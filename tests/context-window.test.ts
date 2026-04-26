@@ -3,7 +3,7 @@ import {
     getContextLimitForModel,
     resolveModelKeyForContextLimit,
     MODEL_CONTEXT_LIMITS,
-} from '../src/llm/context-window-manager.js';
+} from '../src/providers/context-window-manager.js';
 
 describe('context window limits', () => {
     it('strips provider prefix', () => {

@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { LLMCache } from '../src/llm/cache.js';
-import type { GenerateResult, Message } from '../src/llm/types.js';
+import { LLMCache } from '../src/providers/cache.js';
+import type { GenerateResult, Message } from '../src/providers/types.js';
 
 describe('LLMCache', () => {
     let cache: LLMCache;

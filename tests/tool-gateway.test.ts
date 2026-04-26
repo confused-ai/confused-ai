@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { handleToolGatewayRequest } from '../src/tools/tool-gateway-http.js';
-import { CalculatorAddTool } from '../src/tools/calculator-tool.js';
+import { handleToolGatewayRequest } from '../src/tools/core/tool-gateway-http.js';
+import { CalculatorAddTool } from '../src/tools/utils/calculator.js';
 
 describe('handleToolGatewayRequest', () => {
     const tools = [

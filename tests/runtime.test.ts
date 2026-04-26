@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { describe, expect, it, afterEach } from 'vitest';
 import type { CreateAgentResult } from '../src/create-agent/types.js';
-import type { Message } from '../src/llm/types.js';
+import type { Message } from '../src/providers/types.js';
 import { createHttpService, listenService, getRuntimeOpenApiJson } from '../src/runtime/index.js';
 
 function request(

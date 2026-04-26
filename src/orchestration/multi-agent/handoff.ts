@@ -175,7 +175,7 @@ export function createHandoff(config: HandoffConfig): HandoffProtocol {
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function createMinimalContext(agentId: string): AgentContext {
-    const { InMemoryStore } = require('../memory/in-memory-store.js');
+    const { InMemoryStore } = require('../../memory/in-memory-store.js');
     const { ToolRegistryImpl } = require('../../tools/core/registry.js');
 
     return {

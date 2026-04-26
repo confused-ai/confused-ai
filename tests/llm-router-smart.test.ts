@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import type { LLMProvider, Message } from '../src/llm/types.js';
+import type { LLMProvider, Message } from '../src/providers/types.js';
 import {
     createSmartRouter,
     scoreTaskTypesForRouting,
     LLMRouter,
-} from '../src/llm/router.js';
-import type { RouteContext } from '../src/llm/router.js';
+} from '../src/providers/router.js';
+import type { RouteContext } from '../src/providers/router.js';
 
 function stubProvider(): LLMProvider {
     return {

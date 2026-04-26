@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { collectStreamText, collectStreamThenValidate } from '../src/llm/structured-output.js';
-import type { StreamDelta } from '../src/llm/types.js';
+import { collectStreamText, collectStreamThenValidate } from '../src/providers/structured-output.js';
+import type { StreamDelta } from '../src/providers/types.js';
 
 async function* mockStream(chunks: string[]): AsyncIterable<StreamDelta> {
     for (const text of chunks) {
