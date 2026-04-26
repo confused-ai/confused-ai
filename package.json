@@ -1,6 +1,6 @@
 {
     "name": "confused-ai",
-    "version": "0.7.3",
+    "version": "0.7.5",
     "description": "TypeScript framework for building production-grade AI agents, teams, and services",
     "type": "module",
     "files": [
@@ -29,6 +29,16 @@
             "import": "./dist/memory.js",
             "require": "./dist/memory.cjs"
         },
+        "./providers": {
+            "types": "./dist/providers.d.ts",
+            "import": "./dist/providers.js",
+            "require": "./dist/providers.cjs"
+        },
+        "./llm": {
+            "types": "./dist/providers.d.ts",
+            "import": "./dist/providers.js",
+            "require": "./dist/providers.cjs"
+        },
         "./tools": {
             "types": "./dist/tools.d.ts",
             "import": "./dist/tools.js",
@@ -53,11 +63,6 @@
             "types": "./dist/observability.d.ts",
             "import": "./dist/observability.js",
             "require": "./dist/observability.cjs"
-        },
-        "./llm": {
-            "types": "./dist/llm.d.ts",
-            "import": "./dist/llm.js",
-            "require": "./dist/llm.cjs"
         },
         "./agentic": {
             "types": "./dist/agentic.d.ts",
@@ -89,25 +94,75 @@
             "import": "./dist/voice.js",
             "require": "./dist/voice.cjs"
         },
+        "./shared": {
+            "types": "./dist/shared.d.ts",
+            "import": "./dist/shared.js",
+            "require": "./dist/shared.cjs"
+        },
         "./tools/shell": {
             "types": "./dist/tools/shell.d.ts",
             "import": "./dist/tools/shell.js",
             "require": "./dist/tools/shell.cjs"
         },
-        "./tools/ai": {
-            "types": "./dist/tools/ai.d.ts",
-            "import": "./dist/tools/ai.js",
-            "require": "./dist/tools/ai.cjs"
+        "./tools/core": {
+            "types": "./dist/tools/core.d.ts",
+            "import": "./dist/tools/core.js",
+            "require": "./dist/tools/core.cjs"
         },
-        "./tools/code": {
-            "types": "./dist/tools/code.d.ts",
-            "import": "./dist/tools/code.js",
-            "require": "./dist/tools/code.cjs"
+        "./tools/mcp": {
+            "types": "./dist/tools/mcp.d.ts",
+            "import": "./dist/tools/mcp.js",
+            "require": "./dist/tools/mcp.cjs"
+        },
+        "./tools/utils": {
+            "types": "./dist/tools/utils.d.ts",
+            "import": "./dist/tools/utils.js",
+            "require": "./dist/tools/utils.cjs"
         },
         "./tools/communication": {
             "types": "./dist/tools/communication.d.ts",
             "import": "./dist/tools/communication.js",
             "require": "./dist/tools/communication.cjs"
+        },
+        "./tools/productivity": {
+            "types": "./dist/tools/productivity.d.ts",
+            "import": "./dist/tools/productivity.js",
+            "require": "./dist/tools/productivity.cjs"
+        },
+        "./tools/devtools": {
+            "types": "./dist/tools/devtools.d.ts",
+            "import": "./dist/tools/devtools.js",
+            "require": "./dist/tools/devtools.cjs"
+        },
+        "./tools/crm": {
+            "types": "./dist/tools/crm.d.ts",
+            "import": "./dist/tools/crm.js",
+            "require": "./dist/tools/crm.cjs"
+        },
+        "./tools/search": {
+            "types": "./dist/tools/search.d.ts",
+            "import": "./dist/tools/search.js",
+            "require": "./dist/tools/search.cjs"
+        },
+        "./tools/scraping": {
+            "types": "./dist/tools/scraping.d.ts",
+            "import": "./dist/tools/scraping.js",
+            "require": "./dist/tools/scraping.cjs"
+        },
+        "./tools/media": {
+            "types": "./dist/tools/media.d.ts",
+            "import": "./dist/tools/media.js",
+            "require": "./dist/tools/media.cjs"
+        },
+        "./tools/memory": {
+            "types": "./dist/tools/memory.d.ts",
+            "import": "./dist/tools/memory.js",
+            "require": "./dist/tools/memory.cjs"
+        },
+        "./tools/ai": {
+            "types": "./dist/tools/ai.d.ts",
+            "import": "./dist/tools/ai.js",
+            "require": "./dist/tools/ai.cjs"
         },
         "./tools/data": {
             "types": "./dist/tools/data.d.ts",
@@ -119,20 +174,10 @@
             "import": "./dist/tools/finance.js",
             "require": "./dist/tools/finance.cjs"
         },
-        "./tools/productivity": {
-            "types": "./dist/tools/productivity.d.ts",
-            "import": "./dist/tools/productivity.js",
-            "require": "./dist/tools/productivity.cjs"
-        },
-        "./tools/search": {
-            "types": "./dist/tools/search.d.ts",
-            "import": "./dist/tools/search.js",
-            "require": "./dist/tools/search.cjs"
-        },
-        "./tools/web": {
-            "types": "./dist/tools/web.d.ts",
-            "import": "./dist/tools/web.js",
-            "require": "./dist/tools/web.cjs"
+        "./tools/social": {
+            "types": "./dist/tools/social.d.ts",
+            "import": "./dist/tools/social.js",
+            "require": "./dist/tools/social.cjs"
         },
         "./runtime": {
             "types": "./dist/runtime.d.ts",

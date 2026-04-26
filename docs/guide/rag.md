@@ -9,10 +9,10 @@ The `KnowledgeEngine` turns any document collection into a searchable knowledge 
 ```ts
 import {
   KnowledgeEngine,
-  OpenAIEmbeddingProvider,
   InMemoryVectorStore,
   TextLoader,
 } from 'confused-ai/knowledge';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 // or: import { ... } from 'confused-ai';
 
 const knowledge = new KnowledgeEngine({
@@ -24,8 +24,10 @@ const knowledge = new KnowledgeEngine({
 });
 
 // Ingest documents
-await knowledge.ingest({ id: 'doc-1', content: 'confused-ai is a TypeScript framework for production AI agents.' });
-await knowledge.ingest({ id: 'doc-2', content: 'It supports RAG, multi-agent orchestration, and lifecycle hooks.' });
+await knowledge.ingest([
+  { id: 'doc-1', content: 'confused-ai is a TypeScript framework for production AI agents.' },
+  { id: 'doc-2', content: 'It supports RAG, multi-agent orchestration, and lifecycle hooks.' },
+]);
 
 // Query
 const results = await knowledge.query('What does confused-ai support?', { topK: 3 });
@@ -61,9 +63,7 @@ const csvDocs = await new CSVLoader('./data/faq.csv', {
 const webDocs = await new URLLoader('https://example.com/docs').load();
 
 // Ingest all at once
-for (const doc of [...textDocs, ...jsonDocs, ...csvDocs, ...webDocs]) {
-  await knowledge.ingest(doc);
-}
+await knowledge.ingest([...textDocs, ...jsonDocs, ...csvDocs, ...webDocs]);
 ```
 
 ## Attaching to an agent

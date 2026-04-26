@@ -10,6 +10,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "confused-ai": "^0.7.3"
+    "confused-ai": "^0.7.5"
   }
 }

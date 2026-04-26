@@ -28,7 +28,7 @@
  */
 
 import type { CreateAgentOptions } from '../create-agent/types.js';
-import type { Tool } from '../tools/types.js';
+import type { Tool } from '../tools/core/types.js';
 import { MockLLMProvider, type MockLLMOptions } from './mock-llm.js';
 import { MockSessionStore } from './mock-session-store.js';
 

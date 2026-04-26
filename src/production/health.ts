@@ -8,7 +8,7 @@
  * - Aggregated health status
  */
 
-import type { LLMProvider } from '../llm/types.js';
+import type { LLMProvider } from '../providers/types.js';
 import type { SessionStore } from '../session/types.js';
 
 /** Health check status */

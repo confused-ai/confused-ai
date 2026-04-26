@@ -5,12 +5,12 @@
 export * from './types.js';
 export { AgenticRunner } from './runner.js';
 
-import type { LLMProvider } from '../llm/types.js';
-import type { ToolRegistry, ToolMiddleware } from '../tools/types.js';
+import type { LLMProvider } from '../providers/types.js';
+import type { ToolRegistry, ToolMiddleware } from '../tools/core/types.js';
 import type { AgenticRunConfig, AgenticRunResult, AgenticStreamHooks, AgenticLifecycleHooks } from './types.js';
 import type { HumanInTheLoopHooks, GuardrailEngine } from '../guardrails/types.js';
 import { AgenticRunner } from './runner.js';
-import { toToolRegistry, type ToolProvider } from '../tools/registry.js';
+import { toToolRegistry, type ToolProvider } from '../tools/core/registry.js';
 
 /**
  * Create a production-style agentic agent (ReAct loop with LLM + tools).
@@ -33,7 +33,7 @@ export function createAgenticAgent(config: {
     name: string;
     instructions: string;
     llm: LLMProvider;
-    tools: ToolRegistry | import('../tools/types.js').Tool[];
+    tools: ToolRegistry | import('../tools/core/types.js').Tool[];
     maxSteps?: number;
     timeoutMs?: number;
     retry?: import('./types.js').AgenticRetryPolicy;
@@ -52,7 +52,7 @@ export function createAgenticAgent(config: {
     name: string;
     instructions: string;
     run(
-        runConfig: { prompt: string; instructions?: string; messages?: import('../llm/types.js').Message[]; maxSteps?: number; timeoutMs?: number; runId?: string; userId?: string },
+        runConfig: { prompt: string; instructions?: string; messages?: import('../providers/types.js').Message[]; maxSteps?: number; timeoutMs?: number; runId?: string; userId?: string },
         hooks?: AgenticStreamHooks
     ): Promise<AgenticRunResult>;
 } {

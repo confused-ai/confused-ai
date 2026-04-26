@@ -10,6 +10,6 @@ export { asOrchestratorAgent } from './orchestrator-adapter.js';
 
 export * from '../core/types.js';
 export * from '../memory/types.js';
-export * from '../tools/types.js';
+export * from '../tools/core/types.js';
 export * from '../planner/types.js';
 export * from '../execution/types.js';

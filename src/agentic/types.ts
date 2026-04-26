@@ -2,9 +2,9 @@
  * Agentic loop (ReAct-style) types
  */
 
-import type { Message, LLMToolDefinition } from '../llm/types.js';
-import type { LLMProvider } from '../llm/types.js';
-import type { ToolRegistry, ToolMiddleware } from '../tools/types.js';
+import type { Message, LLMToolDefinition } from '../providers/types.js';
+import type { LLMProvider } from '../providers/types.js';
+import type { ToolRegistry, ToolMiddleware } from '../tools/core/types.js';
 import type { EntityId } from '../core/types.js';
 import type { ZodType } from 'zod';
 

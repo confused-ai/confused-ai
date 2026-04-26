@@ -21,8 +21,8 @@
  * ```
  */
 
-import type { Tool, ToolResult, ToolContext } from '../tools/types.js';
-import { ToolCategory } from '../tools/types.js';
+import type { Tool, ToolResult, ToolContext } from '../tools/core/types.js';
+import { ToolCategory } from '../tools/core/types.js';
 import { z } from 'zod';
 
 export interface ToolCallRecord {

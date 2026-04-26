@@ -12,7 +12,7 @@ import type {
 } from './types.js';
 import { SessionState } from './types.js';
 import type { SessionDbDriver, SessionRow, SessionRunRow } from './db-driver.js';
-import type { Message } from '../llm/types.js';
+import type { Message } from '../providers/types.js';
 
 const DEFAULT_CONFIG: Required<SessionStoreConfig> = {
     defaultTtlMs: 24 * 60 * 60 * 1000,

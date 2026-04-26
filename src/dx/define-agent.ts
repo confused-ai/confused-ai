@@ -16,7 +16,7 @@
 import type { CreateAgentOptions, CreateAgentResult } from '../create-agent.js';
 import type { SessionStore } from '../session/types.js';
 import type { GuardrailEngine } from '../guardrails/types.js';
-import type { ToolMiddleware } from '../tools/types.js';
+import type { ToolMiddleware } from '../tools/core/types.js';
 import type { AgenticLifecycleHooks } from '../agentic/types.js';
 import type { z } from 'zod';
 import { createAgent } from '../create-agent.js';

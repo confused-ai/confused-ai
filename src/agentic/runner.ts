@@ -2,8 +2,8 @@
  * Agentic runner: ReAct-style loop (reason → tool call → observe → repeat)
  */
 
-import type { Message, ToolCall as LLMToolCall, LLMToolDefinition, GenerateResult, StreamDelta } from '../llm/types.js';
-import type { ToolResult } from '../tools/types.js';
+import type { Message, ToolCall as LLMToolCall, LLMToolDefinition, GenerateResult, StreamDelta } from '../providers/types.js';
+import type { ToolResult } from '../tools/core/types.js';
 import type {
     AgenticRunConfig,
     AgenticRunResult,
@@ -14,9 +14,9 @@ import type {
 } from './types.js';
 import type { HumanInTheLoopHooks, GuardrailContext } from '../guardrails/types.js';
 import type { GuardrailEngine } from '../guardrails/types.js';
-import { LLMError } from '../errors.js';
-import { toolToLLMDef } from '../llm/zod-to-schema.js';
-import { validateStructuredOutput, buildStructuredOutputPrompt } from '../llm/structured-output.js';
+import { LLMError } from '../shared/errors.js';
+import { toolToLLMDef } from '../providers/zod-to-schema.js';
+import { validateStructuredOutput, buildStructuredOutputPrompt } from '../providers/structured-output.js';
 
 const DEFAULT_MAX_STEPS = 10;
 const DEFAULT_TIMEOUT_MS = 60_000;
@@ -322,7 +322,7 @@ export class AgenticRunner {
                     sessionId,
                     timeoutMs: 30_000,
                     permissions: tool.permissions,
-                } as import('../tools/types.js').ToolContext;
+                } as import('../tools/core/types.js').ToolContext;
 
                 // Tool middleware: beforeExecute
                 const middleware = this.config.toolMiddleware ?? [];

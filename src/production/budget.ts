@@ -19,7 +19,7 @@
  * ```
  */
 
-import { MODEL_PRICING } from '../llm/cost-tracker.js';
+import { MODEL_PRICING } from '../providers/cost-tracker.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

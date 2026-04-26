@@ -75,3 +75,115 @@ const moderationGuardrail: GuardrailValidator = {
 
 const guardrails = createGuardrails({ validators: [moderationGuardrail] });
 ```
+
+---
+
+## Built-in safety rules
+
+### OpenAI Moderation
+
+`createOpenAiModerationRule` — call the OpenAI Moderation API as a guardrail rule. Automatically blocks flagged inputs.
+
+```ts
+import { createGuardrails, createOpenAiModerationRule } from 'confused-ai/guardrails';
+
+const guardrails = createGuardrails({
+  validators: [
+    {
+      validateInput: createOpenAiModerationRule({
+        apiKey: process.env.OPENAI_API_KEY!,
+        // Optional: only block specific categories
+        // categories: ['hate', 'violence', 'sexual'],
+      }),
+    },
+  ],
+});
+```
+
+### PII Detection
+
+`createPiiDetectionRule` — detect and optionally block messages containing PII (emails, phone numbers, SSNs, credit card numbers, IP addresses).
+
+```ts
+import { createGuardrails, createPiiDetectionRule } from 'confused-ai/guardrails';
+
+const guardrails = createGuardrails({
+  validators: [
+    {
+      validateInput: createPiiDetectionRule({
+        action: 'block',   // 'block' | 'warn' (warn logs but allows through)
+        types: ['ssn', 'credit_card'], // optional subset; omit to detect all types
+      }),
+    },
+  ],
+});
+```
+
+To detect PII programmatically without a guardrail:
+
+```ts
+import { detectPii } from 'confused-ai/guardrails';
+
+const result = detectPii('Call me at 555-123-4567 or SSN 123-45-6789');
+console.log(result.found);   // true
+console.log(result.types);   // ['phone', 'ssn']
+```
+
+### Prompt Injection Detection
+
+`createPromptInjectionRule` — heuristic detection of prompt injection attempts (jailbreaks, role-override instructions, etc.).
+
+```ts
+import { createGuardrails, createPromptInjectionRule } from 'confused-ai/guardrails';
+
+const guardrails = createGuardrails({
+  validators: [
+    {
+      validateInput: createPromptInjectionRule({
+        threshold: 0.6,  // sensitivity 0–1 (default 0.5)
+        action: 'block', // 'block' | 'warn'
+      }),
+    },
+  ],
+});
+```
+
+To inspect injection signals directly:
+
+```ts
+import { detectPromptInjection } from 'confused-ai/guardrails';
+
+const result = detectPromptInjection('Ignore all previous instructions and...');
+console.log(result.score);    // 0.9
+console.log(result.signals);  // ['role-override', 'jailbreak-phrase']
+```
+
+For higher accuracy, add an LLM classifier on top of heuristics:
+
+```ts
+import { createLlmInjectionClassifier } from 'confused-ai/guardrails';
+import { OpenAIProvider } from 'confused-ai/llm';
+
+const classifier = createLlmInjectionClassifier({
+  llm: new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o-mini' }),
+  // threshold: 0.7,
+});
+```
+
+### Forbidden topics
+
+`createForbiddenTopicsRule` — block any input that matches a list of forbidden topic keywords or patterns.
+
+```ts
+import { createGuardrails, createForbiddenTopicsRule } from 'confused-ai/guardrails';
+
+const guardrails = createGuardrails({
+  validators: [
+    {
+      validateInput: createForbiddenTopicsRule({
+        topics: ['competitor pricing', 'internal roadmap'],
+      }),
+    },
+  ],
+});
+```

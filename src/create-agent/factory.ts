@@ -1,14 +1,14 @@
-import type { Message } from '../llm/types.js';
+import type { Message } from '../providers/types.js';
 import type { AgenticStreamHooks, AgenticLifecycleHooks } from '../agentic/types.js';
-import type { ToolProvider } from '../tools/registry.js';
+import type { ToolProvider } from '../tools/core/registry.js';
 import { createAgenticAgent } from '../agentic/index.js';
-import { HttpClientTool } from '../tools/http-tool.js';
-import { BrowserTool } from '../tools/browser-tool.js';
+import { HttpClientTool } from '../tools/utils/http.js';
+import { BrowserTool } from '../tools/utils/browser.js';
 import { InMemorySessionStore } from '../session/index.js';
 import { SessionState } from '../session/types.js';
-import { ConfigError } from '../errors.js';
-import { toToolRegistry } from '../tools/registry.js';
-import { isLightweightTool } from '../tools/tool-helper.js';
+import { ConfigError } from '../shared/errors.js';
+import { toToolRegistry } from '../tools/core/registry.js';
+import { isLightweightTool } from '../tools/core/tool-helper.js';
 import { createDevLogger, createDevToolMiddleware } from '../dx/dev-logger.js';
 import { BudgetEnforcer } from '../production/budget.js';
 import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions } from './types.js';
@@ -19,7 +19,7 @@ import {
     ENV_MODEL,
     ENV_BASE_URL,
 } from './resolve-llm.js';
-import { isMultiModalInput, multiModalToMessage } from '../llm/vision.js';
+import { isMultiModalInput, multiModalToMessage } from '../providers/vision.js';
 
 /**
  * Resolves the tools option to a ToolRegistry.
@@ -236,7 +236,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
         name,
         instructions,
         adapters: adapterBindings,
-        async run(prompt: string | import('../llm/vision.js').MultiModalInput, runOptions?: AgentRunOptions) {
+        async run(prompt: string | import('../providers/vision.js').MultiModalInput, runOptions?: AgentRunOptions) {
             // Resolve multi-modal input → text + Message
             const isMMI = isMultiModalInput(prompt);
             const promptText: string = isMMI ? prompt.text : prompt;

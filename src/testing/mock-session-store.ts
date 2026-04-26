@@ -6,7 +6,7 @@
 
 import type { SessionStore, SessionQuery, SessionRun } from '../session/types.js';
 import type { Session } from '../session/types.js';
-import type { Message } from '../llm/types.js';
+import type { Message } from '../providers/types.js';
 
 /**
  * Mock session store for unit tests

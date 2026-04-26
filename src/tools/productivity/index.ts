@@ -1,10 +1,22 @@
-export * from './github-tool.js';
-export * from './jira-tool.js';
-export * from './linear-tool.js';
-export * from './notion-tool.js';
-export * from './clickup-tool.js';
-export * from './confluence-tool.js';
-export * from './google-calendar-tool.js';
-export * from './google-sheets-tool.js';
-export * from './spotify-tool.js';
-export * from './trello-tool.js';
+// Productivity tools: Notion, Jira, Linear, ClickUp, Confluence, Trello,
+// Google Drive/Calendar/Sheets, Todoist
+export {
+    NotionCreatePageTool, NotionSearchTool, NotionUpdatePageTool, NotionToolkit,
+} from './notion.js';
+export {
+    JiraGetIssueTool, JiraCreateIssueTool, JiraSearchIssuesTool, JiraAddCommentTool, JiraToolkit,
+} from './jira.js';
+export {
+    LinearCreateIssueTool, LinearGetIssueTool, LinearSearchIssuesTool, LinearUpdateIssueTool,
+    LinearAddCommentTool, LinearListTeamsTool, LinearToolkit, type LinearToolConfig,
+} from './linear.js';
+export * from './clickup.js';
+export * from './confluence.js';
+export * from './trello.js';
+export * from './google-calendar.js';
+export * from './google-drive.js';
+export * from './google-sheets.js';
+export {
+    TodoistCreateTaskTool, TodoistGetTasksTool, TodoistCompleteTaskTool,
+    TodoistToolkit, type TodoistToolConfig,
+} from './todoist.js';

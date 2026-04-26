@@ -9,15 +9,16 @@ All tools are available from the main `confused-ai` import. You can also import 
 import { TavilySearchTool, GitHubToolkit } from 'confused-ai';
 
 // Category subpaths — tree-shake to just what you need
-import { TavilySearchTool, ExaToolkit }    from 'confused-ai/tools/search';
-import { SlackToolkit, GmailToolkit }       from 'confused-ai/tools/communication';
-import { GitHubToolkit, ClickUpToolkit }    from 'confused-ai/tools/productivity';
-import { DatabaseToolkit, Neo4jToolkit }    from 'confused-ai/tools/data';
-import { StripeToolkit }                    from 'confused-ai/tools/finance';
-import { OpenAIToolkit, SerpApiToolkit }    from 'confused-ai/tools/ai';
-import { JavaScriptExecTool }              from 'confused-ai/tools/code';
-import { WikipediaSearchTool }             from 'confused-ai/tools/web';
-import { ShellTool }                        from 'confused-ai/tools/shell'; // explicit: security
+import { TavilySearchTool, ExaToolkit }       from 'confused-ai/tools/search';
+import { SlackToolkit, GmailToolkit }          from 'confused-ai/tools/communication';
+import { GitHubToolkit, DockerToolkit }        from 'confused-ai/tools/devtools';
+import { ClickUpToolkit, NotionToolkit }       from 'confused-ai/tools/productivity';
+import { DatabaseToolkit, Neo4jToolkit }       from 'confused-ai/tools/data';
+import { StripeToolkit }                       from 'confused-ai/tools/finance';
+import { OpenAIToolkit, SerpApiToolkit }       from 'confused-ai/tools/ai';
+import { JavaScriptExecTool }                 from 'confused-ai/tools/devtools';
+import { WikipediaSearchTool }                from 'confused-ai/tools/scraping';
+import { ShellTool }                           from 'confused-ai/tools/shell'; // explicit: security
 ```
 
 ```ts
@@ -742,22 +743,107 @@ const ai = agent({
 });
 ```
 
-### Expose this framework's tools as an MCP server
+### Expose this framework's tools as an MCP HTTP server
+
+`createMcpServer` / `McpHttpServer` — expose a `ToolRegistry` as a JSON-RPC 2.0 MCP-compatible HTTP endpoint. External clients (Claude Desktop, other agents, any MCP client) can discover and invoke your tools.
 
 ```ts
-import { createMcpServer } from 'confused-ai';
-import { CalculatorToolkit, TavilyToolkit } from 'confused-ai';
+import { createMcpServer, toToolRegistry } from 'confused-ai/tools';
+import { CalculatorToolkit, TavilyToolkit } from 'confused-ai/tools';
 
-const server = createMcpServer({
-  port: 8811,
-  tools: [
-    ...CalculatorToolkit.create(),
-    ...TavilyToolkit.create({ apiKey: process.env.TAVILY_API_KEY }),
-  ],
-  auth: { type: 'bearer', token: process.env.MCP_TOKEN },
+const registry = toToolRegistry([
+  ...CalculatorToolkit.create(),
+  ...TavilyToolkit.create({ apiKey: process.env.TAVILY_API_KEY }),
+]);
+
+const server = createMcpServer(registry, {
+  name: 'my-tools',
+  version: '1.0.0',
+  port: 3100,
+  // auth: { type: 'bearer', token: process.env.MCP_TOKEN! },
+  // cors: ['https://my-app.example.com'],
 });
 
 await server.start();
+// POST http://localhost:3100/mcp — JSON-RPC 2.0
+console.log(server.baseUrl); // 'http://127.0.0.1:3100/mcp'
+
+// Stop gracefully:
+await server.stop();
+```
+
+`McpServerOptions`:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `name` | `string` | `'confused-ai-mcp'` | Server name in `initialize` response |
+| `version` | `string` | `'1.0.0'` | Server version |
+| `port` | `number` | `3100` | HTTP port |
+| `host` | `string` | `'127.0.0.1'` | Bind address |
+| `path` | `string` | `'/mcp'` | URL path for the endpoint |
+| `auth` | `McpAuthConfig` | — | `{ type: 'bearer', token }` or `{ type: 'api-key', key, header? }` |
+| `cors` | `'*' \| string[] \| false` | `'*'` | CORS allowed origins |
+| `toolTimeoutMs` | `number` | `60_000` | Per-tool execution timeout |
+| `maxBodyBytes` | `number` | `1_048_576` | Max request body size |
+
+### Expose tools via stdio (MCP subprocess transport)
+
+`runMcpStdioToolServer` — run a minimal JSON-RPC-over-stdin/stdout MCP server.  
+Useful for Claude Desktop integrations or any host that spawns MCP servers as child processes.
+
+```ts
+// my-mcp-server.ts  — run with: node my-mcp-server.js
+import { runMcpStdioToolServer } from 'confused-ai/tools';
+import { CalculatorToolkit } from 'confused-ai/tools';
+
+await runMcpStdioToolServer(CalculatorToolkit.create(), {
+  name: 'calculator-server',
+  version: '1.0.0',
+});
+// Reads JSON-RPC lines from stdin, writes responses to stdout
+```
+
+For more control, handle individual lines yourself:
+
+```ts
+import { handleMcpStdioLine } from 'confused-ai/tools';
+
+const serverInfo = { name: 'my-server', version: '1.0.0' };
+const tools = CalculatorToolkit.create();
+
+// In your own stdin loop:
+const response = await handleMcpStdioLine(jsonRpcLine, tools, serverInfo);
+if (response) process.stdout.write(response + '\n');
+```
+
+### Tool gateway (simple JSON HTTP bridge)
+
+`handleToolGatewayRequest` — a lightweight framework-agnostic HTTP bridge. Mount it behind your own auth/router. Not full MCP spec — useful for internal tool gateways or quick demos.
+
+```ts
+import { handleToolGatewayRequest, toToolRegistry } from 'confused-ai/tools';
+import { CalculatorToolkit } from 'confused-ai/tools';
+import { createServer } from 'node:http';
+
+const tools = CalculatorToolkit.create();
+
+createServer(async (req, res) => {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const body = Buffer.concat(chunks).toString();
+
+  const result = await handleToolGatewayRequest(
+    req.method ?? 'GET',
+    req.url ?? '/',
+    body,
+    tools,
+  );
+  res.writeHead(result.statusCode, { 'content-type': 'application/json' });
+  res.end(JSON.stringify(result.body));
+}).listen(3200);
+
+// GET  /tools   → list tool IDs + descriptions
+// POST /invoke  → { "toolId": "calculator_add", "args": { "a": 1, "b": 2 } }
 ```
 
 ---
@@ -875,4 +961,6 @@ const loggedSearch = wrapTool(new TavilySearchTool(), {
 | Code | `ShellTool` *(explicit import)* | — |
 | Math | `CalculatorToolkit` (8 tools) | — |
 | MCP | `HttpMcpClient`, `loadMcpToolsFromUrl` | MCP server |
-| MCP | `McpHttpServer`, `createMcpServer` | — |
+| MCP server (HTTP) | `McpHttpServer`, `createMcpServer` | — |
+| MCP server (stdio) | `runMcpStdioToolServer`, `handleMcpStdioLine` | — |
+| Tool gateway | `handleToolGatewayRequest` | — |

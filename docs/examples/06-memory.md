@@ -126,7 +126,7 @@ When you have thousands of memories, use vector search instead of key-value look
 
 ```ts
 import { InMemoryVectorStore } from 'confused-ai/memory';
-import { OpenAIEmbeddingProvider } from 'confused-ai/llm';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 
 const agent = createAgent({
   model: 'gpt-4o-mini',

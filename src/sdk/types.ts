@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { MemoryStore } from '../memory/types.js';
-import type { Tool } from '../tools/types.js';
+import type { Tool } from '../tools/core/types.js';
 import type { Planner } from '../planner/types.js';
 
 /**

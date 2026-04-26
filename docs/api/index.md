@@ -71,8 +71,8 @@ console.log(result.markdown.type);      // "markdown"
 | `JSONLoader` | `confused-ai/knowledge` | Load .json files |
 | `CSVLoader` | `confused-ai/knowledge` | Load .csv files |
 | `URLLoader` | `confused-ai/knowledge` | Load web pages |
-| `OpenAIEmbeddingProvider` | `confused-ai/knowledge` | Text embeddings via OpenAI |
-| `InMemoryVectorStore` | `confused-ai/knowledge` | In-process vector store |
+| `OpenAIEmbeddingProvider` | `confused-ai/memory` | Text embeddings via OpenAI |
+| `InMemoryVectorStore` | `confused-ai/memory` | In-process vector store |
 | `DocumentLoader` | `confused-ai/knowledge` | Loader interface |
 | `KnowledgeEngineConfig` | `confused-ai/knowledge` | Engine config type |
 

@@ -180,7 +180,8 @@ export default resilient;
 ```ts
 import { createAgent, defineTool } from 'confused-ai';
 import { createSqliteSessionStore } from 'confused-ai/session';
-import { KnowledgeEngine, TextLoader, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/knowledge';
+import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'confused-ai/knowledge';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
 import { createHttpService, listenService } from 'confused-ai/runtime';
 import { z } from 'zod';
@@ -443,7 +444,8 @@ const { text } = await router.run('What is 2+2?'); // → routed to fast
 ```ts
 import { agent, defineTool } from 'confused-ai';
 import { createSqliteSessionStore } from 'confused-ai/session';
-import { KnowledgeEngine, TextLoader, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/knowledge';
+import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'confused-ai/knowledge';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
 import { z } from 'zod';
 

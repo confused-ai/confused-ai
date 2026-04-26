@@ -2,8 +2,8 @@
  * LLM-as-judge: rubric-based scoring for eval pipelines and guardrails.
  */
 
-import type { LLMProvider } from '../llm/types.js';
-import { extractJson } from '../llm/structured-output.js';
+import type { LLMProvider } from '../providers/types.js';
+import { extractJson } from '../providers/structured-output.js';
 
 export interface LlmJudgeOptions {
     readonly llm: LLMProvider;

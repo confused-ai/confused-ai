@@ -112,7 +112,7 @@ export type {
 // ── Tools ─────────────────────────────────────────────────────────────────
 
 /** Pluggable tool definition. Implement this to add any capability to an agent. */
-export type { Tool, ToolResult, ToolContext } from '../tools/types.js';
+export type { Tool, ToolResult, ToolContext } from '../tools/core/types.js';
 
 // ── Knowledge / RAG ───────────────────────────────────────────────────────
 
@@ -122,4 +122,4 @@ export type { RAGEngine, RAGChunk, RAGQueryOptions, RAGQueryResult } from '../kn
 // ── LLM ──────────────────────────────────────────────────────────────────
 
 /** Pluggable LLM provider — bring any model/vendor. */
-export type { LLMProvider, Message, GenerateResult, GenerateOptions, StreamOptions } from '../llm/types.js';
+export type { LLMProvider, Message, GenerateResult, GenerateOptions, StreamOptions } from '../providers/types.js';

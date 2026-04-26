@@ -89,6 +89,65 @@ class PostgresSessionDriver implements SessionDbDriver {
 }
 ```
 
+### Redis (distributed sessions + LLM cache)
+
+Use `RedisSessionStore` for distributed deployments (multiple backend instances sharing sessions). Requires `ioredis`.
+
+```ts
+import Redis from 'ioredis';
+import { RedisSessionStore } from 'confused-ai/session';
+
+const redis = new Redis(process.env.REDIS_URL!);
+const sessions = new RedisSessionStore({ client: redis });
+
+const myAgent = agent({
+  model: 'gpt-4o',
+  instructions: '...',
+  sessionStore: sessions,
+});
+```
+
+`RedisSessionStore` uses Redis hashes + lists — active sessions never expire, writes are O(1), and `list()` uses `SCAN` (not `KEYS`) so it's safe on large instances.
+
+**Redis LLM cache** — share an LLM response cache across all instances:
+
+```ts
+import { RedisLlmCache } from 'confused-ai/session';
+import type { RedisLlmCacheKeyInput } from 'confused-ai/session';
+
+const llmCache = new RedisLlmCache({
+  client: redis,
+  ttlSeconds: 3600, // default: 1 hour
+});
+
+const myAgent = createAgent({
+  name: 'assistant',
+  model: 'gpt-4o',
+  instructions: '...',
+  llmCache,
+});
+```
+
+### Bun SQLite (Bun runtime only)
+
+When running under **Bun**, use `createBunSqliteSessionStore` — `better-sqlite3` does not load under Bun.
+
+```ts
+// Import directly from the subpath (not in the main barrel to avoid Node import errors)
+import { createBunSqliteSessionStore } from 'confused-ai/session/bun-sqlite';
+// or in Bun apps: import { createBunSqliteSessionStore } from 'confused-ai/session';
+
+const sessions = await createBunSqliteSessionStore('./data/sessions.db');
+
+const myAgent = agent({
+  model: 'gpt-4o',
+  instructions: '...',
+  sessionStore: sessions,
+});
+```
+
+Under **Node.js**, use `createSqliteSessionStore` (backed by `better-sqlite3`) instead.
+
 ## Disable sessions
 
 ```ts

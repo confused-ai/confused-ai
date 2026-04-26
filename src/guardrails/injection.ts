@@ -20,7 +20,7 @@
  */
 
 import type { GuardrailRule, GuardrailContext, GuardrailResult } from './types.js';
-import type { LLMProvider } from '../llm/types.js';
+import type { LLMProvider } from '../providers/types.js';
 
 // ── Pattern definitions ────────────────────────────────────────────────────
 

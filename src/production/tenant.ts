@@ -27,7 +27,7 @@
 
 import type { SessionStore } from '../session/types.js';
 import type { SessionQuery, Session, SessionId, SessionRun } from '../session/types.js';
-import type { Message } from '../llm/types.js';
+import type { Message } from '../providers/types.js';
 import { RateLimiter } from './rate-limiter.js';
 import type { RateLimiterConfig } from './rate-limiter.js';
 

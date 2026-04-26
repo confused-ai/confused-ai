@@ -110,6 +110,68 @@ const results = await vs.query([0.1, 0.2, 0.3], 2);
 
 ---
 
+## Production vector stores
+
+For production workloads, replace `InMemoryVectorStore` with a persistent vector database.
+
+### Pinecone
+
+```ts
+import { VectorMemoryStore, PineconeVectorStore } from 'confused-ai/memory';
+import { OpenAIEmbeddingProvider } from 'confused-ai/llm';
+
+const vectorMemory = new VectorMemoryStore({
+  embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
+  vectorStore: new PineconeVectorStore({
+    apiKey: process.env.PINECONE_API_KEY!,
+    indexName: 'agent-memory',
+    namespace: 'user-sessions',
+  }),
+  topK: 5,
+});
+```
+
+Requires Pinecone's official SDK (`npm install @pinecone-database/pinecone`).
+
+### Qdrant
+
+```ts
+import { QdrantVectorStore } from 'confused-ai/memory';
+
+const store = new QdrantVectorStore({
+  url: process.env.QDRANT_URL!, // e.g. 'http://localhost:6333'
+  collectionName: 'agent-memory',
+  // apiKey: process.env.QDRANT_API_KEY, // for Qdrant Cloud
+});
+```
+
+### pgvector (PostgreSQL)
+
+```ts
+import { PgVectorStore } from 'confused-ai/memory';
+import type { PgPool } from 'confused-ai/memory';
+
+// Pass any pg-compatible pool
+const store = new PgVectorStore({
+  pool: pgPool as PgPool,
+  tableName: 'agent_embeddings', // default: 'embeddings'
+  dimensions: 1536,
+});
+```
+
+Requires `pg` and the `pgvector` PostgreSQL extension.
+
+### Summary
+
+| Store | Package | Best for |
+|-------|---------|----------|
+| `InMemoryVectorStore` | built-in | Dev / testing |
+| `PineconeVectorStore` | `@pinecone-database/pinecone` | Managed, scale-out |
+| `QdrantVectorStore` | self-hosted or Qdrant Cloud | Open source, on-prem |
+| `PgVectorStore` | `pg` + pgvector | Existing Postgres infra |
+
+---
+
 ## Custom memory store
 
 Implement the `MemoryStore` interface to use any external database:

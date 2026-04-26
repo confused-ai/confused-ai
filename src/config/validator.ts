@@ -3,7 +3,7 @@
  */
 
 import type { AppConfig, ConfigValidationError } from './types.js';
-import { AgentError, ErrorCode } from '../errors.js';
+import { AgentError, ErrorCode } from '../shared/errors.js';
 
 /**
  * Validate application configuration

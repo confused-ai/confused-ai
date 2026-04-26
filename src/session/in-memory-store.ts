@@ -11,7 +11,7 @@ import {
     SessionQuery,
     SessionStoreConfig,
 } from './types.js';
-import type { Message } from '../llm/types.js';
+import type { Message } from '../providers/types.js';
 
 /**
  * Default configuration

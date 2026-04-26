@@ -35,8 +35,8 @@
 import { createHash } from 'node:crypto';
 import type { SessionStore, Session, SessionRun, SessionId, SessionQuery } from './types.js';
 import { SessionState } from './types.js';
-import type { Message } from '../llm/types.js';
-import type { GenerateResult } from '../llm/types.js';
+import type { Message } from '../providers/types.js';
+import type { GenerateResult } from '../providers/types.js';
 
 // ── Redis client interface (matches ioredis public API) ────────────────────
 // We define a minimal interface so the file compiles without ioredis installed.

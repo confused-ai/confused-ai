@@ -30,13 +30,13 @@
  * ```
  */
 
-import type { LLMProvider } from '../llm/types.js';
-import type { Tool, ToolRegistry } from '../tools/types.js';
+import type { LLMProvider } from '../providers/types.js';
+import type { Tool, ToolRegistry } from '../tools/core/types.js';
 import type { AgenticLifecycleHooks } from '../agentic/types.js';
 import type { CreateAgentResult } from '../create-agent/types.js';
 import { createAgenticAgent } from '../agentic/index.js';
-import { toToolRegistry, type ToolProvider } from '../tools/registry.js';
-import type { Message } from '../llm/types.js';
+import { toToolRegistry, type ToolProvider } from '../tools/core/registry.js';
+import type { Message } from '../providers/types.js';
 
 export interface BareAgentOptions {
     /** Agent name. Default: 'Agent' */

@@ -1681,14 +1681,15 @@ import { TavilyToolkit, GitHubToolkit, CalculatorToolkit /* ... */ }   from 'con
 // Tool category subpaths (tree-shakeable)
 import { TavilySearchTool, ExaToolkit, FirecrawlToolkit, GoogleMapsToolkit } from 'confused-ai/tools/search';
 import { SlackToolkit, GmailToolkit, DiscordToolkit, TelegramToolkit }       from 'confused-ai/tools/communication';
-import { GitHubToolkit as GH, ClickUpToolkit, ConfluenceToolkit }            from 'confused-ai/tools/productivity';
-import { GoogleCalendarToolkit, GoogleSheetsToolkit, SpotifyToolkit }        from 'confused-ai/tools/productivity';
+import { GitHubToolkit as GH, DockerToolkit, JavaScriptExecTool, PythonExecTool, ShellCommandTool } from 'confused-ai/tools/devtools';
+import { ClickUpToolkit, ConfluenceToolkit }                                  from 'confused-ai/tools/productivity';
+import { GoogleCalendarToolkit, GoogleSheetsToolkit }                         from 'confused-ai/tools/productivity';
 import { TrelloToolkit }                                                      from 'confused-ai/tools/productivity';
+import { SpotifyToolkit }                                                     from 'confused-ai/tools/social';
 import { DatabaseToolkit, RedisToolkit, CsvToolkit, Neo4jToolkit }           from 'confused-ai/tools/data';
 import { StripeToolkit, YFinanceTool }                                        from 'confused-ai/tools/finance';
 import { OpenAIToolkit, SerpApiToolkit }                                      from 'confused-ai/tools/ai';
-import { JavaScriptExecTool, PythonExecTool, ShellCommandTool }              from 'confused-ai/tools/code';
-import { WikipediaSearchTool, HackerNewsToolkit, PlaywrightPageTitleTool }   from 'confused-ai/tools/web';
+import { WikipediaSearchTool, HackerNewsToolkit, PlaywrightPageTitleTool }   from 'confused-ai/tools/scraping';
 import { ShellTool }                                                           from 'confused-ai/tools/shell'; // explicit for security
 
 // Testing

@@ -12,7 +12,7 @@ import {
     MemoryStoreConfig,
 } from './types.js';
 import type { EntityId } from '../core/types.js';
-import { DebugLogger, createDebugLogger } from '../debug-logger.js';
+import { DebugLogger, createDebugLogger } from '../shared/debug-logger.js';
 
 /**
  * Default configuration for in-memory store

@@ -3,7 +3,7 @@
  */
 
 import type { EntityId } from '../core/types.js';
-import type { Message } from '../llm/types.js';
+import type { Message } from '../providers/types.js';
 
 /**
  * Unique session identifier

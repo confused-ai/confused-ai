@@ -64,7 +64,8 @@ console.log(r.text);
 
 ```ts
 import { agent } from 'confused-ai';
-import { KnowledgeEngine, TextLoader, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/knowledge';
+import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'confused-ai/knowledge';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 
 const knowledge = new KnowledgeEngine({
   embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
@@ -72,7 +73,7 @@ const knowledge = new KnowledgeEngine({
 });
 
 // Ingest a document
-await knowledge.ingest({ id: 'readme', content: 'confused-ai is a TypeScript framework...' });
+await knowledge.ingest([{ id: 'readme', content: 'confused-ai is a TypeScript framework...' }]);
 
 const ragAgent = agent({
   model: 'gpt-4o-mini',

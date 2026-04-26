@@ -9,7 +9,7 @@ import { registerListTemplatesCommand } from './commands/list-templates.js';
 import { registerDoctorCommand } from './commands/doctor.js';
 import { registerServeCommand } from './commands/serve-cmd.js';
 import { registerEvalCommand } from './commands/eval-cmd.js';
-import { VERSION } from '../version.js';
+import { VERSION } from '../shared/version.js';
 
 /**
  * Composes the CLI: one `Command` root, subcommands in `commands/`.

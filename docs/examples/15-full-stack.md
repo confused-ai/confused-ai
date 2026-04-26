@@ -37,7 +37,7 @@ my-ai-app/
 ```ts
 // knowledge.ts — RAG setup
 import { KnowledgeEngine, TextLoader, URLLoader } from 'confused-ai/knowledge';
-import { OpenAIEmbeddingProvider } from 'confused-ai/llm';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 import { InMemoryVectorStore } from 'confused-ai/memory';
 import { createStorage } from 'confused-ai/storage';
 import { readdir, readFile } from 'node:fs/promises';

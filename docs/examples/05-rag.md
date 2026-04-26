@@ -32,7 +32,7 @@ Agent answers using YOUR content
 // rag-agent.ts
 import { createAgent } from 'confused-ai';
 import { KnowledgeEngine, TextLoader, URLLoader, JSONLoader } from 'confused-ai/knowledge';
-import { OpenAIEmbeddingProvider } from 'confused-ai/llm';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 import { InMemoryVectorStore } from 'confused-ai/memory';
 
 // ── 1. Set up the embedding provider ──────────────────────────────────────

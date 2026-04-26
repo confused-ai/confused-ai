@@ -62,22 +62,124 @@ orderCount.add(1, { region: 'us-east-1' });
 
 ## Eval / evaluation
 
-Score agent outputs against expected results:
+Score agent outputs against expected results using built-in accuracy scorers:
 
 ```ts
-import { evaluate } from 'confused-ai/observability';
+import { EvalAggregator, ExactMatchAccuracy, LevenshteinAccuracy, wordOverlapF1, rougeLWords } from 'confused-ai/observability';
 
-const results = await evaluate({
-  agent: myAgent,
-  dataset: [
-    { input: 'What is 2+2?', expected: '4' },
-    { input: 'Capital of France?', expected: 'Paris' },
+const aggregator = new EvalAggregator([
+  new ExactMatchAccuracy(),
+  new LevenshteinAccuracy(),
+]);
+
+const results = aggregator.run([
+  { prediction: 'Paris', reference: 'Paris' },
+  { prediction: 'Rome', reference: 'Paris' },
+]);
+
+console.log(results);
+// { exactMatch: 0.5, levenshtein: 0.6, ... }
+
+// Or individual scorers:
+const f1 = wordOverlapF1('TypeScript is great', 'TypeScript is awesome');  // → 0.67
+const rouge = rougeLWords('the cat sat', 'the cat sat on the mat');        // → 0.75
+```
+
+## LLM-as-judge
+
+Use an LLM to score agent outputs with a rubric — ideal for open-ended evaluations where exact-match scorers fall short.
+
+```ts
+import { runLlmAsJudge, createMultiCriteriaJudge, runEvalBatch } from 'confused-ai/observability';
+import { OpenAIProvider } from 'confused-ai/llm';
+
+const llm = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o-mini' });
+
+// Single judgment
+const result = await runLlmAsJudge({
+  llm,
+  rubric: 'Is the response factually accurate and concise?',
+  candidate: 'The Eiffel Tower is in Rome.',
+  reference: 'The Eiffel Tower is in Paris.',
+  maxScore: 10,
+});
+console.log(result.score);     // e.g. 2
+console.log(result.rationale); // 'Incorrect city — the tower is in Paris, not Rome.'
+
+// Multi-criteria judgment
+const judge = createMultiCriteriaJudge({
+  llm,
+  criteria: [
+    { name: 'accuracy', description: 'Factual correctness', weight: 2 },
+    { name: 'clarity',  description: 'Clear and readable prose', weight: 1 },
   ],
-  scorers: ['exact-match', 'semantic-similarity'],
 });
 
-console.log(results.summary);
-// { score: 0.95, passed: 19, failed: 1 }
+const multiResult = await judge.judge({
+  candidate: 'Paris is the capital of France.',
+  reference: 'Paris is the capital of France.',
+});
+console.log(multiResult.totalScore); // weighted aggregate
+
+// Batch eval
+const batchResults = await runEvalBatch({
+  llm,
+  cases: [
+    { input: 'Capital of France?', output: 'Paris', reference: 'Paris' },
+    { input: 'Capital of Germany?', output: 'Munich', reference: 'Berlin' },
+  ],
+  rubric: 'Is the answer correct?',
+});
+console.log(batchResults.summary); // { pass: 1, fail: 1, avgScore: 5.5 }
+```
+
+Built-in criteria presets: `RAG_CRITERIA` (faithfulness, relevance, completeness) and `AGENT_CRITERIA` (task completion, efficiency, safety).
+
+## External trace ingestion (Langfuse / LangSmith)
+
+Send traces and run data to Langfuse or LangSmith without requiring their full SDK.
+
+### Langfuse
+
+```ts
+import { sendLangfuseBatch } from 'confused-ai/observability';
+import type { LangfuseIngestClientConfig } from 'confused-ai/observability';
+
+const config: LangfuseIngestClientConfig = {
+  publicKey: process.env.LANGFUSE_PUBLIC_KEY!,
+  secretKey: process.env.LANGFUSE_SECRET_KEY!,
+  // baseUrl: 'https://cloud.langfuse.com', // default
+};
+
+// Batch ingest trace events — call this in your afterRun hook
+await sendLangfuseBatch(config, [
+  {
+    type: 'trace-create',
+    body: { id: runId, name: 'agent.run', input: prompt, output: responseText },
+  },
+]);
+```
+
+### LangSmith
+
+```ts
+import { sendLangSmithRunBatch } from 'confused-ai/observability';
+import type { LangSmithRunPayload } from 'confused-ai/observability';
+
+const run: LangSmithRunPayload = {
+  id: runId,
+  name: 'agent.run',
+  run_type: 'chain',
+  inputs: { prompt },
+  outputs: { text: responseText },
+  start_time: startTs,
+  end_time: Date.now(),
+};
+
+await sendLangSmithRunBatch(
+  { apiKey: process.env.LANGCHAIN_API_KEY! },
+  [run]
+);
 ```
 
 ## Lifecycle hooks for custom observability

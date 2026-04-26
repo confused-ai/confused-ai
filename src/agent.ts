@@ -5,12 +5,12 @@
  */
 
 import type { SessionStore } from './session/types.js';
-import type { Tool, ToolRegistry } from './tools/types.js';
+import type { Tool, ToolRegistry } from './tools/core/types.js';
 import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions } from './create-agent.js';
 import { createAgent } from './create-agent.js';
 import { InMemorySessionStore } from './session/index.js';
-import { HttpClientTool } from './tools/http-tool.js';
-import { BrowserTool } from './tools/browser-tool.js';
+import { HttpClientTool } from './tools/utils/http.js';
+import { BrowserTool } from './tools/utils/browser.js';
 import type { AgenticRunResult } from './agentic/types.js';
 
 /** Options for the {@link Agent} class. */

@@ -93,6 +93,31 @@ const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
   }));
 ```
 
+### Redis rate limiter (distributed)
+
+`RedisRateLimiter` — fixed-window rate limiting across multiple server instances. Requires `ioredis`.
+
+```ts
+import Redis from 'ioredis';
+import { RedisRateLimiter } from 'confused-ai/production';
+
+const redis = new Redis(process.env.REDIS_URL!);
+
+const limiter = new RedisRateLimiter({
+  client: redis,
+  windowMs: 60_000,     // 1 minute window
+  maxRequests: 100,     // per key per window
+});
+
+// Use in your route handler or middleware:
+const key = `user:${userId}`;
+const result = await limiter.check(key);
+if (!result.allowed) {
+  res.status(429).json({ error: 'Rate limit exceeded', retryAfter: result.retryAfterMs });
+  return;
+}
+```
+
 ## Health checks
 
 Monitor agent health and readiness:
@@ -319,6 +344,82 @@ class RedisCheckpointStore implements AgentCheckpointStore {
 
 ---
 
+## HTTP runtime authentication
+
+`createHttpService` supports built-in authentication strategies via the `auth` option. When omitted, the server runs without auth (dev mode only).
+
+```ts
+import { createHttpService, listenService } from 'confused-ai/runtime';
+import { apiKeyAuth, bearerAuth } from 'confused-ai/runtime';
+
+// API key (header: x-api-key)
+const service = createHttpService({
+  agents: { assistant },
+  auth: apiKeyAuth(['sk-prod-abc', 'sk-staging-xyz']),
+  // or shorthand:
+  // auth: { strategy: 'api-key', keys: ['sk-prod-abc'] },
+  maxBodyBytes: 512_000, // 512 KB request body limit (default: 1 MB)
+});
+
+await listenService(service, 8080);
+```
+
+```ts
+// Bearer JWT / custom token validation
+import { bearerAuth } from 'confused-ai/runtime';
+
+const service = createHttpService({
+  agents: { assistant },
+  auth: bearerAuth(async (token) => {
+    const user = await verifyJwt(token);
+    return user ? { userId: user.sub, tenantId: user.org } : null;
+  }),
+});
+```
+
+```ts
+// Basic auth (username:password)
+import { createHttpService } from 'confused-ai/runtime';
+
+const service = createHttpService({
+  agents: { assistant },
+  auth: {
+    strategy: 'basic',
+    users: { admin: process.env.ADMIN_PASSWORD! },
+  },
+});
+```
+
+**JWT RBAC** — for role-based access control using HS256 JWTs:
+
+```ts
+import { jwtAuth, hasRole } from 'confused-ai/runtime';
+
+const service = createHttpService({
+  agents: { assistant },
+  auth: jwtAuth({
+    secret: process.env.JWT_SECRET!,
+    required: true,
+  }),
+});
+
+// In a hook or custom middleware, check roles:
+const auth = ctx.auth; // { userId, roles: ['admin', 'user'] }
+if (!hasRole(auth, 'admin')) throw new Error('Forbidden');
+```
+
+### `CreateHttpServiceOptions` reference
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `agents` | `Record<string, Agent>` | required | Named agents to expose |
+| `auth` | `AuthMiddlewareOptions` | — | Auth strategy; omit for dev/no-auth |
+| `maxBodyBytes` | `number` | `1_048_576` | Max request body size (bytes); returns 413 on exceed |
+| `cors` | `string` | — | `Access-Control-Allow-Origin` header |
+| `tracing` | `boolean` | `false` | In-memory request audit log |
+
+---
+
 ## Idempotency
 
 Prevent duplicate side-effects when clients retry failed HTTP requests. Pass an `X-Idempotency-Key` header and the same response is returned on replay — the agent does **not** re-execute.
@@ -418,18 +519,23 @@ entries.forEach((e) => {
 For distributed deployments where multiple processes share the same rate limits:
 
 ```ts
+import Redis from 'ioredis';
 import { RedisRateLimiter } from 'confused-ai/production';
 
+const redis = new Redis(process.env.REDIS_URL!);
+
 const limiter = new RedisRateLimiter({
-  redisUrl: process.env.REDIS_URL!,
+  redis,
+  name: 'api',          // logical limiter name (part of Redis key)
   maxRequests: 100,
-  windowMs: 60_000,   // fixed window — 100 req/min
-  keyPrefix: 'rl:api',
+  windowSeconds: 60,    // fixed window — 100 req/min
 });
 
-// In request middleware
-const allowed = await limiter.allow('user-42');
-if (!allowed) return res.status(429).json({ error: 'Rate limit exceeded' });
+// Wrap logic in execute() — throws RateLimitError when limit is exceeded
+await limiter.execute(async () => {
+  const result = await myAgent.run(prompt);
+  res.json({ text: result.text });
+});
 ```
 
 Use `RedisRateLimiter` instead of the in-process `RateLimiter` whenever you run multiple server instances.

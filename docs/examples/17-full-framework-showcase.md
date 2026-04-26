@@ -153,7 +153,7 @@ const out = await wf.task('analyst', analyst).sequential().execute({ question: '
 ```ts
 import { KnowledgeEngine, splitText } from 'confused-ai/knowledge';
 import { InMemoryVectorStore } from 'confused-ai/memory';
-import { OpenAIEmbeddingProvider } from 'confused-ai/llm';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 
 const chunks = splitText('Return policy: 30 days. Receipt required.', { chunkSize: 40, chunkOverlap: 8 });
 

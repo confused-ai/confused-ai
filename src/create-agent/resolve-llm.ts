@@ -1,4 +1,4 @@
-import type { LLMProvider } from '../llm/types.js';
+import type { LLMProvider } from '../providers/types.js';
 import {
     OpenAIProvider,
     AnthropicProvider,
@@ -6,8 +6,8 @@ import {
     resolveModelString,
     isModelString,
     getProviderFromModelString,
-} from '../llm/index.js';
-import { PROVIDER } from '../llm/model-resolver.js';
+} from '../providers/index.js';
+import { PROVIDER } from '../providers/model-resolver.js';
 import type { CreateAgentOptions } from './types.js';
 
 export const ENV_API_KEY = 'OPENAI_API_KEY';

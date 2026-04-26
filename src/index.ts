@@ -4,8 +4,8 @@
  * @packageDocumentation
  */
 
-import { recordFrameworkStartup, isTelemetryEnabled } from './telemetry.js';
-import { VERSION } from './version.js';
+import { recordFrameworkStartup, isTelemetryEnabled } from './shared/telemetry.js';
+import { VERSION } from './shared/version.js';
 
 export { isTelemetryEnabled, recordFrameworkStartup, VERSION };
 
@@ -37,7 +37,7 @@ export * from './orchestration/index.js';
 export * from './observability/index.js';
 
 // LLM provider abstraction (optional peer: openai for OpenAIProvider)
-export * from './llm/index.js';
+export * from './providers/index.js';
 
 // Agentic loop (ReAct-style)
 export * from './agentic/index.js';
@@ -71,7 +71,7 @@ export * from './config/index.js';
 export * from './production/index.js';
 
 // Structured errors for production (ErrorCode, AgentError, LLMError, ToolExecutionError, etc.)
-export * from './errors.js';
+export * from './shared/errors.js';
 
 // Testing utilities (mock providers, fixtures)
 export * from './testing/index.js';

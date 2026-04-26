@@ -3,7 +3,7 @@
  */
 
 import type { MemoryStore } from '../memory/types.js';
-import type { ToolRegistry } from '../tools/types.js';
+import type { ToolRegistry } from '../tools/core/types.js';
 import type { Planner } from '../planner/types.js';
 
 /**

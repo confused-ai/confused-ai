@@ -4,8 +4,8 @@
  * Allows testing agents without consuming API calls
  */
 
-import type { LLMProvider } from '../llm/types.js';
-import type { Message, GenerateResult, GenerateOptions, StreamOptions } from '../llm/types.js';
+import type { LLMProvider } from '../providers/types.js';
+import type { Message, GenerateResult, GenerateOptions, StreamOptions } from '../providers/types.js';
 
 export interface MockLLMOptions {
     /** Response to return for any prompt */

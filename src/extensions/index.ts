@@ -7,8 +7,8 @@
 
 import type { SessionStore } from '../session/types.js';
 import type { MemoryStore } from '../memory/types.js';
-import type { Tool, ToolRegistry, ToolMiddleware } from '../tools/types.js';
-import type { LLMProvider } from '../llm/types.js';
+import type { Tool, ToolRegistry, ToolMiddleware } from '../tools/core/types.js';
+import type { LLMProvider } from '../providers/types.js';
 import type { GuardrailEngine } from '../guardrails/types.js';
 import { Agent, AgentState } from '../core/types.js';
 import type { AgentInput, AgentOutput, AgentContext } from '../core/types.js';
@@ -17,7 +17,7 @@ import type { AgenticRunResult } from '../agentic/types.js';
 
 // Re-export extension types and tool provider for convenience
 export type { SessionStore, MemoryStore, Tool, ToolRegistry, ToolMiddleware, LLMProvider, GuardrailEngine };
-export { toToolRegistry, type ToolProvider } from '../tools/registry.js';
+export { toToolRegistry, type ToolProvider } from '../tools/core/registry.js';
 
 /**
  * Create a tool middleware that logs tool calls and results (easy cross-tool integration).
