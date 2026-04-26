@@ -255,3 +255,272 @@ console.log(result.rounds);     // per-agent exchange history
 |-------|--------|-------|
 | `InMemoryEventStore` | `fluxion/graph` | Dev/test — events lost on restart |
 | `SqliteEventStore` | `fluxion/graph` | Durable default; `SqliteEventStore.create(path)` |
+
+---
+
+## `DurableExecutor` — persistent durable runs
+
+`DurableExecutor` wraps `DAGEngine` and **automatically persists every event** to an `EventStore`. On failure or restart, call `.resume(executionId)` to skip completed nodes and continue exactly where execution stopped.
+
+```ts
+import { createGraph, DurableExecutor, SqliteEventStore, NodeKind } from 'fluxion/graph';
+
+const graph = createGraph('long-job')
+  .addNode({ id: 'step-a', kind: NodeKind.TASK, execute: async () => ({ a: 1 }) })
+  .addNode({ id: 'step-b', kind: NodeKind.TASK, execute: async (ctx) => ({ b: (ctx.state['step-a'] as { a: number }).a + 1 }) })
+  .chain('step-a', 'step-b')
+  .build();
+
+const store    = SqliteEventStore.create('./graph-events.db');
+const executor = new DurableExecutor(graph, store);
+
+// First run
+const result = await executor.run({ variables: { input: 'hello' } });
+console.log(result.executionId); // save this for resume
+console.log(result.status);      // 'completed' | 'failed'
+
+// If the process crashes mid-run and restarts:
+const resumed = await executor.resume(result.executionId);
+// Completed nodes are skipped; execution picks up from the last failed/pending node
+```
+
+### `DurableExecutor` API
+
+```ts
+class DurableExecutor {
+  constructor(graph: GraphDef, eventStore: EventStore);
+
+  // Start a fresh durable execution
+  run(options?: Omit<ExecuteOptions, 'eventStore' | 'resumeFrom'>): Promise<ExecutionResult>;
+
+  // Resume a previous execution by ID — replays events and skips completed nodes
+  resume(
+    executionId: ExecutionId,
+    options?: Omit<ExecuteOptions, 'eventStore' | 'resumeFrom' | 'executionId'>,
+  ): Promise<ExecutionResult>;
+}
+```
+
+`ExecuteOptions` fields available on both `run()` and `resume()`:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `variables` | `Record<string, unknown>` | Initial state variables |
+| `maxConcurrency` | `number` | Max concurrent nodes |
+| `signal` | `AbortSignal` | Cancel execution |
+| `plugins` | `GraphPlugin[]` | Additional plugins for this run |
+| `checkpointInterval` | `number` | Persist checkpoint every N events |
+| `loggerFactory` | `(nodeId, name) => NodeLogger` | Per-node logger factory |
+
+`ExecutionResult` fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `executionId` | `ExecutionId` | Stable ID — pass to `.resume()` |
+| `status` | `ExecutionStatus` | `'completed' \| 'failed' \| 'running' \| ...` |
+| `state` | `GraphState` | Final state of all nodes |
+| `events` | `GraphEvent[]` | All events emitted during this run |
+| `durationMs` | `number` | Wall-clock duration |
+| `error` | `string \| undefined` | Set when `status === 'failed'` |
+
+---
+
+## Wave-based scheduling with `computeWaves()`
+
+`computeWaves(graph)` performs a topological sort and groups nodes into **execution waves** — sets of nodes with no dependencies on each other that can run in parallel. Useful for analysing graphs or implementing custom schedulers.
+
+```ts
+import { createGraph, computeWaves, NodeKind } from 'fluxion/graph';
+
+const graph = createGraph('pipeline')
+  .addNode({ id: 'a', kind: NodeKind.TASK, execute: async () => ({}) })
+  .addNode({ id: 'b', kind: NodeKind.TASK, execute: async () => ({}) })
+  .addNode({ id: 'c', kind: NodeKind.TASK, execute: async () => ({}) })
+  .addNode({ id: 'd', kind: NodeKind.TASK, execute: async () => ({}) })
+  .chain('a', 'c')
+  .chain('b', 'c')
+  .chain('c', 'd')
+  .build();
+
+const waves = computeWaves(graph);
+// waves[0] → ['a', 'b']  — can run in parallel (no deps)
+// waves[1] → ['c']       — depends on a and b
+// waves[2] → ['d']       — depends on c
+```
+
+```ts
+// Signature
+function computeWaves(graph: GraphDef): NodeId[][];
+```
+
+---
+
+## Concurrency control with `BackpressureController`
+
+`BackpressureController` is a semaphore that limits how many graph nodes (or any async operations) can run concurrently. It enqueues excess work instead of dropping it.
+
+```ts
+import { BackpressureController } from 'fluxion/graph';
+
+const bp = new BackpressureController(4); // max 4 concurrent
+
+async function runNode(id: string) {
+  await bp.acquire();  // blocks if 4 are already in-flight
+  try {
+    await doWork(id);
+  } finally {
+    bp.release();
+  }
+}
+
+console.log(bp.inflight);    // currently running
+console.log(bp.queueDepth);  // waiting to acquire
+```
+
+```ts
+class BackpressureController {
+  constructor(maxConcurrency: number);
+  acquire(): Promise<void>;   // waits until a slot is free
+  release(): void;            // frees a slot
+  get inflight(): number;     // currently executing
+  get queueDepth(): number;   // waiting in queue
+  get maxConcurrency(): number;
+}
+```
+
+`BackpressureController` is used internally by `DAGEngine` (controlled via `ExecuteOptions.maxConcurrency`) and by `GraphWorker` (via `workerOptions.concurrency`).
+
+---
+
+## Testing graphs
+
+`fluxion/testing` exports graph-specific test utilities:
+
+```ts
+import {
+  createTestRunner,
+  createMockLLMProvider,
+  expectEventSequence,
+  assertExactEventSequence,
+} from 'fluxion/testing';
+import { GraphEventType } from 'fluxion/graph';
+
+const runner = createTestRunner({ maxConcurrency: 2 });
+
+const result = await runner.run(graph, { url: 'https://example.com' });
+
+// result is a GraphTestResult — extends ExecutionResult with extra fields
+console.log(result.status);       // 'completed'
+console.log(result.eventTypes);   // [GraphEventType.EXECUTION_STARTED, GraphEventType.NODE_STARTED, ...]
+console.log(result.storedEvents); // all events written to the in-memory store
+console.log(result.eventStore);   // the InMemoryEventStore used for this run
+
+// Assert that specific event types appeared in order (allows gaps)
+expectEventSequence(result.eventTypes, [
+  GraphEventType.EXECUTION_STARTED,
+  GraphEventType.NODE_COMPLETED,
+  GraphEventType.EXECUTION_COMPLETED,
+]);
+
+// Assert exact event sequence (no extra events allowed)
+assertExactEventSequence(result.eventTypes, [
+  GraphEventType.EXECUTION_STARTED,
+  GraphEventType.NODE_STARTED,
+  GraphEventType.NODE_COMPLETED,
+  GraphEventType.EXECUTION_COMPLETED,
+]);
+```
+
+### Mock LLM provider for agent nodes
+
+```ts
+import { createMockLLMProvider } from 'fluxion/testing';
+
+const llm = createMockLLMProvider('test-llm', [
+  { content: 'First response' },
+  { content: 'Second response', toolCalls: [{ id: 'tc1', name: 'search', arguments: { q: 'test' } }] },
+]);
+
+// Responses are consumed in order — useful for deterministic graph tests
+```
+
+### Test utilities reference
+
+| Export | Description |
+|--------|-------------|
+| `createTestRunner(opts?)` | Returns a `TestRunner` with an isolated `InMemoryEventStore` |
+| `createMockLLMProvider(name, responses)` | `LLMProvider` that replays a pre-set response queue |
+| `expectEventSequence(actual, expected)` | Asserts event types appear in order (allows gaps) |
+| `assertExactEventSequence(actual, expected)` | Asserts exact event type sequence (no extras) |
+
+---
+
+## CLI commands for graph runs
+
+After executing a graph with `DurableExecutor` (using a `SqliteEventStore`), use the built-in CLI commands to inspect, replay, export, and compare runs:
+
+### `fluxion replay`
+
+Stream the event timeline for a past run in chronological order:
+
+```bash
+fluxion replay --run-id <executionId> [--db ./graph-events.db] [--json] [--from <seq>]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--run-id` | required | Execution ID to replay |
+| `--db` | `./agent.db` | Path to the SQLite event store |
+| `--json` | `false` | Output raw events as JSON |
+| `--from` | `0` | Start from this sequence number |
+
+### `fluxion inspect`
+
+Print a per-node execution summary — status, retry count, duration, and errors:
+
+```bash
+fluxion inspect --run-id <executionId> [--db ./graph-events.db]
+```
+
+```
+Run:    exec-abc-123
+Status: COMPLETED
+Events: 12  (2026-04-27T10:00:00Z → 2026-04-27T10:00:03Z)
+
+NODE ID          STATUS       TRIES  DURATION  ERROR
+─────────────────────────────────────────────────────
+✓ fetch          completed    1      245ms
+✗ analyze        failed       3      1200ms    Connection timeout
+○ publish        skipped      0      -
+```
+
+### `fluxion export`
+
+Export all events for a run to a JSON file or stdout:
+
+```bash
+fluxion export --run-id <executionId> [--db ./graph-events.db] [--out events.json] [--pretty]
+```
+
+### `fluxion diff`
+
+Compare two runs node-by-node — useful for regression analysis after code changes:
+
+```bash
+fluxion diff --run-id-a <baselineId> --run-id-b <newId> [--db ./graph-events.db]
+```
+
+```
+Run A: exec-abc  (10 events, 245ms)
+Run B: exec-xyz  (11 events, 420ms)
+Duration delta: +175ms
+
+NODE ID    RUN A STATUS  RUN B STATUS  DIFF  DUR A   DUR B   Δ DUR
+───────────────────────────────────────────────────────────────────
+! analyze  completed     failed        ≠     245ms   420ms   +175ms
+  fetch    completed     completed     =     50ms    48ms    -2ms
+
+1 node compared — 1 divergent
+```
+
+Exits with code `1` if any nodes diverged (CI-friendly).

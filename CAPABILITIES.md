@@ -47,6 +47,24 @@ Use this as a checklist of what the framework can do and which import path to st
 | Planners & plans | `fluxion/planner` |
 | Execution graphs / workers | `fluxion/execution` |
 
+## Graph Engine
+
+| Capability | Where |
+|------------|--------|
+| DAG graph execution | `createGraph`, `DAGEngine` — `fluxion/graph` |
+| Durable execution + crash resume | `DurableExecutor` — `fluxion/graph` — `.run()` + `.resume(executionId)` with graph-version mismatch detection |
+| Wave-based scheduling | `computeWaves(graph) → NodeId[][]` — `fluxion/graph` |
+| Concurrency control | `BackpressureController(maxConcurrency)` — `fluxion/graph` — `.acquire()/.release()`, `.inflight`, `.queueDepth` |
+| Graph event sourcing | `InMemoryEventStore`, `SqliteEventStore` — `fluxion/graph` |
+| Distributed graph workers | `DistributedEngine`, `InMemoryTaskQueue`, `RedisTaskQueue`, `GraphWorker` — `fluxion/graph` |
+| Multi-agent graph orchestration | `MultiAgentOrchestrator`, `agentNode(id, agent)` — `fluxion/graph` |
+| Graph telemetry plugins | `TelemetryPlugin`, `LoggingPlugin`, `AuditPlugin`, `RateLimitPlugin` — `fluxion/graph` |
+| Graph testing utilities | `createTestRunner`, `createMockLLMProvider`, `expectEventSequence`, `assertExactEventSequence` — `fluxion/testing` |
+| CLI: replay event timeline | `fluxion replay --run-id <id> [--db path] [--json] [--from seq]` |
+| CLI: per-node inspection | `fluxion inspect --run-id <id> [--db path]` |
+| CLI: export events to JSON | `fluxion export --run-id <id> [--db path] [--out file] [--pretty]` |
+| CLI: diff two runs | `fluxion diff --run-id-a <id> --run-id-b <id> [--db path]` — exits `1` if divergent |
+
 ## Orchestration
 
 | Capability | Where |

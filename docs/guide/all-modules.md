@@ -726,6 +726,91 @@ const moderation = createOpenAiModerationRule({
 
 ---
 
+## Graph Engine
+
+Execute complex, stateful multi-agent workflows as a **directed acyclic graph (DAG)**. Supports topological scheduling, parallel execution, event sourcing, durable resume, and distributed workers.
+
+```ts
+import { createGraph, DAGEngine, DurableExecutor, NodeKind, InMemoryEventStore, SqliteEventStore, computeWaves, BackpressureController } from 'fluxion/graph';
+```
+
+### Building and running a graph
+
+```ts
+import { createGraph, DAGEngine, NodeKind } from 'fluxion/graph';
+
+const graph = createGraph('my-pipeline')
+  .addNode({ id: 'fetch',   kind: NodeKind.TASK, execute: async (ctx) => ({ data: 'hello' }) })
+  .addNode({ id: 'process', kind: NodeKind.TASK, execute: async (ctx) => ({ result: (ctx.state['fetch'] as { data: string }).data.toUpperCase() }) })
+  .chain('fetch', 'process')
+  .build();
+
+const engine = new DAGEngine(graph, new InMemoryEventStore());
+const result = await engine.execute();
+```
+
+### `fluxion/graph` exports
+
+| Export | Description |
+|--------|-------------|
+| `createGraph(id)` | Fluent `GraphBuilder` — add nodes, edges, then `.build()` |
+| `DAGEngine` | Core executor — `new DAGEngine(graph, eventStore)`, `.execute(options?)` |
+| `DurableExecutor` | Persistence wrapper — `.run()` + `.resume(executionId)` |
+| `replayState` | Replay stored events to reconstruct graph state |
+| `NodeKind` | Enum: `TASK`, `AGENT`, `DECISION`, `SUBGRAPH`, `PARALLEL`, `JOIN` |
+| `InMemoryEventStore` | Dev/test event store — events lost on restart |
+| `SqliteEventStore` | Durable event store — `SqliteEventStore.create(path)` |
+| `computeWaves(graph)` | Topological level assignment → `NodeId[][]` |
+| `BackpressureController` | Semaphore for concurrency control |
+| `DistributedEngine` | DAGEngine with task-queue dispatch for distributed workers |
+| `InMemoryTaskQueue` | In-process task queue for `DistributedEngine` |
+| `RedisTaskQueue` | Redis-backed task queue (requires ioredis peer dep) |
+| `GraphWorker` | Worker process that polls a task queue and executes nodes |
+| `MultiAgentOrchestrator` | Orchestrates an agent graph using `agentNode` definitions |
+| `agentNode(id, agent, opts?)` | Creates a graph node backed by a `FluxionAgent` |
+| `TelemetryPlugin` | Emits OTLP spans per node execution |
+| `LoggingPlugin` | Logs node lifecycle events |
+| `AuditPlugin` | Writes per-node entries to an `AuditStore` |
+| `RateLimitPlugin` | Applies per-node rate limiting via a `RateLimiter` |
+
+### Durable execution
+
+```ts
+import { DurableExecutor, SqliteEventStore } from 'fluxion/graph';
+
+const store    = SqliteEventStore.create('./graph-events.db');
+const executor = new DurableExecutor(graph, store);
+
+const result = await executor.run({ variables: { input: 'hello' } });
+// On restart / failure:
+const resumed = await executor.resume(result.executionId);
+```
+
+### Wave scheduling and backpressure
+
+```ts
+import { computeWaves, BackpressureController } from 'fluxion/graph';
+
+const waves = computeWaves(graph); // [['a','b'], ['c'], ['d']]
+
+const bp = new BackpressureController(4);
+await bp.acquire();   // waits if 4 already in-flight
+// ... do work ...
+bp.release();
+console.log(bp.inflight, bp.queueDepth);
+```
+
+### CLI commands for graph runs
+
+| Command | Description |
+|---------|-------------|
+| `fluxion replay --run-id <id> [--db path] [--json] [--from seq]` | Stream event timeline for a past run |
+| `fluxion inspect --run-id <id> [--db path]` | Per-node execution summary (status, retries, duration) |
+| `fluxion export --run-id <id> [--db path] [--out file] [--pretty]` | Export events to JSON |
+| `fluxion diff --run-id-a <id> --run-id-b <id> [--db path]` | Compare two runs node-by-node; exits `1` if divergent |
+
+---
+
 ## Observability
 
 ### Console logger (dev)
@@ -1515,6 +1600,44 @@ assert.equal(result.text, '4');
 
 // Inspect calls
 console.log(mockLlm.getCallCount()); // 1
+```
+
+### Graph testing utilities
+
+Test graphs without hitting real LLMs or external services:
+
+```ts
+import {
+  createTestRunner,
+  createMockLLMProvider,
+  expectEventSequence,
+  assertExactEventSequence,
+} from 'fluxion/testing';
+import { GraphEventType } from 'fluxion/graph';
+
+const runner = createTestRunner({ maxConcurrency: 2 });
+const result = await runner.run(graph, { input: 'hello' });
+
+// result.eventTypes — ordered list of GraphEventType values emitted
+expectEventSequence(result.eventTypes, [
+  GraphEventType.EXECUTION_STARTED,
+  GraphEventType.NODE_COMPLETED,
+  GraphEventType.EXECUTION_COMPLETED,
+]);
+
+// Exact matching (no extra events allowed)
+assertExactEventSequence(result.eventTypes, [
+  GraphEventType.EXECUTION_STARTED,
+  GraphEventType.NODE_STARTED,
+  GraphEventType.NODE_COMPLETED,
+  GraphEventType.EXECUTION_COMPLETED,
+]);
+
+// Mock LLM for agent nodes
+const llm = createMockLLMProvider('mock', [
+  { content: 'Response 1' },
+  { content: 'Response 2', toolCalls: [{ id: 't1', name: 'search', arguments: { q: 'foo' } }] },
+]);
 ```
 
 ---

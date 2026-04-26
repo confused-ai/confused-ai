@@ -29,6 +29,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `extractTraceContext()` imported and called in `server.ts` from incoming request headers (`traceparent`, `tracestate`)
 - `traceId` from the incoming trace is propagated in JSON responses and SSE event streams
 
+#### Graph Engine Production Hardening
+- `DurableExecutor` class — wraps `DAGEngine` + `EventStore` for fully durable execution; `.run()` starts a new execution, `.resume(executionId)` replays all events and continues from the last incomplete node; detects graph version mismatch on resume
+- `computeWaves(graph: GraphDef): NodeId[][]` — topological level assignment returning groups of nodes that can execute in parallel, used internally by the scheduler and available for custom scheduling
+- `BackpressureController(maxConcurrency)` — semaphore for concurrency control; `.acquire()` waits for a free slot, `.release()` frees one, `.inflight` and `.queueDepth` expose current state
+- Graph testing utilities exported from `fluxion/testing`: `createTestRunner(opts?)`, `createMockLLMProvider(name, responses)`, `expectEventSequence(actual, expected)` (subset match), `assertExactEventSequence(actual, expected)` (strict match)
+- 4 new CLI commands: `fluxion replay --run-id <id>` (stream events), `fluxion inspect --run-id <id>` (per-node summary), `fluxion export --run-id <id> [--out file]` (dump to JSON), `fluxion diff --run-id-a <id> --run-id-b <id>` (compare two runs; exits `1` if divergent)
+- Benchmark suite under `benchmarks/` with 4 files targeting: executor (<1ms), event-store (>5 k writes/sec), replay (>10 k events/sec), graph-compile (<5ms); run via `bun run bench`
+- ESLint layer-boundaries config (`eslint.config.js`) using `eslint-plugin-boundaries` to block illegal cross-layer imports
+
 ---
 
 ## [Unreleased]

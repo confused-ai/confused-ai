@@ -140,6 +140,7 @@ Most AI agent frameworks stop at the prototype. fluxion ships production infrast
 | Audit log (SOC 2 / HIPAA) | ✅ | ❌ | ❌ | ❌ |
 | Idempotency keys | ✅ | ❌ | ❌ | ❌ |
 | Intelligent LLM router | ✅ | ❌ | ❌ | ❌ |
+| DAG graph engine + durable execution | ✅ | ⚠️ | ❌ | ❌ |
 | Voice TTS + STT | ✅ | ⚠️ | ❌ | ❌ |
 | TypeScript-first | ✅ | ✅ | ✅ | ✅ |
 
@@ -340,6 +341,32 @@ const agent = createAgent({
 
 ---
 
+## Graph Engine — Durable DAG Execution
+
+Build complex multi-agent workflows as a directed acyclic graph (DAG). Nodes run in topological order, independent nodes run in parallel, and every event is persisted to an event store for deterministic replay and crash recovery.
+
+```ts
+import { createGraph, DurableExecutor, SqliteEventStore, NodeKind } from 'fluxion/graph';
+
+const graph = createGraph('research-pipeline')
+  .addNode({ id: 'search',    kind: NodeKind.TASK, execute: async (ctx) => ({ results: await search(ctx.state.query as string) }) })
+  .addNode({ id: 'summarise', kind: NodeKind.TASK, execute: async (ctx) => ({ summary: await summarise((ctx.state['search'] as { results: string[] }).results) }) })
+  .chain('search', 'summarise')
+  .build();
+
+const store    = SqliteEventStore.create('./runs.db');
+const executor = new DurableExecutor(graph, store);
+
+const result = await executor.run({ variables: { query: 'latest AI research' } });
+
+// If the process crashes and restarts, resume where it left off:
+const resumed = await executor.resume(result.executionId);
+```
+
+Includes: `computeWaves()` for wave-based scheduling, `BackpressureController` for concurrency limiting, `DistributedEngine` + `GraphWorker` for multi-process execution, and a full OTEL telemetry plugin.
+
+---
+
 ## Production Hardening
 
 ### Circuit Breakers & Rate Limits
@@ -501,7 +528,8 @@ Includes: `Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`, `k8s.ya
 | `fluxion/runtime` | HTTP service, OpenAPI, WebSocket, admin API |
 | `fluxion/adapters` | 20-category adapter system |
 | `fluxion/plugins` | Plugin registry + built-in plugins |
-| `fluxion/testing` | MockLLMProvider, MockToolRegistry, fixtures |
+| `fluxion/graph` | DAGEngine, DurableExecutor, GraphBuilder, event stores, distributed workers |
+| `fluxion/testing` | MockLLMProvider, MockToolRegistry, fixtures, graph test runner |
 | `fluxion/contracts` | Shared interfaces — zero runtime code |
 
 ---
@@ -531,7 +559,23 @@ const { text } = await agent.run({ prompt: 'What is the answer?' });
 expect(text).toBe('The answer is 42');
 ```
 
-99 passing tests covering circuit breakers, rate limiters, JWT RBAC, LLM caching, guardrails, and more. See [`/tests`](./tests/).
+### Graph testing utilities
+
+```ts
+import { createTestRunner, createMockLLMProvider, expectEventSequence } from 'fluxion/testing';
+import { GraphEventType } from 'fluxion/graph';
+
+const runner = createTestRunner();
+const result = await runner.run(myGraph);
+
+// assert event sequence (allows gaps)
+expectEventSequence(result.eventTypes, [
+  GraphEventType.EXECUTION_STARTED,
+  GraphEventType.EXECUTION_COMPLETED,
+]);
+```
+
+232 passing tests covering circuit breakers, rate limiters, JWT RBAC, LLM caching, guardrails, graph execution, and more. See [`/tests`](./tests/).
 
 ---
 
@@ -539,6 +583,24 @@ expect(text).toBe('The answer is 42');
 
 ```bash
 npx fluxion --help   # after npm install or npm run build
+```
+
+### Graph run debugging
+
+After executing a graph with `DurableExecutor` (backed by `SqliteEventStore`), use the built-in CLI to inspect, replay, export, and diff past runs:
+
+```bash
+# Replay event timeline for a run
+fluxion replay --run-id <executionId> --db ./graph-events.db
+
+# Per-node summary (status, retries, duration, errors)
+fluxion inspect --run-id <executionId>
+
+# Export all events to JSON
+fluxion export --run-id <executionId> --out events.json --pretty
+
+# Compare two runs — exits 1 if any nodes diverged (CI-friendly)
+fluxion diff --run-id-a <baseline> --run-id-b <new>
 ```
 
 ---
