@@ -1,34 +1,133 @@
 <div align="center">
+  <img src="docs/public/logo.svg" alt="confused-ai logo" width="96" />
+  <h1>confused-ai</h1>
+  <p><strong>TypeScript AI Agent Framework — Build Production-Grade LLM Agents in Minutes</strong></p>
+  <p>
+    ReAct-loop agents · 50+ built-in tools · Multi-agent orchestration · RAG · MCP · Circuit breakers · Budget caps · HITL · OTLP tracing
+  </p>
 
-<img src="docs/public/logo.svg" alt="confused-ai" width="80" height="80" />
+  [![npm version](https://img.shields.io/npm/v/confused-ai?color=8b5cf6&logo=npm&label=confused-ai)](https://www.npmjs.com/package/confused-ai)
+  [![npm downloads](https://img.shields.io/npm/dm/confused-ai?color=22d3ee&logo=npm)](https://www.npmjs.com/package/confused-ai)
+  [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e.svg)](./LICENSE)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org/)
+  [![Tests](https://img.shields.io/badge/tests-99%20passing-success)](./tests/)
+  [![Docs](https://img.shields.io/badge/docs-vitepress-8b5cf6?logo=vitepress)](https://rvuyyuru2.github.io/agent-framework/)
+  [![GitHub Stars](https://img.shields.io/github/stars/rvuyyuru2/agent-framework?style=social)](https://github.com/rvuyyuru2/agent-framework)
+  [![GitHub Issues](https://img.shields.io/github/issues/rvuyyuru2/agent-framework?color=f97316)](https://github.com/rvuyyuru2/agent-framework/issues)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/rvuyyuru2/agent-framework/blob/main/CONTRIBUTING.md)
 
-# confused-ai
-
-**Production-Grade AI Agent Framework for TypeScript**
-
-Build, orchestrate, and deploy AI agents with enterprise-level reliability — from hello world to SOC 2-ready production in a single package.
-
-[![npm version](https://img.shields.io/npm/v/confused-ai?color=8b5cf6&label=npm)](https://www.npmjs.com/package/confused-ai)
-[![npm downloads](https://img.shields.io/npm/dm/confused-ai?color=22d3ee)](https://www.npmjs.com/package/confused-ai)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
-[![Tests](https://img.shields.io/badge/tests-99%20passing-success)](./tests/)
-[![Docs](https://img.shields.io/badge/docs-vitepress-8b5cf6)](https://your-org.github.io/agent-framework/)
-
-[**Documentation**](https://your-org.github.io/agent-framework/) · [**Getting Started**](https://your-org.github.io/agent-framework/guide/getting-started) · [**18 Examples**](https://your-org.github.io/agent-framework/examples/) · [**Changelog**](./CHANGELOG.md)
-
+  <p>
+    <a href="https://rvuyyuru2.github.io/agent-framework/"><strong>Documentation</strong></a> ·
+    <a href="https://rvuyyuru2.github.io/agent-framework/guide/getting-started">Getting Started</a> ·
+    <a href="https://rvuyyuru2.github.io/agent-framework/examples/">18 Examples</a> ·
+    <a href="https://www.npmjs.com/package/confused-ai">npm</a> ·
+    <a href="./CHANGELOG.md">Changelog</a>
+  </p>
 </div>
 
 ---
 
-## Why confused-ai?
+> **confused-ai** is a TypeScript-first AI agent framework designed for production. It gives you a complete stack — LLM providers, 50+ tools, multi-agent orchestration, RAG, session memory, guardrails, circuit breakers, budget enforcement, OTLP tracing, and an HTTP runtime — so you never have to stitch libraries together again.
 
-Most AI frameworks give you a prototype. confused-ai gives you a **production system**:
+---
 
-| Capability | confused-ai | LangChain.js | Vercel AI SDK | Mastra |
+## Install
+
+```bash
+npm install confused-ai        # npm
+bun add confused-ai            # bun
+pnpm add confused-ai           # pnpm
+yarn add confused-ai           # yarn
+```
+
+> **Node.js ≥ 18 required.** Set at least one LLM provider key — that's the only required config.
+
+```bash
+# .env
+OPENAI_API_KEY=sk-...           # OpenAI GPT-4o, GPT-4o-mini, o1, o3-mini
+ANTHROPIC_API_KEY=sk-ant-...    # Anthropic Claude 3.5 Sonnet / Haiku
+GOOGLE_API_KEY=...              # Google Gemini 1.5 Pro / Flash
+OPENROUTER_API_KEY=sk-or-...    # OpenRouter — 100+ models in one key
+```
+
+---
+
+## Quickstart — AI Agent in 3 Lines
+
+```ts
+import { agent } from 'confused-ai';
+
+const ai = agent('You are a helpful assistant.');
+const { text } = await ai.run('Summarise the key points of the React 19 release.');
+console.log(text);
+```
+
+No config files. No wiring. No boilerplate. Add tools, sessions, RAG, guardrails, and observability only when you need them.
+
+---
+
+## Table of Contents
+
+- [Install](#install)
+- [Quickstart](#quickstart--ai-agent-in-3-lines)
+- [What You Can Build](#what-you-can-build)
+- [Why confused-ai](#why-confused-ai--feature-comparison)
+- [Creating Agents](#creating-agents)
+- [50+ Built-in Tools](#50-built-in-tools)
+- [Custom Tools](#custom-tools)
+- [Multi-Agent Orchestration](#multi-agent-orchestration)
+- [Intelligent LLM Router](#intelligent-llm-router)
+- [RAG — Retrieval-Augmented Generation](#rag--retrieval-augmented-generation)
+- [Session Memory & Chat History](#session-memory--chat-history)
+- [Guardrails & Content Safety](#guardrails--content-safety)
+- [Production Hardening](#production-hardening)
+  - [Circuit Breakers & Rate Limiting](#circuit-breakers--rate-limiting)
+  - [Budget Enforcement (USD Caps)](#budget-enforcement-usd-caps)
+  - [Human-in-the-Loop (HITL)](#human-in-the-loop-hitl)
+  - [Multi-Tenancy](#multi-tenancy)
+  - [Audit Log & Idempotency](#audit-log--idempotency)
+- [HTTP Runtime & REST API](#http-runtime--rest-api)
+- [Observability — OTLP, Tracing & Metrics](#observability--otlp-tracing--metrics)
+- [MCP — Model Context Protocol](#mcp--model-context-protocol)
+- [Voice — TTS & STT](#voice--tts--stt)
+- [Deployment](#deployment)
+- [All Subpath Packages](#all-subpath-packages)
+- [Supported LLM Providers](#supported-llm-providers)
+- [Testing Utilities](#testing-utilities)
+- [CLI](#cli)
+- [Enterprise Checklist](#enterprise-checklist)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## What You Can Build
+
+confused-ai covers the entire spectrum of LLM-powered applications:
+
+| Use Case | What you use |
+|----------|-------------|
+| **AI chatbot with memory** | `createAgent` + `SessionStore` + `createHttpService` |
+| **Customer support bot** | + `KnowledgeEngine` (RAG) + `GuardrailValidator` |
+| **Code review / coding agent** | + `ShellTool`, `FileReadTool`, `GitHubTool` |
+| **Data analysis pipeline** | + `PostgreSQLTool`, `CSVTool`, `defineTool` |
+| **Multi-agent research team** | `compose()` / `createSupervisor()` / `createSwarm()` |
+| **AI-powered REST API** | `createHttpService` + OpenAPI + SSE streaming |
+| **Cost-controlled LLM gateway** | `LLMRouter` + `budget` caps + `RateLimiter` |
+| **Voice assistant** | `createVoiceProvider` (OpenAI / ElevenLabs TTS + STT) |
+| **MCP-connected agent** | `loadMcpToolsFromUrl` + any MCP server |
+| **Multi-tenant SaaS AI feature** | `createTenantContext` + per-tenant rate limits & budgets |
+
+---
+
+## Why confused-ai — Feature Comparison
+
+Most AI agent frameworks stop at the prototype. confused-ai ships production infrastructure out of the box:
+
+| Capability | **confused-ai** | LangChain.js | Vercel AI SDK | Mastra |
 |---|:---:|:---:|:---:|:---:|
-| Zero-config start | ✅ | ⚠️ | ✅ | ⚠️ |
+| Zero-config quickstart | ✅ | ⚠️ | ✅ | ⚠️ |
 | 50+ built-in tools | ✅ | ✅ | ❌ | ⚠️ |
 | Multi-agent orchestration | ✅ | ✅ | ❌ | ✅ |
 | Circuit breakers | ✅ | ❌ | ❌ | ❌ |
@@ -39,65 +138,9 @@ Most AI frameworks give you a prototype. confused-ai gives you a **production sy
 | Multi-tenancy | ✅ | ❌ | ❌ | ❌ |
 | Audit log (SOC 2 / HIPAA) | ✅ | ❌ | ❌ | ❌ |
 | Idempotency keys | ✅ | ❌ | ❌ | ❌ |
-| LLM router (by task type) | ✅ | ❌ | ❌ | ❌ |
-| Voice (TTS + STT) | ✅ | ⚠️ | ❌ | ❌ |
-
----
-
-## Install
-
-```bash
-npm install confused-ai
-# bun add confused-ai
-# pnpm add confused-ai
-```
-
-Requires Node.js ≥ 18. Set at least one provider key:
-
-```bash
-OPENAI_API_KEY=sk-...           # OpenAI / Azure OpenAI
-ANTHROPIC_API_KEY=sk-ant-...    # Anthropic Claude
-GOOGLE_API_KEY=...              # Google Gemini
-OPENROUTER_API_KEY=sk-or-...    # OpenRouter (100+ models)
-```
-
-## Quick Start
-
-```ts
-import { agent } from 'confused-ai';
-
-const ai = agent('You are a helpful assistant.');
-const { text } = await ai.run('What is 2 + 2?');
-console.log(text); // "4"
-```
-
-That's it. No YAML. No chains. No boilerplate.
-
----
-
-## Table of Contents
-
-- [Install](#install)
-- [Quick Start](#quick-start)
-- [Creating Agents](#creating-agents)
-- [Tools (50+)](#tools-50)
-- [Multi-Agent Orchestration](#multi-agent-orchestration)
-- [LLM Router](#llm-router)
-- [RAG & Knowledge](#rag--knowledge)
-- [Sessions & Memory](#sessions--memory)
-- [Guardrails](#guardrails)
-- [Production Hardening](#production-hardening)
-- [HTTP Runtime](#http-runtime)
-- [Observability & Tracing](#observability--tracing)
-- [MCP Client & Server](#mcp-client--server)
-- [Voice (TTS & STT)](#voice-tts--stt)
-- [Deployment](#deployment)
-- [Subpath Packages](#subpath-packages)
-- [LLM Providers](#llm-providers)
-- [Testing](#testing)
-- [CLI](#cli)
-- [Contributing](#contributing)
-- [License](#license)
+| Intelligent LLM router | ✅ | ❌ | ❌ | ❌ |
+| Voice TTS + STT | ✅ | ⚠️ | ❌ | ❌ |
+| TypeScript-first | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -513,7 +556,7 @@ npx confused-ai --help   # after npm install or npm run build
 ## Contributing
 
 ```bash
-git clone https://github.com/your-org/agent-framework
+git clone https://github.com/rvuyyuru2/agent-framework
 cd agent-framework && bun install
 bun test          # 99 tests
 bun run build     # tsup

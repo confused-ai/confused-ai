@@ -17,7 +17,7 @@ hero:
       link: /examples/
     - theme: alt
       text: GitHub
-      link: https://github.com/your-org/agent-framework
+      link: https://github.com/rvuyyuru2/agent-framework
 
 features:
   - icon: ⚡
@@ -266,7 +266,7 @@ Everything you need to go from prototype to production without switching framewo
 - **Reliability** — Circuit breakers, exponential-backoff retry, Redis distributed rate limiting, graceful shutdown, checkpoint/resume for long-running agents
 - **Compliance** — Persistent audit log (SQLite / pluggable), X-Idempotency-Key deduplication, per-user and per-tenant cost caps, W3C trace-context propagation
 - **Observability** — OTLP tracing (Jaeger, Datadog, Honeycomb), structured logging, eval store, health endpoints, Grafana dashboard template
-- **Deployment** — Docker, docker-compose, Kubernetes, Fly.io, and Render templates in [`/templates`](https://github.com/your-org/agent-framework/tree/main/templates)
+- **Deployment** — Docker, docker-compose, Kubernetes, Fly.io, and Render templates in [`/templates`](https://github.com/rvuyyuru2/agent-framework/tree/main/templates)
 - **Testing** — `MockLLMProvider`, `MockToolRegistry`, fixture helpers, Vitest-compatible test utilities in `confused-ai/testing`
 
 ## Subpath packages
@@ -333,7 +333,7 @@ kubectl set env deployment/agent OPENAI_API_KEY=sk-...
 
 :::
 
-Templates are in [`/templates`](https://github.com/your-org/agent-framework/tree/main/templates) — includes Dockerfile, docker-compose.yml, fly.toml, render.yaml, and k8s.yaml with resource limits, health checks, and rolling update config.
+Templates are in [`/templates`](https://github.com/rvuyyuru2/agent-framework/tree/main/templates) — includes Dockerfile, docker-compose.yml, fly.toml, render.yaml, and k8s.yaml with resource limits, health checks, and rolling update config.
 
 </div>
 

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress';
 
 const base = process.env.BASE ?? '/';
-const SITE_URL = process.env.SITE_URL ?? 'https://your-org.github.io/agent-framework';
+const SITE_URL = process.env.SITE_URL ?? 'https://rvuyyuru2.github.io/agent-framework';
 
 export default defineConfig({
     base,
@@ -68,8 +68,8 @@ export default defineConfig({
                 items: [
                     { text: 'Changelog', link: '/changelog' },
                     { text: 'npm', link: 'https://www.npmjs.com/package/confused-ai' },
-                    { text: 'Releases', link: 'https://github.com/your-org/agent-framework/releases' },
-                    { text: 'Contributing', link: 'https://github.com/your-org/agent-framework/blob/main/CONTRIBUTING.md' },
+                    { text: 'Releases', link: 'https://github.com/rvuyyuru2/agent-framework/releases' },
+                    { text: 'Contributing', link: 'https://github.com/rvuyyuru2/agent-framework/blob/main/CONTRIBUTING.md' },
                 ],
             },
         ],
@@ -197,12 +197,12 @@ export default defineConfig({
         },
 
         socialLinks: [
-            { icon: 'github', link: 'https://github.com/your-org/agent-framework' },
+            { icon: 'github', link: 'https://github.com/rvuyyuru2/agent-framework' },
             { icon: 'npm', link: 'https://www.npmjs.com/package/confused-ai' },
         ],
 
         footer: {
-            message: 'Released under the <a href="https://github.com/your-org/agent-framework/blob/main/LICENSE">MIT License</a>.',
+            message: 'Released under the <a href="https://github.com/rvuyyuru2/agent-framework/blob/main/LICENSE">MIT License</a>.',
             copyright: 'Copyright © 2024-present confused-ai contributors',
         },
 
@@ -214,7 +214,7 @@ export default defineConfig({
         },
 
         editLink: {
-            pattern: 'https://github.com/your-org/agent-framework/edit/main/docs/:path',
+            pattern: 'https://github.com/rvuyyuru2/agent-framework/edit/main/docs/:path',
             text: 'Edit this page on GitHub',
         },
 

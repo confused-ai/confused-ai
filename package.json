@@ -174,19 +174,59 @@
         "pack:inspect": "npm pack --dry-run"
     },
     "keywords": [
+        "ai-agent",
         "agent",
         "ai",
-        "framework",
+        "artificial-intelligence",
         "typescript",
+        "framework",
+        "llm",
+        "openai",
+        "anthropic",
+        "claude",
+        "gemini",
         "multi-agent",
         "orchestration",
-        "llm",
+        "rag",
+        "retrieval-augmented-generation",
         "mcp",
+        "model-context-protocol",
         "workflow",
-        "rag"
+        "chatbot",
+        "react-agent",
+        "langchain-alternative",
+        "production-ai",
+        "circuit-breaker",
+        "human-in-the-loop",
+        "hitl",
+        "guardrails",
+        "observability",
+        "opentelemetry",
+        "multi-tenant",
+        "voice-ai",
+        "embeddings",
+        "vector-store",
+        "budget-enforcement",
+        "llm-router",
+        "agent-framework"
     ],
-    "author": "",
+    "author": {
+        "name": "rvuyyuru2",
+        "url": "https://github.com/rvuyyuru2"
+    },
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rvuyyuru2/agent-framework.git"
+    },
+    "homepage": "https://rvuyyuru2.github.io/agent-framework/",
+    "bugs": {
+        "url": "https://github.com/rvuyyuru2/agent-framework/issues"
+    },
+    "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/rvuyyuru2"
+    },
     "devDependencies": {
         "@aws-sdk/client-bedrock-runtime": "^3.1036.0",
         "@types/bun": "latest",

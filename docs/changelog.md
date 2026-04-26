@@ -10,7 +10,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) · [Semantic Ve
 
 ::: tip Full changelog
 The authoritative `CHANGELOG.md` lives in the repository root.  
-[View on GitHub →](https://github.com/your-org/agent-framework/blob/main/CHANGELOG.md)
+[View on GitHub →](https://github.com/rvuyyuru2/agent-framework/blob/main/CHANGELOG.md)
 :::
 
 ## v0.7.0 — Current
