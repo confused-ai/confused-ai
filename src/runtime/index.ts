@@ -26,3 +26,6 @@ export type { JwtAuthOptions, JwtPayload } from './jwt-rbac.js';
 
 // Admin API
 export type { AdminApiOptions, AdminStats } from './admin.js';
+
+// WebSocket transport
+export { attachWebSocketTransport } from './ws-transport.js';

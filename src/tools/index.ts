@@ -219,6 +219,25 @@ export {
     type TodoistToolConfig,
 } from './search/todoist-tool.js';
 
+// ── Communication (additional) ────────────────────────────────────────────
+export * from './communication/gmail-tool.js';
+
+// ── Data (additional) ─────────────────────────────────────────────────────
+export * from './data/neo4j-tool.js';
+
+// ── Search (additional) ───────────────────────────────────────────────────
+export * from './search/exa-tool.js';
+export * from './search/firecrawl-tool.js';
+export * from './search/google-maps-tool.js';
+
+// ── Productivity (additional) ─────────────────────────────────────────────
+export * from './productivity/clickup-tool.js';
+export * from './productivity/confluence-tool.js';
+export * from './productivity/google-calendar-tool.js';
+export * from './productivity/google-sheets-tool.js';
+export * from './productivity/spotify-tool.js';
+export * from './productivity/trello-tool.js';
+
 // ── MCP ────────────────────────────────────────────────────────────────────
 export { HttpMcpClient, loadMcpToolsFromUrl } from './mcp-client.js';
 export type { HttpMcpClientOptions } from './mcp-client.js';

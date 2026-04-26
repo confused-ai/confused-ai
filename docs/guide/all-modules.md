@@ -1346,9 +1346,103 @@ import type { TenantContext, TenantConfig, TenantContextOptions } from 'confused
 
 ## Extensions
 
-Utilities for wiring the framework into larger systems.
+Utilities for wiring the framework into larger systems. Import from `confused-ai` (main barrel) or `confused-ai/extensions`.
 
 ### Tool logging middleware
+
+```ts
+import { createLoggingToolMiddleware } from 'confused-ai';
+// or: import { createLoggingToolMiddleware } from 'confused-ai/extensions';
+
+const logMiddleware = createLoggingToolMiddleware((msg, meta) => {
+  logger.info(msg, meta);
+});
+
+const ai = agent({
+  model: 'gpt-4o',
+  instructions: '...',
+  toolMiddleware: [logMiddleware],
+});
+```
+
+### Wrap a high-level agent for orchestration
+
+```ts
+import { wrapAgentForOrchestration } from 'confused-ai';
+// or: import { wrapAgentForOrchestration } from 'confused-ai/extensions';
+
+const highLevelAgent = agent({ name: 'Researcher', instructions: '...' });
+const coreAgent = wrapAgentForOrchestration(highLevelAgent);
+
+// Now usable in Orchestrator, Pipeline, Supervisor
+const pipeline = createPipeline({ agents: [coreAgent, writerCoreAgent] });
+```
+
+---
+
+## DX — Minimal & Fluent Agent APIs
+
+The `confused-ai/dx` subpath exposes the best-DX entry points. Everything here is also re-exported from the main `confused-ai` barrel.
+
+```ts
+import { agent, bare, defineAgent, compose, pipe, definePersona } from 'confused-ai/dx';
+import { createDevLogger, createDevToolMiddleware }                from 'confused-ai/dx';
+```
+
+| Export | Purpose |
+|---|---|
+| `agent(opts)` | One-line agent factory — resolves LLM from env, wires defaults |
+| `bare(opts)` | Zero-defaults agent — bring your own everything |
+| `defineAgent()` | Fluent builder: `.instructions().model().use().hooks().dev().build()` |
+| `compose(a, b)` | Sequential pipeline of two agents |
+| `pipe(a).then(b).run(prompt)` | Stepwise pipeline builder |
+| `definePersona(opts)` | Reusable persona definition |
+| `buildPersonaInstructions(p)` | Render a persona into a system prompt string |
+| `createDevLogger()` | Pretty-print all LLM steps to stdout |
+| `createDevToolMiddleware()` | Log tool calls in dev mode |
+
+---
+
+## SDK — Typed Agents & Workflows
+
+The `confused-ai/sdk` subpath provides typed agent definitions, multi-step workflows, and orchestration adapters.
+
+```ts
+import { defineAgent, createWorkflow, asOrchestratorAgent } from 'confused-ai/sdk';
+import type { AgentDefinitionConfig, WorkflowStep, WorkflowResult } from 'confused-ai/sdk';
+```
+
+### `defineAgent` (typed)
+
+```ts
+import { defineAgent } from 'confused-ai/sdk';
+
+const ResearchAgent = defineAgent({
+  name: 'Researcher',
+  instructions: 'You are a research specialist.',
+  tools: [new TavilySearchTool({ apiKey: process.env.TAVILY_API_KEY })],
+});
+
+// From the main barrel, `defineTypedAgent` is the SDK version to avoid name collision
+import { defineTypedAgent } from 'confused-ai';
+```
+
+### `createWorkflow`
+
+```ts
+import { createWorkflow } from 'confused-ai/sdk';
+
+const workflow = createWorkflow({
+  name: 'ResearchAndWrite',
+  steps: [
+    { name: 'Research', agent: researchAgent },
+    { name: 'Write',    agent: writerAgent, dependsOn: ['Research'] },
+    { name: 'Review',   agent: reviewAgent, dependsOn: ['Write'] },
+  ],
+});
+
+const result = await workflow.run('Write a report on quantum computing in 2025');
+```
 
 ```ts
 import { createLoggingToolMiddleware } from 'confused-ai';
@@ -1550,6 +1644,7 @@ import { KnowledgeEngine, TextLoader, JSONLoader, CSVLoader, URLLoader } from 'c
 
 // Session
 import { InMemorySessionStore, createSqliteSessionStore, SqlSessionStore, RedisSessionStore } from 'confused-ai';
+import { createBunSqliteSessionStore }                                from 'confused-ai'; // Bun-native SQLite
 
 // Storage
 import { createStorage, MemoryStorageAdapter } from 'confused-ai';
@@ -1583,6 +1678,18 @@ import { createPluginRegistry, createLoggingPlugin }                   from 'con
 // Tools
 import { tool, createTool, defineTool, ToolBuilder, extendTool, wrapTool, pipeTools } from 'confused-ai';
 import { TavilyToolkit, GitHubToolkit, CalculatorToolkit /* ... */ }   from 'confused-ai';
+// Tool category subpaths (tree-shakeable)
+import { TavilySearchTool, ExaToolkit, FirecrawlToolkit, GoogleMapsToolkit } from 'confused-ai/tools/search';
+import { SlackToolkit, GmailToolkit, DiscordToolkit, TelegramToolkit }       from 'confused-ai/tools/communication';
+import { GitHubToolkit as GH, ClickUpToolkit, ConfluenceToolkit }            from 'confused-ai/tools/productivity';
+import { GoogleCalendarToolkit, GoogleSheetsToolkit, SpotifyToolkit }        from 'confused-ai/tools/productivity';
+import { TrelloToolkit }                                                      from 'confused-ai/tools/productivity';
+import { DatabaseToolkit, RedisToolkit, CsvToolkit, Neo4jToolkit }           from 'confused-ai/tools/data';
+import { StripeToolkit, YFinanceTool }                                        from 'confused-ai/tools/finance';
+import { OpenAIToolkit, SerpApiToolkit }                                      from 'confused-ai/tools/ai';
+import { JavaScriptExecTool, PythonExecTool, ShellCommandTool }              from 'confused-ai/tools/code';
+import { WikipediaSearchTool, HackerNewsToolkit, PlaywrightPageTitleTool }   from 'confused-ai/tools/web';
+import { ShellTool }                                                           from 'confused-ai/tools/shell'; // explicit for security
 
 // Testing
 import { MockLLMProvider, MockSessionStore }                           from 'confused-ai';
@@ -1590,20 +1697,30 @@ import { MockLLMProvider, MockSessionStore }                           from 'con
 // Config
 import { loadConfig }                                                   from 'confused-ai';
 
-// Extensions
+// Extensions (also available as subpath)
 import { createLoggingToolMiddleware, wrapAgentForOrchestration }      from 'confused-ai';
+import { toToolRegistry }                                               from 'confused-ai/extensions';
+
+// DX — minimal & fluent APIs (also in main barrel)
+import { agent, bare, defineAgent, compose, pipe, definePersona }      from 'confused-ai/dx';
+import { createDevLogger, createDevToolMiddleware }                     from 'confused-ai/dx';
+
+// SDK — typed agents & workflows (also in main barrel)
+import { defineAgent as defineTypedAgent, createWorkflow }             from 'confused-ai/sdk';
+import { asOrchestratorAgent }                                          from 'confused-ai/sdk';
 
 // Learning
 import { InMemoryUserProfileStore, LearningMode }                      from 'confused-ai';
 
 // Background queues
-import { queueHook, InMemoryBackgroundQueue }                          from 'confused-ai/background';
+import { queueHook, InMemoryBackgroundQueue, generateTaskId }          from 'confused-ai/background';
 import { BullMQBackgroundQueue, KafkaBackgroundQueue }                 from 'confused-ai/background';
 import { RabbitMQBackgroundQueue, SQSBackgroundQueue }                 from 'confused-ai/background';
 import { RedisPubSubBackgroundQueue }                                   from 'confused-ai/background';
 
-// Voice
-import { createVoiceProvider, OpenAIVoiceProvider }                    from 'confused-ai/voice';
+// Runtime — HTTP server, JWT auth, WebSocket
+import { createRuntimeServer }                                          from 'confused-ai/runtime';
+import { attachWebSocketTransport }                                     from 'confused-ai/runtime';
 import { ElevenLabsVoiceProvider }                                      from 'confused-ai/voice';
 
 // Production — budget, checkpoint, idempotency, audit, HITL, tenant

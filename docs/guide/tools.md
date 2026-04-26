@@ -1,6 +1,24 @@
 # Built-in Tools
 
-confused-ai ships **50+ production-ready tools** organized into categories. Every tool uses the same interface — plug any of them into `agent()` via the `tools:` option.
+confused-ai ships **70+ production-ready tools** organized into categories. Every tool uses the same interface — plug any of them into `agent()` via the `tools:` option.
+
+All tools are available from the main `confused-ai` import. You can also import by category subpath for better tree-shaking:
+
+```ts
+// Everything — always works
+import { TavilySearchTool, GitHubToolkit } from 'confused-ai';
+
+// Category subpaths — tree-shake to just what you need
+import { TavilySearchTool, ExaToolkit }    from 'confused-ai/tools/search';
+import { SlackToolkit, GmailToolkit }       from 'confused-ai/tools/communication';
+import { GitHubToolkit, ClickUpToolkit }    from 'confused-ai/tools/productivity';
+import { DatabaseToolkit, Neo4jToolkit }    from 'confused-ai/tools/data';
+import { StripeToolkit }                    from 'confused-ai/tools/finance';
+import { OpenAIToolkit, SerpApiToolkit }    from 'confused-ai/tools/ai';
+import { JavaScriptExecTool }              from 'confused-ai/tools/code';
+import { WikipediaSearchTool }             from 'confused-ai/tools/web';
+import { ShellTool }                        from 'confused-ai/tools/shell'; // explicit: security
+```
 
 ```ts
 import { agent } from 'confused-ai';
@@ -304,7 +322,96 @@ await ai.run('Create a new Notion page titled "Sprint 42 Retrospective" with a s
 
 Available tools: `NotionCreatePageTool`, `NotionSearchTool`, `NotionUpdatePageTool`
 
-### Todoist
+### ClickUp
+
+```ts
+import { ClickUpToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: ClickUpToolkit.create({ apiKey: process.env.CLICKUP_API_KEY }),
+});
+
+await ai.run('List all tasks in my ClickUp workspace that are overdue');
+```
+
+Available tools: `ClickUpGetWorkspacesTool`, `ClickUpGetSpacesTool`, `ClickUpGetListsTool`, `ClickUpGetTasksTool`, `ClickUpCreateTaskTool`, `ClickUpUpdateTaskTool`, `ClickUpDeleteTaskTool`, `ClickUpSearchTasksTool`
+
+### Confluence
+
+```ts
+import { ConfluenceToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: ConfluenceToolkit.create({
+    host: 'https://your-org.atlassian.net',
+    email: process.env.CONFLUENCE_EMAIL,
+    apiToken: process.env.CONFLUENCE_API_TOKEN,
+  }),
+});
+
+await ai.run('Search Confluence for pages about the onboarding process');
+```
+
+Available tools: `ConfluenceSearchPagesTool`, `ConfluenceGetPageTool`, `ConfluenceCreatePageTool`, `ConfluenceUpdatePageTool`, `ConfluenceGetSpacesTool`, `ConfluenceGetChildPagesTool`
+
+### Google Calendar
+
+```ts
+import { GoogleCalendarToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: GoogleCalendarToolkit.create({ accessToken: process.env.GOOGLE_ACCESS_TOKEN }),
+});
+
+await ai.run('Schedule a 30-minute meeting called "Sprint Planning" for next Monday at 10am');
+```
+
+Available tools: `GoogleCalendarListEventsTool`, `GoogleCalendarCreateEventTool`, `GoogleCalendarUpdateEventTool`, `GoogleCalendarDeleteEventTool`, `GoogleCalendarGetEventTool`
+
+### Google Sheets
+
+```ts
+import { GoogleSheetsToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: GoogleSheetsToolkit.create({ accessToken: process.env.GOOGLE_ACCESS_TOKEN }),
+});
+
+await ai.run('Read the values from A1:D10 in spreadsheet 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms');
+```
+
+Available tools: `GoogleSheetsGetValuesTool`, `GoogleSheetsUpdateValuesTool`, `GoogleSheetsAppendValuesTool`, `GoogleSheetsClearValuesTool`, `GoogleSheetsGetSheetInfoTool`, `GoogleSheetsBatchGetTool`
+
+### Spotify
+
+```ts
+import { SpotifyToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: SpotifyToolkit.create({ accessToken: process.env.SPOTIFY_ACCESS_TOKEN }),
+});
+
+await ai.run('Search for jazz playlists and start playing the top result');
+```
+
+Available tools: `SpotifySearchTool`, `SpotifyGetTrackTool`, `SpotifyGetPlaylistTool`, `SpotifyGetCurrentPlaybackTool`, `SpotifyPlayTool`, `SpotifyPauseTool`, `SpotifySkipTool`, `SpotifyGetUserPlaylistsTool`, `SpotifyAddToQueueTool`
+
+### Trello
+
+```ts
+import { TrelloToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: TrelloToolkit.create({
+    apiKey: process.env.TRELLO_API_KEY,
+    token: process.env.TRELLO_TOKEN,
+  }),
+});
+
+await ai.run('Create a card called "Fix login bug" in the Backlog list of my main board');
+```
+
+Available tools: `TrelloGetBoardsTool`, `TrelloGetBoardTool`, `TrelloGetCardsTool`, `TrelloCreateCardTool`, `TrelloUpdateCardTool`, `TrelloAddCommentTool`, `TrelloCreateListTool`
 
 ```ts
 import { TodoistToolkit } from 'confused-ai';
@@ -317,6 +424,20 @@ await ai.run('Add a task: "Review PR #142" due tomorrow with priority 2');
 ```
 
 Available tools: `TodoistCreateTaskTool`, `TodoistGetTasksTool`, `TodoistCompleteTaskTool`
+
+### Gmail
+
+```ts
+import { GmailToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: GmailToolkit.create({ accessToken: process.env.GMAIL_ACCESS_TOKEN }),
+});
+
+await ai.run('List the 5 most recent unread emails in my inbox');
+```
+
+Available tools: `GmailListMessagesTool`, `GmailGetMessageTool`, `GmailSendEmailTool`, `GmailModifyLabelsTool`, `GmailTrashMessageTool`, `GmailSearchMessagesTool`
 
 ---
 
@@ -374,9 +495,23 @@ await ai.run(`
 
 Available tools: `CsvParseTool`, `CsvFilterTool`, `CsvSelectColumnsTool`, `CsvSortTool`, `CsvAggregateTool`, `CsvToJsonTool`
 
----
+### Neo4j
 
-## Finance
+```ts
+import { Neo4jToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: Neo4jToolkit.create({
+    uri: process.env.NEO4J_URI,
+    username: process.env.NEO4J_USERNAME,
+    password: process.env.NEO4J_PASSWORD,
+  }),
+});
+
+await ai.run('Find all people connected to Alice within 2 hops in the knowledge graph');
+```
+
+Available tools: `Neo4jRunCypherTool`, `Neo4jCreateNodeTool`, `Neo4jCreateRelationshipTool`, `Neo4jFindNodesTool`, `Neo4jDeleteNodeTool`, `Neo4jGetSchemaTool`
 
 ### Stripe
 
@@ -417,6 +552,48 @@ await ai.run('What is the 5-day weather forecast for San Francisco?');
 ```
 
 Available tools: `OpenWeatherCurrentTool`, `OpenWeatherForecastTool`
+
+### Exa
+
+```ts
+import { ExaToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: ExaToolkit.create({ apiKey: process.env.EXA_API_KEY }),
+});
+
+await ai.run('Find pages similar to https://react.dev and get their full content');
+```
+
+Available tools: `ExaSearchTool`, `ExaFindSimilarTool`, `ExaGetContentsTool`
+
+### Firecrawl
+
+```ts
+import { FirecrawlToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: FirecrawlToolkit.create({ apiKey: process.env.FIRECRAWL_API_KEY }),
+});
+
+await ai.run('Scrape the pricing page at https://example.com/pricing and extract all plan details');
+```
+
+Available tools: `FirecrawlScrapeTool`, `FirecrawlCrawlTool`, `FirecrawlMapTool`
+
+### Google Maps
+
+```ts
+import { GoogleMapsToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: GoogleMapsToolkit.create({ apiKey: process.env.GOOGLE_MAPS_API_KEY }),
+});
+
+await ai.run('Find the top 5 coffee shops within 1km of the Eiffel Tower and get directions from the nearest Metro station');
+```
+
+Available tools: `GoogleMapsSearchPlacesTool`, `GoogleMapsGeocodeTool`, `GoogleMapsReverseGeocodeTool`, `GoogleMapsDirectionsTool`, `GoogleMapsPlaceDetailsTool`
 
 ---
 
@@ -664,20 +841,31 @@ const loggedSearch = wrapTool(new TavilySearchTool(), {
 | Search | `OpenWeatherCurrentTool`, `OpenWeatherForecastTool` | `OPENWEATHER_API_KEY` |
 | Search | `YouTubeSearchTool`, `YouTubeGetVideoTool` | `YOUTUBE_API_KEY` |
 | Search | `RedditSearchTool`, `RedditGetPostsTool` | — |
+| Search | `ExaSearchTool`, `ExaFindSimilarTool`, `ExaGetContentsTool` | `EXA_API_KEY` |
+| Search | `FirecrawlScrapeTool`, `FirecrawlCrawlTool`, `FirecrawlMapTool` | `FIRECRAWL_API_KEY` |
+| Search | `GoogleMapsSearchPlacesTool`, `GoogleMapsGeocodeTool`, `GoogleMapsReverseGeocodeTool`, `GoogleMapsDirectionsTool`, `GoogleMapsPlaceDetailsTool` | `GOOGLE_MAPS_API_KEY` |
 | Comms | `SlackSendMessageTool`, `SlackListChannelsTool`, `SlackGetChannelHistoryTool` | `SLACK_BOT_TOKEN` |
 | Comms | `DiscordSendMessageTool`, `DiscordGetMessagesTool`, `DiscordCreateChannelTool`, `DiscordDeleteMessageTool`, `DiscordListMembersTool` | `DISCORD_BOT_TOKEN` |
 | Comms | `TelegramTool` | `TELEGRAM_BOT_TOKEN` |
 | Comms | `SmtpEmailTool` | SMTP credentials |
 | Comms | `SendGridEmailTool` | `SENDGRID_API_KEY` |
 | Comms | `TwilioSendSmsTool`, `TwilioMakeCallTool` | `TWILIO_*` |
+| Comms | `GmailListMessagesTool`, `GmailGetMessageTool`, `GmailSendEmailTool`, `GmailModifyLabelsTool`, `GmailTrashMessageTool`, `GmailSearchMessagesTool` | Gmail `accessToken` |
 | Productivity | `GitHubSearchRepositoriesTool`, `GitHubGetRepositoryTool`, `GitHubListIssuesTool`, `GitHubCreateIssueTool`, `GitHubListPullRequestsTool` | `GITHUB_TOKEN` |
 | Productivity | `JiraGetIssueTool`, `JiraCreateIssueTool`, `JiraSearchIssuesTool`, `JiraAddCommentTool` | Jira credentials |
 | Productivity | `LinearCreateIssueTool`, `LinearGetIssueTool`, `LinearSearchIssuesTool`, `LinearUpdateIssueTool`, `LinearAddCommentTool`, `LinearListTeamsTool` | `LINEAR_API_KEY` |
 | Productivity | `NotionCreatePageTool`, `NotionSearchTool`, `NotionUpdatePageTool` | `NOTION_API_KEY` |
 | Productivity | `TodoistCreateTaskTool`, `TodoistGetTasksTool`, `TodoistCompleteTaskTool` | `TODOIST_API_TOKEN` |
+| Productivity | `ClickUpGetWorkspacesTool`, `ClickUpGetSpacesTool`, `ClickUpGetListsTool`, `ClickUpGetTasksTool`, `ClickUpCreateTaskTool`, `ClickUpUpdateTaskTool`, `ClickUpDeleteTaskTool`, `ClickUpSearchTasksTool` | `CLICKUP_API_KEY` |
+| Productivity | `ConfluenceSearchPagesTool`, `ConfluenceGetPageTool`, `ConfluenceCreatePageTool`, `ConfluenceUpdatePageTool`, `ConfluenceGetSpacesTool`, `ConfluenceGetChildPagesTool` | Confluence credentials |
+| Productivity | `GoogleCalendarListEventsTool`, `GoogleCalendarCreateEventTool`, `GoogleCalendarUpdateEventTool`, `GoogleCalendarDeleteEventTool`, `GoogleCalendarGetEventTool` | Google `accessToken` |
+| Productivity | `GoogleSheetsGetValuesTool`, `GoogleSheetsUpdateValuesTool`, `GoogleSheetsAppendValuesTool`, `GoogleSheetsClearValuesTool`, `GoogleSheetsGetSheetInfoTool`, `GoogleSheetsBatchGetTool` | Google `accessToken` |
+| Productivity | `SpotifySearchTool`, `SpotifyGetTrackTool`, `SpotifyGetPlaylistTool`, `SpotifyGetCurrentPlaybackTool`, `SpotifyPlayTool`, `SpotifyPauseTool`, `SpotifySkipTool`, `SpotifyGetUserPlaylistsTool`, `SpotifyAddToQueueTool` | Spotify `accessToken` |
+| Productivity | `TrelloGetBoardsTool`, `TrelloGetBoardTool`, `TrelloGetCardsTool`, `TrelloCreateCardTool`, `TrelloUpdateCardTool`, `TrelloAddCommentTool`, `TrelloCreateListTool` | `TRELLO_API_KEY` + `TRELLO_TOKEN` |
 | Data | `PostgreSQLQueryTool`, `PostgreSQLInsertTool`, `MySQLQueryTool`, `SQLiteQueryTool` | DB connection |
 | Data | `RedisGetTool`, `RedisSetTool`, `RedisDeleteTool`, `RedisKeysTool`, `RedisHashGetTool`, `RedisIncrTool` | `REDIS_URL` |
 | Data | `CsvParseTool`, `CsvFilterTool`, `CsvSelectColumnsTool`, `CsvSortTool`, `CsvAggregateTool`, `CsvToJsonTool` | — |
+| Data | `Neo4jRunCypherTool`, `Neo4jCreateNodeTool`, `Neo4jCreateRelationshipTool`, `Neo4jFindNodesTool`, `Neo4jDeleteNodeTool`, `Neo4jGetSchemaTool` | `NEO4J_URI` + credentials |
 | Finance | `StripeCreateCustomerTool`, `StripeGetCustomerTool`, `StripeCreatePaymentIntentTool`, `StripeCreateSubscriptionTool`, `StripeCancelSubscriptionTool`, `StripeRefundTool` | `STRIPE_SECRET_KEY` |
 | Finance | `YFinanceTool` | `yahoo-finance2` |
 | AI | `OpenAIGenerateImageTool`, `OpenAITranscribeAudioTool` | `OPENAI_API_KEY` |

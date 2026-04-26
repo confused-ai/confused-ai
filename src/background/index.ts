@@ -71,3 +71,4 @@ export type { SQSBackgroundQueueOptions } from './queues/sqs.js';
 
 // The hook wrapper
 export { queueHook } from './queue-hook.js';
+export { generateTaskId } from './util.js';

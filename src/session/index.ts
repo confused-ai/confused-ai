@@ -18,3 +18,4 @@ export type {
     RedisLlmCacheConfig,
     RedisLlmCacheKeyInput,
 } from './redis-store.js';
+export { createBunSqliteSessionStore } from './bun-sqlite-store.js';

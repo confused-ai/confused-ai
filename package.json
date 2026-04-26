@@ -94,6 +94,46 @@
             "import": "./dist/tools/shell.js",
             "require": "./dist/tools/shell.cjs"
         },
+        "./tools/ai": {
+            "types": "./dist/tools/ai.d.ts",
+            "import": "./dist/tools/ai.js",
+            "require": "./dist/tools/ai.cjs"
+        },
+        "./tools/code": {
+            "types": "./dist/tools/code.d.ts",
+            "import": "./dist/tools/code.js",
+            "require": "./dist/tools/code.cjs"
+        },
+        "./tools/communication": {
+            "types": "./dist/tools/communication.d.ts",
+            "import": "./dist/tools/communication.js",
+            "require": "./dist/tools/communication.cjs"
+        },
+        "./tools/data": {
+            "types": "./dist/tools/data.d.ts",
+            "import": "./dist/tools/data.js",
+            "require": "./dist/tools/data.cjs"
+        },
+        "./tools/finance": {
+            "types": "./dist/tools/finance.d.ts",
+            "import": "./dist/tools/finance.js",
+            "require": "./dist/tools/finance.cjs"
+        },
+        "./tools/productivity": {
+            "types": "./dist/tools/productivity.d.ts",
+            "import": "./dist/tools/productivity.js",
+            "require": "./dist/tools/productivity.cjs"
+        },
+        "./tools/search": {
+            "types": "./dist/tools/search.d.ts",
+            "import": "./dist/tools/search.js",
+            "require": "./dist/tools/search.cjs"
+        },
+        "./tools/web": {
+            "types": "./dist/tools/web.d.ts",
+            "import": "./dist/tools/web.js",
+            "require": "./dist/tools/web.cjs"
+        },
         "./runtime": {
             "types": "./dist/runtime.d.ts",
             "import": "./dist/runtime.js",
@@ -153,6 +193,21 @@
             "types": "./dist/config.d.ts",
             "import": "./dist/config.js",
             "require": "./dist/config.cjs"
+        },
+        "./dx": {
+            "types": "./dist/dx.d.ts",
+            "import": "./dist/dx.js",
+            "require": "./dist/dx.cjs"
+        },
+        "./sdk": {
+            "types": "./dist/sdk.d.ts",
+            "import": "./dist/sdk.js",
+            "require": "./dist/sdk.cjs"
+        },
+        "./extensions": {
+            "types": "./dist/extensions.d.ts",
+            "import": "./dist/extensions.js",
+            "require": "./dist/extensions.cjs"
         }
     },
     "scripts": {
