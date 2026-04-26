@@ -2,13 +2,13 @@
  * SQLite-backed User Profile Store — persistent learning across sessions.
  *
  * Agno's memory module stores user facts automatically across restarts.
- * This store provides the same capability for confused-ai: user profiles
+ * This store provides the same capability for fluxion: user profiles
  * survive process restarts when backed by SQLite (or Postgres).
  *
  * @example
  * ```ts
- * import { createAgent } from 'confused-ai';
- * import { createSqliteUserProfileStore } from 'confused-ai/learning';
+ * import { createAgent } from 'fluxion';
+ * import { createSqliteUserProfileStore } from 'fluxion/learning';
  *
  * const agent = createAgent({
  *   name: 'PersonalAssistant',

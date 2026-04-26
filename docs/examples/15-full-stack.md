@@ -2,7 +2,7 @@
 
 Everything in one place: an HTTP API server, a RAG knowledge base, persistent
 memory, tool extensions, multi-agent team, observability hooks, and resilience
-patterns. This is what a production confused-ai deployment looks like.
+patterns. This is what a production fluxion deployment looks like.
 
 ## What you'll learn
 
@@ -36,10 +36,10 @@ my-ai-app/
 
 ```ts
 // knowledge.ts — RAG setup
-import { KnowledgeEngine, TextLoader, URLLoader } from 'confused-ai/knowledge';
-import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
-import { InMemoryVectorStore } from 'confused-ai/memory';
-import { createStorage } from 'confused-ai/storage';
+import { KnowledgeEngine, TextLoader, URLLoader } from 'fluxion/knowledge';
+import { OpenAIEmbeddingProvider } from 'fluxion/memory';
+import { InMemoryVectorStore } from 'fluxion/memory';
+import { createStorage } from 'fluxion/storage';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -85,8 +85,8 @@ export async function buildKnowledge() {
 ```ts
 // tools.ts — all application tools
 import { z } from 'zod';
-import { tool, extendTool, wrapTool } from 'confused-ai';
-import { createStorage } from 'confused-ai/storage';
+import { tool, extendTool, wrapTool } from 'fluxion';
+import { createStorage } from 'fluxion/storage';
 
 const toolCache = createStorage({ type: 'file', path: './data/tool-cache.json' });
 
@@ -155,13 +155,13 @@ export const webSearch = extendTool(rawSearch, {
 
 ```ts
 // agent.ts — agent setup with all features
-import { createAgent } from 'confused-ai';
-import { FallbackChain } from 'confused-ai/llm';
-import { InMemoryStore } from 'confused-ai/memory';
-import { createStorage } from 'confused-ai/storage';
+import { createAgent } from 'fluxion';
+import { FallbackChain } from 'fluxion/llm';
+import { InMemoryStore } from 'fluxion/memory';
+import { createStorage } from 'fluxion/storage';
 import { weatherTool, calculator, webSearch } from './tools.js';
 import { buildKnowledge } from './knowledge.js';
-import type { KnowledgeEngine } from 'confused-ai/knowledge';
+import type { KnowledgeEngine } from 'fluxion/knowledge';
 
 const storage = createStorage({ type: 'file', path: './data/memory.json' });
 const longTermMemory = new InMemoryStore({ storage });
@@ -308,7 +308,7 @@ server.listen(PORT, () => {
 
 ```bash
 # Install dependencies
-npm install confused-ai better-sqlite3
+npm install fluxion better-sqlite3
 
 # Set env vars
 echo "OPENAI_API_KEY=sk-..." > .env

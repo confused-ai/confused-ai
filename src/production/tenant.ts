@@ -3,14 +3,14 @@
  * cost trackers, and audit logs.
  *
  * Agno handles user_id / session_id isolation automatically. This module
- * brings the same capability to confused-ai: call `createTenantContext(tenantId)`
+ * brings the same capability to fluxion: call `createTenantContext(tenantId)`
  * and get back a set of stores that automatically namespace all keys.
  *
  * @example
  * ```ts
- * import { createAgent } from 'confused-ai';
- * import { createTenantContext } from 'confused-ai/production';
- * import { createSqliteSessionStore } from 'confused-ai/session';
+ * import { createAgent } from 'fluxion';
+ * import { createTenantContext } from 'fluxion/production';
+ * import { createSqliteSessionStore } from 'fluxion/session';
  *
  * const baseSessionStore = await createSqliteSessionStore('./agent.db');
  *

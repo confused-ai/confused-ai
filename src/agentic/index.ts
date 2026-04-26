@@ -18,7 +18,7 @@ import { toToolRegistry, type ToolProvider } from '../tools/core/registry.js';
  * Supports Tool[] or ToolRegistry and optional tool middleware for cross-tool integration.
  *
  * @example
- * import { createAgenticAgent, OpenAIProvider } from 'confused-ai';
+ * import { createAgenticAgent, OpenAIProvider } from 'fluxion';
  * const agent = createAgenticAgent({
  *   name: 'Researcher',
  *   instructions: 'You research topics and cite sources.',

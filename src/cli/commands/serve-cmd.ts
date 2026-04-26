@@ -3,7 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 /**
- * `confused-ai serve <file>` — import an agent file and start an HTTP service.
+ * `fluxion serve <file>` — import an agent file and start an HTTP service.
  *
  * The agent file must export one of:
  *   - `export const agent = createAgent(...)` — a CreateAgentResult
@@ -11,8 +11,8 @@ import { pathToFileURL } from 'node:url';
  *   - `export const agents = { name: createAgent(...), ... }` — named agents
  *
  * @example
- * confused-ai serve ./my-agent.ts --port 3000
- * confused-ai serve ./my-agent.ts --port 3000 --cors '*' --websocket
+ * fluxion serve ./my-agent.ts --port 3000
+ * fluxion serve ./my-agent.ts --port 3000 --cors '*' --websocket
  */
 export function registerServeCommand(program: Command): void {
     program
@@ -78,7 +78,7 @@ export function registerServeCommand(program: Command): void {
 
             const listening = await listenService(svc, parseInt(options.port as string, 10));
             const names = Object.keys(agentMap).join(', ');
-            console.log(`\n🤖  confused-ai serving: ${names}`);
+            console.log(`\n🤖  Fluxion serving: ${names}`);
             console.log(`   http://127.0.0.1:${listening.port}/v1/health`);
             console.log(`   http://127.0.0.1:${listening.port}/v1/chat`);
             if (options.websocket) console.log(`   ws://127.0.0.1:${listening.port}/v1/ws`);

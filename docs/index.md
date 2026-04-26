@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: "confused-ai"
+  name: "Fluxion"
   text: "Production AI Agents,\nShipped in TypeScript"
   tagline: "The only TypeScript AI agent framework with smart defaults AND full control. 50+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, OTLP — from prototype to enterprise in one package."
   image:
     src: /logo.svg
-    alt: confused-ai
+    alt: Fluxion
   actions:
     - theme: brand
       text: Get Started →
@@ -87,11 +87,11 @@ features:
 ## Install
 
 ```bash
-npm install confused-ai
+npm install fluxion
 # or
-bun add confused-ai
+bun add fluxion
 # or
-pnpm add confused-ai
+pnpm add fluxion
 ```
 
 Set at least one provider key in your environment:
@@ -108,7 +108,7 @@ OPENROUTER_API_KEY=sk-or-...   # OpenRouter (100+ models)
 ::: code-group
 
 ```ts [Hello World]
-import { agent } from 'confused-ai';
+import { agent } from 'fluxion';
 
 const ai = agent('You are a helpful assistant.');
 const { text } = await ai.run('What is 2 + 2?');
@@ -116,7 +116,7 @@ console.log(text); // "4"
 ```
 
 ```ts [Custom Tool]
-import { agent, defineTool } from 'confused-ai';
+import { agent, defineTool } from 'fluxion';
 import { z } from 'zod';
 
 const getWeather = defineTool()
@@ -131,7 +131,7 @@ const { text } = await ai.run('What is the weather in Paris?');
 ```
 
 ```ts [Multi-Agent Pipeline]
-import { agent, compose } from 'confused-ai';
+import { agent, compose } from 'fluxion';
 
 const researcher = agent('Research topics thoroughly and return key findings.');
 const writer     = agent('Turn research notes into polished reports.');
@@ -141,7 +141,7 @@ const { text } = await pipeline.run('Report on TypeScript 5.5 features');
 ```
 
 ```ts [LLM Router]
-import { createCostOptimizedRouter } from 'confused-ai';
+import { createCostOptimizedRouter } from 'fluxion';
 
 // Automatically sends coding tasks to GPT-4o, simple Q&A to GPT-4o-mini
 const router = createCostOptimizedRouter({
@@ -151,9 +151,9 @@ const { text } = await router.run('What is 2+2?'); // → routed to fast model
 ```
 
 ```ts [Production Agent]
-import { createAgent } from 'confused-ai';
-import { createSqliteSessionStore } from 'confused-ai/session';
-import { withResilience } from 'confused-ai/production';
+import { createAgent } from 'fluxion';
+import { createSqliteSessionStore } from 'fluxion/session';
+import { withResilience } from 'fluxion/production';
 
 const agent = createAgent({
   name:         'SupportBot',
@@ -178,12 +178,12 @@ export default resilient;
 ## What production looks like
 
 ```ts
-import { createAgent, defineTool } from 'confused-ai';
-import { createSqliteSessionStore } from 'confused-ai/session';
-import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'confused-ai/knowledge';
-import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
-import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
-import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createAgent, defineTool } from 'fluxion';
+import { createSqliteSessionStore } from 'fluxion/session';
+import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'fluxion/knowledge';
+import { OpenAIEmbeddingProvider } from 'fluxion/memory';
+import { GuardrailValidator, createSensitiveDataRule } from 'fluxion/guardrails';
+import { createHttpService, listenService } from 'fluxion/runtime';
 import { z } from 'zod';
 
 // 1. Knowledge base from your docs
@@ -235,11 +235,11 @@ listenService(service, { port: 3000 });
 // → POST /v1/approvals/:id    (approve/reject)
 ```
 
-## Why confused-ai?
+## Why Fluxion?
 
 <div class="comparison-table">
 
-| Capability | confused-ai | LangChain.js | Vercel AI SDK | Mastra |
+| Capability | Fluxion | LangChain.js | Vercel AI SDK | Mastra |
 |------------|:-----------:|:------------:|:-------------:|:------:|
 | Zero-config start | ✅ | ⚠️ | ✅ | ⚠️ |
 | 50+ built-in tools | ✅ | ✅ | ❌ | ⚠️ |
@@ -268,7 +268,7 @@ Everything you need to go from prototype to production without switching framewo
 - **Compliance** — Persistent audit log (SQLite / pluggable), X-Idempotency-Key deduplication, per-user and per-tenant cost caps, W3C trace-context propagation
 - **Observability** — OTLP tracing (Jaeger, Datadog, Honeycomb), structured logging, eval store, health endpoints, Grafana dashboard template
 - **Deployment** — Docker, docker-compose, Kubernetes, Fly.io, and Render templates in [`/templates`](https://github.com/rvuyyuru2/agent-framework/tree/main/templates)
-- **Testing** — `MockLLMProvider`, `MockToolRegistry`, fixture helpers, Vitest-compatible test utilities in `confused-ai/testing`
+- **Testing** — `MockLLMProvider`, `MockToolRegistry`, fixture helpers, Vitest-compatible test utilities in `fluxion/testing`
 
 ## Subpath packages
 
@@ -276,22 +276,22 @@ Import only what you need — every module is independently tree-shakeable:
 
 | Import path | Contents |
 |-------------|---------|
-| `confused-ai` | Main barrel: `createAgent`, `agent`, tools, session, LLM, orchestration |
-| `confused-ai/create-agent` | Lean `createAgent` + env helpers |
-| `confused-ai/llm` | Providers, model resolution, embeddings |
-| `confused-ai/tools` | `BaseTool`, registries, 50+ built-in tools |
-| `confused-ai/orchestration` | Pipelines, supervisor, swarm, team, router |
-| `confused-ai/knowledge` | RAG engine, loaders, vector store |
-| `confused-ai/session` | Session stores (in-memory, SQL, SQLite) |
-| `confused-ai/memory` | Memory stores + vector-backed memory |
-| `confused-ai/guardrails` | Validators, rules, content safety |
-| `confused-ai/production` | Circuit breaker, rate limiter, resilience wrappers |
-| `confused-ai/observability` | OTLP tracer, logger, metrics, eval store |
-| `confused-ai/runtime` | HTTP service, OpenAPI, WebSocket, HITL endpoints |
-| `confused-ai/adapters` | 20-category adapter system (SQL, Redis, S3, …) |
-| `confused-ai/plugins` | Plugin registry + built-in logging/rate-limit/telemetry |
-| `confused-ai/testing` | Mock LLM, mock tools, test fixtures |
-| `confused-ai/contracts` | Shared interfaces (no runtime code) |
+| `fluxion` | Main barrel: `createAgent`, `agent`, tools, session, LLM, orchestration |
+| `fluxion/create-agent` | Lean `createAgent` + env helpers |
+| `fluxion/llm` | Providers, model resolution, embeddings |
+| `fluxion/tools` | `BaseTool`, registries, 50+ built-in tools |
+| `fluxion/orchestration` | Pipelines, supervisor, swarm, team, router |
+| `fluxion/knowledge` | RAG engine, loaders, vector store |
+| `fluxion/session` | Session stores (in-memory, SQL, SQLite) |
+| `fluxion/memory` | Memory stores + vector-backed memory |
+| `fluxion/guardrails` | Validators, rules, content safety |
+| `fluxion/production` | Circuit breaker, rate limiter, resilience wrappers |
+| `fluxion/observability` | OTLP tracer, logger, metrics, eval store |
+| `fluxion/runtime` | HTTP service, OpenAPI, WebSocket, HITL endpoints |
+| `fluxion/adapters` | 20-category adapter system (SQL, Redis, S3, …) |
+| `fluxion/plugins` | Plugin registry + built-in logging/rate-limit/telemetry |
+| `fluxion/testing` | Mock LLM, mock tools, test fixtures |
+| `fluxion/contracts` | Shared interfaces (no runtime code) |
 
 ## Supported LLM providers
 
@@ -382,7 +382,7 @@ Templates are in [`/templates`](https://github.com/rvuyyuru2/agent-framework/tre
 ::: code-group
 
 ```ts [Hello World]
-import { agent } from 'confused-ai';
+import { agent } from 'fluxion';
 
 const ai = agent('You are a helpful assistant.');
 const { text } = await ai.run('What is 2 + 2?');
@@ -390,7 +390,7 @@ console.log(text); // "4"
 ```
 
 ```ts [Custom Tool]
-import { agent, defineTool } from 'confused-ai';
+import { agent, defineTool } from 'fluxion';
 import { z } from 'zod';
 
 const getWeather = defineTool()
@@ -405,7 +405,7 @@ const { text } = await ai.run('What is the weather in Paris?');
 ```
 
 ```ts [Multi-Agent Pipeline]
-import { agent, compose } from 'confused-ai';
+import { agent, compose } from 'fluxion';
 
 const researcher = agent('Research topics thoroughly and return key findings.');
 const writer     = agent('Turn research notes into polished, engaging reports.');
@@ -415,7 +415,7 @@ const { text } = await pipeline.run('Report on TypeScript 5.5 features');
 ```
 
 ```ts [Lifecycle Hooks]
-import { agent } from 'confused-ai';
+import { agent } from 'fluxion';
 
 const ai = agent({
   instructions: 'You are a helpful assistant.',
@@ -428,7 +428,7 @@ const ai = agent({
 ```
 
 ```ts [LLM Router]
-import { createCostOptimizedRouter } from 'confused-ai';
+import { createCostOptimizedRouter } from 'fluxion';
 
 // Automatically sends coding tasks to GPT-4o, simple Q&A to GPT-4o-mini
 const router = createCostOptimizedRouter({
@@ -442,11 +442,11 @@ const { text } = await router.run('What is 2+2?'); // → routed to fast
 ## What it looks like in production
 
 ```ts
-import { agent, defineTool } from 'confused-ai';
-import { createSqliteSessionStore } from 'confused-ai/session';
-import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'confused-ai/knowledge';
-import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
-import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
+import { agent, defineTool } from 'fluxion';
+import { createSqliteSessionStore } from 'fluxion/session';
+import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'fluxion/knowledge';
+import { OpenAIEmbeddingProvider } from 'fluxion/memory';
+import { GuardrailValidator, createSensitiveDataRule } from 'fluxion/guardrails';
 import { z } from 'zod';
 
 // 1. Knowledge base from your docs

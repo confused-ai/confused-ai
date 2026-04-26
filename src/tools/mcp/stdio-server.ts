@@ -135,7 +135,7 @@ export async function runMcpStdioToolServer(
     options?: Partial<McpStdioServerInfo>
 ): Promise<void> {
     const serverInfo: McpStdioServerInfo = {
-        name: options?.name ?? 'confused-ai-mcp',
+        name: options?.name ?? 'fluxion-mcp',
         version: options?.version ?? '0.6.0',
     };
     const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });

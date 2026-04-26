@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `confused-ai` are documented here.
+All notable changes to `fluxion` are documented here.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -18,7 +18,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-#### Testing Module (`confused-ai/testing`)
+#### Testing Module (`fluxion/testing`)
 - `MockToolRegistry` — records all tool invocations for assertion in tests; supports `calls()`, `lastCall()`, `reset()`, `register()`, `toTools()`
 - `createTestAgent()` — zero-config test harness that auto-wires `MockLLMProvider` + `MockSessionStore`
 - `createTestHttpService()` — integration test helper that starts a real HTTP server on a random port with `.request()`, `.close()`, `.port`, `.baseUrl`
@@ -34,11 +34,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `algorithm` option on `JwtAuthOptions` for explicit algorithm selection
 
 #### CLI
-- `confused-ai serve <file>` — new command; imports an agent file and starts the HTTP service on a configurable port; graceful SIGINT/SIGTERM handling
-- `confused-ai eval <dataset> --agent <file>` — new command; runs a JSON dataset against an agent and reports accuracy; CI-friendly exit code
-- `confused-ai run --watch` — fully implemented watch mode using `fs.watch()` with 150ms debounce and module cache busting
-- `confused-ai doctor` — complete rewrite: checks Node.js version, all LLM provider API keys, 7 optional packages, and network connectivity
-- `confused-ai create` — complete rewrite: multi-template scaffold (`basic`, `http`) generating `agent.ts`, `package.json`, `tsconfig.json`, `.env.example`, `README.md`
+- `fluxion serve <file>` — new command; imports an agent file and starts the HTTP service on a configurable port; graceful SIGINT/SIGTERM handling
+- `fluxion eval <dataset> --agent <file>` — new command; runs a JSON dataset against an agent and reports accuracy; CI-friendly exit code
+- `fluxion run --watch` — fully implemented watch mode using `fs.watch()` with 150ms debounce and module cache busting
+- `fluxion doctor` — complete rewrite: checks Node.js version, all LLM provider API keys, 7 optional packages, and network connectivity
+- `fluxion create` — complete rewrite: multi-template scaffold (`basic`, `http`) generating `agent.ts`, `package.json`, `tsconfig.json`, `.env.example`, `README.md`
 
 #### Package Exports
 - Added `./testing`, `./learning`, `./video`, `./config` subpaths to package.json
@@ -137,4 +137,4 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 - Basic agent with single LLM call
 - OpenAI provider
-- CLI scaffold (`confused-ai create`)
+- CLI scaffold (`fluxion create`)

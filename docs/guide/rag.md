@@ -11,9 +11,9 @@ import {
   KnowledgeEngine,
   InMemoryVectorStore,
   TextLoader,
-} from 'confused-ai/knowledge';
-import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
-// or: import { ... } from 'confused-ai';
+} from 'fluxion/knowledge';
+import { OpenAIEmbeddingProvider } from 'fluxion/memory';
+// or: import { ... } from 'fluxion';
 
 const knowledge = new KnowledgeEngine({
   embeddingProvider: new OpenAIEmbeddingProvider({
@@ -25,12 +25,12 @@ const knowledge = new KnowledgeEngine({
 
 // Ingest documents
 await knowledge.ingest([
-  { id: 'doc-1', content: 'confused-ai is a TypeScript framework for production AI agents.' },
+  { id: 'doc-1', content: 'fluxion is a TypeScript framework for production AI agents.' },
   { id: 'doc-2', content: 'It supports RAG, multi-agent orchestration, and lifecycle hooks.' },
 ]);
 
 // Query
-const results = await knowledge.query('What does confused-ai support?', { topK: 3 });
+const results = await knowledge.query('What does fluxion support?', { topK: 3 });
 // results: [{ id, content, score, metadata }]
 ```
 
@@ -44,7 +44,7 @@ import {
   JSONLoader,
   CSVLoader,
   URLLoader,
-} from 'confused-ai/knowledge';
+} from 'fluxion/knowledge';
 
 // Plain text / markdown files
 const textDocs = await new TextLoader('./docs/').load();
@@ -69,7 +69,7 @@ await knowledge.ingest([...textDocs, ...jsonDocs, ...csvDocs, ...webDocs]);
 ## Attaching to an agent
 
 ```ts
-import { agent } from 'confused-ai';
+import { agent } from 'fluxion';
 
 const ragAgent = agent({
   model: 'gpt-4o-mini',
@@ -90,7 +90,7 @@ console.log(answer.text);
 The engine supports keyword + semantic hybrid search when you implement `HybridSearchProvider`:
 
 ```ts
-import type { HybridSearchProvider } from 'confused-ai/knowledge';
+import type { HybridSearchProvider } from 'fluxion/knowledge';
 
 class MyHybridSearch implements HybridSearchProvider {
   async search(query: string, topK: number) {
@@ -111,7 +111,7 @@ const knowledge = new KnowledgeEngine({
 Add a reranker to improve result precision:
 
 ```ts
-import type { RerankerProvider } from 'confused-ai/knowledge';
+import type { RerankerProvider } from 'fluxion/knowledge';
 
 class CohereReranker implements RerankerProvider {
   async rerank(query: string, results: RAGChunk[], topN: number) {
@@ -132,7 +132,7 @@ const knowledge = new KnowledgeEngine({
 Implement `VectorStore` to use Pinecone, Weaviate, Qdrant, pgvector, etc.:
 
 ```ts
-import type { VectorStore } from 'confused-ai/memory';
+import type { VectorStore } from 'fluxion/memory';
 
 class PineconeVectorStore implements VectorStore {
   async upsert(id: string, embedding: number[], metadata: Record<string, unknown>): Promise<void> {

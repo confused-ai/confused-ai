@@ -2,7 +2,7 @@
 
 The tenant module provides per-tenant isolation for session stores, rate limiters, cost trackers, and audit logs — all without separate databases.
 
-> **Import path:** `confused-ai/production`
+> **Import path:** `fluxion/production`
 
 ---
 
@@ -17,9 +17,9 @@ Without tenant isolation, all users share the same session namespace and rate li
 ## Quick start
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { createTenantContext } from 'confused-ai/production';
-import { createSqliteSessionStore } from 'confused-ai/session';
+import { createAgent } from 'fluxion';
+import { createTenantContext } from 'fluxion/production';
+import { createSqliteSessionStore } from 'fluxion/session';
 
 // Create the base stores once (shared across tenants)
 const baseSessionStore = await createSqliteSessionStore('./agent.db');
@@ -73,7 +73,7 @@ interface TenantContext {
 ## Per-tenant rate limiting
 
 ```ts
-import { createTenantContext } from 'confused-ai/production';
+import { createTenantContext } from 'fluxion/production';
 
 const ctx = createTenantContext('tenant-enterprise', {
   rateLimitConfig: {
@@ -114,8 +114,8 @@ function getTenantContext(tenantId: string, plan: 'free' | 'pro' | 'enterprise')
 The `TenantScopedSessionStore` wraps any `SessionStore` and transparently adds the tenant prefix to every session ID. Use it directly if you want more control:
 
 ```ts
-import { TenantScopedSessionStore } from 'confused-ai/production';
-import { createSqliteSessionStore } from 'confused-ai/session';
+import { TenantScopedSessionStore } from 'fluxion/production';
+import { createSqliteSessionStore } from 'fluxion/session';
 
 const base = await createSqliteSessionStore('./shared.db');
 const tenantStore = new TenantScopedSessionStore(base, 'tenant-acme');
@@ -131,8 +131,8 @@ const session = await tenantStore.create({ agentId: 'support', userId: 'user-1' 
 
 | Export | From | Description |
 |--------|------|-------------|
-| `createTenantContext` | `confused-ai/production` | Create a tenant-scoped context |
-| `TenantScopedSessionStore` | `confused-ai/production` | Prefix-wrapping session store |
-| `TenantContext` | `confused-ai/production` | Context shape (type) |
-| `TenantContextOptions` | `confused-ai/production` | Config type |
-| `TenantConfig` | `confused-ai/production` | Config type |
+| `createTenantContext` | `fluxion/production` | Create a tenant-scoped context |
+| `TenantScopedSessionStore` | `fluxion/production` | Prefix-wrapping session store |
+| `TenantContext` | `fluxion/production` | Context shape (type) |
+| `TenantContextOptions` | `fluxion/production` | Config type |
+| `TenantConfig` | `fluxion/production` | Config type |

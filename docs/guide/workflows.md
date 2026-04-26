@@ -5,7 +5,7 @@ Build complex multi-step workflows with typed steps, branching, and error handli
 ## Step workflow
 
 ```ts
-import { createWorkflow, step } from 'confused-ai/execution';
+import { createWorkflow, step } from 'fluxion/execution';
 import { z } from 'zod';
 
 const analysisWorkflow = createWorkflow('data-analysis')

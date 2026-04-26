@@ -7,8 +7,8 @@ Production-grade resilience: circuit breakers, rate limiting, retries, and grace
 Wraps any agent with automatic retries, circuit breaking, fallback models, and health checks:
 
 ```ts
-import { ResilientAgent } from 'confused-ai/production';
-import { agent } from 'confused-ai';
+import { ResilientAgent } from 'fluxion/production';
+import { agent } from 'fluxion';
 
 const myAgent = agent({ model: 'gpt-4o', instructions: '...' });
 
@@ -33,7 +33,7 @@ const result = await resilient.run('Process this data');
 Control what agents can say and do:
 
 ```ts
-import { createGuardrails } from 'confused-ai/guardrails';
+import { createGuardrails } from 'fluxion/guardrails';
 
 const guardrails = createGuardrails({
   // Input allowlist — only allow topics in this list
@@ -69,7 +69,7 @@ const myAgent = agent({
 Automatically fail over to backup models:
 
 ```ts
-import { createFallbackChain } from 'confused-ai/llm';
+import { createFallbackChain } from 'fluxion/llm';
 
 const llm = createFallbackChain([
   { model: 'gpt-4o', weight: 1 },
@@ -83,7 +83,7 @@ const myAgent = agent({ model: llm, instructions: '...' });
 ## Rate limiting (plugin)
 
 ```ts
-import { rateLimitPlugin } from 'confused-ai/plugins';
+import { rateLimitPlugin } from 'fluxion/plugins';
 
 const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
   .use(rateLimitPlugin({
@@ -99,7 +99,7 @@ const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
 
 ```ts
 import Redis from 'ioredis';
-import { RedisRateLimiter } from 'confused-ai/production';
+import { RedisRateLimiter } from 'fluxion/production';
 
 const redis = new Redis(process.env.REDIS_URL!);
 
@@ -123,7 +123,7 @@ if (!result.allowed) {
 Monitor agent health and readiness:
 
 ```ts
-import { HealthMonitor } from 'confused-ai/production';
+import { HealthMonitor } from 'fluxion/production';
 
 const health = new HealthMonitor({
   agents: [myAgent, teamAgent],
@@ -147,7 +147,7 @@ app.get('/health', (req, res) => {
 Automatic truncation when approaching token limits:
 
 ```ts
-import { ContextWindowManager } from 'confused-ai/llm';
+import { ContextWindowManager } from 'fluxion/llm';
 
 const myAgent = agent({
   model: 'gpt-4o',  // 128k context
@@ -164,7 +164,7 @@ const myAgent = agent({
 Track and budget LLM costs:
 
 ```ts
-import { CostTracker } from 'confused-ai/llm';
+import { CostTracker } from 'fluxion/llm';
 
 const tracker = new CostTracker({
   budget: 10.00,  // USD
@@ -194,8 +194,8 @@ It connects sessions, memory, guardrails, rate-limiting, audit logs, observabili
 and more with sensible in-memory defaults that you replace progressively:
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { createProductionSetup } from 'confused-ai/adapters';
+import { createAgent } from 'fluxion';
+import { createProductionSetup } from 'fluxion/adapters';
 
 const setup = createProductionSetup({
   // Replace in-memory defaults with real drivers:
@@ -238,7 +238,7 @@ See the [Adapters guide](./adapters.md) for the full reference.
 Hard-stop LLM spend per run, per user (daily), or globally (monthly). Unlike `CostTracker` (which measures), `BudgetEnforcer` **stops execution** when a cap is crossed.
 
 ```ts
-import { createAgent } from 'confused-ai';
+import { createAgent } from 'fluxion';
 
 const agent = createAgent({
   name: 'Safe',
@@ -258,10 +258,10 @@ const agent = createAgent({
 The default `InMemoryBudgetStore` resets on restart. For persistence, implement `BudgetStore` or use the SQLite default:
 
 ```ts
-import { InMemoryBudgetStore, BudgetEnforcer } from 'confused-ai/production';
+import { InMemoryBudgetStore, BudgetEnforcer } from 'fluxion/production';
 
 // Custom Postgres-backed store:
-import type { BudgetStore } from 'confused-ai/production';
+import type { BudgetStore } from 'fluxion/production';
 
 class PostgresBudgetStore implements BudgetStore {
   async getUserDailySpend(userId: string) { /* SELECT SUM(usd) WHERE user_id = $1 AND date = today */ }
@@ -282,7 +282,7 @@ const agent = createAgent({
 ### Handling `BudgetExceededError`
 
 ```ts
-import { BudgetExceededError } from 'confused-ai/production';
+import { BudgetExceededError } from 'fluxion/production';
 
 try {
   await agent.run('Analyse 500 documents', { userId: 'user-42' });
@@ -302,8 +302,8 @@ try {
 For long-running tasks, save execution state after each step. If the process restarts, resume from the last saved step.
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { createSqliteCheckpointStore } from 'confused-ai/production';
+import { createAgent } from 'fluxion';
+import { createSqliteCheckpointStore } from 'fluxion/production';
 
 const agent = createAgent({
   name: 'BatchProcessor',
@@ -319,14 +319,14 @@ const result = await agent.run('Process all 500 records', { runId: 'batch-job-00
 
 | Store | Import | Notes |
 |-------|--------|-------|
-| `InMemoryCheckpointStore` | `confused-ai/production` | Dev/test — does not survive restarts |
-| `SqliteCheckpointStore` | `confused-ai/production` | Durable default |
-| `createSqliteCheckpointStore` | `confused-ai/production` | Factory shorthand |
+| `InMemoryCheckpointStore` | `fluxion/production` | Dev/test — does not survive restarts |
+| `SqliteCheckpointStore` | `fluxion/production` | Durable default |
+| `createSqliteCheckpointStore` | `fluxion/production` | Factory shorthand |
 
 ### Custom checkpoint store
 
 ```ts
-import type { AgentCheckpointStore, AgentRunState } from 'confused-ai/production';
+import type { AgentCheckpointStore, AgentRunState } from 'fluxion/production';
 
 class RedisCheckpointStore implements AgentCheckpointStore {
   async save(runId: string, step: number, state: AgentRunState) {
@@ -349,8 +349,8 @@ class RedisCheckpointStore implements AgentCheckpointStore {
 `createHttpService` supports built-in authentication strategies via the `auth` option. When omitted, the server runs without auth (dev mode only).
 
 ```ts
-import { createHttpService, listenService } from 'confused-ai/runtime';
-import { apiKeyAuth, bearerAuth } from 'confused-ai/runtime';
+import { createHttpService, listenService } from 'fluxion/runtime';
+import { apiKeyAuth, bearerAuth } from 'fluxion/runtime';
 
 // API key (header: x-api-key)
 const service = createHttpService({
@@ -366,7 +366,7 @@ await listenService(service, 8080);
 
 ```ts
 // Bearer JWT / custom token validation
-import { bearerAuth } from 'confused-ai/runtime';
+import { bearerAuth } from 'fluxion/runtime';
 
 const service = createHttpService({
   agents: { assistant },
@@ -379,7 +379,7 @@ const service = createHttpService({
 
 ```ts
 // Basic auth (username:password)
-import { createHttpService } from 'confused-ai/runtime';
+import { createHttpService } from 'fluxion/runtime';
 
 const service = createHttpService({
   agents: { assistant },
@@ -393,7 +393,7 @@ const service = createHttpService({
 **JWT RBAC** — for role-based access control using HS256 JWTs:
 
 ```ts
-import { jwtAuth, hasRole } from 'confused-ai/runtime';
+import { jwtAuth, hasRole } from 'fluxion/runtime';
 
 const service = createHttpService({
   agents: { assistant },
@@ -425,8 +425,8 @@ if (!hasRole(auth, 'admin')) throw new Error('Forbidden');
 Prevent duplicate side-effects when clients retry failed HTTP requests. Pass an `X-Idempotency-Key` header and the same response is returned on replay — the agent does **not** re-execute.
 
 ```ts
-import { createHttpService } from 'confused-ai/runtime';
-import { createSqliteIdempotencyStore } from 'confused-ai/production';
+import { createHttpService } from 'fluxion/runtime';
+import { createSqliteIdempotencyStore } from 'fluxion/production';
 
 const service = createHttpService({
   agents: { assistant },
@@ -452,7 +452,7 @@ If the request is retried with the same key within 24 hours, the original respon
 ### Custom idempotency store
 
 ```ts
-import type { IdempotencyStore } from 'confused-ai/production';
+import type { IdempotencyStore } from 'fluxion/production';
 
 class RedisIdempotencyStore implements IdempotencyStore {
   async get(key: string) { /* fetch from Redis */ }
@@ -467,8 +467,8 @@ class RedisIdempotencyStore implements IdempotencyStore {
 Persistent, queryable audit trail for every agent run. Satisfies SOC 2 and HIPAA requirements for tamper-evident logging.
 
 ```ts
-import { createHttpService } from 'confused-ai/runtime';
-import { createSqliteAuditStore } from 'confused-ai/production';
+import { createHttpService } from 'fluxion/runtime';
+import { createSqliteAuditStore } from 'fluxion/production';
 
 const service = createHttpService({
   agents: { assistant },
@@ -520,7 +520,7 @@ For distributed deployments where multiple processes share the same rate limits:
 
 ```ts
 import Redis from 'ioredis';
-import { RedisRateLimiter } from 'confused-ai/production';
+import { RedisRateLimiter } from 'fluxion/production';
 
 const redis = new Redis(process.env.REDIS_URL!);
 
@@ -547,7 +547,7 @@ Use `RedisRateLimiter` instead of the in-process `RateLimiter` whenever you run 
 Pause agent execution at high-risk tool calls and require a human decision before proceeding. Build a gate tool using `waitForApproval`:
 
 ```ts
-import { createSqliteApprovalStore, waitForApproval, ApprovalRejectedError } from 'confused-ai/production';
+import { createSqliteApprovalStore, waitForApproval, ApprovalRejectedError } from 'fluxion/production';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
 

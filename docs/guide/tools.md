@@ -1,29 +1,29 @@
 # Built-in Tools
 
-confused-ai ships **70+ production-ready tools** organized into categories. Every tool uses the same interface — plug any of them into `agent()` via the `tools:` option.
+fluxion ships **70+ production-ready tools** organized into categories. Every tool uses the same interface — plug any of them into `agent()` via the `tools:` option.
 
-All tools are available from the main `confused-ai` import. You can also import by category subpath for better tree-shaking:
+All tools are available from the main `fluxion` import. You can also import by category subpath for better tree-shaking:
 
 ```ts
 // Everything — always works
-import { TavilySearchTool, GitHubToolkit } from 'confused-ai';
+import { TavilySearchTool, GitHubToolkit } from 'fluxion';
 
 // Category subpaths — tree-shake to just what you need
-import { TavilySearchTool, ExaToolkit }       from 'confused-ai/tools/search';
-import { SlackToolkit, GmailToolkit }          from 'confused-ai/tools/communication';
-import { GitHubToolkit, DockerToolkit }        from 'confused-ai/tools/devtools';
-import { ClickUpToolkit, NotionToolkit }       from 'confused-ai/tools/productivity';
-import { DatabaseToolkit, Neo4jToolkit }       from 'confused-ai/tools/data';
-import { StripeToolkit }                       from 'confused-ai/tools/finance';
-import { OpenAIToolkit, SerpApiToolkit }       from 'confused-ai/tools/ai';
-import { JavaScriptExecTool }                 from 'confused-ai/tools/devtools';
-import { WikipediaSearchTool }                from 'confused-ai/tools/scraping';
-import { ShellTool }                           from 'confused-ai/tools/shell'; // explicit: security
+import { TavilySearchTool, ExaToolkit }       from 'fluxion/tools/search';
+import { SlackToolkit, GmailToolkit }          from 'fluxion/tools/communication';
+import { GitHubToolkit, DockerToolkit }        from 'fluxion/tools/devtools';
+import { ClickUpToolkit, NotionToolkit }       from 'fluxion/tools/productivity';
+import { DatabaseToolkit, Neo4jToolkit }       from 'fluxion/tools/data';
+import { StripeToolkit }                       from 'fluxion/tools/finance';
+import { OpenAIToolkit, SerpApiToolkit }       from 'fluxion/tools/ai';
+import { JavaScriptExecTool }                 from 'fluxion/tools/devtools';
+import { WikipediaSearchTool }                from 'fluxion/tools/scraping';
+import { ShellTool }                           from 'fluxion/tools/shell'; // explicit: security
 ```
 
 ```ts
-import { agent } from 'confused-ai';
-import { TavilySearchTool, GitHubToolkit, CalculatorToolkit } from 'confused-ai';
+import { agent } from 'fluxion';
+import { TavilySearchTool, GitHubToolkit, CalculatorToolkit } from 'fluxion';
 
 const ai = agent({
   instructions: 'You are a research assistant.',
@@ -43,7 +43,7 @@ const ai = agent({
 Make arbitrary HTTP requests (GET, POST, PUT, PATCH, DELETE). SSRF-protected by default — private IP ranges are blocked.
 
 ```ts
-import { HttpClientTool } from 'confused-ai';
+import { HttpClientTool } from 'fluxion';
 
 const ai = agent({
   tools: [
@@ -62,7 +62,7 @@ const result = await ai.run('GET https://api.github.com/repos/microsoft/typescri
 Fetch a URL and extract page title, visible text, and all links. No headless browser required — uses native `fetch`.
 
 ```ts
-import { BrowserTool } from 'confused-ai';
+import { BrowserTool } from 'fluxion';
 
 const ai = agent({
   tools: [new BrowserTool()],
@@ -75,7 +75,7 @@ const result = await ai.run('Summarize the homepage of https://typescriptlang.or
 Full headless browser via Playwright — renders JavaScript-heavy pages. Requires `playwright` peer dep.
 
 ```ts
-import { PlaywrightPageTitleTool } from 'confused-ai';
+import { PlaywrightPageTitleTool } from 'fluxion';
 
 const ai = agent({
   tools: [new PlaywrightPageTitleTool()],
@@ -86,7 +86,7 @@ const ai = agent({
 Read and write files within a sandboxed base directory.
 
 ```ts
-import { WriteFileTool, ReadFileTool } from 'confused-ai';
+import { WriteFileTool, ReadFileTool } from 'fluxion';
 
 const ai = agent({
   tools: [
@@ -106,7 +106,7 @@ await ai.run('Read report.csv from data/, summarize it, and save the summary to 
 Free, no-API-key web search and news via DuckDuckGo.
 
 ```ts
-import { DuckDuckGoSearchTool, DuckDuckGoNewsTool } from 'confused-ai';
+import { DuckDuckGoSearchTool, DuckDuckGoNewsTool } from 'fluxion';
 
 const ai = agent({
   tools: [new DuckDuckGoSearchTool(), new DuckDuckGoNewsTool()],
@@ -119,7 +119,7 @@ await ai.run('What are the top stories about TypeScript 5.5 today?');
 AI-optimized web search and content extraction. Best for research tasks.
 
 ```ts
-import { TavilyToolkit } from 'confused-ai';
+import { TavilyToolkit } from 'fluxion';
 
 const ai = agent({
   tools: TavilyToolkit.create({ apiKey: process.env.TAVILY_API_KEY }),
@@ -132,7 +132,7 @@ await ai.run('Find the latest benchmarks comparing GPT-4o and Claude 3.5 Sonnet'
 Search and retrieve Wikipedia articles.
 
 ```ts
-import { WikipediaSearchTool } from 'confused-ai';
+import { WikipediaSearchTool } from 'fluxion';
 
 const ai = agent({
   tools: [new WikipediaSearchTool()],
@@ -143,7 +143,7 @@ const ai = agent({
 Browse Hacker News top stories and user profiles.
 
 ```ts
-import { HackerNewsToolkit } from 'confused-ai';
+import { HackerNewsToolkit } from 'fluxion';
 
 const ai = agent({
   tools: HackerNewsToolkit.create(),
@@ -156,7 +156,7 @@ await ai.run('What are the top 5 stories on Hacker News right now?');
 Search and retrieve academic papers from arXiv.
 
 ```ts
-import { ArxivToolkit } from 'confused-ai';
+import { ArxivToolkit } from 'fluxion';
 
 const ai = agent({
   tools: ArxivToolkit.create(),
@@ -169,7 +169,7 @@ await ai.run('Find recent papers on mixture-of-experts transformer architectures
 Google Search and YouTube search via SerpAPI.
 
 ```ts
-import { SerpApiToolkit } from 'confused-ai';
+import { SerpApiToolkit } from 'fluxion';
 
 const ai = agent({
   tools: SerpApiToolkit.create({ apiKey: process.env.SERPAPI_KEY }),
@@ -183,7 +183,7 @@ const ai = agent({
 ### Slack
 
 ```ts
-import { SlackToolkit } from 'confused-ai';
+import { SlackToolkit } from 'fluxion';
 
 const ai = agent({
   tools: SlackToolkit.create({ token: process.env.SLACK_BOT_TOKEN }),
@@ -197,7 +197,7 @@ Available tools: `SlackSendMessageTool`, `SlackListChannelsTool`, `SlackGetChann
 ### Discord
 
 ```ts
-import { DiscordToolkit } from 'confused-ai';
+import { DiscordToolkit } from 'fluxion';
 
 const ai = agent({
   tools: DiscordToolkit.create({ token: process.env.DISCORD_BOT_TOKEN }),
@@ -209,7 +209,7 @@ Available tools: `DiscordSendMessageTool`, `DiscordGetMessagesTool`, `DiscordCre
 ### Telegram
 
 ```ts
-import { TelegramToolkit } from 'confused-ai';
+import { TelegramToolkit } from 'fluxion';
 
 const ai = agent({
   tools: TelegramToolkit.create({ botToken: process.env.TELEGRAM_BOT_TOKEN }),
@@ -219,7 +219,7 @@ const ai = agent({
 ### Email (SMTP / SendGrid)
 
 ```ts
-import { EmailToolkit, SmtpEmailTool, SendGridEmailTool } from 'confused-ai';
+import { EmailToolkit, SmtpEmailTool, SendGridEmailTool } from 'fluxion';
 
 // SMTP
 const smtpAgent = agent({
@@ -246,7 +246,7 @@ await sgAgent.run('Email hello@example.com with subject "Weekly Report" and a su
 ### Twilio (SMS / Voice)
 
 ```ts
-import { TwilioToolkit } from 'confused-ai';
+import { TwilioToolkit } from 'fluxion';
 
 const ai = agent({
   tools: TwilioToolkit.create({
@@ -268,7 +268,7 @@ Available tools: `TwilioSendSmsTool`, `TwilioMakeCallTool`
 ### GitHub
 
 ```ts
-import { GitHubToolkit } from 'confused-ai';
+import { GitHubToolkit } from 'fluxion';
 
 const ai = agent({
   tools: GitHubToolkit.create({ token: process.env.GITHUB_TOKEN }),
@@ -282,7 +282,7 @@ Available tools: `GitHubSearchRepositoriesTool`, `GitHubGetRepositoryTool`, `Git
 ### Jira
 
 ```ts
-import { JiraToolkit } from 'confused-ai';
+import { JiraToolkit } from 'fluxion';
 
 const ai = agent({
   tools: JiraToolkit.create({
@@ -300,7 +300,7 @@ Available tools: `JiraGetIssueTool`, `JiraCreateIssueTool`, `JiraSearchIssuesToo
 ### Linear
 
 ```ts
-import { LinearToolkit } from 'confused-ai';
+import { LinearToolkit } from 'fluxion';
 
 const ai = agent({
   tools: LinearToolkit.create({ apiKey: process.env.LINEAR_API_KEY }),
@@ -312,7 +312,7 @@ Available tools: `LinearCreateIssueTool`, `LinearGetIssueTool`, `LinearSearchIss
 ### Notion
 
 ```ts
-import { NotionToolkit } from 'confused-ai';
+import { NotionToolkit } from 'fluxion';
 
 const ai = agent({
   tools: NotionToolkit.create({ apiKey: process.env.NOTION_API_KEY }),
@@ -326,7 +326,7 @@ Available tools: `NotionCreatePageTool`, `NotionSearchTool`, `NotionUpdatePageTo
 ### ClickUp
 
 ```ts
-import { ClickUpToolkit } from 'confused-ai';
+import { ClickUpToolkit } from 'fluxion';
 
 const ai = agent({
   tools: ClickUpToolkit.create({ apiKey: process.env.CLICKUP_API_KEY }),
@@ -340,7 +340,7 @@ Available tools: `ClickUpGetWorkspacesTool`, `ClickUpGetSpacesTool`, `ClickUpGet
 ### Confluence
 
 ```ts
-import { ConfluenceToolkit } from 'confused-ai';
+import { ConfluenceToolkit } from 'fluxion';
 
 const ai = agent({
   tools: ConfluenceToolkit.create({
@@ -358,7 +358,7 @@ Available tools: `ConfluenceSearchPagesTool`, `ConfluenceGetPageTool`, `Confluen
 ### Google Calendar
 
 ```ts
-import { GoogleCalendarToolkit } from 'confused-ai';
+import { GoogleCalendarToolkit } from 'fluxion';
 
 const ai = agent({
   tools: GoogleCalendarToolkit.create({ accessToken: process.env.GOOGLE_ACCESS_TOKEN }),
@@ -372,7 +372,7 @@ Available tools: `GoogleCalendarListEventsTool`, `GoogleCalendarCreateEventTool`
 ### Google Sheets
 
 ```ts
-import { GoogleSheetsToolkit } from 'confused-ai';
+import { GoogleSheetsToolkit } from 'fluxion';
 
 const ai = agent({
   tools: GoogleSheetsToolkit.create({ accessToken: process.env.GOOGLE_ACCESS_TOKEN }),
@@ -386,7 +386,7 @@ Available tools: `GoogleSheetsGetValuesTool`, `GoogleSheetsUpdateValuesTool`, `G
 ### Spotify
 
 ```ts
-import { SpotifyToolkit } from 'confused-ai';
+import { SpotifyToolkit } from 'fluxion';
 
 const ai = agent({
   tools: SpotifyToolkit.create({ accessToken: process.env.SPOTIFY_ACCESS_TOKEN }),
@@ -400,7 +400,7 @@ Available tools: `SpotifySearchTool`, `SpotifyGetTrackTool`, `SpotifyGetPlaylist
 ### Trello
 
 ```ts
-import { TrelloToolkit } from 'confused-ai';
+import { TrelloToolkit } from 'fluxion';
 
 const ai = agent({
   tools: TrelloToolkit.create({
@@ -415,7 +415,7 @@ await ai.run('Create a card called "Fix login bug" in the Backlog list of my mai
 Available tools: `TrelloGetBoardsTool`, `TrelloGetBoardTool`, `TrelloGetCardsTool`, `TrelloCreateCardTool`, `TrelloUpdateCardTool`, `TrelloAddCommentTool`, `TrelloCreateListTool`
 
 ```ts
-import { TodoistToolkit } from 'confused-ai';
+import { TodoistToolkit } from 'fluxion';
 
 const ai = agent({
   tools: TodoistToolkit.create({ apiToken: process.env.TODOIST_API_TOKEN }),
@@ -429,7 +429,7 @@ Available tools: `TodoistCreateTaskTool`, `TodoistGetTasksTool`, `TodoistComplet
 ### Gmail
 
 ```ts
-import { GmailToolkit } from 'confused-ai';
+import { GmailToolkit } from 'fluxion';
 
 const ai = agent({
   tools: GmailToolkit.create({ accessToken: process.env.GMAIL_ACCESS_TOKEN }),
@@ -447,7 +447,7 @@ Available tools: `GmailListMessagesTool`, `GmailGetMessageTool`, `GmailSendEmail
 ### Databases (PostgreSQL / MySQL / SQLite)
 
 ```ts
-import { DatabaseToolkit } from 'confused-ai';
+import { DatabaseToolkit } from 'fluxion';
 
 const ai = agent({
   tools: DatabaseToolkit.create({
@@ -464,7 +464,7 @@ Available tools: `PostgreSQLQueryTool`, `PostgreSQLInsertTool`, `MySQLQueryTool`
 ### Redis
 
 ```ts
-import { RedisToolkit } from 'confused-ai';
+import { RedisToolkit } from 'fluxion';
 
 const ai = agent({
   tools: RedisToolkit.create({ url: process.env.REDIS_URL }),
@@ -478,7 +478,7 @@ Available tools: `RedisGetTool`, `RedisSetTool`, `RedisDeleteTool`, `RedisKeysTo
 ### CSV
 
 ```ts
-import { CsvToolkit } from 'confused-ai';
+import { CsvToolkit } from 'fluxion';
 
 const ai = agent({
   tools: CsvToolkit.create(),
@@ -499,7 +499,7 @@ Available tools: `CsvParseTool`, `CsvFilterTool`, `CsvSelectColumnsTool`, `CsvSo
 ### Neo4j
 
 ```ts
-import { Neo4jToolkit } from 'confused-ai';
+import { Neo4jToolkit } from 'fluxion';
 
 const ai = agent({
   tools: Neo4jToolkit.create({
@@ -517,7 +517,7 @@ Available tools: `Neo4jRunCypherTool`, `Neo4jCreateNodeTool`, `Neo4jCreateRelati
 ### Stripe
 
 ```ts
-import { StripeToolkit } from 'confused-ai';
+import { StripeToolkit } from 'fluxion';
 
 const ai = agent({
   tools: StripeToolkit.create({ secretKey: process.env.STRIPE_SECRET_KEY }),
@@ -531,7 +531,7 @@ Available tools: `StripeCreateCustomerTool`, `StripeGetCustomerTool`, `StripeCre
 ### Yahoo Finance
 
 ```ts
-import { YFinanceTool } from 'confused-ai';
+import { YFinanceTool } from 'fluxion';
 
 const ai = agent({
   tools: [new YFinanceTool()],
@@ -543,7 +543,7 @@ await ai.run('What is the current stock price and PE ratio for NVDA?');
 ### OpenWeather
 
 ```ts
-import { OpenWeatherToolkit } from 'confused-ai';
+import { OpenWeatherToolkit } from 'fluxion';
 
 const ai = agent({
   tools: OpenWeatherToolkit.create({ apiKey: process.env.OPENWEATHER_API_KEY }),
@@ -557,7 +557,7 @@ Available tools: `OpenWeatherCurrentTool`, `OpenWeatherForecastTool`
 ### Exa
 
 ```ts
-import { ExaToolkit } from 'confused-ai';
+import { ExaToolkit } from 'fluxion';
 
 const ai = agent({
   tools: ExaToolkit.create({ apiKey: process.env.EXA_API_KEY }),
@@ -571,7 +571,7 @@ Available tools: `ExaSearchTool`, `ExaFindSimilarTool`, `ExaGetContentsTool`
 ### Firecrawl
 
 ```ts
-import { FirecrawlToolkit } from 'confused-ai';
+import { FirecrawlToolkit } from 'fluxion';
 
 const ai = agent({
   tools: FirecrawlToolkit.create({ apiKey: process.env.FIRECRAWL_API_KEY }),
@@ -585,7 +585,7 @@ Available tools: `FirecrawlScrapeTool`, `FirecrawlCrawlTool`, `FirecrawlMapTool`
 ### Google Maps
 
 ```ts
-import { GoogleMapsToolkit } from 'confused-ai';
+import { GoogleMapsToolkit } from 'fluxion';
 
 const ai = agent({
   tools: GoogleMapsToolkit.create({ apiKey: process.env.GOOGLE_MAPS_API_KEY }),
@@ -603,7 +603,7 @@ Available tools: `GoogleMapsSearchPlacesTool`, `GoogleMapsGeocodeTool`, `GoogleM
 ### OpenAI (Images / Audio)
 
 ```ts
-import { OpenAIToolkit } from 'confused-ai';
+import { OpenAIToolkit } from 'fluxion';
 
 const ai = agent({
   tools: OpenAIToolkit.create({ apiKey: process.env.OPENAI_API_KEY }),
@@ -621,7 +621,7 @@ Available tools: `OpenAIGenerateImageTool`, `OpenAITranscribeAudioTool`
 ### YouTube
 
 ```ts
-import { YouTubeToolkit } from 'confused-ai';
+import { YouTubeToolkit } from 'fluxion';
 
 const ai = agent({
   tools: YouTubeToolkit.create({ apiKey: process.env.YOUTUBE_API_KEY }),
@@ -635,7 +635,7 @@ Available tools: `YouTubeSearchTool`, `YouTubeGetVideoTool`
 ### Reddit
 
 ```ts
-import { RedditToolkit } from 'confused-ai';
+import { RedditToolkit } from 'fluxion';
 
 const ai = agent({
   tools: RedditToolkit.create(),
@@ -657,7 +657,7 @@ Code execution tools run user-supplied code on your server. Only enable them in 
 ### JavaScript (Node.js vm sandbox)
 
 ```ts
-import { JavaScriptExecTool } from 'confused-ai';
+import { JavaScriptExecTool } from 'fluxion';
 
 const ai = agent({
   tools: [new JavaScriptExecTool({ timeoutMs: 3000 })],
@@ -669,7 +669,7 @@ await ai.run('Calculate the first 20 Fibonacci numbers using JavaScript');
 ### Python (subprocess)
 
 ```ts
-import { PythonExecTool } from 'confused-ai';
+import { PythonExecTool } from 'fluxion';
 
 const ai = agent({
   tools: [new PythonExecTool({ timeoutMs: 10_000 })],
@@ -681,7 +681,7 @@ await ai.run('Write and run a Python script to parse this JSON and compute avera
 ### Shell Commands (allowlist-gated)
 
 ```ts
-import { ShellCommandTool } from 'confused-ai';
+import { ShellCommandTool } from 'fluxion';
 
 const ai = agent({
   tools: [
@@ -697,7 +697,7 @@ const ai = agent({
 The `ShellTool` is **not** in the default barrel export to avoid supply chain flags. Import explicitly:
 
 ```ts
-import { ShellTool } from 'confused-ai/tools/shell';
+import { ShellTool } from 'fluxion/tools/shell';
 
 const ai = agent({
   tools: [
@@ -715,7 +715,7 @@ const ai = agent({
 ## Calculator
 
 ```ts
-import { CalculatorToolkit } from 'confused-ai';
+import { CalculatorToolkit } from 'fluxion';
 
 const ai = agent({
   tools: CalculatorToolkit.create(),
@@ -733,7 +733,7 @@ Available tools: `CalculatorAddTool`, `CalculatorSubtractTool`, `CalculatorMulti
 ### Consume an MCP server
 
 ```ts
-import { loadMcpToolsFromUrl } from 'confused-ai';
+import { loadMcpToolsFromUrl } from 'fluxion';
 
 // Load all tools exposed by any MCP-compatible server
 const mcpTools = await loadMcpToolsFromUrl('http://localhost:8811/mcp');
@@ -748,8 +748,8 @@ const ai = agent({
 `createMcpServer` / `McpHttpServer` — expose a `ToolRegistry` as a JSON-RPC 2.0 MCP-compatible HTTP endpoint. External clients (Claude Desktop, other agents, any MCP client) can discover and invoke your tools.
 
 ```ts
-import { createMcpServer, toToolRegistry } from 'confused-ai/tools';
-import { CalculatorToolkit, TavilyToolkit } from 'confused-ai/tools';
+import { createMcpServer, toToolRegistry } from 'fluxion/tools';
+import { CalculatorToolkit, TavilyToolkit } from 'fluxion/tools';
 
 const registry = toToolRegistry([
   ...CalculatorToolkit.create(),
@@ -776,7 +776,7 @@ await server.stop();
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `name` | `string` | `'confused-ai-mcp'` | Server name in `initialize` response |
+| `name` | `string` | `'fluxion-mcp'` | Server name in `initialize` response |
 | `version` | `string` | `'1.0.0'` | Server version |
 | `port` | `number` | `3100` | HTTP port |
 | `host` | `string` | `'127.0.0.1'` | Bind address |
@@ -793,8 +793,8 @@ Useful for Claude Desktop integrations or any host that spawns MCP servers as ch
 
 ```ts
 // my-mcp-server.ts  — run with: node my-mcp-server.js
-import { runMcpStdioToolServer } from 'confused-ai/tools';
-import { CalculatorToolkit } from 'confused-ai/tools';
+import { runMcpStdioToolServer } from 'fluxion/tools';
+import { CalculatorToolkit } from 'fluxion/tools';
 
 await runMcpStdioToolServer(CalculatorToolkit.create(), {
   name: 'calculator-server',
@@ -806,7 +806,7 @@ await runMcpStdioToolServer(CalculatorToolkit.create(), {
 For more control, handle individual lines yourself:
 
 ```ts
-import { handleMcpStdioLine } from 'confused-ai/tools';
+import { handleMcpStdioLine } from 'fluxion/tools';
 
 const serverInfo = { name: 'my-server', version: '1.0.0' };
 const tools = CalculatorToolkit.create();
@@ -821,8 +821,8 @@ if (response) process.stdout.write(response + '\n');
 `handleToolGatewayRequest` — a lightweight framework-agnostic HTTP bridge. Mount it behind your own auth/router. Not full MCP spec — useful for internal tool gateways or quick demos.
 
 ```ts
-import { handleToolGatewayRequest, toToolRegistry } from 'confused-ai/tools';
-import { CalculatorToolkit } from 'confused-ai/tools';
+import { handleToolGatewayRequest, toToolRegistry } from 'fluxion/tools';
+import { CalculatorToolkit } from 'fluxion/tools';
 import { createServer } from 'node:http';
 
 const tools = CalculatorToolkit.create();
@@ -853,7 +853,7 @@ createServer(async (req, res) => {
 All tools extend `BaseTool`. Use the `tool()` helper for quick inline definitions:
 
 ```ts
-import { tool } from 'confused-ai';
+import { tool } from 'fluxion';
 import { z } from 'zod';
 
 const getWeatherTool = tool({
@@ -877,7 +877,7 @@ const ai = agent({
 Or use the fluent `ToolBuilder`:
 
 ```ts
-import { ToolBuilder } from 'confused-ai';
+import { ToolBuilder } from 'fluxion';
 import { z } from 'zod';
 
 const myTool = new ToolBuilder('fetch_price')
@@ -893,7 +893,7 @@ const myTool = new ToolBuilder('fetch_price')
 Extend or wrap any existing tool:
 
 ```ts
-import { extendTool, wrapTool, TavilySearchTool } from 'confused-ai';
+import { extendTool, wrapTool, TavilySearchTool } from 'fluxion';
 
 // Add logging around an existing tool
 const loggedSearch = wrapTool(new TavilySearchTool(), {

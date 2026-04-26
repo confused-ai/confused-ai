@@ -2,7 +2,7 @@
 
 The Background Queue system lets you dispatch long-running hook work to an external queue backend instead of running it inside the agentic loop. This keeps agent latency low even when post-processing (analytics, billing, notifications) takes seconds.
 
-> **Import path:** `confused-ai/background`
+> **Import path:** `fluxion/background`
 
 ---
 
@@ -21,8 +21,8 @@ agent.run() ──► LLM loop ──► result returned to user   ← fast
 ## Quick start
 
 ```ts
-import { agent } from 'confused-ai';
-import { queueHook, InMemoryBackgroundQueue } from 'confused-ai/background';
+import { agent } from 'fluxion';
+import { queueHook, InMemoryBackgroundQueue } from 'fluxion/background';
 
 // Default: in-memory worker pool (no extra deps, great for dev/test)
 const queue = new InMemoryBackgroundQueue({ concurrency: 5 });
@@ -54,7 +54,7 @@ Replace `InMemoryBackgroundQueue` with a production backend. All implement the s
 ### In-memory (default)
 
 ```ts
-import { InMemoryBackgroundQueue } from 'confused-ai/background';
+import { InMemoryBackgroundQueue } from 'fluxion/background';
 
 const queue = new InMemoryBackgroundQueue({
   concurrency: 10,   // parallel workers
@@ -70,7 +70,7 @@ bun add bullmq
 ```
 
 ```ts
-import { BullMQBackgroundQueue } from 'confused-ai/background';
+import { BullMQBackgroundQueue } from 'fluxion/background';
 
 const queue = new BullMQBackgroundQueue({
   connection: { host: 'localhost', port: 6379 },
@@ -90,7 +90,7 @@ bun add kafkajs
 ```
 
 ```ts
-import { KafkaBackgroundQueue } from 'confused-ai/background';
+import { KafkaBackgroundQueue } from 'fluxion/background';
 
 const queue = new KafkaBackgroundQueue({
   clientId: 'agent-framework',
@@ -108,7 +108,7 @@ bun add amqplib
 ```
 
 ```ts
-import { RabbitMQBackgroundQueue } from 'confused-ai/background';
+import { RabbitMQBackgroundQueue } from 'fluxion/background';
 
 const queue = new RabbitMQBackgroundQueue({
   url: 'amqp://localhost',
@@ -126,7 +126,7 @@ bun add @aws-sdk/client-sqs
 ```
 
 ```ts
-import { SQSBackgroundQueue } from 'confused-ai/background';
+import { SQSBackgroundQueue } from 'fluxion/background';
 
 const queue = new SQSBackgroundQueue({
   region: 'us-east-1',
@@ -143,7 +143,7 @@ bun add ioredis
 ```
 
 ```ts
-import { RedisPubSubBackgroundQueue } from 'confused-ai/background';
+import { RedisPubSubBackgroundQueue } from 'fluxion/background';
 import Redis from 'ioredis';
 
 const pub = new Redis(process.env.REDIS_URL);
@@ -159,8 +159,8 @@ Good for: fire-and-forget fanout, multiple consumers for the same event.
 ## `queueHook()` API
 
 ```ts
-import { queueHook } from 'confused-ai/background';
-import type { BackgroundQueue } from 'confused-ai/background';
+import { queueHook } from 'fluxion/background';
+import type { BackgroundQueue } from 'fluxion/background';
 
 queueHook(
   queue,          // BackgroundQueue instance
@@ -186,7 +186,7 @@ queueHook(
 Implement the interface to bring any backend:
 
 ```ts
-import type { BackgroundQueue, BackgroundTask, BackgroundTaskHandler, EnqueueOptions, WorkerOptions } from 'confused-ai/background';
+import type { BackgroundQueue, BackgroundTask, BackgroundTaskHandler, EnqueueOptions, WorkerOptions } from 'fluxion/background';
 
 class MyQueue implements BackgroundQueue {
   async enqueue<T>(topic: string, payload: T, opts?: EnqueueOptions): Promise<string> {
@@ -209,7 +209,7 @@ class MyQueue implements BackgroundQueue {
 ## Multiple hooks, multiple topics
 
 ```ts
-import { queueHook, InMemoryBackgroundQueue } from 'confused-ai/background';
+import { queueHook, InMemoryBackgroundQueue } from 'fluxion/background';
 
 const queue = new InMemoryBackgroundQueue();
 

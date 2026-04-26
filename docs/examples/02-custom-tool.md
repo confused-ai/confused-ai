@@ -15,7 +15,7 @@ for connecting agents to any external API, database, or service.
 ```ts
 // weather-agent.ts
 import { z } from 'zod';
-import { createAgent, tool } from 'confused-ai';
+import { createAgent, tool } from 'fluxion';
 
 // ── 1. Define the tool ─────────────────────────────────────────────────────
 const getWeather = tool({
@@ -109,7 +109,7 @@ const agent = createAgent({
 Prefer a more structured API? Use `defineTool()`:
 
 ```ts
-import { defineTool } from 'confused-ai';
+import { defineTool } from 'fluxion';
 
 const getWeather = defineTool()
   .name('getWeather')

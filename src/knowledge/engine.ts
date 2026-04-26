@@ -5,7 +5,7 @@
  * and optional agentic RAG (retrieve → LLM generate answer with citations).
  *
  * @example
- * import { KnowledgeEngine, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai-core';
+ * import { KnowledgeEngine, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'fluxion-core';
  *
  * const knowledge = new KnowledgeEngine({
  *   embeddingProvider: new OpenAIEmbeddingProvider(),

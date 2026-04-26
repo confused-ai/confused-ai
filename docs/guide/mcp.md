@@ -5,8 +5,8 @@ Connect any Model Context Protocol (MCP) server to your agents. All MCP tools be
 ## Quick start
 
 ```ts
-import { McpClient } from 'confused-ai/orchestration';
-import { agent } from 'confused-ai';
+import { McpClient } from 'fluxion/orchestration';
+import { agent } from 'fluxion';
 
 // Connect to an MCP server
 const mcp = new McpClient({
@@ -104,7 +104,7 @@ const devAgent = agent({
 The framework ships a lightweight outbound client for the [Google A2A spec](https://google.github.io/A2A/) — useful when your agents need to call agents hosted on other services.
 
 ```ts
-import { createHttpA2AClient } from 'confused-ai/orchestration';
+import { createHttpA2AClient } from 'fluxion/orchestration';
 
 const a2a = createHttpA2AClient({
   baseUrl: 'https://broker.example.com/a2a',
@@ -131,7 +131,7 @@ console.log(reply.payload);
 `subscribe` is intentionally a no-op stub. Inbound delivery (push notifications, SSE streams, WebSocket) requires broker-side infrastructure that you operate. Implement your own subscribe transport when you need it:
 
 ```ts
-import type { A2AClient, A2AMessage } from 'confused-ai/orchestration';
+import type { A2AClient, A2AMessage } from 'fluxion/orchestration';
 
 class MyPollingA2AClient implements A2AClient {
   async send(msg) { /* ... */ }

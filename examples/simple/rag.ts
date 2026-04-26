@@ -1,6 +1,6 @@
-import { agent } from 'confused-ai';
-import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'confused-ai/knowledge';
-import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
+import { agent } from 'fluxion';
+import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'fluxion/knowledge';
+import { OpenAIEmbeddingProvider } from 'fluxion/memory';
 
 const knowledge = new KnowledgeEngine({
   embeddingProvider: new OpenAIEmbeddingProvider(),
@@ -8,7 +8,7 @@ const knowledge = new KnowledgeEngine({
 });
 
 // Ingest a document
-await knowledge.ingest([{ content: 'confused-ai is a TypeScript framework...' }]);
+await knowledge.ingest([{ content: 'fluxion is a TypeScript framework...' }]);
 
 const ragAgent = agent({
   model: 'gpt-4o-mini',
@@ -16,5 +16,5 @@ const ragAgent = agent({
   ragEngine: knowledge,
 });
 
-const r = await ragAgent.run('What is confused-ai?');
+const r = await ragAgent.run('What is fluxion?');
 console.log(r.text);

@@ -7,7 +7,7 @@ Build multi-agent systems with routers, handoffs, consensus voting, supervisors,
 Route requests to the most appropriate agent based on content or metadata:
 
 ```ts
-import { AgentRouter } from 'confused-ai/orchestration';
+import { AgentRouter } from 'fluxion/orchestration';
 
 const router = new AgentRouter({
   agents: {
@@ -37,7 +37,7 @@ const result = await router.route('I need a refund for my last invoice');
 One agent hands off to another mid-conversation:
 
 ```ts
-import { createHandoff } from 'confused-ai/orchestration';
+import { createHandoff } from 'fluxion/orchestration';
 
 const handoff = createHandoff({
   from: triageAgent,
@@ -61,7 +61,7 @@ const result = await handoff.execute('My app keeps crashing on login');
 Multiple agents vote on a response — use for high-stakes decisions:
 
 ```ts
-import { ConsensusProtocol } from 'confused-ai/orchestration';
+import { ConsensusProtocol } from 'fluxion/orchestration';
 
 const consensus = new ConsensusProtocol({
   agents: { analyst1: agent1, analyst2: agent2, analyst3: agent3 },
@@ -81,7 +81,7 @@ console.log(result.votes);       // individual agent votes
 A supervisor agent manages a team and delegates tasks:
 
 ```ts
-import { createSupervisor, createRole } from 'confused-ai/orchestration';
+import { createSupervisor, createRole } from 'fluxion/orchestration';
 
 const supervisor = createSupervisor({
   name: 'ArticleSupervisor',
@@ -104,7 +104,7 @@ const output = await supervisor.run(
 Agents collaborate peer-to-peer, handing off freely among themselves:
 
 ```ts
-import { createSwarm, createSwarmAgent } from 'confused-ai/orchestration';
+import { createSwarm, createSwarmAgent } from 'fluxion/orchestration';
 
 const swarm = createSwarm({
   name: 'SupportSwarm',
@@ -125,7 +125,7 @@ console.log(result.finalOutput);
 Chain agents with `compose()` — output of each becomes input of the next:
 
 ```ts
-import { agent, compose } from 'confused-ai';
+import { agent, compose } from 'fluxion';
 
 const researcher = agent('Research topics and return key findings.');
 const analyst    = agent('Analyse findings and identify key trends.');
@@ -149,7 +149,7 @@ const conditional = compose(researcher, analyst, {
 For pipelines involving `AgenticRunner`-style `Agent` instances (not `createAgent` results), use `createPipeline()`:
 
 ```ts
-import { createPipeline } from 'confused-ai/orchestration';
+import { createPipeline } from 'fluxion/orchestration';
 
 const pipeline = createPipeline({
   name: 'DataPipeline',
@@ -169,7 +169,7 @@ const output = await pipeline.run({ prompt: 'Analyze Q3 sales data' }, context);
 Decouple agents with a publish/subscribe message bus:
 
 ```ts
-import { MessageBusImpl } from 'confused-ai/orchestration';
+import { MessageBusImpl } from 'fluxion/orchestration';
 
 const bus = new MessageBusImpl();
 
@@ -193,7 +193,7 @@ await bus.send({
 Distribute requests across multiple instances of the same agent:
 
 ```ts
-import { RoundRobinLoadBalancer } from 'confused-ai/orchestration';
+import { RoundRobinLoadBalancer } from 'fluxion/orchestration';
 
 const lb = new RoundRobinLoadBalancer({
   agents: [agentInstance1, agentInstance2, agentInstance3],

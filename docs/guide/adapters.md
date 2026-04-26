@@ -1,6 +1,6 @@
 # Adapters
 
-The adapter system is the **universal extensibility layer** of confused-ai.
+The adapter system is the **universal extensibility layer** of fluxion.
 Every infrastructure concern — sessions, memory, guardrails, RAG, tools,
 auth, rate-limiting, audit logging, databases, queues, search, and more — is
 expressed as an adapter interface.  Swap any backend without touching your
@@ -14,8 +14,8 @@ The fastest path: `createProductionSetup()` wires every slot to a sensible
 default and lets you swap individual drivers progressively.
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { createProductionSetup } from 'confused-ai/adapters';
+import { createAgent } from 'fluxion';
+import { createProductionSetup } from 'fluxion/adapters';
 
 const setup = createProductionSetup();   // all in-memory defaults — works everywhere
 
@@ -112,11 +112,11 @@ AdapterRegistry ─ central store, lifecycle management, health checks ───
 Start with all defaults, then replace slots one at a time as you add real infra:
 
 ```ts
-import { createProductionSetup } from 'confused-ai/adapters';
+import { createProductionSetup } from 'fluxion/adapters';
 // Real adapters (install separately as needed):
-// import { RedisAdapter } from 'confused-ai-adapter-redis';
-// import { PostgresAdapter } from 'confused-ai-adapter-postgres';
-// import { PineconeAdapter } from 'confused-ai-adapter-pinecone';
+// import { RedisAdapter } from 'fluxion-adapter-redis';
+// import { PostgresAdapter } from 'fluxion-adapter-postgres';
+// import { PineconeAdapter } from 'fluxion-adapter-pinecone';
 
 const setup = createProductionSetup({
   // Stage 1 — replace cache
@@ -172,7 +172,7 @@ process.on('SIGTERM', async () => {
 For maximum control, build the registry yourself:
 
 ```ts
-import { createAdapterRegistry } from 'confused-ai/adapters';
+import { createAdapterRegistry } from 'fluxion/adapters';
 
 const registry = createAdapterRegistry();
 
@@ -274,7 +274,7 @@ Any object that satisfies the interface can be used as an adapter.
 Here is a minimal example for `RagAdapter`:
 
 ```ts
-import type { RagAdapter, RetrievedDocument, RagRetrieveOptions } from 'confused-ai/adapters';
+import type { RagAdapter, RetrievedDocument, RagRetrieveOptions } from 'fluxion/adapters';
 
 export class MyRagAdapter implements RagAdapter {
   readonly name = 'my-rag';
@@ -331,12 +331,12 @@ createAgent({ ragAdapter: new MyRagAdapter(), ... });
 Manages conversation sessions — messages, state, and metadata.
 
 ```ts
-import { InMemorySessionStoreAdapter } from 'confused-ai/adapters';
+import { InMemorySessionStoreAdapter } from 'fluxion/adapters';
 
 const sessionStore = new InMemorySessionStoreAdapter();
 
 // Or implement SessionStoreAdapter for Redis:
-// import { RedisSessionAdapter } from 'confused-ai-adapter-redis-sessions';
+// import { RedisSessionAdapter } from 'fluxion-adapter-redis-sessions';
 // const sessionStore = new RedisSessionAdapter({ url: '...' });
 
 createAgent({ sessionStoreAdapter: sessionStore, ... });
@@ -352,7 +352,7 @@ createAgent({ sessionStoreAdapter: sessionStore, ... });
 Long-term memory with semantic retrieval.
 
 ```ts
-import { InMemoryMemoryStoreAdapter } from 'confused-ai/adapters';
+import { InMemoryMemoryStoreAdapter } from 'fluxion/adapters';
 
 // Semantic retrieval with cosine similarity (if embeddings provided)
 // or keyword overlap fallback for dev/test
@@ -370,8 +370,8 @@ createAgent({ memoryStoreAdapter: memoryStore, ... });
 Content safety and compliance checks — runs on input, output, and tool calls.
 
 ```ts
-import { PassThroughGuardrailAdapter } from 'confused-ai/adapters';
-import type { GuardrailAdapter, GuardrailAdapterContext } from 'confused-ai/adapters';
+import { PassThroughGuardrailAdapter } from 'fluxion/adapters';
+import type { GuardrailAdapter, GuardrailAdapterContext } from 'fluxion/adapters';
 
 // Custom rule-based guardrail
 class BlockProfanityGuardrail implements GuardrailAdapter {
@@ -409,13 +409,13 @@ Full retrieval pipeline — ingest documents, retrieve relevant chunks,
 and build context strings.
 
 ```ts
-import { InMemoryRagAdapter } from 'confused-ai/adapters';
+import { InMemoryRagAdapter } from 'fluxion/adapters';
 
 const rag = new InMemoryRagAdapter();
 await rag.connect();
 
 // Ingest documents
-await rag.ingest({ content: 'confused-ai supports streaming out of the box.' });
+await rag.ingest({ content: 'fluxion supports streaming out of the box.' });
 await rag.ingestBatch([
   { content: 'Use createAgent() for simple agents.', source: 'docs/getting-started.md' },
   { content: 'The adapter system covers 20+ categories.', source: 'docs/adapters.md' },
@@ -436,7 +436,7 @@ createAgent({ ragAdapter: rag, ... });
 Credential validation — JWT, OAuth2, API-key, mTLS.
 
 ```ts
-import type { AuthAdapter, AuthIdentity, AuthResult } from 'confused-ai/adapters';
+import type { AuthAdapter, AuthIdentity, AuthResult } from 'fluxion/adapters';
 
 class JwtAuthAdapter implements AuthAdapter {
   readonly name = 'jwt';
@@ -472,7 +472,7 @@ createAgent({ authAdapter: new JwtAuthAdapter(), ... });
 Throttle requests per user, agent, or tool.
 
 ```ts
-import { InMemoryRateLimitAdapter } from 'confused-ai/adapters';
+import { InMemoryRateLimitAdapter } from 'fluxion/adapters';
 
 // 50 requests per 60 seconds
 const rateLimit = new InMemoryRateLimitAdapter(50, 60);
@@ -500,7 +500,7 @@ createAgent({ rateLimitAdapter: rateLimit, ... });
 Immutable, append-only compliance log. Every agent action can be recorded.
 
 ```ts
-import { InMemoryAuditLogAdapter } from 'confused-ai/adapters';
+import { InMemoryAuditLogAdapter } from 'fluxion/adapters';
 
 const auditLog = new InMemoryAuditLogAdapter();
 
@@ -532,7 +532,7 @@ createAgent({ auditLogAdapter: auditLog, ... });
 Remote tool discovery and execution — MCP servers, HTTP tool hubs.
 
 ```ts
-import { InMemoryToolRegistryAdapter } from 'confused-ai/adapters';
+import { InMemoryToolRegistryAdapter } from 'fluxion/adapters';
 
 const toolRegistry = new InMemoryToolRegistryAdapter();
 await toolRegistry.connect();
@@ -555,16 +555,16 @@ createAgent({ toolRegistryAdapter: toolRegistry, ... });
 ## Full production example
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { createProductionSetup } from 'confused-ai/adapters';
+import { createAgent } from 'fluxion';
+import { createProductionSetup } from 'fluxion/adapters';
 
 // Real adapters (community packages — install when you need them)
-// import { RedisAdapter } from 'confused-ai-adapter-redis';
-// import { PostgresAdapter } from 'confused-ai-adapter-postgres';
-// import { PineconeAdapter } from 'confused-ai-adapter-pinecone';
-// import { OtelAdapter } from 'confused-ai-adapter-otel';
-// import { ContentSafetyAdapter } from 'confused-ai-adapter-azure-content-safety';
-// import { JwtAuthAdapter } from 'confused-ai-adapter-jwt';
+// import { RedisAdapter } from 'fluxion-adapter-redis';
+// import { PostgresAdapter } from 'fluxion-adapter-postgres';
+// import { PineconeAdapter } from 'fluxion-adapter-pinecone';
+// import { OtelAdapter } from 'fluxion-adapter-otel';
+// import { ContentSafetyAdapter } from 'fluxion-adapter-azure-content-safety';
+// import { JwtAuthAdapter } from 'fluxion-adapter-jwt';
 
 const setup = createProductionSetup({
   // Uncomment and fill when you have real infrastructure:

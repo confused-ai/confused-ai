@@ -32,8 +32,8 @@ User: "Write a market analysis report on EVs"
 ```ts
 // supervisor-workflow.ts
 import { z } from 'zod';
-import { createAgent, tool } from 'confused-ai';
-import { createSupervisor, createRole } from 'confused-ai/orchestration';
+import { createAgent, tool } from 'fluxion';
+import { createSupervisor, createRole } from 'fluxion/orchestration';
 
 // ── Worker: market research ────────────────────────────────────────────────
 const webSearch = tool({
@@ -132,8 +132,8 @@ For dynamic delegation, create a high-level agent with `createAgent()` that uses
 handoff tools to delegate to specialists:
 
 ```ts
-import { agent, defineTool } from 'confused-ai';
-import { createHandoff } from 'confused-ai/orchestration';
+import { agent, defineTool } from 'fluxion';
+import { createHandoff } from 'fluxion/orchestration';
 
 const handoff = createHandoff({
   from: triageAgent,

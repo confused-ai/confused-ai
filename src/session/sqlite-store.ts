@@ -2,7 +2,7 @@
  * SQLite session store. Requires optional peer dependency: better-sqlite3.
  *
  * Install: pnpm add better-sqlite3
- * Then: import { createSqliteSessionStore } from '@confused-ai/core/session';
+ * Then: import { createSqliteSessionStore } from '@fluxion/core/session';
  */
 
 import type { SessionStore } from './types.js';

@@ -7,8 +7,8 @@ Plugins are reusable middleware you attach to agents via `.use()`. They can inte
 ### Logging plugin
 
 ```ts
-import { loggingPlugin } from 'confused-ai/plugins';
-import { defineAgent } from 'confused-ai';
+import { loggingPlugin } from 'fluxion/plugins';
+import { defineAgent } from 'fluxion';
 
 const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
   .use(loggingPlugin({ level: 'info' }));
@@ -17,7 +17,7 @@ const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
 ### Rate limit plugin
 
 ```ts
-import { rateLimitPlugin } from 'confused-ai/plugins';
+import { rateLimitPlugin } from 'fluxion/plugins';
 
 const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
   .use(rateLimitPlugin({
@@ -30,7 +30,7 @@ const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
 ### Telemetry plugin
 
 ```ts
-import { telemetryPlugin } from 'confused-ai/plugins';
+import { telemetryPlugin } from 'fluxion/plugins';
 
 const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
   .use(telemetryPlugin({
@@ -44,7 +44,7 @@ const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
 A plugin is a function that receives and optionally modifies agent config:
 
 ```ts
-import type { AgentPlugin } from 'confused-ai/plugins';
+import type { AgentPlugin } from 'fluxion/plugins';
 
 const myPlugin: AgentPlugin = (config) => ({
   ...config,
@@ -64,7 +64,7 @@ const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
 ## Parameterized plugins
 
 ```ts
-import type { AgentPlugin } from 'confused-ai/plugins';
+import type { AgentPlugin } from 'fluxion/plugins';
 
 function auditPlugin(options: { store: Storage }): AgentPlugin {
   return (config) => ({

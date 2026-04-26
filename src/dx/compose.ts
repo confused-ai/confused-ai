@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { agent, compose } from 'confused-ai';
+ * import { agent, compose } from 'fluxion';
  *
  * const researcher = agent('You research topics and return raw findings.');
  * const writer     = agent('You turn research findings into polished reports.');

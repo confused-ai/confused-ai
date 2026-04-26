@@ -17,7 +17,7 @@ export interface CreateHttpServiceOptions {
      *
      * @example
      * ```ts
-     * import { apiKeyAuth } from 'confused-ai/runtime';
+     * import { apiKeyAuth } from 'fluxion/runtime';
      * createHttpService({ agents, auth: { strategy: 'api-key', keys: ['sk-prod-abc'] } });
      * ```
      */
@@ -35,7 +35,7 @@ export interface CreateHttpServiceOptions {
      *
      * @example
      * ```ts
-     * import { createSqliteIdempotencyStore } from 'confused-ai/production';
+     * import { createSqliteIdempotencyStore } from 'fluxion/production';
      * createHttpService({
      *   agents: { assistant },
      *   idempotency: { store: createSqliteIdempotencyStore('./agent.db'), ttlMs: 24 * 60 * 60 * 1000 },
@@ -49,7 +49,7 @@ export interface CreateHttpServiceOptions {
      *
      * @example
      * ```ts
-     * import { createSqliteAuditStore } from 'confused-ai/production';
+     * import { createSqliteAuditStore } from 'fluxion/production';
      * createHttpService({
      *   agents: { assistant },
      *   auditStore: createSqliteAuditStore('./agent.db'),
@@ -74,7 +74,7 @@ export interface CreateHttpServiceOptions {
      *
      * @example
      * ```ts
-     * import { createSqliteAuditStore, createSqliteCheckpointStore } from 'confused-ai/production';
+     * import { createSqliteAuditStore, createSqliteCheckpointStore } from 'fluxion/production';
      * createHttpService({
      *   agents: { assistant },
      *   adminApi: {
@@ -94,7 +94,7 @@ export interface CreateHttpServiceOptions {
      *
      * @example
      * ```ts
-     * import { createSqliteApprovalStore } from 'confused-ai/production';
+     * import { createSqliteApprovalStore } from 'fluxion/production';
      * createHttpService({
      *   agents: { assistant },
      *   approvalStore: createSqliteApprovalStore('./agent.db'),
@@ -108,7 +108,7 @@ export interface CreateHttpServiceOptions {
      *
      * @example
      * ```ts
-     * import { RateLimiter } from 'confused-ai/production';
+     * import { RateLimiter } from 'fluxion/production';
      * createHttpService({
      *   agents: { assistant },
      *   rateLimit: new RateLimiter({ name: 'http', maxRequests: 100, intervalMs: 60_000 }),

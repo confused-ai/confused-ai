@@ -1,6 +1,6 @@
 # Creating Agents
 
-confused-ai provides **five ways** to create an agent — from zero-config to full control.
+fluxion provides **five ways** to create an agent — from zero-config to full control.
 
 ---
 
@@ -9,7 +9,7 @@ confused-ai provides **five ways** to create an agent — from zero-config to fu
 The highest-level API. Sane defaults, full option surface.
 
 ```ts
-import { agent } from 'confused-ai';
+import { agent } from 'fluxion';
 
 const myAgent = agent({
   name: 'MyAssistant',
@@ -46,7 +46,7 @@ const result = await myAgent.run('Do something complex', {
 Use when you want a reusable agent definition you can share and extend.
 
 ```ts
-import { defineAgent } from 'confused-ai';
+import { defineAgent } from 'fluxion';
 
 const baseAgent = defineAgent({
   model: 'gpt-4o',
@@ -70,7 +70,7 @@ const debugAgent = defineAgent({
 ## 3. `createAgent()` — factory API
 
 ```ts
-import { createAgent } from 'confused-ai';
+import { createAgent } from 'fluxion';
 
 const myAgent = createAgent({
   model: 'gpt-4o',
@@ -86,7 +86,7 @@ const myAgent = createAgent({
 Full control, zero magic. You're responsible for everything.
 
 ```ts
-import { bare } from 'confused-ai';
+import { bare } from 'fluxion';
 
 const rawAgent = bare({
   model: 'gpt-4o',
@@ -103,7 +103,7 @@ const rawAgent = bare({
 For advanced cases, extend the base class directly:
 
 ```ts
-import { Agent } from 'confused-ai';
+import { Agent } from 'fluxion';
 
 class MyCustomAgent extends Agent {
   async run(input: string, opts = {}) {

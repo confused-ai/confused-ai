@@ -71,7 +71,7 @@ interface AgenticLifecycleHooks {
 ### Via `agent()` options
 
 ```ts
-import { agent } from 'confused-ai';
+import { agent } from 'fluxion';
 
 const myAgent = agent({
   instructions: '...',
@@ -98,7 +98,7 @@ const myAgent = agent({
 ### Via `defineAgent().hooks()`
 
 ```ts
-import { defineAgent } from 'confused-ai';
+import { defineAgent } from 'fluxion';
 
 const myAgent = defineAgent({
   model: 'gpt-4o',
@@ -212,7 +212,7 @@ For truly long-running or resource-intensive work — audit logging, analytics p
 ### Quick start — no extra dependencies
 
 ```ts
-import { agent, queueHook, InMemoryBackgroundQueue } from 'confused-ai';
+import { agent, queueHook, InMemoryBackgroundQueue } from 'fluxion';
 
 const queue = new InMemoryBackgroundQueue({ concurrency: 5 });
 
@@ -257,7 +257,7 @@ Replace `InMemoryBackgroundQueue` with any backend — the hook code never chang
 #### BullMQ (Redis-backed, durable, retries)
 
 ```ts
-import { BullMQBackgroundQueue, queueHook } from 'confused-ai/background';
+import { BullMQBackgroundQueue, queueHook } from 'fluxion/background';
 
 const queue = new BullMQBackgroundQueue({
   redis: process.env.REDIS_URL!,          // or { host, port, password }
@@ -283,7 +283,7 @@ Install peer dep: `bun add bullmq`
 #### Kafka (high-throughput, ordered, replay)
 
 ```ts
-import { KafkaBackgroundQueue, queueHook } from 'confused-ai/background';
+import { KafkaBackgroundQueue, queueHook } from 'fluxion/background';
 
 const queue = new KafkaBackgroundQueue({
   brokers:        ['kafka:9092'],
@@ -299,7 +299,7 @@ Install peer dep: `bun add kafkajs`
 #### RabbitMQ / AMQP (routing, dead-letter exchanges)
 
 ```ts
-import { RabbitMQBackgroundQueue, queueHook } from 'confused-ai/background';
+import { RabbitMQBackgroundQueue, queueHook } from 'fluxion/background';
 
 const queue = new RabbitMQBackgroundQueue({
   url:                'amqp://localhost',
@@ -315,7 +315,7 @@ Install peer dep: `bun add amqplib`
 
 ```ts
 import Redis from 'ioredis';
-import { RedisPubSubBackgroundQueue, queueHook } from 'confused-ai/background';
+import { RedisPubSubBackgroundQueue, queueHook } from 'fluxion/background';
 
 const queue = new RedisPubSubBackgroundQueue({
   publisher:  new Redis(process.env.REDIS_URL!),
@@ -329,7 +329,7 @@ Install peer dep: `bun add ioredis`
 #### AWS SQS (managed, serverless, Lambda-friendly)
 
 ```ts
-import { SQSBackgroundQueue, queueHook } from 'confused-ai/background';
+import { SQSBackgroundQueue, queueHook } from 'fluxion/background';
 
 const queue = new SQSBackgroundQueue({
   queueUrl:          process.env.SQS_QUEUE_URL!,
@@ -346,7 +346,7 @@ Install peer dep: `bun add @aws-sdk/client-sqs`
 Implement the `BackgroundQueue` interface to connect any other system (Inngest, Trigger.dev, Upstash QStash, Azure Service Bus, Google Pub/Sub, etc.):
 
 ```ts
-import type { BackgroundQueue, BackgroundTask, BackgroundTaskHandler, EnqueueOptions, WorkerOptions } from 'confused-ai/background';
+import type { BackgroundQueue, BackgroundTask, BackgroundTaskHandler, EnqueueOptions, WorkerOptions } from 'fluxion/background';
 
 class MyCustomQueue implements BackgroundQueue {
   readonly name = 'my-custom-queue';
@@ -411,7 +411,7 @@ Blocking hooks (`beforeRun`, `beforeStep`, etc.) must NOT be wrapped with either
 Every hook is `await`ed by the agentic loop, so a slow `afterRun` or `onError` handler delays the caller. Use `background()` to fire-and-forget a **void-returning** hook — the loop moves on immediately while the async work runs in the background. Errors are caught and logged, never crashing the run.
 
 ```ts
-import { agent, background } from 'confused-ai';
+import { agent, background } from 'fluxion';
 
 const ai = agent({
   model: 'gpt-4o',
@@ -457,7 +457,7 @@ Rejections from background hooks are caught and written to `console.error`. They
 Use `compose()` to merge multiple hook objects. Agent-level hooks run first, per-run hooks after:
 
 ```ts
-import { agent } from 'confused-ai';
+import { agent } from 'fluxion';
 
 // Provide multiple hook objects at agent construction — they are merged
 const ai = agent({

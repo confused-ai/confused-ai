@@ -5,8 +5,8 @@ const SITE_URL = process.env.SITE_URL ?? 'https://rvuyyuru2.github.io/agent-fram
 
 export default defineConfig({
     base,
-    title: 'confused-ai',
-    titleTemplate: ':title — confused-ai',
+    title: 'Fluxion',
+    titleTemplate: ':title — Fluxion',
     description: 'TypeScript framework for building production-grade AI agents, teams, and services. ReAct loop, 50+ tools, multi-agent orchestration, circuit breakers, HITL, budget enforcement — all in one package.',
     lang: 'en-US',
 
@@ -25,21 +25,21 @@ export default defineConfig({
 
         // Open Graph
         ['meta', { property: 'og:type', content: 'website' }],
-        ['meta', { property: 'og:site_name', content: 'confused-ai' }],
-        ['meta', { property: 'og:title', content: 'confused-ai — Production-Grade AI Agent Framework' }],
+        ['meta', { property: 'og:site_name', content: 'Fluxion' }],
+        ['meta', { property: 'og:title', content: 'Fluxion — Production-Grade AI Agent Framework' }],
         ['meta', { property: 'og:description', content: 'Build and ship AI agents in TypeScript. 50+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, MCP, OTLP tracing — zero magic, every escape hatch open.' }],
         ['meta', { property: 'og:image', content: `${SITE_URL}/og-banner.png` }],
         ['meta', { property: 'og:url', content: SITE_URL }],
 
         // Twitter / X
         ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-        ['meta', { name: 'twitter:title', content: 'confused-ai — Production-Grade AI Agent Framework' }],
+        ['meta', { name: 'twitter:title', content: 'Fluxion — Production-Grade AI Agent Framework' }],
         ['meta', { name: 'twitter:description', content: 'Build and ship AI agents in TypeScript. 50+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, MCP.' }],
         ['meta', { name: 'twitter:image', content: `${SITE_URL}/og-banner.png` }],
 
         // SEO
         ['meta', { name: 'keywords', content: 'AI agent framework, TypeScript AI agents, LLM orchestration, multi-agent, RAG, MCP, production AI, OpenAI, Anthropic, Google Gemini' }],
-        ['meta', { name: 'author', content: 'confused-ai contributors' }],
+        ['meta', { name: 'author', content: 'Fluxion contributors' }],
         ['meta', { name: 'robots', content: 'index, follow' }],
 
         // Performance
@@ -47,8 +47,8 @@ export default defineConfig({
     ],
 
     themeConfig: {
-        logo: { src: '/logo.svg', alt: 'confused-ai' },
-        siteTitle: 'confused-ai',
+        logo: { src: '/logo.svg', alt: 'Fluxion' },
+        siteTitle: 'Fluxion',
 
         nav: [
             { text: 'Guide', link: '/guide/getting-started', activeMatch: '/guide/' },
@@ -67,7 +67,7 @@ export default defineConfig({
                 text: 'v0.7.0',
                 items: [
                     { text: 'Changelog', link: '/changelog' },
-                    { text: 'npm', link: 'https://www.npmjs.com/package/confused-ai' },
+                    { text: 'npm', link: 'https://www.npmjs.com/package/fluxion' },
                     { text: 'Releases', link: 'https://github.com/rvuyyuru2/agent-framework/releases' },
                     { text: 'Contributing', link: 'https://github.com/rvuyyuru2/agent-framework/blob/main/CONTRIBUTING.md' },
                 ],
@@ -198,12 +198,12 @@ export default defineConfig({
 
         socialLinks: [
             { icon: 'github', link: 'https://github.com/rvuyyuru2/agent-framework' },
-            { icon: 'npm', link: 'https://www.npmjs.com/package/confused-ai' },
+            { icon: 'npm', link: 'https://www.npmjs.com/package/fluxion' },
         ],
 
         footer: {
             message: 'Released under the <a href="https://github.com/rvuyyuru2/agent-framework/blob/main/LICENSE">MIT License</a>.',
-            copyright: 'Copyright © 2024-present confused-ai contributors',
+            copyright: 'Copyright © 2024-present Fluxion contributors',
         },
 
         search: {

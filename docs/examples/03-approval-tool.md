@@ -15,7 +15,7 @@ before the tool runs.
 ```ts
 // approval-agent.ts
 import { z } from 'zod';
-import { createAgent, tool } from 'confused-ai';
+import { createAgent, tool } from 'fluxion';
 import * as readline from 'node:readline/promises';
 
 // ── Approval helper ────────────────────────────────────────────────────────

@@ -2,12 +2,12 @@
 
 When an agent is about to take a high-risk action — sending an email, charging a card, deleting records — you can pause execution and require a human to approve before proceeding.
 
-confused-ai provides a complete HITL system:
+fluxion provides a complete HITL system:
 - **`ApprovalStore`** — durable pending-approval queue
 - **`requireApprovalTool`** — tool factory that creates the gate in the agentic loop
 - HTTP endpoint `POST /v1/approvals/:id` exposed automatically via `createHttpService`
 
-> **Import path:** `confused-ai/production`
+> **Import path:** `fluxion/production`
 
 ---
 
@@ -30,12 +30,12 @@ agent.run()
 ## Quick start
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { defineTool } from 'confused-ai';
+import { createAgent } from 'fluxion';
+import { defineTool } from 'fluxion';
 import {
   createSqliteApprovalStore,
   waitForApproval,
-} from 'confused-ai/production';
+} from 'fluxion/production';
 import { z } from 'zod';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
@@ -92,8 +92,8 @@ const agent = createAgent({
 Pass `approvalStore` to `createHttpService` — it auto-wires the approval endpoint:
 
 ```ts
-import { createHttpService } from 'confused-ai/runtime';
-import { createSqliteApprovalStore } from 'confused-ai/production';
+import { createHttpService } from 'fluxion/runtime';
+import { createSqliteApprovalStore } from 'fluxion/production';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
 
@@ -142,7 +142,7 @@ await approvalStore.decide(approvalId, {
 ### SQLite (durable default)
 
 ```ts
-import { createSqliteApprovalStore } from 'confused-ai/production';
+import { createSqliteApprovalStore } from 'fluxion/production';
 
 const store = createSqliteApprovalStore('./agent.db');
 ```
@@ -150,7 +150,7 @@ const store = createSqliteApprovalStore('./agent.db');
 ### In-memory (tests)
 
 ```ts
-import { InMemoryApprovalStore } from 'confused-ai/production';
+import { InMemoryApprovalStore } from 'fluxion/production';
 
 const store = new InMemoryApprovalStore();
 ```
@@ -158,7 +158,7 @@ const store = new InMemoryApprovalStore();
 ### Custom (Postgres, Redis, etc.)
 
 ```ts
-import type { ApprovalStore, HitlRequest, ApprovalDecision } from 'confused-ai/production';
+import type { ApprovalStore, HitlRequest, ApprovalDecision } from 'fluxion/production';
 
 class PostgresApprovalStore implements ApprovalStore {
   async create(req) { /* INSERT */ }
@@ -199,7 +199,7 @@ interface HitlRequest {
 When an approval is rejected, the agent throws `ApprovalRejectedError`. Handle it gracefully:
 
 ```ts
-import { ApprovalRejectedError } from 'confused-ai/production';
+import { ApprovalRejectedError } from 'fluxion/production';
 
 try {
   const result = await agent.run('Send a welcome email to alice@acme.com', { runId: 'run-001' });

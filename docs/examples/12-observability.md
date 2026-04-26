@@ -39,7 +39,7 @@ createAgent({
 
 ```ts
 // structured-logger.ts
-import { createAgent } from 'confused-ai';
+import { createAgent } from 'fluxion';
 
 const agent = createAgent({
   name: 'observed-agent',
@@ -128,7 +128,7 @@ const agent = createAgent({
 Build a detailed trace of everything the agent did:
 
 ```ts
-import { createAgent } from 'confused-ai';
+import { createAgent } from 'fluxion';
 
 interface TraceEvent {
   type: string;
@@ -193,7 +193,7 @@ Output:
 // Send traces to OpenTelemetry / Datadog / any platform
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 
-const tracer = trace.getTracer('confused-ai');
+const tracer = trace.getTracer('fluxion');
 
 hooks: {
   beforeRun: (input, ctx) => {

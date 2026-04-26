@@ -8,8 +8,8 @@
  *
  * @example
  * ```ts
- * import { Agent } from 'confused-ai';
- * import { withResilience } from 'confused-ai/production';
+ * import { Agent } from 'fluxion';
+ * import { withResilience } from 'fluxion/production';
  *
  * const agent = new Agent({ instructions: 'You are helpful.' });
  * const resilient = withResilience(agent, {

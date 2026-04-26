@@ -1,5 +1,5 @@
 {
-    "name": "confused-ai",
+    "name": "fluxion",
     "version": "0.8.1",
     "description": "TypeScript framework for building production-grade AI agents, teams, and services",
     "type": "module",
@@ -376,6 +376,6 @@
         "node": ">=18.0.0"
     },
     "bin": {
-        "confused-ai": "dist/cli.js"
+        "fluxion": "dist/cli.js"
     }
 }

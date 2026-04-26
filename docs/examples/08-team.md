@@ -30,8 +30,8 @@ User message
 ```ts
 // multi-agent-team.ts
 import { z } from 'zod';
-import { createAgent, tool } from 'confused-ai';
-import { Team } from 'confused-ai/orchestration';
+import { createAgent, tool } from 'fluxion';
+import { Team } from 'fluxion/orchestration';
 
 // ── Specialist tools ───────────────────────────────────────────────────────
 const lookupInvoice = tool({
@@ -161,7 +161,7 @@ const team = new Team({
 An agent can hand off to another mid-conversation:
 
 ```ts
-import { handoff } from 'confused-ai/orchestration';
+import { handoff } from 'fluxion/orchestration';
 
 const triageAgent = createAgent({
   name: 'triage',

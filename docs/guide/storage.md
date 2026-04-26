@@ -7,8 +7,8 @@ The storage module provides a generic key-value store with pluggable backends. U
 ## Quick start
 
 ```ts
-import { createStorage } from 'confused-ai';
-// or: import { createStorage } from 'confused-ai/storage';
+import { createStorage } from 'fluxion';
+// or: import { createStorage } from 'fluxion/storage';
 
 // In-memory (dev / testing)
 const store = createStorage();
@@ -68,7 +68,7 @@ await store.set('user:123:prefs', { theme: 'dark' });
 Bring your own storage backend — Redis, S3, Azure Blob, Cloudflare KV, Turso, etc.:
 
 ```ts
-import { createStorage, type StorageAdapter } from 'confused-ai/storage';
+import { createStorage, type StorageAdapter } from 'fluxion/storage';
 import Redis from 'ioredis';
 
 const redis = new Redis();

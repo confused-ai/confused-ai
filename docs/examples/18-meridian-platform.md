@@ -1,6 +1,6 @@
 # 18 · Meridian — Role Intelligence Platform 🔴
 
-Build a complete enterprise AI persona platform with confused-ai.
+Build a complete enterprise AI persona platform with fluxion.
 **Meridian** turns organizational knowledge into always-on, role-specific AI co-pilots
 that assist teams in real time — covering every major framework surface area in one
 runnable example.
@@ -62,7 +62,7 @@ Each persona is built with the fluent `definePersona()` builder and produces a
 self-contained system prompt:
 
 ```ts
-import { definePersona } from 'confused-ai';
+import { definePersona } from 'fluxion';
 
 const sage = definePersona()
   .displayName('Sage')
@@ -160,7 +160,7 @@ import {
   createPiiDetectionRule,
   createForbiddenTopicsRule,
   createPromptInjectionRule,
-} from 'confused-ai';
+} from 'fluxion';
 
 const guardrails = new GuardrailValidator({
   rules: [
@@ -175,7 +175,7 @@ const guardrails = new GuardrailValidator({
 ### Triage + handoff
 
 ```ts
-import { createHandoff } from 'confused-ai';
+import { createHandoff } from 'fluxion';
 
 const handoff = createHandoff({
   from: triageAgent,
@@ -195,7 +195,7 @@ console.log('Handled by:', result.toAgent);
 ### Supervisor delegation
 
 ```ts
-import { createSupervisor, createRole } from 'confused-ai';
+import { createSupervisor, createRole } from 'fluxion';
 
 const supervisor = createSupervisor({
   name: 'MeridianSupervisor',
@@ -211,7 +211,7 @@ const supervisor = createSupervisor({
 ### Consensus decisions
 
 ```ts
-import { createConsensus } from 'confused-ai';
+import { createConsensus } from 'fluxion';
 
 const panel = createConsensus({
   agents: { orbit, forge, prism },
@@ -229,7 +229,7 @@ console.log(decision.decision, '— confidence:', decision.confidence);
 ### compose() deal-to-campaign pipeline
 
 ```ts
-import { compose } from 'confused-ai';
+import { compose } from 'fluxion';
 
 const dealToCampaign = compose(
   forge,  // surfaces deal insights
@@ -246,7 +246,7 @@ const result = await dealToCampaign.run('Top 3 enterprise deals closing this qua
 ### pipe() three-stage workflow
 
 ```ts
-import { pipe } from 'confused-ai';
+import { pipe } from 'fluxion';
 
 const plan = pipe(sage)
   .then(orbit, { transform: (r) => `Data context:\n${r.text}\n\nCreate a project plan.` })
@@ -258,7 +258,7 @@ const result = await plan.run('What are our top conversion metrics this quarter?
 ### HTTP runtime (all 6 personas)
 
 ```ts
-import { createHttpService, listenService } from 'confused-ai';
+import { createHttpService, listenService } from 'fluxion';
 
 const svc = createHttpService(
   { agents: { sage, orbit, prism, forge, anchor, lens }, tracing: true, cors: '*' },

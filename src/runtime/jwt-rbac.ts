@@ -6,8 +6,8 @@
  *
  * @example
  * ```ts
- * import { createHttpService } from 'confused-ai/runtime';
- * import { jwtAuth } from 'confused-ai/runtime';
+ * import { createHttpService } from 'fluxion/runtime';
+ * import { jwtAuth } from 'fluxion/runtime';
  *
  * createHttpService({
  *   agents: [{ name: 'support', agent: supportAgent }],

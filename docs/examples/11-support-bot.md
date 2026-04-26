@@ -37,10 +37,10 @@ Customer receives response
 ```ts
 // support-bot.ts
 import { z } from 'zod';
-import { createAgent, tool } from 'confused-ai';
-import { Guardrail } from 'confused-ai/guardrails';
-import { InMemoryStore } from 'confused-ai/memory';
-import { createStorage } from 'confused-ai/storage';
+import { createAgent, tool } from 'fluxion';
+import { Guardrail } from 'fluxion/guardrails';
+import { InMemoryStore } from 'fluxion/memory';
+import { createStorage } from 'fluxion/storage';
 
 // ── Storage + Memory ───────────────────────────────────────────────────────
 const storage = createStorage({ type: 'file', path: './data/support.json' });

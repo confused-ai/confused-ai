@@ -12,8 +12,8 @@ export {
     URLLoader,
 } from './loaders.js';
 export type { DocumentLoader } from './loaders.js';
-// Note: OpenAIEmbeddingProvider and InMemoryVectorStore are exported from 'confused-ai/memory'
-// They are re-exported here for convenience when importing from 'confused-ai/knowledge' directly.
+// Note: OpenAIEmbeddingProvider and InMemoryVectorStore are exported from 'fluxion/memory'
+// They are re-exported here for convenience when importing from 'fluxion/knowledge' directly.
 export { OpenAIEmbeddingProvider } from '../memory/openai-embeddings.js';
 export type { OpenAIEmbeddingConfig } from '../memory/openai-embeddings.js';
 export { InMemoryVectorStore } from '../memory/in-memory-vector-store.js';

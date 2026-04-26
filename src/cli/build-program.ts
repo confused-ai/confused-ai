@@ -17,8 +17,8 @@ import { VERSION } from '../shared/version.js';
 export function buildProgram(): Command {
     const program = new Command();
     program
-        .name('confused-ai')
-        .description('CLI for confused-ai — production-grade TypeScript agents')
+        .name('fluxion')
+        .description('CLI for Fluxion — production-grade TypeScript agents')
         .version(VERSION);
 
     registerCreateCommand(program);

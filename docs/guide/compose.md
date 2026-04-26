@@ -7,7 +7,7 @@
 Merge two or more agent hook sets. Both hook sets execute for each event.
 
 ```ts
-import { compose, defineAgent } from 'confused-ai';
+import { compose, defineAgent } from 'fluxion';
 
 const loggingHooks = {
   beforeRun: async (ctx) => console.log('Run started:', ctx.runId),
@@ -29,7 +29,7 @@ const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
 Chain transformations sequentially. Each stage receives the output of the previous one. Useful for `buildSystemPrompt` hooks:
 
 ```ts
-import { pipe, defineAgent } from 'confused-ai';
+import { pipe, defineAgent } from 'fluxion';
 
 const addUserContext = {
   buildSystemPrompt: async (base, ctx) => {
@@ -94,7 +94,7 @@ export const rateLimitHooks = {
 };
 
 // agent.ts
-import { compose, defineAgent } from 'confused-ai';
+import { compose, defineAgent } from 'fluxion';
 import { analyticsHooks } from './hooks/analytics';
 import { rateLimitHooks } from './hooks/rate-limit';
 

@@ -8,7 +8,7 @@
  * @example
  * ```ts
  * // Your own Postgres-backed budget store:
- * import type { BudgetStore } from 'confused-ai/contracts/extensions';
+ * import type { BudgetStore } from 'fluxion/contracts/extensions';
  *
  * class PostgresBudgetStore implements BudgetStore {
  *   async getTotal(userId: string) { ... }
@@ -89,7 +89,7 @@ export type { TraceContext } from '../observability/trace-context.js';
  * Pluggable auth middleware — implement your own `validate` strategy.
  * @example
  * ```ts
- * import type { AuthMiddlewareOptions } from 'confused-ai/contracts/extensions';
+ * import type { AuthMiddlewareOptions } from 'fluxion/contracts/extensions';
  * const auth: AuthMiddlewareOptions = {
  *   strategy: 'custom',
  *   validate: async (req) => {

@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="docs/public/logo.svg" alt="confused-ai logo" width="96" />
-  <h1>confused-ai</h1>
+  <img src="docs/public/logo.svg" alt="Fluxion logo" width="96" />
+  <h1>Fluxion</h1>
   <p><strong>TypeScript AI Agent Framework — Build Production-Grade LLM Agents in Minutes</strong></p>
   <p>
     ReAct-loop agents · 50+ built-in tools · Multi-agent orchestration · RAG · MCP · Circuit breakers · Budget caps · HITL · OTLP tracing
@@ -8,8 +8,8 @@
 
   [![CI](https://github.com/rvuyyuru2/agent-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/rvuyyuru2/agent-framework/actions/workflows/ci.yml)
   [![CodeQL](https://github.com/rvuyyuru2/agent-framework/actions/workflows/codeql.yml/badge.svg)](https://github.com/rvuyyuru2/agent-framework/actions/workflows/codeql.yml)
-  [![npm version](https://img.shields.io/npm/v/confused-ai?color=8b5cf6&logo=npm&label=confused-ai)](https://www.npmjs.com/package/confused-ai)
-  [![npm downloads](https://img.shields.io/npm/dm/confused-ai?color=22d3ee&logo=npm)](https://www.npmjs.com/package/confused-ai)
+  [![npm version](https://img.shields.io/npm/v/fluxion?color=8b5cf6&logo=npm&label=Fluxion)](https://www.npmjs.com/package/fluxion)
+  [![npm downloads](https://img.shields.io/npm/dm/fluxion?color=22d3ee&logo=npm)](https://www.npmjs.com/package/fluxion)
   [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e.svg)](./LICENSE)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -22,24 +22,24 @@
     <a href="https://rvuyyuru2.github.io/agent-framework/"><strong>Documentation</strong></a> ·
     <a href="https://rvuyyuru2.github.io/agent-framework/guide/getting-started">Getting Started</a> ·
     <a href="https://rvuyyuru2.github.io/agent-framework/examples/">18 Examples</a> ·
-    <a href="https://www.npmjs.com/package/confused-ai">npm</a> ·
+    <a href="https://www.npmjs.com/package/fluxion">npm</a> ·
     <a href="./CHANGELOG.md">Changelog</a>
   </p>
 </div>
 
 ---
 
-> **confused-ai** is a TypeScript-first AI agent framework designed for production. It gives you a complete stack — LLM providers, 50+ tools, multi-agent orchestration, RAG, session memory, guardrails, circuit breakers, budget enforcement, OTLP tracing, and an HTTP runtime — so you never have to stitch libraries together again.
+> **Fluxion** is a TypeScript-first AI agent framework designed for production. It gives you a complete stack — LLM providers, 50+ tools, multi-agent orchestration, RAG, session memory, guardrails, circuit breakers, budget enforcement, OTLP tracing, and an HTTP runtime — so you never have to stitch libraries together again.
 
 ---
 
 ## Install
 
 ```bash
-npm install confused-ai        # npm
-bun add confused-ai            # bun
-pnpm add confused-ai           # pnpm
-yarn add confused-ai           # yarn
+npm install fluxion        # npm
+bun add fluxion            # bun
+pnpm add fluxion           # pnpm
+yarn add fluxion           # yarn
 ```
 
 > **Node.js ≥ 18 required.** Set at least one LLM provider key — that's the only required config.
@@ -57,7 +57,7 @@ OPENROUTER_API_KEY=sk-or-...    # OpenRouter — 100+ models in one key
 ## Quickstart — AI Agent in 3 Lines
 
 ```ts
-import { agent } from 'confused-ai';
+import { agent } from 'fluxion';
 
 const ai = agent('You are a helpful assistant.');
 const { text } = await ai.run('Summarise the key points of the React 19 release.');
@@ -73,7 +73,7 @@ No config files. No wiring. No boilerplate. Add tools, sessions, RAG, guardrails
 - [Install](#install)
 - [Quickstart](#quickstart--ai-agent-in-3-lines)
 - [What You Can Build](#what-you-can-build)
-- [Why confused-ai](#why-confused-ai--feature-comparison)
+- [Why fluxion](#why-fluxion--feature-comparison)
 - [Creating Agents](#creating-agents)
 - [50+ Built-in Tools](#50-built-in-tools)
 - [Custom Tools](#custom-tools)
@@ -105,7 +105,7 @@ No config files. No wiring. No boilerplate. Add tools, sessions, RAG, guardrails
 
 ## What You Can Build
 
-confused-ai covers the entire spectrum of LLM-powered applications:
+fluxion covers the entire spectrum of LLM-powered applications:
 
 | Use Case | What you use |
 |----------|-------------|
@@ -122,11 +122,11 @@ confused-ai covers the entire spectrum of LLM-powered applications:
 
 ---
 
-## Why confused-ai — Feature Comparison
+## Why fluxion — Feature Comparison
 
-Most AI agent frameworks stop at the prototype. confused-ai ships production infrastructure out of the box:
+Most AI agent frameworks stop at the prototype. fluxion ships production infrastructure out of the box:
 
-| Capability | **confused-ai** | LangChain.js | Vercel AI SDK | Mastra |
+| Capability | **fluxion** | LangChain.js | Vercel AI SDK | Mastra |
 |---|:---:|:---:|:---:|:---:|
 | Zero-config quickstart | ✅ | ⚠️ | ✅ | ⚠️ |
 | 50+ built-in tools | ✅ | ✅ | ❌ | ⚠️ |
@@ -150,8 +150,8 @@ Most AI agent frameworks stop at the prototype. confused-ai ships production inf
 ### Option A: `createAgent` (recommended)
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { CalculatorAddTool, HttpClientTool } from 'confused-ai/tools';
+import { createAgent } from 'fluxion';
+import { CalculatorAddTool, HttpClientTool } from 'fluxion/tools';
 
 const agent = createAgent({
   name:         'Assistant',
@@ -166,7 +166,7 @@ const { text, steps, finishReason } = await agent.run('What is 40 + 2?');
 ### Option B: DX fluent builder
 
 ```ts
-import { defineAgent } from 'confused-ai';
+import { defineAgent } from 'fluxion';
 
 const agent = defineAgent()
   .name('Assistant')
@@ -180,7 +180,7 @@ const agent = defineAgent()
 ### Option C: Typed agents with Zod I/O
 
 ```ts
-import { defineTypedAgent, createWorkflow } from 'confused-ai';
+import { defineTypedAgent, createWorkflow } from 'fluxion';
 import { z } from 'zod';
 
 const planner = defineTypedAgent({
@@ -224,13 +224,13 @@ import {
   FileReadTool, FileWriteTool, ShellTool, // File system
   StripeTool, YahooFinanceTool,          // Finance
   GitHubTool, CalculatorAddTool,         // Dev / Utilities
-} from 'confused-ai/tools';
+} from 'fluxion/tools';
 ```
 
 Every tool is Zod-validated, tree-shakeable, and dependency-lazy. Build custom tools with `defineTool()`:
 
 ```ts
-import { defineTool } from 'confused-ai';
+import { defineTool } from 'fluxion';
 import { z } from 'zod';
 
 const lookupOrder = defineTool()
@@ -246,8 +246,8 @@ const lookupOrder = defineTool()
 ## Multi-Agent Orchestration
 
 ```ts
-import { agent, compose, createSupervisor } from 'confused-ai';
-import { AgentRouter } from 'confused-ai/orchestration';
+import { agent, compose, createSupervisor } from 'fluxion';
+import { AgentRouter } from 'fluxion/orchestration';
 
 // Sequential pipeline — output of researcher feeds writer
 const pipeline = compose(
@@ -273,7 +273,7 @@ router.register(analyticsAgent, ['data', 'analysis']);
 ## LLM Router
 
 ```ts
-import { createCostOptimizedRouter } from 'confused-ai';
+import { createCostOptimizedRouter } from 'fluxion';
 
 const router = createCostOptimizedRouter({
   providers: { fast: gpt4oMini, smart: gpt4o },
@@ -290,7 +290,7 @@ Four built-in strategies: `balanced`, `cost`, `quality`, `speed`. Custom overrid
 ## RAG & Knowledge
 
 ```ts
-import { KnowledgeEngine, TextLoader, URLLoader, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/knowledge';
+import { KnowledgeEngine, TextLoader, URLLoader, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'fluxion/knowledge';
 
 const knowledge = new KnowledgeEngine({
   embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
@@ -313,7 +313,7 @@ const agent = createAgent({
 ## Sessions & Memory
 
 ```ts
-import { createSqliteSessionStore } from 'confused-ai/session';
+import { createSqliteSessionStore } from 'fluxion/session';
 
 const agent = createAgent({
   instructions: 'You are a helpful assistant.',
@@ -330,7 +330,7 @@ const r2 = await agent.run('What is my name?', { sessionId }); // → "Alice"
 ## Guardrails
 
 ```ts
-import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
+import { GuardrailValidator, createSensitiveDataRule } from 'fluxion/guardrails';
 
 const agent = createAgent({
   instructions: 'You are a support agent.',
@@ -345,7 +345,7 @@ const agent = createAgent({
 ### Circuit Breakers & Rate Limits
 
 ```ts
-import { withResilience } from 'confused-ai/production';
+import { withResilience } from 'fluxion/production';
 
 const resilient = withResilience(agent, {
   circuitBreaker: { threshold: 5, timeout: 30_000 },
@@ -370,8 +370,8 @@ const agent = createAgent({
 ### Human-in-the-Loop (HITL)
 
 ```ts
-import { requireApprovalTool, InMemoryApprovalStore } from 'confused-ai/tools';
-import { createHttpService } from 'confused-ai/runtime';
+import { requireApprovalTool, InMemoryApprovalStore } from 'fluxion/tools';
+import { createHttpService } from 'fluxion/runtime';
 
 const service = createHttpService({
   agents: { admin: adminAgent },
@@ -384,7 +384,7 @@ const service = createHttpService({
 ### Multi-Tenancy
 
 ```ts
-import { createTenantContext } from 'confused-ai';
+import { createTenantContext } from 'fluxion';
 
 const ctx = createTenantContext({ tenantId: 'acme-corp', ... });
 await agent.run(prompt, { context: ctx });
@@ -393,8 +393,8 @@ await agent.run(prompt, { context: ctx });
 ### Audit Log & Idempotency
 
 ```ts
-import { createHttpService } from 'confused-ai/runtime';
-import { SqliteAuditStore } from 'confused-ai/observability';
+import { createHttpService } from 'fluxion/runtime';
+import { SqliteAuditStore } from 'fluxion/observability';
 
 const service = createHttpService({
   agents:     { support: supportAgent },
@@ -408,7 +408,7 @@ const service = createHttpService({
 ## HTTP Runtime
 
 ```ts
-import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createHttpService, listenService } from 'fluxion/runtime';
 
 const service = createHttpService({
   agents:   { support: supportAgent },
@@ -428,7 +428,7 @@ Routes: `GET /v1/health` · `GET /v1/agents` · `POST /v1/sessions` · `POST /v1
 ## Observability & Tracing
 
 ```ts
-import { OTLPTraceExporter } from 'confused-ai/observability';
+import { OTLPTraceExporter } from 'fluxion/observability';
 
 const service = createHttpService({
   agents:  { support: supportAgent },
@@ -444,7 +444,7 @@ const service = createHttpService({
 ## MCP Client & Server
 
 ```ts
-import { loadMcpToolsFromUrl } from 'confused-ai/tools';
+import { loadMcpToolsFromUrl } from 'fluxion/tools';
 
 const mcpTools = await loadMcpToolsFromUrl('http://mcp-server:3001');
 const agent = createAgent({ tools: mcpTools, instructions: 'Use MCP filesystem tools.' });
@@ -455,7 +455,7 @@ const agent = createAgent({ tools: mcpTools, instructions: 'Use MCP filesystem t
 ## Voice (TTS & STT)
 
 ```ts
-import { createVoiceProvider, OpenAIVoiceAdapter } from 'confused-ai/voice';
+import { createVoiceProvider, OpenAIVoiceAdapter } from 'fluxion/voice';
 
 const voice = createVoiceProvider(new OpenAIVoiceAdapter({ apiKey: process.env.OPENAI_API_KEY! }));
 const audio = await voice.textToSpeech('Hello, how can I help you?');
@@ -487,22 +487,22 @@ Includes: `Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`, `k8s.ya
 
 | Import | Contents |
 |--------|---------|
-| `confused-ai` | Main barrel |
-| `confused-ai/create-agent` | Lean createAgent + env resolver |
-| `confused-ai/llm` | Providers, model resolution, embeddings |
-| `confused-ai/tools` | BaseTool, registries, 50+ built-in tools |
-| `confused-ai/orchestration` | Pipelines, supervisor, swarm, router, consensus |
-| `confused-ai/knowledge` | RAG engine, loaders, vector store |
-| `confused-ai/session` | Session stores (in-memory, SQL, SQLite) |
-| `confused-ai/memory` | Memory stores + vector-backed long-term memory |
-| `confused-ai/guardrails` | Validators, rules, content safety |
-| `confused-ai/production` | Circuit breaker, rate limiter, health checks |
-| `confused-ai/observability` | OTLP tracer, metrics, eval store, structured logger |
-| `confused-ai/runtime` | HTTP service, OpenAPI, WebSocket, admin API |
-| `confused-ai/adapters` | 20-category adapter system |
-| `confused-ai/plugins` | Plugin registry + built-in plugins |
-| `confused-ai/testing` | MockLLMProvider, MockToolRegistry, fixtures |
-| `confused-ai/contracts` | Shared interfaces — zero runtime code |
+| `fluxion` | Main barrel |
+| `fluxion/create-agent` | Lean createAgent + env resolver |
+| `fluxion/llm` | Providers, model resolution, embeddings |
+| `fluxion/tools` | BaseTool, registries, 50+ built-in tools |
+| `fluxion/orchestration` | Pipelines, supervisor, swarm, router, consensus |
+| `fluxion/knowledge` | RAG engine, loaders, vector store |
+| `fluxion/session` | Session stores (in-memory, SQL, SQLite) |
+| `fluxion/memory` | Memory stores + vector-backed long-term memory |
+| `fluxion/guardrails` | Validators, rules, content safety |
+| `fluxion/production` | Circuit breaker, rate limiter, health checks |
+| `fluxion/observability` | OTLP tracer, metrics, eval store, structured logger |
+| `fluxion/runtime` | HTTP service, OpenAPI, WebSocket, admin API |
+| `fluxion/adapters` | 20-category adapter system |
+| `fluxion/plugins` | Plugin registry + built-in plugins |
+| `fluxion/testing` | MockLLMProvider, MockToolRegistry, fixtures |
+| `fluxion/contracts` | Shared interfaces — zero runtime code |
 
 ---
 
@@ -523,7 +523,7 @@ Includes: `Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`, `k8s.ya
 ## Testing
 
 ```ts
-import { MockLLMProvider } from 'confused-ai/testing';
+import { MockLLMProvider } from 'fluxion/testing';
 
 const mockLLM = new MockLLMProvider([{ text: 'The answer is 42', tool_calls: [] }]);
 const agent = createAgenticAgent({ name: 'Test', llm: mockLLM, tools: new MockToolRegistry() });
@@ -538,7 +538,7 @@ expect(text).toBe('The answer is 42');
 ## CLI
 
 ```bash
-npx confused-ai --help   # after npm install or npm run build
+npx fluxion --help   # after npm install or npm run build
 ```
 
 ---
@@ -576,4 +576,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
-[MIT](./LICENSE) — Copyright © 2024-present confused-ai contributors
+[MIT](./LICENSE) — Copyright © 2024-present fluxion contributors

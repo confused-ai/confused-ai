@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { createAgentRouter } from 'confused-ai/orchestration';
+ * import { createAgentRouter } from 'fluxion/orchestration';
  *
  * const router = createAgentRouter({
  *   agents: {

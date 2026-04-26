@@ -13,8 +13,8 @@
  *
  * @example
  * ```ts
- * import { createAgent } from 'confused-ai';
- * import { createSqliteApprovalStore, requireApprovalTool } from 'confused-ai/production';
+ * import { createAgent } from 'fluxion';
+ * import { createSqliteApprovalStore, requireApprovalTool } from 'fluxion/production';
  *
  * const approvalStore = createSqliteApprovalStore('./agent.db');
  *

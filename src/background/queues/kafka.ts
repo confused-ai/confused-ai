@@ -8,7 +8,7 @@
  *
  * @example
  * ```ts
- * import { KafkaBackgroundQueue } from 'confused-ai/background';
+ * import { KafkaBackgroundQueue } from 'fluxion/background';
  *
  * const queue = new KafkaBackgroundQueue({
  *   brokers: ['kafka:9092'],
@@ -65,7 +65,7 @@ export class KafkaBackgroundQueue implements BackgroundQueue {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { Kafka } = (await import('kafkajs')) as any;
         this.kafka = new Kafka({
-            clientId: this.opts.clientId ?? 'confused-ai-bg',
+            clientId: this.opts.clientId ?? 'fluxion-bg',
             brokers: this.opts.brokers,
             ...(this.opts.kafkaOptions ?? {}),
         });
@@ -113,7 +113,7 @@ export class KafkaBackgroundQueue implements BackgroundQueue {
         const { Kafka } = (await import('kafkajs')) as any;
         if (!this.kafka) {
             this.kafka = new Kafka({
-                clientId: `${this.opts.clientId ?? 'confused-ai-bg'}-worker`,
+                clientId: `${this.opts.clientId ?? 'fluxion-bg'}-worker`,
                 brokers: this.opts.brokers,
                 ...(this.opts.kafkaOptions ?? {}),
             });
