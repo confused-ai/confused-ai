@@ -1,0 +1,42 @@
+# release-please — automated releases based on Conventional Commits.
+# On every push to main:
+#   1. Opens/updates a "Release PR" with a generated CHANGELOG and version bump.
+#   2. When you merge that PR, it creates a GitHub Release + git tag.
+#   3. The 'published' release event then triggers publish.yml → npm publish.
+#
+# Conventional commit prefixes recognised:
+#   feat:     → minor bump  (0.x.0)
+#   fix:      → patch bump  (0.0.x)
+#   feat!: / BREAKING CHANGE → major bump (x.0.0)
+#   chore/docs/refactor → no release (unless --bump-minor-pre-major)
+#
+# Required: add RELEASE_PLEASE_TOKEN secret (fine-grained PAT with
+# contents:write + pull-requests:write) or use the default GITHUB_TOKEN
+# (works for public repos; org repos may need the PAT).
+
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Create release PR
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # Use default GITHUB_TOKEN for public repos.
+          # For private/org repos, replace with: token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+          # release-please reads version from package.json automatically

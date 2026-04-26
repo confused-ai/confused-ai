@@ -1,0 +1,62 @@
+# Publish to npm when a GitHub Release is published.
+# Requires NPM_TOKEN secret in repo settings.
+# Uses npm provenance (--provenance) for supply-chain audit trail (npm v9.5+).
+# Verifies git tag version matches package.json version before publishing.
+
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write  # required for npm provenance attestation
+
+jobs:
+  publish:
+    name: npm publish
+    runs-on: ubuntu-latest
+    environment: npm-publish  # optional: require manual approval gate in GitHub Environments
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          # Automatically sets NODE_AUTH_TOKEN for npm commands below
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+
+      # Guard: ensure the git tag matches the package.json version
+      - name: Verify version matches tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"   # strips leading 'v' from tag
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ package.json version ($PKG_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "✅ Version $PKG_VERSION matches tag"
+
+      # Run full pre-publish gate (typecheck + tests + build)
+      - name: Pre-publish gate
+        run: bun run prepack
+
+      # Publish with provenance for npm audit trail
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

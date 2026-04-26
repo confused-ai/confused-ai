@@ -6,12 +6,13 @@
     ReAct-loop agents · 50+ built-in tools · Multi-agent orchestration · RAG · MCP · Circuit breakers · Budget caps · HITL · OTLP tracing
   </p>
 
+  [![CI](https://github.com/rvuyyuru2/agent-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/rvuyyuru2/agent-framework/actions/workflows/ci.yml)
+  [![CodeQL](https://github.com/rvuyyuru2/agent-framework/actions/workflows/codeql.yml/badge.svg)](https://github.com/rvuyyuru2/agent-framework/actions/workflows/codeql.yml)
   [![npm version](https://img.shields.io/npm/v/confused-ai?color=8b5cf6&logo=npm&label=confused-ai)](https://www.npmjs.com/package/confused-ai)
   [![npm downloads](https://img.shields.io/npm/dm/confused-ai?color=22d3ee&logo=npm)](https://www.npmjs.com/package/confused-ai)
   [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e.svg)](./LICENSE)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org/)
-  [![Tests](https://img.shields.io/badge/tests-99%20passing-success)](./tests/)
   [![Docs](https://img.shields.io/badge/docs-vitepress-8b5cf6?logo=vitepress)](https://rvuyyuru2.github.io/agent-framework/)
   [![GitHub Stars](https://img.shields.io/github/stars/rvuyyuru2/agent-framework?style=social)](https://github.com/rvuyyuru2/agent-framework)
   [![GitHub Issues](https://img.shields.io/github/issues/rvuyyuru2/agent-framework?color=f97316)](https://github.com/rvuyyuru2/agent-framework/issues)
