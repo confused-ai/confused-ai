@@ -141,12 +141,12 @@ async function main() {
     // ── 5. Fire the handler manually (simulate a missed run / backfill) ───
     divider('Manual trigger (simulate missed run)');
 
-    await manager.triggerNow(id);
+    await manager.trigger(id);
 
     // ── 6. Query run history ──────────────────────────────────────────────
     divider('Run history');
 
-    const runs = await manager.listRuns(id, 10);
+    const runs = await manager.getRuns(id, 10);
     for (const run of runs) {
         const duration = run.completedAt
             ? `${new Date(run.completedAt).getTime() - new Date(run.triggeredAt).getTime()}ms`

@@ -175,7 +175,7 @@ async function main() {
         name: 'SupportBot-v1',
         instructions: 'You are a helpful customer support agent. Answer customer questions accurately and concisely.',
         tools: false,
-        llmProvider: new MockLLMProvider({ responses: V1_RESPONSES }),
+        llm: new MockLLMProvider({ responses: V1_RESPONSES }),
     });
 
     const report1 = await runEvalSuite({
@@ -203,7 +203,7 @@ async function main() {
         name: 'SupportBot-v2',
         instructions: 'You are a support assistant. Be brief.',  // ← worse prompt
         tools: false,
-        llmProvider: new MockLLMProvider({ responses: V2_RESPONSES }),
+        llm: new MockLLMProvider({ responses: V2_RESPONSES }),
     });
 
     const report2 = await runEvalSuite({
@@ -234,7 +234,7 @@ async function main() {
         name: 'SupportBot-v2-fixed',
         instructions: 'You are a support assistant. Be brief.',
         tools: false,
-        llmProvider: new MockLLMProvider({ responses: V2_FIXED }),
+        llm: new MockLLMProvider({ responses: V2_FIXED }),
     });
 
     const report3 = await runEvalSuite({
