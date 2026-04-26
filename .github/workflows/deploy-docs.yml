@@ -1,10 +1,12 @@
 # Build VitePress docs and deploy to GitHub Pages.
-# Enable: Repo → Settings → Pages → Source: "GitHub Actions".
+# Pages is auto-enabled by configure-pages (enablement: true).
+# If that fails due to org policy, manually go to:
+#   Repo → Settings → Pages → Source: "GitHub Actions"
 name: Deploy docs
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
     paths:
       - 'docs/**'
       - 'package.json'
@@ -12,13 +14,16 @@ on:
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# Allow only one concurrent deployment, skipping runs queued between the
+# run in-progress and latest queued. Do NOT cancel in-progress runs.
 concurrency:
-  group: pages
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
@@ -57,13 +62,14 @@ jobs:
       - name: Build docs
         run: bun run docs:build
         env:
-          # Required for GitHub Pages: site will be at https://<user>.github.io/<repo>/
           BASE: /${{ github.event.repository.name }}/
           SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
           NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -79,5 +85,6 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+
 
