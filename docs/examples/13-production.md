@@ -17,8 +17,8 @@ running when things go wrong.
 If your primary model is unavailable, automatically fall back to alternatives:
 
 ```ts
-import { createAgent } from 'fluxion';
-import { FallbackChain } from 'fluxion/llm';
+import { createAgent } from 'confused-ai';
+import { FallbackChain } from 'confused-ai/llm';
 
 // Tries models in order — uses first one that responds
 const resilientModel = new FallbackChain([
@@ -42,7 +42,7 @@ console.log('Used model:', result.modelUsed); // whichever succeeded
 ## 2 · Retry with Backoff
 
 ```ts
-import { createAgent } from 'fluxion';
+import { createAgent } from 'confused-ai';
 
 const agent = createAgent({
   model: 'gpt-4o-mini',
@@ -92,8 +92,8 @@ After N failures, the circuit "opens" — all requests fail fast for a cooldown
 period instead of continuing to hammer a broken service.
 
 ```ts
-// npm install fluxion (includes circuit breaker)
-import { CircuitBreaker } from 'fluxion';
+// npm install confused-ai (includes circuit breaker)
+import { CircuitBreaker } from 'confused-ai';
 
 const breaker = new CircuitBreaker({
   name: 'openai-api',
@@ -212,8 +212,8 @@ const server = createServer((req, res) => {
 Combine everything:
 
 ```ts
-import { createAgent } from 'fluxion';
-import { FallbackChain } from 'fluxion/llm';
+import { createAgent } from 'confused-ai';
+import { FallbackChain } from 'confused-ai/llm';
 
 const agent = createAgent({
   name: 'production-agent',

@@ -9,7 +9,7 @@ This is especially valuable in long agentic loops where tool results accumulate 
 ## Quick start
 
 ```ts
-import { CompressionManager } from 'fluxion';
+import { CompressionManager } from 'confused-ai';
 
 const cm = new CompressionManager({
   // Same signature as ReasoningManager — provider-agnostic
@@ -71,7 +71,7 @@ The built-in compression prompt is strict:
 - ❌ Never invents or infers information not in the original
 
 ```ts
-import { DEFAULT_COMPRESSION_PROMPT } from 'fluxion';
+import { DEFAULT_COMPRESSION_PROMPT } from 'confused-ai';
 // Use as a base for your custom prompt
 ```
 
@@ -133,7 +133,7 @@ Messages where `compressedContent` is set have been processed. The original `con
 Combine with `ContextWindowManager` for a fully managed context:
 
 ```ts
-import { CompressionManager, ContextWindowManager } from 'fluxion';
+import { CompressionManager, ContextWindowManager } from 'confused-ai';
 
 const cm = new CompressionManager({ generate, compressToolResultsLimit: 3 });
 const cwm = new ContextWindowManager({

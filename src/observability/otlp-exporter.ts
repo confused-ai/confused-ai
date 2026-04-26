@@ -214,7 +214,7 @@ export class OTLPTraceExporter {
                     },
                     scopeSpans: [
                         {
-                            scope: { name: '@fluxion/core', version: '0.1.0' },
+                            scope: { name: '@confused-ai/core', version: '0.1.0' },
                             spans: spans.map(span => this.convertSpan(span)),
                         },
                     ],
@@ -388,7 +388,7 @@ export class OTLPMetricsExporter {
                     },
                     scopeMetrics: [
                         {
-                            scope: { name: '@fluxion/core', version: '0.1.0' },
+                            scope: { name: '@confused-ai/core', version: '0.1.0' },
                             metrics: metrics.map(m => ({
                                 name: m.name,
                                 description: '',

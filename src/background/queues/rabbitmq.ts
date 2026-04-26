@@ -8,7 +8,7 @@
  *
  * @example
  * ```ts
- * import { RabbitMQBackgroundQueue } from 'fluxion/background';
+ * import { RabbitMQBackgroundQueue } from 'confused-ai/background';
  *
  * const queue = new RabbitMQBackgroundQueue({
  *   url: 'amqp://localhost',

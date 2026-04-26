@@ -3,9 +3,9 @@
 ## Installation
 
 ```bash
-npm install fluxion
+npm install confused-ai
 # or
-bun add fluxion
+bun add confused-ai
 ```
 
 You'll also need at least one LLM provider key in your environment:
@@ -21,7 +21,7 @@ OPENROUTER_API_KEY=sk-or-...
 ## Your first agent
 
 ```ts
-import { agent } from 'fluxion';
+import { agent } from 'confused-ai';
 
 const myAgent = agent({
   model: 'gpt-4o-mini',                    // or 'claude-3-haiku', 'gemini-flash', ...
@@ -37,7 +37,7 @@ await fs.writeFile('answer.md', result.markdown.content);
 ## Add a custom tool
 
 ```ts
-import { agent, defineTool } from 'fluxion';
+import { agent, defineTool } from 'confused-ai';
 import { z } from 'zod';
 
 const getWeather = defineTool()
@@ -63,9 +63,9 @@ console.log(r.text);
 ## Add RAG
 
 ```ts
-import { agent } from 'fluxion';
-import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'fluxion/knowledge';
-import { OpenAIEmbeddingProvider } from 'fluxion/memory';
+import { agent } from 'confused-ai';
+import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'confused-ai/knowledge';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 
 const knowledge = new KnowledgeEngine({
   embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
@@ -73,7 +73,7 @@ const knowledge = new KnowledgeEngine({
 });
 
 // Ingest a document
-await knowledge.ingest([{ id: 'readme', content: 'fluxion is a TypeScript framework...' }]);
+await knowledge.ingest([{ id: 'readme', content: 'confused-ai is a TypeScript framework...' }]);
 
 const ragAgent = agent({
   model: 'gpt-4o-mini',
@@ -81,7 +81,7 @@ const ragAgent = agent({
   ragEngine: knowledge,
 });
 
-const r = await ragAgent.run('What is fluxion?');
+const r = await ragAgent.run('What is confused-ai?');
 console.log(r.text);
 ```
 
@@ -90,7 +90,7 @@ console.log(r.text);
 Use `compose()` to chain agents — output of the first becomes input of the next:
 
 ```ts
-import { agent, compose } from 'fluxion';
+import { agent, compose } from 'confused-ai';
 
 const researcher = agent({ model: 'gpt-4o', instructions: 'Research topics thoroughly and return key findings.' });
 const writer     = agent({ model: 'gpt-4o', instructions: 'Write clear, concise summaries from research notes.' });

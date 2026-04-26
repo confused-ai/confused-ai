@@ -27,7 +27,7 @@ function log(title: string) {
 }
 
 async function main() {
-    console.log('fluxion — unlock more modules (no LLM call in this script)\n');
+    console.log('confused-ai — unlock more modules (no LLM call in this script)\n');
 
     log('Knowledge: splitText (chunking for RAG pipelines)');
     const chunks = splitText('Hello world. Second sentence here.', {

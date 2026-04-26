@@ -7,8 +7,8 @@
 Chain agents sequentially. The final result of agent N is automatically passed as the prompt to agent N+1.
 
 ```ts
-import { compose, createAgent } from 'fluxion';
-import { OpenAIProvider } from 'fluxion/llm';
+import { compose, createAgent } from 'confused-ai';
+import { OpenAIProvider } from 'confused-ai/llm';
 
 const llm = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o' });
 
@@ -42,7 +42,7 @@ export interface ComposeOptions {
 ### Early stopping with `when`
 
 ```ts
-import { compose, createAgent } from 'fluxion';
+import { compose, createAgent } from 'confused-ai';
 
 const classifier = createAgent({ name: 'classifier', llm, instructions: 'Classify the input as RELEVANT or IRRELEVANT.' });
 const responder  = createAgent({ name: 'responder',  llm, instructions: 'Answer the question in detail.' });
@@ -80,7 +80,7 @@ const pipeline = compose(
 `pipe()` builds the same kind of pipeline but with a fluent `.then()` chain. Useful when different stages need different options.
 
 ```ts
-import { pipe, createAgent } from 'fluxion';
+import { pipe, createAgent } from 'confused-ai';
 
 const result = await pipe(researcher)
   .then(writer, {

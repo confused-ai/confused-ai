@@ -9,8 +9,8 @@
  * ### Usage
  *
  * ```ts
- * import { agent } from 'fluxion';
- * import { queueHook, BullMQBackgroundQueue } from 'fluxion/background';
+ * import { agent } from 'confused-ai';
+ * import { queueHook, BullMQBackgroundQueue } from 'confused-ai/background';
  *
  * const queue = new BullMQBackgroundQueue({
  *   redis: process.env.REDIS_URL!,

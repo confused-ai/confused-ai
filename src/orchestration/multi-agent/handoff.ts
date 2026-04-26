@@ -5,7 +5,7 @@
  *
  * @example
  * ```ts
- * import { createHandoff, HandoffProtocol } from 'fluxion/orchestration';
+ * import { createHandoff, HandoffProtocol } from 'confused-ai/orchestration';
  *
  * const handoff = createHandoff({
  *   from: triageAgent,

@@ -1,6 +1,6 @@
 # Creating Agents
 
-fluxion provides **five ways** to create an agent — from zero-config to full control.
+confused-ai provides **five ways** to create an agent — from zero-config to full control.
 
 ---
 
@@ -9,7 +9,7 @@ fluxion provides **five ways** to create an agent — from zero-config to full c
 The highest-level API. Sane defaults, full option surface.
 
 ```ts
-import { agent } from 'fluxion';
+import { agent } from 'confused-ai';
 
 const myAgent = agent({
   name: 'MyAssistant',
@@ -46,7 +46,7 @@ const result = await myAgent.run('Do something complex', {
 Use when you want a reusable agent definition you can share and extend.
 
 ```ts
-import { defineAgent } from 'fluxion';
+import { defineAgent } from 'confused-ai';
 
 const baseAgent = defineAgent({
   model: 'gpt-4o',
@@ -70,7 +70,7 @@ const debugAgent = defineAgent({
 ## 3. `createAgent()` — factory API
 
 ```ts
-import { createAgent } from 'fluxion';
+import { createAgent } from 'confused-ai';
 
 const myAgent = createAgent({
   model: 'gpt-4o',
@@ -86,8 +86,8 @@ const myAgent = createAgent({
 Full control, zero magic. You're responsible for everything.
 
 ```ts
-import { bare } from 'fluxion';
-import { OpenAIProvider } from 'fluxion/llm';
+import { bare } from 'confused-ai';
+import { OpenAIProvider } from 'confused-ai/llm';
 
 // bare() requires an explicit LLMProvider — it never auto-resolves from env
 const llm = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o' });
@@ -107,7 +107,7 @@ const rawAgent = bare({
 For advanced cases, extend the base class directly:
 
 ```ts
-import { Agent } from 'fluxion';
+import { Agent } from 'confused-ai';
 
 class MyCustomAgent extends Agent {
   async run(input: string, opts = {}) {

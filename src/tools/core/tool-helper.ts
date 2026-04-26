@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { tool } from 'fluxion';
+ * import { tool } from 'confused-ai';
  * import { z } from 'zod';
  *
  * const weatherTool = tool({
@@ -421,7 +421,7 @@ interface ToolBuilderState<TSchema extends ZodObject<ZodRawShape>, TOutput> {
  *
  * @example
  * ```ts
- * import { defineTool } from 'fluxion';
+ * import { defineTool } from 'confused-ai';
  * import { z } from 'zod';
  *
  * const searchTool = defineTool()
@@ -570,7 +570,7 @@ export class ToolBuilder<TSchema extends ZodObject<ZodRawShape> = ZodObject<ZodR
  *
  * @example
  * ```ts
- * import { defineTool } from 'fluxion';
+ * import { defineTool } from 'confused-ai';
  * import { z } from 'zod';
  *
  * const myTool = defineTool()
@@ -655,8 +655,8 @@ export interface ExtendToolOptions<TSchema extends ZodObject<ZodRawShape>, TOutp
  *
  * @example
  * ```ts
- * import { extendTool } from 'fluxion';
- * import { webSearchTool } from 'fluxion/tools';
+ * import { extendTool } from 'confused-ai';
+ * import { webSearchTool } from 'confused-ai/tools';
  *
  * // Add logging + result trimming to the built-in web search tool
  * const cachedSearch = extendTool(webSearchTool, {
@@ -733,7 +733,7 @@ export function extendTool<TSchema extends ZodObject<ZodRawShape>, TOutput>(
  *
  * @example
  * ```ts
- * import { wrapTool } from 'fluxion';
+ * import { wrapTool } from 'confused-ai';
  *
  * const safeTool = wrapTool(myTool, [
  *   // Auth check
@@ -785,7 +785,7 @@ export function wrapTool<TSchema extends ZodObject<ZodRawShape>, TOutput>(
  *
  * @example
  * ```ts
- * import { pipeTools, fetchUrlTool, myParserTool } from 'fluxion';
+ * import { pipeTools, fetchUrlTool, myParserTool } from 'confused-ai';
  *
  * const fetchAndParse = pipeTools(fetchUrlTool, myParserTool, {
  *   name: 'fetchAndParse',

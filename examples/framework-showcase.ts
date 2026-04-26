@@ -190,7 +190,7 @@ async function sectionPipeline() {
         .withPlanner(new ClassicalPlanner({ algorithm: PlanningAlgorithm.HIERARCHICAL }))
         .build();
     const pout = await pipeline.run(
-        { prompt: JSON.stringify({ topic: 'fluxion' }) },
+        { prompt: JSON.stringify({ topic: 'confused-ai' }) },
         pctx
     );
     console.log('Pipeline state:', pout.state, 'result sample:', JSON.stringify(pout.result).slice(0, 180));
@@ -246,7 +246,7 @@ async function main() {
         10
     );
 
-    console.log('fluxion framework showcase | VERSION', VERSION);
+    console.log('confused-ai framework showcase | VERSION', VERSION);
     if (!process.env.OPENAI_API_KEY) {
         console.error('Set OPENAI_API_KEY in examples/.env (or the environment) for the LLM sections.');
         process.exit(1);

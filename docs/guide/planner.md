@@ -12,7 +12,7 @@ Both implement the `Planner` interface so they're interchangeable.
 ## Quick start — ClassicalPlanner
 
 ```ts
-import { ClassicalPlanner, PlanningAlgorithm } from 'fluxion/planner';
+import { ClassicalPlanner, PlanningAlgorithm } from 'confused-ai/planner';
 
 const planner = new ClassicalPlanner({
   algorithm:             PlanningAlgorithm.HIERARCHICAL, // default
@@ -40,7 +40,7 @@ for (const task of plan.tasks) {
 ## Quick start — LLMPlanner
 
 ```ts
-import { LLMPlanner } from 'fluxion/planner';
+import { LLMPlanner } from 'confused-ai/planner';
 
 // The planner takes any object with a generateText method
 const llmAdapter = {
@@ -140,7 +140,7 @@ Used by `ClassicalPlanner`:
 `PlanValidator` checks that dependencies are acyclic, all referenced task IDs exist, and no tasks are orphaned:
 
 ```ts
-import { PlanValidator } from 'fluxion/planner';
+import { PlanValidator } from 'confused-ai/planner';
 
 const validator = new PlanValidator();
 const result = await validator.validate(plan);

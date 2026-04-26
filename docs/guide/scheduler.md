@@ -7,7 +7,7 @@
 ## Quick start
 
 ```ts
-import { ScheduleManager } from 'fluxion';
+import { ScheduleManager } from 'confused-ai';
 
 const scheduler = new ScheduleManager();
 
@@ -51,7 +51,7 @@ scheduler.stop();
 Validate and inspect cron expressions:
 
 ```ts
-import { validateCronExpr, computeNextRun } from 'fluxion';
+import { validateCronExpr, computeNextRun } from 'confused-ai';
 
 validateCronExpr('0 9 * * *'); // throws if invalid
 
@@ -180,7 +180,7 @@ await scheduler.create({
 Swap the in-memory stores for persistent backends by implementing `ScheduleStore` and `ScheduleRunStore`:
 
 ```ts
-import type { ScheduleStore, ScheduleRunStore } from 'fluxion';
+import type { ScheduleStore, ScheduleRunStore } from 'confused-ai';
 
 class PgScheduleStore implements ScheduleStore {
   async get(id: string) { /* SELECT * FROM schedules WHERE id = $1 */ }

@@ -12,7 +12,7 @@
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Email: **security@fluxion.dev** (or substitute your actual security contact).
+Email: **security@confused-ai.dev** (or substitute your actual security contact).
 
 Include:
 - Description of the vulnerability
@@ -36,7 +36,7 @@ We target a **72-hour acknowledgement** and **14-day patch cycle** for critical 
 
 - Store LLM provider keys (OpenAI, Anthropic, etc.) in environment variables — never hardcode in source.
 - Use `.env.example` (committed) and `.env` (gitignored) pattern.
-- The `fluxion doctor` command validates that required keys are present without logging their values.
+- The `confused-ai doctor` command validates that required keys are present without logging their values.
 
 ### Rate Limiting
 

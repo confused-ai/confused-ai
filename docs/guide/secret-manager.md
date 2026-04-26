@@ -3,13 +3,13 @@
 `createSecretManager()` provides a unified `getSecret(name, version?)` interface over five secret providers. All provider SDKs are loaded **lazily** — if you use only `env`, for example, none of the AWS/Azure/GCP packages are loaded.
 
 ```ts
-import { createSecretManager } from 'fluxion/config';
+import { createSecretManager } from 'confused-ai/config';
 ```
 
 ## Quick start
 
 ```ts
-import { createSecretManager } from 'fluxion/config';
+import { createSecretManager } from 'confused-ai/config';
 
 // Reads from process.env (zero dependencies)
 const secrets = createSecretManager({ provider: 'env' });
@@ -121,7 +121,7 @@ interface SecretManagerAdapter {
 You can implement this interface to add your own provider:
 
 ```ts
-import type { SecretManagerAdapter } from 'fluxion/config';
+import type { SecretManagerAdapter } from 'confused-ai/config';
 
 class DbSecretAdapter implements SecretManagerAdapter {
   async getSecret(name: string) {
@@ -136,9 +136,9 @@ class DbSecretAdapter implements SecretManagerAdapter {
 A common pattern — load secrets at startup and inject into the agent:
 
 ```ts
-import { createSecretManager } from 'fluxion/config';
-import { createAgent }          from 'fluxion';
-import { OpenAIProvider }       from 'fluxion/llm';
+import { createSecretManager } from 'confused-ai/config';
+import { createAgent }          from 'confused-ai';
+import { OpenAIProvider }       from 'confused-ai/llm';
 
 const secrets = createSecretManager({ provider: 'aws', region: 'us-east-1' });
 

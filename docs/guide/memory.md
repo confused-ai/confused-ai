@@ -8,9 +8,9 @@ Memory lets agents remember context across turns and recall semantically related
 
 | Type | Module | Best for |
 |------|--------|----------|
-| `InMemoryStore` | `fluxion/memory` | Simple turn-by-turn conversation history |
-| `VectorMemoryStore` | `fluxion/memory` | Semantic recall — "remember things like this" |
-| Session stores | `fluxion/session` | Long-lived user sessions across restarts |
+| `InMemoryStore` | `confused-ai/memory` | Simple turn-by-turn conversation history |
+| `VectorMemoryStore` | `confused-ai/memory` | Semantic recall — "remember things like this" |
+| Session stores | `confused-ai/session` | Long-lived user sessions across restarts |
 
 ---
 
@@ -19,8 +19,8 @@ Memory lets agents remember context across turns and recall semantically related
 Simple, fast, in-process. Best for short conversations.
 
 ```ts
-import { InMemoryStore } from 'fluxion/memory';
-// or: import { InMemoryStore } from 'fluxion';
+import { InMemoryStore } from 'confused-ai/memory';
+// or: import { InMemoryStore } from 'confused-ai';
 
 const memory = new InMemoryStore();
 
@@ -43,8 +43,8 @@ console.log(r2.text); // "Your name is Alice."
 Enables semantic long-term memory — store anything and recall the most relevant context.
 
 ```ts
-import { VectorMemoryStore } from 'fluxion/memory';
-import { OpenAIEmbeddingProvider, InMemoryVectorStore } from 'fluxion/memory';
+import { VectorMemoryStore } from 'confused-ai/memory';
+import { OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/memory';
 
 const vectorMemory = new VectorMemoryStore({
   embeddingProvider: new OpenAIEmbeddingProvider({
@@ -74,7 +74,7 @@ await myAgent.run('How should I set up my editor?', { sessionId: 'bob' });
 Used by `VectorMemoryStore` and `KnowledgeEngine` alike:
 
 ```ts
-import { OpenAIEmbeddingProvider } from 'fluxion/memory';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 
 const embedder = new OpenAIEmbeddingProvider({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -97,7 +97,7 @@ const vectors = await embedder.embedBatch(['Hello', 'World']);
 In-process vector store using cosine similarity. No external DB required.
 
 ```ts
-import { InMemoryVectorStore } from 'fluxion/memory';
+import { InMemoryVectorStore } from 'confused-ai/memory';
 
 const vs = new InMemoryVectorStore();
 
@@ -117,8 +117,8 @@ For production workloads, replace `InMemoryVectorStore` with a persistent vector
 ### Pinecone
 
 ```ts
-import { VectorMemoryStore, PineconeVectorStore } from 'fluxion/memory';
-import { OpenAIEmbeddingProvider } from 'fluxion/llm';
+import { VectorMemoryStore, PineconeVectorStore } from 'confused-ai/memory';
+import { OpenAIEmbeddingProvider } from 'confused-ai/llm';
 
 const vectorMemory = new VectorMemoryStore({
   embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
@@ -136,7 +136,7 @@ Requires Pinecone's official SDK (`npm install @pinecone-database/pinecone`).
 ### Qdrant
 
 ```ts
-import { QdrantVectorStore } from 'fluxion/memory';
+import { QdrantVectorStore } from 'confused-ai/memory';
 
 const store = new QdrantVectorStore({
   url: process.env.QDRANT_URL!, // e.g. 'http://localhost:6333'
@@ -148,8 +148,8 @@ const store = new QdrantVectorStore({
 ### pgvector (PostgreSQL)
 
 ```ts
-import { PgVectorStore } from 'fluxion/memory';
-import type { PgPool } from 'fluxion/memory';
+import { PgVectorStore } from 'confused-ai/memory';
+import type { PgPool } from 'confused-ai/memory';
 
 // Pass any pg-compatible pool
 const store = new PgVectorStore({
@@ -177,7 +177,7 @@ Requires `pg` and the `pgvector` PostgreSQL extension.
 Implement the `MemoryStore` interface to use any external database:
 
 ```ts
-import type { MemoryStore } from 'fluxion/memory';
+import type { MemoryStore } from 'confused-ai/memory';
 
 class PostgresMemoryStore implements MemoryStore {
   async save(sessionId: string, messages: Message[]): Promise<void> {
@@ -205,7 +205,7 @@ class PostgresMemoryStore implements MemoryStore {
 For persistence across process restarts, use session stores — see [Session Management](/guide/session).
 
 ```ts
-import { createSqliteSessionStore } from 'fluxion/session';
+import { createSqliteSessionStore } from 'confused-ai/session';
 
 const sessions = createSqliteSessionStore('./data/sessions.db');
 

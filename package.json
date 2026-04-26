@@ -1,6 +1,6 @@
 {
-    "name": "fluxion",
-    "version": "0.9.1",
+    "name": "confused-ai",
+    "version": "0.9.2",
     "description": "TypeScript framework for building production-grade AI agents, teams, and services",
     "type": "module",
     "files": [
@@ -268,6 +268,10 @@
         "example:meridian": "bun examples/meridian-platform.ts",
         "example:graph": "bun examples/graph-workflow.ts",
         "example:multi-agent": "bun examples/multi-agent-orchestration.ts",
+        "example:reasoning": "bun examples/reasoning-agent.ts",
+        "example:scheduled": "bun examples/scheduled-agent.ts",
+        "example:code-review": "bun examples/code-review-pipeline.ts",
+        "example:eval": "bun examples/eval-regression.ts",
         "build": "tsup",
         "dev": "tsup --watch",
         "typecheck": "tsc --noEmit",
@@ -386,6 +390,6 @@
         "node": ">=18.0.0"
     },
     "bin": {
-        "fluxion": "dist/cli.js"
+        "confused-ai": "dist/cli.js"
     }
 }

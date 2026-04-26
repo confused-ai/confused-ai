@@ -8,7 +8,7 @@
  * @example
  * ```ts
  * // In createHttpService options:
- * import { createSqliteIdempotencyStore } from 'fluxion/production';
+ * import { createSqliteIdempotencyStore } from 'confused-ai/production';
  *
  * createHttpService({
  *   agents: { assistant },

@@ -13,7 +13,7 @@ state, configuration, and checkpointing — regardless of where you store the da
 ## The storage API
 
 ```ts
-import { createStorage } from 'fluxion/storage';
+import { createStorage } from 'confused-ai/storage';
 
 const store = createStorage({ type: 'memory' }); // or 'file'
 
@@ -50,8 +50,8 @@ Wrap any tool with caching using the storage layer:
 
 ```ts
 import { z } from 'zod';
-import { tool, extendTool } from 'fluxion';
-import { createStorage } from 'fluxion/storage';
+import { tool, extendTool } from 'confused-ai';
+import { createStorage } from 'confused-ai/storage';
 
 const cache = createStorage({ type: 'file', path: './data/tool-cache.json' });
 
@@ -100,7 +100,7 @@ const cachedGeocode = extendTool(geocodeTool, {
 ### Simpler cache pattern with `wrapTool`
 
 ```ts
-import { wrapTool } from 'fluxion';
+import { wrapTool } from 'confused-ai';
 
 function withCache<T extends ZodObject<ZodRawShape>, O>(
   base: LightweightTool<T, O>,

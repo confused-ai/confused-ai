@@ -7,9 +7,9 @@
  *
  * @example
  * ```ts
- * import { createAgent } from 'fluxion';
- * import { createTenantContext } from 'fluxion/production';
- * import { createSqliteSessionStore } from 'fluxion/session';
+ * import { createAgent } from 'confused-ai';
+ * import { createTenantContext } from 'confused-ai/production';
+ * import { createSqliteSessionStore } from 'confused-ai/session';
  *
  * const baseSessionStore = await createSqliteSessionStore('./agent.db');
  *

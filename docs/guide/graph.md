@@ -5,7 +5,7 @@ The graph engine executes complex, stateful multi-agent workflows as a **directe
 ## Quick start
 
 ```ts
-import { createGraph, DAGEngine, NodeKind } from 'fluxion/graph';
+import { createGraph, DAGEngine, NodeKind } from 'confused-ai/graph';
 import { z } from 'zod';
 
 const graph = createGraph('report-pipeline')
@@ -52,7 +52,7 @@ console.log(result.state.analyze); // { analysis: '...' }
 | `PARALLEL` | Fans out to multiple child nodes, runs them concurrently |
 | `JOIN` | Waits for all incoming parallel branches before continuing |
 | `SUBGRAPH` | Embeds another `GraphDef` — composes graphs hierarchically |
-| `AGENT` | Runs a fluxion agent via `AgentNodeConfig` |
+| `AGENT` | Runs a confused-ai agent via `AgentNodeConfig` |
 | `WAIT` | Suspends execution until `.resume()` is called |
 | `START` | Entry point (auto-created by `createGraph`) |
 | `END` | Terminal node (auto-created by `createGraph`) |
@@ -60,7 +60,7 @@ console.log(result.state.analyze); // { analysis: '...' }
 ## Parallel fan-out and join
 
 ```ts
-import { createGraph, DAGEngine, NodeKind } from 'fluxion/graph';
+import { createGraph, DAGEngine, NodeKind } from 'confused-ai/graph';
 
 const graph = createGraph('parallel-research')
   .addNode({ id: 'news',    kind: NodeKind.TASK, execute: async () => ({ news: await fetchNews() }) })
@@ -99,11 +99,11 @@ const graph = createGraph('parallel-research')
 
 ## Agent nodes
 
-Wire a fluxion agent directly into the graph:
+Wire a confused-ai agent directly into the graph:
 
 ```ts
-import { createGraph, DAGEngine, NodeKind } from 'fluxion/graph';
-import { createAgent } from 'fluxion';
+import { createGraph, DAGEngine, NodeKind } from 'confused-ai/graph';
+import { createAgent } from 'confused-ai';
 
 const analystAgent = createAgent({ name: 'analyst', llm, instructions: 'Analyze the data.' });
 
@@ -147,7 +147,7 @@ const r2 = await engine.resume(r1.executionId, { approvedBy: 'alice' });
 Every node execution is recorded as an immutable `GraphEvent`. You can deterministically replay any execution up to a given point.
 
 ```ts
-import { InMemoryEventStore, SqliteEventStore, replayState } from 'fluxion/graph';
+import { InMemoryEventStore, SqliteEventStore, replayState } from 'confused-ai/graph';
 
 // Durable store (survives restarts)
 const eventStore = SqliteEventStore.create('./graph-events.db');
@@ -169,7 +169,7 @@ Graph plugins intercept execution events — telemetry, logging, audit trails, r
 import {
   DAGEngine,
   TelemetryPlugin, LoggingPlugin, AuditPlugin, RateLimitPlugin,
-} from 'fluxion/graph';
+} from 'confused-ai/graph';
 
 const engine = new DAGEngine(graph, {
   plugins: [
@@ -196,7 +196,7 @@ const engine = new DAGEngine(graph, {
 For high-throughput workloads, distribute node execution across multiple workers:
 
 ```ts
-import { DistributedEngine, InMemoryTaskQueue, RedisTaskQueue, GraphWorker } from 'fluxion/graph';
+import { DistributedEngine, InMemoryTaskQueue, RedisTaskQueue, GraphWorker } from 'confused-ai/graph';
 
 // In-process queue (dev/test)
 const queue = new InMemoryTaskQueue();
@@ -219,8 +219,8 @@ const result = await engine.execute({ url: '...' });
 `MultiAgentOrchestrator` executes a graph where each node is an agent, with full message routing:
 
 ```ts
-import { MultiAgentOrchestrator, agentNode } from 'fluxion/graph';
-import { createAgent } from 'fluxion';
+import { MultiAgentOrchestrator, agentNode } from 'confused-ai/graph';
+import { createAgent } from 'confused-ai';
 
 const router = createAgent({ name: 'router', llm, instructions: 'Route to the right specialist.' });
 const coder  = createAgent({ name: 'coder',  llm, instructions: 'Write code.' });
@@ -253,8 +253,8 @@ console.log(result.rounds);     // per-agent exchange history
 
 | Store | Import | Notes |
 |-------|--------|-------|
-| `InMemoryEventStore` | `fluxion/graph` | Dev/test — events lost on restart |
-| `SqliteEventStore` | `fluxion/graph` | Durable default; `SqliteEventStore.create(path)` |
+| `InMemoryEventStore` | `confused-ai/graph` | Dev/test — events lost on restart |
+| `SqliteEventStore` | `confused-ai/graph` | Durable default; `SqliteEventStore.create(path)` |
 
 ---
 
@@ -263,7 +263,7 @@ console.log(result.rounds);     // per-agent exchange history
 `DurableExecutor` wraps `DAGEngine` and **automatically persists every event** to an `EventStore`. On failure or restart, call `.resume(executionId)` to skip completed nodes and continue exactly where execution stopped.
 
 ```ts
-import { createGraph, DurableExecutor, SqliteEventStore, NodeKind } from 'fluxion/graph';
+import { createGraph, DurableExecutor, SqliteEventStore, NodeKind } from 'confused-ai/graph';
 
 const graph = createGraph('long-job')
   .addNode({ id: 'step-a', kind: NodeKind.TASK, execute: async () => ({ a: 1 }) })
@@ -330,7 +330,7 @@ class DurableExecutor {
 `computeWaves(graph)` performs a topological sort and groups nodes into **execution waves** — sets of nodes with no dependencies on each other that can run in parallel. Useful for analysing graphs or implementing custom schedulers.
 
 ```ts
-import { createGraph, computeWaves, NodeKind } from 'fluxion/graph';
+import { createGraph, computeWaves, NodeKind } from 'confused-ai/graph';
 
 const graph = createGraph('pipeline')
   .addNode({ id: 'a', kind: NodeKind.TASK, execute: async () => ({}) })
@@ -360,7 +360,7 @@ function computeWaves(graph: GraphDef): NodeId[][];
 `BackpressureController` is a semaphore that limits how many graph nodes (or any async operations) can run concurrently. It enqueues excess work instead of dropping it.
 
 ```ts
-import { BackpressureController } from 'fluxion/graph';
+import { BackpressureController } from 'confused-ai/graph';
 
 const bp = new BackpressureController(4); // max 4 concurrent
 
@@ -394,7 +394,7 @@ class BackpressureController {
 
 ## Testing graphs
 
-`fluxion/testing` exports graph-specific test utilities:
+`confused-ai/testing` exports graph-specific test utilities:
 
 ```ts
 import {
@@ -402,8 +402,8 @@ import {
   createMockLLMProvider,
   expectEventSequence,
   assertExactEventSequence,
-} from 'fluxion/testing';
-import { GraphEventType } from 'fluxion/graph';
+} from 'confused-ai/testing';
+import { GraphEventType } from 'confused-ai/graph';
 
 const runner = createTestRunner({ maxConcurrency: 2 });
 
@@ -434,7 +434,7 @@ assertExactEventSequence(result.eventTypes, [
 ### Mock LLM provider for agent nodes
 
 ```ts
-import { createMockLLMProvider } from 'fluxion/testing';
+import { createMockLLMProvider } from 'confused-ai/testing';
 
 const llm = createMockLLMProvider('test-llm', [
   { content: 'First response' },
@@ -459,12 +459,12 @@ const llm = createMockLLMProvider('test-llm', [
 
 After executing a graph with `DurableExecutor` (using a `SqliteEventStore`), use the built-in CLI commands to inspect, replay, export, and compare runs:
 
-### `fluxion replay`
+### `confused-ai replay`
 
 Stream the event timeline for a past run in chronological order:
 
 ```bash
-fluxion replay --run-id <executionId> [--db ./graph-events.db] [--json] [--from <seq>]
+confused-ai replay --run-id <executionId> [--db ./graph-events.db] [--json] [--from <seq>]
 ```
 
 | Flag | Default | Description |
@@ -474,12 +474,12 @@ fluxion replay --run-id <executionId> [--db ./graph-events.db] [--json] [--from 
 | `--json` | `false` | Output raw events as JSON |
 | `--from` | `0` | Start from this sequence number |
 
-### `fluxion inspect`
+### `confused-ai inspect`
 
 Print a per-node execution summary — status, retry count, duration, and errors:
 
 ```bash
-fluxion inspect --run-id <executionId> [--db ./graph-events.db]
+confused-ai inspect --run-id <executionId> [--db ./graph-events.db]
 ```
 
 ```
@@ -494,20 +494,20 @@ NODE ID          STATUS       TRIES  DURATION  ERROR
 ○ publish        skipped      0      -
 ```
 
-### `fluxion export`
+### `confused-ai export`
 
 Export all events for a run to a JSON file or stdout:
 
 ```bash
-fluxion export --run-id <executionId> [--db ./graph-events.db] [--out events.json] [--pretty]
+confused-ai export --run-id <executionId> [--db ./graph-events.db] [--out events.json] [--pretty]
 ```
 
-### `fluxion diff`
+### `confused-ai diff`
 
 Compare two runs node-by-node — useful for regression analysis after code changes:
 
 ```bash
-fluxion diff --run-id-a <baselineId> --run-id-b <newId> [--db ./graph-events.db]
+confused-ai diff --run-id-a <baselineId> --run-id-b <newId> [--db ./graph-events.db]
 ```
 
 ```

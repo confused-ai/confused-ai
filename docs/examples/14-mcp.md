@@ -18,7 +18,7 @@ and tools. Instead of building a custom tool for every API, MCP server providers
 expose a standard interface that any MCP-compatible agent can use.
 
 ```
-Agent (fluxion)
+Agent (confused-ai)
      ↓  (MCP protocol over stdio/HTTP)
 MCP Server (e.g., filesystem, github, postgres)
      ↓
@@ -31,16 +31,16 @@ Real system (files, repos, databases)
 # Install the official filesystem MCP server
 npm install -g @modelcontextprotocol/server-filesystem
 
-# Install fluxion MCP client support
-npm install fluxion
+# Install confused-ai MCP client support
+npm install confused-ai
 ```
 
 ## Code
 
 ```ts
 // mcp-agent.ts
-import { createAgent } from 'fluxion';
-import { MCPClient } from 'fluxion/orchestration';
+import { createAgent } from 'confused-ai';
+import { MCPClient } from 'confused-ai/orchestration';
 
 // ── Connect to MCP server ──────────────────────────────────────────────────
 const filesystem = new MCPClient({
@@ -154,7 +154,7 @@ const remoteMCP = new MCPClient({
 Expose any tool as an MCP server (other agents can then use it):
 
 ```ts
-import { MCPServer } from 'fluxion/orchestration';
+import { MCPServer } from 'confused-ai/orchestration';
 import { z } from 'zod';
 
 const server = new MCPServer({ name: 'my-tools', version: '1.0.0' });

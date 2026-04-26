@@ -21,7 +21,7 @@ PEXELS_API_KEY=...         # For background footage — https://www.pexels.com/a
 ## Quick start
 
 ```ts
-import { VideoOrchestrator } from 'fluxion';
+import { VideoOrchestrator } from 'confused-ai';
 
 const orchestrator = new VideoOrchestrator();
 
@@ -86,8 +86,8 @@ await rm('./temp_videos', { recursive: true, force: true });
 Wire `VideoOrchestrator` as a custom tool so the agent can trigger video generation on demand:
 
 ```ts
-import { agent, defineTool } from 'fluxion';
-import { VideoOrchestrator } from 'fluxion';
+import { agent, defineTool } from 'confused-ai';
+import { VideoOrchestrator } from 'confused-ai';
 import { z } from 'zod';
 
 const orchestrator = new VideoOrchestrator();

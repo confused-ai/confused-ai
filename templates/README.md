@@ -1,4 +1,4 @@
-# fluxion Deployment Templates
+# confused-ai Deployment Templates
 
 Production-ready templates for deploying your agent to various platforms.
 
@@ -19,9 +19,9 @@ Copy the template for your target platform and fill in the `<placeholders>`.
 Create `src/server.ts` (adapt to your stack):
 
 ```typescript
-import { createHttpService, listenService } from 'fluxion/runtime';
-import { createAgent } from 'fluxion';
-import { openai } from 'fluxion/llm';
+import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createAgent } from 'confused-ai';
+import { openai } from 'confused-ai/llm';
 
 const assistant = createAgent({
   name: 'assistant',

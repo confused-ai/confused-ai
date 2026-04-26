@@ -1,10 +1,10 @@
 /**
- * CLI — `fluxion inspect` command
+ * CLI — `confused-ai inspect` command
  *
  * Shows a per-node execution summary table for a durable run.
  *
  * Usage:
- *   fluxion inspect --run-id <executionId> [--db <path>]
+ *   confused-ai inspect --run-id <executionId> [--db <path>]
  */
 
 import type { Command } from 'commander';

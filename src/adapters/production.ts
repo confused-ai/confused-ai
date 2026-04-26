@@ -2,7 +2,7 @@
  * Production Setup Helper
  *
  * `createProductionSetup()` gives you a single, opinionated entry-point that
- * wires a complete, production-ready adapter stack for a fluxion agent.
+ * wires a complete, production-ready adapter stack for a confused-ai agent.
  *
  * Every slot can be overridden with a real driver.  Anything not provided falls
  * back to a sensible zero-dep in-memory implementation so the agent always
@@ -13,7 +13,7 @@
  * QUICK START — full production wiring
  * ─────────────────────────────────────────────────────────────────────────
  * ```ts
- * import { createProductionSetup } from 'fluxion/adapters';
+ * import { createProductionSetup } from 'confused-ai/adapters';
  *
  * // 1. Describe the stack using real adapters
  * const setup = createProductionSetup({
@@ -243,7 +243,7 @@ export interface ProductionSetup {
 // ── Factory ────────────────────────────────────────────────────────────────
 
 /**
- * Create a production-ready, fully-wired adapter stack for a fluxion agent.
+ * Create a production-ready, fully-wired adapter stack for a confused-ai agent.
  *
  * @param options - Adapter overrides.  Any omitted field defaults to a safe
  *                  zero-dep in-memory implementation.
@@ -253,7 +253,7 @@ export interface ProductionSetup {
  * import {
  *   createProductionSetup,
  *   InMemorySessionStoreAdapter,
- * } from 'fluxion/adapters';
+ * } from 'confused-ai/adapters';
  *
  * const setup = createProductionSetup({
  *   // Swap any slot with a real adapter:

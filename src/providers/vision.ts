@@ -102,7 +102,7 @@ export interface FileSource {
  *
  * @example
  * ```ts
- * import { imageUrl, imageFile, multiModal } from 'fluxion';
+ * import { imageUrl, imageFile, multiModal } from 'confused-ai';
  *
  * // Run with a remote image
  * await agent.run(multiModal('What is in this image?', imageUrl('https://example.com/photo.jpg')));

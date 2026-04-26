@@ -1,4 +1,4 @@
-import { agent, defineTool } from 'fluxion';
+import { agent, defineTool } from 'confused-ai';
 import { z } from 'zod';
 
 const getWeather = defineTool()

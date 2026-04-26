@@ -5,8 +5,8 @@ Sessions let agents maintain conversation history across multiple calls and proc
 ## Quick start
 
 ```ts
-import { createSqliteSessionStore } from 'fluxion/session';
-// or: import { createSqliteSessionStore } from 'fluxion';
+import { createSqliteSessionStore } from 'confused-ai/session';
+// or: import { createSqliteSessionStore } from 'confused-ai';
 
 const sessions = createSqliteSessionStore('./data/sessions.db');
 
@@ -29,7 +29,7 @@ console.log(r.text); // "Your favorite color is blue."
 Fast, in-process, no setup. Lost on restart.
 
 ```ts
-import { InMemorySessionStore } from 'fluxion/session';
+import { InMemorySessionStore } from 'confused-ai/session';
 
 const sessions = new InMemorySessionStore();
 ```
@@ -39,7 +39,7 @@ const sessions = new InMemorySessionStore();
 Persists to a local SQLite file. Zero external dependencies.
 
 ```ts
-import { createSqliteSessionStore } from 'fluxion/session';
+import { createSqliteSessionStore } from 'confused-ai/session';
 
 const sessions = createSqliteSessionStore('./data/sessions.db');
 // DB file and table created automatically
@@ -50,7 +50,7 @@ const sessions = createSqliteSessionStore('./data/sessions.db');
 Use any SQL database via the `SqlSessionStore`:
 
 ```ts
-import { SqlSessionStore } from 'fluxion/session';
+import { SqlSessionStore } from 'confused-ai/session';
 
 const sessions = new SqlSessionStore({
   driver: myDbDriver, // implements SessionDbDriver
@@ -61,7 +61,7 @@ const sessions = new SqlSessionStore({
 Implement `SessionDbDriver` for your database:
 
 ```ts
-import type { SessionDbDriver, SessionRow } from 'fluxion/session';
+import type { SessionDbDriver, SessionRow } from 'confused-ai/session';
 
 class PostgresSessionDriver implements SessionDbDriver {
   async get(sessionId: string): Promise<SessionRow | null> {
@@ -95,7 +95,7 @@ Use `RedisSessionStore` for distributed deployments (multiple backend instances 
 
 ```ts
 import Redis from 'ioredis';
-import { RedisSessionStore } from 'fluxion/session';
+import { RedisSessionStore } from 'confused-ai/session';
 
 const redis = new Redis(process.env.REDIS_URL!);
 const sessions = new RedisSessionStore({ client: redis });
@@ -112,8 +112,8 @@ const myAgent = agent({
 **Redis LLM cache** — share an LLM response cache across all instances:
 
 ```ts
-import { RedisLlmCache } from 'fluxion/session';
-import type { RedisLlmCacheKeyInput } from 'fluxion/session';
+import { RedisLlmCache } from 'confused-ai/session';
+import type { RedisLlmCacheKeyInput } from 'confused-ai/session';
 
 const llmCache = new RedisLlmCache({
   client: redis,
@@ -134,8 +134,8 @@ When running under **Bun**, use `createBunSqliteSessionStore` — `better-sqlite
 
 ```ts
 // Import directly from the subpath (not in the main barrel to avoid Node import errors)
-import { createBunSqliteSessionStore } from 'fluxion/session/bun-sqlite';
-// or in Bun apps: import { createBunSqliteSessionStore } from 'fluxion/session';
+import { createBunSqliteSessionStore } from 'confused-ai/session/bun-sqlite';
+// or in Bun apps: import { createBunSqliteSessionStore } from 'confused-ai/session';
 
 const sessions = await createBunSqliteSessionStore('./data/sessions.db');
 
@@ -166,9 +166,9 @@ Use a `SessionStoreAdapter` to plug any backend into the session layer without
 replacing the entire `SessionStore` implementation:
 
 ```ts
-import { createAgent } from 'fluxion';
-import { InMemorySessionStoreAdapter } from 'fluxion/adapters';
-// Production: import { RedisSessionAdapter } from 'fluxion-adapter-redis-sessions';
+import { createAgent } from 'confused-ai';
+import { InMemorySessionStoreAdapter } from 'confused-ai/adapters';
+// Production: import { RedisSessionAdapter } from 'confused-ai-adapter-redis-sessions';
 
 createAgent({
   name: 'assistant',

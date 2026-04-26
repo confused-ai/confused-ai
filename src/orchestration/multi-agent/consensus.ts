@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { createConsensus } from 'fluxion/orchestration';
+ * import { createConsensus } from 'confused-ai/orchestration';
  *
  * const consensus = createConsensus({
  *   agents: { analyst1, analyst2, analyst3 },

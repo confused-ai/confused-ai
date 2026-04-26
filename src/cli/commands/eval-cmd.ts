@@ -4,7 +4,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 /**
- * `fluxion eval <dataset> --agent <file>` — run an eval suite from CLI.
+ * `confused-ai eval <dataset> --agent <file>` — run an eval suite from CLI.
  *
  * Dataset format (JSON):
  * [{ "input": "What is 2+2?", "expected": "4" }, ...]
@@ -12,8 +12,8 @@ import { pathToFileURL } from 'node:url';
  * The agent file must export `agent` or default a CreateAgentResult.
  *
  * @example
- * fluxion eval ./evals/qa.json --agent ./my-agent.ts
- * fluxion eval ./evals/qa.json --agent ./my-agent.ts --threshold 0.8 --output ./results.json
+ * confused-ai eval ./evals/qa.json --agent ./my-agent.ts
+ * confused-ai eval ./evals/qa.json --agent ./my-agent.ts --threshold 0.8 --output ./results.json
  */
 export function registerEvalCommand(program: Command): void {
     program

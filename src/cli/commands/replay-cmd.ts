@@ -1,11 +1,11 @@
 /**
- * CLI — `fluxion replay` command
+ * CLI — `confused-ai replay` command
  *
  * Replays the events of a durable run to stdout as a human-readable timeline.
  *
  * Usage:
- *   fluxion replay --run-id <executionId> [--db <path>]
- *   fluxion replay --run-id <executionId> --json
+ *   confused-ai replay --run-id <executionId> [--db <path>]
+ *   confused-ai replay --run-id <executionId> --json
  */
 
 import type { Command } from 'commander';

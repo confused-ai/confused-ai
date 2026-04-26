@@ -5,7 +5,7 @@ Build complex multi-step workflows with typed steps, branching, parallel executi
 ## Basic workflow
 
 ```ts
-import { createWorkflow, createStep } from 'fluxion/execution';
+import { createWorkflow, createStep } from 'confused-ai/execution';
 import { z } from 'zod';
 
 const fetchStep = createStep({
@@ -91,7 +91,7 @@ createWorkflow({
 ## Parallel steps
 
 ```ts
-import { createWorkflow, createStep } from 'fluxion/execution';
+import { createWorkflow, createStep } from 'confused-ai/execution';
 import { z } from 'zod';
 
 const newsStep    = createStep({ id: 'news',    inputSchema: z.object({}), outputSchema: z.object({ news: z.string() }),    execute: async () => ({ news: await fetchNews() }) });

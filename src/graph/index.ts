@@ -2,12 +2,12 @@
  * Graph Execution Engine — Public API
  *
  * This is the main entry point for the graph-based execution engine.
- * Import from 'fluxion/graph' to access all graph engine capabilities.
+ * Import from 'confused-ai/graph' to access all graph engine capabilities.
  *
  * ## Quick Start
  *
  * ```typescript
- * import { createGraph, DAGEngine } from 'fluxion/graph';
+ * import { createGraph, DAGEngine } from 'confused-ai/graph';
  *
  * const graph = createGraph('my-workflow')
  *   .addNode('start', { kind: 'start' })

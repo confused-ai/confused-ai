@@ -1,6 +1,6 @@
 # 17 · Full framework showcase (real-world map)
 
-This page is a **single narrative** that touches **every major capability** in fluxion: one fictional product, with imports you can copy into your own app. Deep dives live in the numbered examples and guides linked throughout.
+This page is a **single narrative** that touches **every major capability** in confused-ai: one fictional product, with imports you can copy into your own app. Deep dives live in the numbered examples and guides linked throughout.
 
 ---
 
@@ -69,7 +69,7 @@ flowchart TB
 
 ## Runnable scripts in this repo
 
-Run these from the **repository root** (they import `src/` paths; published apps use `fluxion` imports instead).
+Run these from the **repository root** (they import `src/` paths; published apps use `confused-ai` imports instead).
 
 | Script | Command | What it demonstrates |
 |--------|---------|----------------------|
@@ -87,16 +87,16 @@ Use this as a **coverage map** against **`CAPABILITIES.md`** at the repository r
 
 | Capability | Example import |
 |------------|----------------|
-| Opinionated agent | `import { createAgent } from 'fluxion'` |
-| ReAct / tool loop (bring your own LLM) | `import { createAgenticAgent } from 'fluxion/agentic'` |
-| Class-based `Agent` | `import { Agent } from 'fluxion'` |
-| Fluent DX builder | `import { defineAgent } from 'fluxion'` (DX chain under `fluxion` — see [Creating Agents](/guide/agents)) |
-| Typed Zod agents (SDK) | `import { defineAgent, createWorkflow, asOrchestratorAgent } from 'fluxion'` |
+| Opinionated agent | `import { createAgent } from 'confused-ai'` |
+| ReAct / tool loop (bring your own LLM) | `import { createAgenticAgent } from 'confused-ai/agentic'` |
+| Class-based `Agent` | `import { Agent } from 'confused-ai'` |
+| Fluent DX builder | `import { defineAgent } from 'confused-ai'` (DX chain under `confused-ai` — see [Creating Agents](/guide/agents)) |
+| Typed Zod agents (SDK) | `import { defineAgent, createWorkflow, asOrchestratorAgent } from 'confused-ai'` |
 
 ```ts
-import { createAgent, resolveLlmForCreateAgent } from 'fluxion';
-import { CalculatorAddTool } from 'fluxion/tools';
-import { InMemorySessionStore } from 'fluxion/session';
+import { createAgent, resolveLlmForCreateAgent } from 'confused-ai';
+import { CalculatorAddTool } from 'confused-ai/tools';
+import { InMemorySessionStore } from 'confused-ai/session';
 
 const agent = createAgent({
   name: 'StoreOps',
@@ -114,17 +114,17 @@ const agent = createAgent({
 
 | Capability | Example import |
 |------------|----------------|
-| Built-in tools | `import { … } from 'fluxion/tools'` |
-| Registry | `import { ToolRegistryImpl, toToolRegistry } from 'fluxion/tools'` |
-| MCP HTTP client | `import { HttpMcpClient, loadMcpToolsFromUrl } from 'fluxion/tools'` |
-| MCP HTTP server | `import { McpHttpServer, createMcpServer } from 'fluxion/tools'` |
-| MCP stdio (minimal) | `import { runMcpStdioToolServer, handleMcpStdioLine } from 'fluxion/tools'` |
-| JSON tool gateway | `import { handleToolGatewayRequest } from 'fluxion/tools'` |
-| Playwright (optional peer) | `import { PlaywrightPageTitleTool } from 'fluxion/tools'` |
+| Built-in tools | `import { … } from 'confused-ai/tools'` |
+| Registry | `import { ToolRegistryImpl, toToolRegistry } from 'confused-ai/tools'` |
+| MCP HTTP client | `import { HttpMcpClient, loadMcpToolsFromUrl } from 'confused-ai/tools'` |
+| MCP HTTP server | `import { McpHttpServer, createMcpServer } from 'confused-ai/tools'` |
+| MCP stdio (minimal) | `import { runMcpStdioToolServer, handleMcpStdioLine } from 'confused-ai/tools'` |
+| JSON tool gateway | `import { handleToolGatewayRequest } from 'confused-ai/tools'` |
+| Playwright (optional peer) | `import { PlaywrightPageTitleTool } from 'confused-ai/tools'` |
 
 ```ts
-import { createWorkflow, defineAgent } from 'fluxion';
-import { CalculatorAddTool } from 'fluxion/tools';
+import { createWorkflow, defineAgent } from 'confused-ai';
+import { CalculatorAddTool } from 'confused-ai/tools';
 import { z } from 'zod';
 
 const analyst = defineAgent({
@@ -143,17 +143,17 @@ const out = await wf.task('analyst', analyst).sequential().execute({ question: '
 
 | Capability | Example import |
 |------------|----------------|
-| Sessions (memory / SQL / SQLite / Redis) | `import { InMemorySessionStore, RedisSessionStore, createSqliteSessionStore } from 'fluxion/session'` |
-| Redis LLM cache | `import { RedisLlmCache } from 'fluxion/session'` |
-| Semantic / episodic memory | `import { InMemoryStore, MemoryType } from 'fluxion'` |
-| Vector stores | `import { PineconeVectorStore, QdrantVectorStore, PgVectorStore, InMemoryVectorStore } from 'fluxion/memory'` |
-| User profiles | `import { InMemoryUserProfileStore } from 'fluxion/learning'` |
-| RAG | `import { KnowledgeEngine, TextLoader, splitText } from 'fluxion/knowledge'` |
+| Sessions (memory / SQL / SQLite / Redis) | `import { InMemorySessionStore, RedisSessionStore, createSqliteSessionStore } from 'confused-ai/session'` |
+| Redis LLM cache | `import { RedisLlmCache } from 'confused-ai/session'` |
+| Semantic / episodic memory | `import { InMemoryStore, MemoryType } from 'confused-ai'` |
+| Vector stores | `import { PineconeVectorStore, QdrantVectorStore, PgVectorStore, InMemoryVectorStore } from 'confused-ai/memory'` |
+| User profiles | `import { InMemoryUserProfileStore } from 'confused-ai/learning'` |
+| RAG | `import { KnowledgeEngine, TextLoader, splitText } from 'confused-ai/knowledge'` |
 
 ```ts
-import { KnowledgeEngine, splitText } from 'fluxion/knowledge';
-import { InMemoryVectorStore } from 'fluxion/memory';
-import { OpenAIEmbeddingProvider } from 'fluxion/memory';
+import { KnowledgeEngine, splitText } from 'confused-ai/knowledge';
+import { InMemoryVectorStore } from 'confused-ai/memory';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 
 const chunks = splitText('Return policy: 30 days. Receipt required.', { chunkSize: 40, chunkOverlap: 8 });
 
@@ -175,12 +175,12 @@ await rag.ingest([
 
 | Capability | Example import |
 |------------|----------------|
-| Guardrails | `import { GuardrailValidator, createSensitiveDataRule, createPiiDetectionRule } from 'fluxion/guardrails'` |
-| Planners | `import { ClassicalPlanner, PlanningAlgorithm } from 'fluxion/planner'` |
-| Execution graphs | `import { … } from 'fluxion/execution'` |
+| Guardrails | `import { GuardrailValidator, createSensitiveDataRule, createPiiDetectionRule } from 'confused-ai/guardrails'` |
+| Planners | `import { ClassicalPlanner, PlanningAlgorithm } from 'confused-ai/planner'` |
+| Execution graphs | `import { … } from 'confused-ai/execution'` |
 
 ```ts
-import { GuardrailValidator, createSensitiveDataRule } from 'fluxion/guardrails';
+import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
 
 const guardrails = new GuardrailValidator({
   rules: [createSensitiveDataRule()],
@@ -191,27 +191,27 @@ const guardrails = new GuardrailValidator({
 
 | Capability | Example import |
 |------------|----------------|
-| Pipeline | `import { createPipeline } from 'fluxion/orchestration'` |
-| Supervisor, swarm, team, toolkit | `import { … } from 'fluxion/orchestration'` |
-| Agent router (**orchestration** strategy type) | `import type { AgentRoutingStrategy } from 'fluxion/orchestration'` |
-| A2A client | `import { HttpA2AClient, createHttpA2AClient } from 'fluxion/orchestration'` |
+| Pipeline | `import { createPipeline } from 'confused-ai/orchestration'` |
+| Supervisor, swarm, team, toolkit | `import { … } from 'confused-ai/orchestration'` |
+| Agent router (**orchestration** strategy type) | `import type { AgentRoutingStrategy } from 'confused-ai/orchestration'` |
+| A2A client | `import { HttpA2AClient, createHttpA2AClient } from 'confused-ai/orchestration'` |
 
 ::: tip
-The **LLM** router uses `RoutingStrategy` from `fluxion/llm`. The **multi-agent** router uses `AgentRoutingStrategy` from `fluxion/orchestration`—do not confuse the two.
+The **LLM** router uses `RoutingStrategy` from `confused-ai/llm`. The **multi-agent** router uses `AgentRoutingStrategy` from `confused-ai/orchestration`—do not confuse the two.
 :::
 
 ### Observability & quality
 
 | Capability | Example import |
 |------------|----------------|
-| Logging / metrics / tracer | `import { ConsoleLogger, MetricsCollectorImpl, InMemoryTracer } from 'fluxion/observability'` |
-| Eval metrics | `import { wordOverlapF1, rougeLWords, ExactMatchAccuracy } from 'fluxion/observability'` |
-| LLM-as-judge | `import { runLlmAsJudge } from 'fluxion/observability'` |
-| Langfuse / LangSmith (HTTP helpers) | `import { sendLangfuseBatch, sendLangSmithRunBatch } from 'fluxion/observability'` |
-| OTLP | `import { OTLPTraceExporter, OTLPMetricsExporter } from 'fluxion/observability'` |
+| Logging / metrics / tracer | `import { ConsoleLogger, MetricsCollectorImpl, InMemoryTracer } from 'confused-ai/observability'` |
+| Eval metrics | `import { wordOverlapF1, rougeLWords, ExactMatchAccuracy } from 'confused-ai/observability'` |
+| LLM-as-judge | `import { runLlmAsJudge } from 'confused-ai/observability'` |
+| Langfuse / LangSmith (HTTP helpers) | `import { sendLangfuseBatch, sendLangSmithRunBatch } from 'confused-ai/observability'` |
+| OTLP | `import { OTLPTraceExporter, OTLPMetricsExporter } from 'confused-ai/observability'` |
 
 ```ts
-import { MetricsCollectorImpl } from 'fluxion/observability';
+import { MetricsCollectorImpl } from 'confused-ai/observability';
 
 const metrics = new MetricsCollectorImpl();
 metrics.counter('northpeak_queries', 1, { region: 'us-west' });
@@ -221,27 +221,27 @@ metrics.counter('northpeak_queries', 1, { region: 'us-west' });
 
 | Capability | Example import |
 |------------|----------------|
-| Health | `import { HealthCheckManager, createSessionStoreHealthCheck } from 'fluxion/production'` |
-| Rate limiting (process) | `import { RateLimiter, createOpenAIRateLimiter } from 'fluxion/production'` |
-| Rate limiting (Redis) | `import { RedisRateLimiter } from 'fluxion/production'` |
-| Circuit breaker | `import { CircuitBreaker, createLLMCircuitBreaker } from 'fluxion/production'` |
-| Streams / shutdown | `import { ResumableStreamManager, GracefulShutdown } from 'fluxion/production'` |
+| Health | `import { HealthCheckManager, createSessionStoreHealthCheck } from 'confused-ai/production'` |
+| Rate limiting (process) | `import { RateLimiter, createOpenAIRateLimiter } from 'confused-ai/production'` |
+| Rate limiting (Redis) | `import { RedisRateLimiter } from 'confused-ai/production'` |
+| Circuit breaker | `import { CircuitBreaker, createLLMCircuitBreaker } from 'confused-ai/production'` |
+| Streams / shutdown | `import { ResumableStreamManager, GracefulShutdown } from 'confused-ai/production'` |
 
 ### Artifacts & media
 
 | Capability | Example import |
 |------------|----------------|
-| Versioned outputs | `import { InMemoryArtifactStorage, createTextArtifact } from 'fluxion/artifacts'` |
-| Media / video helpers | `import { … } from 'fluxion'` (video module) |
+| Versioned outputs | `import { InMemoryArtifactStorage, createTextArtifact } from 'confused-ai/artifacts'` |
+| Media / video helpers | `import { … } from 'confused-ai'` (video module) |
 
 ### HTTP service
 
 | Capability | Example import |
 |------------|----------------|
-| API + SSE + OpenAPI | `import { createHttpService, listenService, getRuntimeOpenApiJson } from 'fluxion/runtime'` |
+| API + SSE + OpenAPI | `import { createHttpService, listenService, getRuntimeOpenApiJson } from 'confused-ai/runtime'` |
 
 ```ts
-import { createHttpService, listenService } from 'fluxion/runtime';
+import { createHttpService, listenService } from 'confused-ai/runtime';
 
 const service = createHttpService(
   { agents: { storeops: agent }, tracing: true, cors: '*' },
@@ -254,21 +254,21 @@ await listenService(service, 8787);
 
 | Capability | Example import |
 |------------|----------------|
-| Env-based config | `import { loadConfig, validateConfig } from 'fluxion/config'` |
+| Env-based config | `import { loadConfig, validateConfig } from 'confused-ai/config'` |
 
 ### LLM providers & structured streaming
 
 | Capability | Example import |
 |------------|----------------|
-| OpenAI / Anthropic / Google / compat | `import { OpenAIProvider, AnthropicProvider, GoogleProvider, … } from 'fluxion/llm'` |
-| Bedrock (optional SDK) | `import { BedrockConverseProvider } from 'fluxion/llm'` |
-| Smart model routing (no extra LLM call) | `import { createSmartRouter, scoreTaskTypesForRouting } from 'fluxion/llm'` |
-| Stream → Zod | `import { collectStreamText, collectStreamThenValidate } from 'fluxion/llm'` |
-| Context limits | `import { getContextLimitForModel, ContextWindowManager } from 'fluxion/llm'` |
+| OpenAI / Anthropic / Google / compat | `import { OpenAIProvider, AnthropicProvider, GoogleProvider, … } from 'confused-ai/llm'` |
+| Bedrock (optional SDK) | `import { BedrockConverseProvider } from 'confused-ai/llm'` |
+| Smart model routing (no extra LLM call) | `import { createSmartRouter, scoreTaskTypesForRouting } from 'confused-ai/llm'` |
+| Stream → Zod | `import { collectStreamText, collectStreamThenValidate } from 'confused-ai/llm'` |
+| Context limits | `import { getContextLimitForModel, ContextWindowManager } from 'confused-ai/llm'` |
 
 ```ts
 import { z } from 'zod';
-import { collectStreamThenValidate, type StreamDelta } from 'fluxion/llm';
+import { collectStreamThenValidate, type StreamDelta } from 'confused-ai/llm';
 
 async function structuredFromStream(stream: AsyncIterable<StreamDelta>) {
   const schema = z.object({ summary: z.string(), risk: z.enum(['low', 'medium', 'high']) });
@@ -305,4 +305,4 @@ If you only wire **one** path first:
 
 Then add **workflows**, **MCP**, **A2A**, and **Bedrock** when a concrete integration requires them.
 
-The runnable **`examples/framework-showcase.ts`** file in the repo is the closest **end-to-end code** counterpart to this page; diff it against your app’s `package.json` imports when you migrate from repo-relative paths to `fluxion`.
+The runnable **`examples/framework-showcase.ts`** file in the repo is the closest **end-to-end code** counterpart to this page; diff it against your app’s `package.json` imports when you migrate from repo-relative paths to `confused-ai`.

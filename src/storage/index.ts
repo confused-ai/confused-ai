@@ -198,7 +198,7 @@ export interface StorageOptions {
  *
  * @example
  * ```ts
- * import { createStorage } from 'fluxion';
+ * import { createStorage } from 'confused-ai';
  *
  * // Dev: in-memory
  * const store = createStorage();

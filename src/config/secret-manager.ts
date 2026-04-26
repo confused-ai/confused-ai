@@ -10,7 +10,7 @@
  *
  * @example
  * ```ts
- * import { createSecretManager } from 'fluxion/config';
+ * import { createSecretManager } from 'confused-ai/config';
  *
  * // AWS
  * const secrets = createSecretManager({ provider: 'aws', region: 'us-east-1' });

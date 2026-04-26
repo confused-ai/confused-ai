@@ -30,10 +30,10 @@ Agent answers using YOUR content
 
 ```ts
 // rag-agent.ts
-import { createAgent } from 'fluxion';
-import { KnowledgeEngine, TextLoader, URLLoader, JSONLoader } from 'fluxion/knowledge';
-import { OpenAIEmbeddingProvider } from 'fluxion/memory';
-import { InMemoryVectorStore } from 'fluxion/memory';
+import { createAgent } from 'confused-ai';
+import { KnowledgeEngine, TextLoader, URLLoader, JSONLoader } from 'confused-ai/knowledge';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
+import { InMemoryVectorStore } from 'confused-ai/memory';
 
 // ── 1. Set up the embedding provider ──────────────────────────────────────
 const embeddings = new OpenAIEmbeddingProvider({
@@ -128,7 +128,7 @@ Each chunk stored in the vector store has:
 ## Persist to disk (no re-embedding on restart)
 
 ```ts
-import { createStorage } from 'fluxion/storage';
+import { createStorage } from 'confused-ai/storage';
 
 const storage = createStorage({ type: 'file', path: './data/vectors.json' });
 

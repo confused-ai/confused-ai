@@ -12,7 +12,7 @@
  *
  * @example
  * ```ts
- * import { bare } from 'fluxion';
+ * import { bare } from 'confused-ai';
  *
  * const myAgent = bare({
  *   llm: new OpenAIProvider({ model: 'gpt-4o', apiKey: '...' }),

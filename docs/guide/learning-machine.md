@@ -13,7 +13,7 @@ import {
   LearningMachine,
   InMemoryUserMemoryStore,
   InMemorySessionContextStore,
-} from 'fluxion';
+} from 'confused-ai';
 
 const machine = new LearningMachine({
   userMemory:     new InMemoryUserMemoryStore(),
@@ -64,7 +64,7 @@ import {
   InMemorySessionContextStore,
   InMemoryEntityMemoryStore,
   InMemoryLearnedKnowledgeStore,
-} from 'fluxion';
+} from 'confused-ai';
 
 const machine = new LearningMachine({
   userProfile:     new InMemoryUserProfileStore(),
@@ -84,7 +84,7 @@ const machine = new LearningMachine({
 The `InMemoryUserMemoryStore` records free-form memory entries per user, with optional per-agent scoping.
 
 ```ts
-import { InMemoryUserMemoryStore } from 'fluxion';
+import { InMemoryUserMemoryStore } from 'confused-ai';
 
 const store = new InMemoryUserMemoryStore();
 
@@ -113,7 +113,7 @@ await store.deleteMemory('user-42', id);
 Tracks what the user is currently trying to accomplish — goal, running summary, and active plan.
 
 ```ts
-import { InMemorySessionContextStore } from 'fluxion';
+import { InMemorySessionContextStore } from 'confused-ai';
 
 const store = new InMemorySessionContextStore();
 
@@ -140,7 +140,7 @@ await store.delete('sess-abc');
 Remembers named entities (companies, people, projects) along with structured facts, timeline events, and relationships.
 
 ```ts
-import { InMemoryEntityMemoryStore } from 'fluxion';
+import { InMemoryEntityMemoryStore } from 'confused-ai';
 
 const store = new InMemoryEntityMemoryStore();
 
@@ -178,7 +178,7 @@ const results = await store.search('Acme', 'global');
 Stores cross-session insights the agent has discovered — rules-of-thumb, patterns, and domain knowledge.
 
 ```ts
-import { InMemoryLearnedKnowledgeStore } from 'fluxion';
+import { InMemoryLearnedKnowledgeStore } from 'confused-ai';
 
 const store = new InMemoryLearnedKnowledgeStore();
 
@@ -226,12 +226,12 @@ const insights = await store.query('enterprise pricing', 'sales-bot');
 All four in-memory stores can be swapped for persistent backends. For user profiles specifically, a SQLite store ships out of the box:
 
 ```ts
-import { createSqliteUserProfileStore } from 'fluxion';
+import { createSqliteUserProfileStore } from 'confused-ai';
 
 const profiles = createSqliteUserProfileStore('./data/profiles.db');
 ```
 
-For the other four stores, implement `UserMemoryStore`, `SessionContextStore`, `EntityMemoryStore`, or `LearnedKnowledgeStore` from `fluxion` using your database of choice.
+For the other four stores, implement `UserMemoryStore`, `SessionContextStore`, `EntityMemoryStore`, or `LearnedKnowledgeStore` from `confused-ai` using your database of choice.
 
 ---
 

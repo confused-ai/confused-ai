@@ -5,7 +5,7 @@
  *
  * @example
  * ```ts
- * import { BullMQBackgroundQueue } from 'fluxion/background';
+ * import { BullMQBackgroundQueue } from 'confused-ai/background';
  *
  * const queue = new BullMQBackgroundQueue({
  *   queueName: 'agent-hooks',

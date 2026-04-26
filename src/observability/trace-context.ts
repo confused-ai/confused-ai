@@ -10,7 +10,7 @@
  *
  * @example
  * ```ts
- * import { extractTraceContext, injectTraceHeaders, generateTraceparent } from 'fluxion/observability';
+ * import { extractTraceContext, injectTraceHeaders, generateTraceparent } from 'confused-ai/observability';
  *
  * // In an incoming HTTP handler:
  * const traceCtx = extractTraceContext(req.headers);

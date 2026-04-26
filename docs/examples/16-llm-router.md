@@ -11,7 +11,7 @@ speed, and how well the model’s `capabilities` match the detected task). Task 
 is **multi-signal** (scores per task type, not “first regex wins”).
 
 ```ts
-import { createSmartRouter, OpenAIProvider } from 'fluxion';
+import { createSmartRouter, OpenAIProvider } from 'confused-ai';
 
 const openai = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY! });
 
@@ -40,7 +40,7 @@ Tune trade-offs with `adaptiveWeights` (optional): `quality`, `cost`, `speed`,
 `capabilityFit`. For full control, pass `classifyTask` and/or `classifyComplexity`
 callbacks on `LLMRouter` / `createSmartRouter`.
 
-Use **`scoreTaskTypesForRouting(text, ctx)`** (exported from `fluxion/llm`) if you
+Use **`scoreTaskTypesForRouting(text, ctx)`** (exported from `confused-ai/llm`) if you
 want to log or override task scores in middleware.
 
 Legacy **`createBalancedRouter`** is unchanged: filter by capability, enforce a minimum
@@ -78,7 +78,7 @@ import {
   createBalancedRouter,
   OpenAIProvider,
   AnthropicProvider,
-} from 'fluxion';
+} from 'confused-ai';
 
 const openai     = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY! });
 const anthropic  = new AnthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -154,7 +154,7 @@ console.log(router.getLastRouteDecision());
 | `speed` | Always picks the fastest capable model |
 
 ```ts
-import { LLMRouter } from 'fluxion';
+import { LLMRouter } from 'confused-ai';
 
 const qualityRouter = new LLMRouter({ entries, strategy: 'quality' });
 const costRouter    = new LLMRouter({ entries, strategy: 'cost' });
@@ -208,7 +208,7 @@ Because `LLMRouter` implements `LLMProvider`, pass it anywhere a provider is
 accepted:
 
 ```ts
-import { createAgent } from 'fluxion';
+import { createAgent } from 'confused-ai';
 
 const agent = await createAgent({
   name: 'smart-agent',

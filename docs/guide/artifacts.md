@@ -18,7 +18,7 @@ import {
   createMarkdownArtifact,
   createTextArtifact,
   createDataArtifact,
-} from 'fluxion/artifacts';
+} from 'confused-ai/artifacts';
 
 const storage = new InMemoryArtifactStorage();
 
@@ -56,8 +56,8 @@ import {
   createDataArtifact,
   createReasoningArtifact,
   createPlanArtifact,
-} from 'fluxion/artifacts';
-// or: import { createMarkdownArtifact, ... } from 'fluxion';
+} from 'confused-ai/artifacts';
+// or: import { createMarkdownArtifact, ... } from 'confused-ai';
 
 // Plain text (type: 'file')
 createTextArtifact('summary', 'The executive summary is...');
@@ -128,8 +128,8 @@ const results = await storage.search('market report Q1', 10);
 Attach artifact storage to your agent workflow to automatically persist outputs:
 
 ```ts
-import { agent } from 'fluxion';
-import { InMemoryArtifactStorage, createMarkdownArtifact } from 'fluxion/artifacts';
+import { agent } from 'confused-ai';
+import { InMemoryArtifactStorage, createMarkdownArtifact } from 'confused-ai/artifacts';
 
 const storage = new InMemoryArtifactStorage();
 

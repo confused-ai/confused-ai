@@ -1,6 +1,6 @@
 # Custom Tools
 
-Tools are functions the LLM can call during its run. fluxion provides **three APIs** — pick whichever fits your style:
+Tools are functions the LLM can call during its run. confused-ai provides **three APIs** — pick whichever fits your style:
 
 | API | Style | Best for |
 |-----|-------|----------|
@@ -15,7 +15,7 @@ Tools are functions the LLM can call during its run. fluxion provides **three AP
 The recommended API for new projects. Chain methods until you call `.build()`.
 
 ```ts
-import { defineTool } from 'fluxion';
+import { defineTool } from 'confused-ai';
 import { z } from 'zod';
 
 const searchDocs = defineTool()
@@ -82,7 +82,7 @@ const deleteFile = defineTool()
 ## `tool()` — config object
 
 ```ts
-import { tool } from 'fluxion';
+import { tool } from 'confused-ai';
 import { z } from 'zod';
 
 const getPrice = tool({
@@ -105,7 +105,7 @@ const getPrice = tool({
 Drop-in compatible with Mastra and Vercel AI SDK tool definitions:
 
 ```ts
-import { createTool } from 'fluxion';
+import { createTool } from 'confused-ai';
 import { z } from 'zod';
 
 const myTool = createTool({
@@ -123,7 +123,7 @@ const myTool = createTool({
 Define multiple tools in one call:
 
 ```ts
-import { createTools } from 'fluxion';
+import { createTools } from 'confused-ai';
 import { z } from 'zod';
 
 const tools = createTools({
@@ -188,7 +188,7 @@ const contextTool = tool({
 
 ## Built-in tools
 
-fluxion ships 40+ production-ready tools. Import them as-is or extend with your own:
+confused-ai ships 40+ production-ready tools. Import them as-is or extend with your own:
 
 ```ts
 import {
@@ -215,7 +215,7 @@ import {
 
   // Data
   csvReadTool, jsonQueryTool,
-} from 'fluxion/tools';
+} from 'confused-ai/tools';
 ```
 
 See [Database Tools](/guide/database) for DB tool details.

@@ -1,6 +1,6 @@
 # Examples Playbook
 
-Real-world examples covering **every feature** of fluxion. Pick your level.
+Real-world examples covering **every feature** of confused-ai. Pick your level.
 
 ---
 
@@ -13,6 +13,10 @@ Runnable counterparts in the repo:
 - `bun run example:showcase` — LLM, sessions, workflows, pipeline, health, metrics, optional HTTP.
 - `bun run example:potential` — chunking, circuit breaker, rate limiter, artifacts, profiles, eval metrics, config (no LLM calls).
 - `bun run example:meridian` — full role intelligence platform: 6 personas, handoff, router, supervisor, consensus, RAG, HTTP server.
+- `bun run example:reasoning` — chain-of-thought incident triage with `ReasoningManager`.
+- `bun run example:scheduled` — nightly market digest cron with `ScheduleManager`.
+- `bun run example:code-review` — three-agent PR review pipeline with `bare()`, `compose()`, `pipe()`.
+- `bun run example:eval` — CI eval regression guard with `runEvalSuite` + `InMemoryEvalStore`.
 
 ---
 
@@ -48,17 +52,21 @@ Runnable counterparts in the repo:
 | 16 | [Intelligent LLM Router](./16-llm-router) | 🟡 | Auto-route requests to the right model by task, cost & speed |
 | 17 | [Full framework showcase](./17-full-framework-showcase) | 🔴 | **Coverage map:** one real-world story + every module / import path + links to 01–16 |
 | 18 | [Meridian — Role Intelligence Platform](./18-meridian-platform) | 🔴 | **Full platform demo:** 6 role personas, triage handoff, router, supervisor, consensus, compose/pipe, workflows, RAG, guardrails, resilience, health, HTTP runtime |
+| 19 | [Incident Triage Bot](./19-reasoning) | 🔴 | Chain-of-thought reasoning, `ReasoningManager`, event streaming, `NextAction` loop |
+| 20 | [Scheduled Agent Jobs](./20-scheduled-agents) | 🔴 | Cron scheduling, `ScheduleManager`, handler registry, run history, enable/disable |
+| 21 | [Code Review Pipeline](./21-code-review-pipeline) | 🔴 | `bare()`, `compose()`, `pipe()`, conditional `when` hand-off, lifecycle hooks |
+| 22 | [Eval Regression Guard](./22-eval-ci) | 🟡 | `runEvalSuite`, `EvalStore`, custom scorer, baseline saving, CI exit code |
 
 ---
 
 ## Quick Start (30 seconds)
 
 ```bash
-npm install fluxion
+npm install confused-ai
 ```
 
 ```ts
-import { createAgent } from 'fluxion';
+import { createAgent } from 'confused-ai';
 
 const agent = createAgent({
   name: 'my-first-agent',

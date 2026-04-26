@@ -7,8 +7,8 @@
  *
  * @example
  * ```ts
- * import { createHttpService } from 'fluxion/runtime';
- * import { createSqliteAuditStore } from 'fluxion/production';
+ * import { createHttpService } from 'confused-ai/runtime';
+ * import { createSqliteAuditStore } from 'confused-ai/production';
  *
  * createHttpService({
  *   agents: { assistant },

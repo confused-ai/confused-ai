@@ -1,11 +1,11 @@
 /**
- * CLI — `fluxion export` command
+ * CLI — `confused-ai export` command
  *
  * Exports all events for a run to a JSON file (or stdout).
  *
  * Usage:
- *   fluxion export --run-id <id> [--db <path>] [--out <file>]
- *   fluxion export --run-id <id> --out -          # stdout
+ *   confused-ai export --run-id <id> [--db <path>] [--out <file>]
+ *   confused-ai export --run-id <id> --out -          # stdout
  */
 
 import type { Command } from 'commander';

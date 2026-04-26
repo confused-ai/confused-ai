@@ -1,7 +1,7 @@
 /**
  * Meridian — Role Intelligence Platform
  *
- * Full demonstration of building an enterprise AI persona platform with fluxion.
+ * Full demonstration of building an enterprise AI persona platform with confused-ai.
  * Meridian turns organizational knowledge into always-on, role-specific AI co-pilots
  * that assist teams in real time.
  *
@@ -352,7 +352,7 @@ function buildKnowledgeBase() {
     // Shape of a KnowledgeEngine (embedding + retrieve requires a real API key at runtime)
     const vectorStore = new InMemoryVectorStore();
     console.log('InMemoryVectorStore ready — attach an EmbeddingProvider at runtime for live RAG.');
-    console.log('Import path: KnowledgeEngine, OpenAIEmbeddingProvider from "fluxion"');
+    console.log('Import path: KnowledgeEngine, OpenAIEmbeddingProvider from "confused-ai"');
 
     return { chunks, vectorStore };
 }
@@ -691,10 +691,10 @@ async function sectionMemoryAndProfiles() {
     // InMemoryStore is for dev/testing only. In production, replace it with a
     // persistent, production-grade MemoryStoreAdapter and pass it to createAgent:
     //
-    //   import { InMemoryMemoryStoreAdapter } from 'fluxion/adapters';        // dev
-    //   import { PgVectorStore }              from 'fluxion/memory';           // Postgres + pgvector
-    //   import { PineconeVectorStore }        from 'fluxion/memory';           // Pinecone
-    //   import { QdrantVectorStore }          from 'fluxion/memory';           // Qdrant
+    //   import { InMemoryMemoryStoreAdapter } from 'confused-ai/adapters';        // dev
+    //   import { PgVectorStore }              from 'confused-ai/memory';           // Postgres + pgvector
+    //   import { PineconeVectorStore }        from 'confused-ai/memory';           // Pinecone
+    //   import { QdrantVectorStore }          from 'confused-ai/memory';           // Qdrant
     //
     //   const pgMemory = new PgVectorStore({ pool, table: 'agent_memory', dimension: 1536 });
     //   const agent = createAgent({ ..., memoryStoreAdapter: pgMemory });
@@ -950,7 +950,7 @@ async function main() {
 
     console.log('╔══════════════════════════════════════════════════════╗');
     console.log('║          Meridian — Role Intelligence Platform        ║');
-    console.log(`║  fluxion v${VERSION.padEnd(6)}   ${hasLlm ? 'LLM: ✓ active' : 'LLM: ✗ key missing — demo mode'}  ║`);
+    console.log(`║  confused-ai v${VERSION.padEnd(6)}   ${hasLlm ? 'LLM: ✓ active' : 'LLM: ✗ key missing — demo mode'}  ║`);
     console.log('╚══════════════════════════════════════════════════════╝');
 
     if (!hasLlm) {

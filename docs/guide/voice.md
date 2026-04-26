@@ -2,14 +2,14 @@
 
 The voice module provides text-to-speech and speech-to-text via OpenAI and ElevenLabs. Wire it into agents to build voice-enabled assistants, podcast generators, or any audio pipeline.
 
-> **Import path:** `fluxion/voice`
+> **Import path:** `confused-ai/voice`
 
 ---
 
 ## Quick start
 
 ```ts
-import { createVoiceProvider } from 'fluxion/voice';
+import { createVoiceProvider } from 'confused-ai/voice';
 
 // Auto-selects OpenAI if OPENAI_API_KEY is set
 const voice = createVoiceProvider();
@@ -44,7 +44,7 @@ console.log(stt.durationMs);  // audio duration
 ## OpenAI Voice Provider
 
 ```ts
-import { OpenAIVoiceProvider } from 'fluxion/voice';
+import { OpenAIVoiceProvider } from 'confused-ai/voice';
 
 const voice = new OpenAIVoiceProvider({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -80,7 +80,7 @@ bun add elevenlabs
 ```
 
 ```ts
-import { ElevenLabsVoiceProvider } from 'fluxion/voice';
+import { ElevenLabsVoiceProvider } from 'confused-ai/voice';
 
 const voice = new ElevenLabsVoiceProvider({
   apiKey: process.env.ELEVENLABS_API_KEY!,
@@ -101,7 +101,7 @@ const tts = await voice.textToSpeech('Welcome to our platform.', {
 Auto-selects the provider from environment variables:
 
 ```ts
-import { createVoiceProvider } from 'fluxion/voice';
+import { createVoiceProvider } from 'confused-ai/voice';
 
 // Uses OPENAI_API_KEY  → OpenAIVoiceProvider
 // Uses ELEVENLABS_API_KEY → ElevenLabsVoiceProvider (if no OpenAI key)
@@ -120,9 +120,9 @@ const voice = createVoiceProvider({
 ## Wire voice into an agent pipeline
 
 ```ts
-import { agent } from 'fluxion';
-import { createVoiceProvider } from 'fluxion/voice';
-import { createStorage } from 'fluxion/storage';
+import { agent } from 'confused-ai';
+import { createVoiceProvider } from 'confused-ai/voice';
+import { createStorage } from 'confused-ai/storage';
 
 const voice = createVoiceProvider();
 const storage = createStorage();
@@ -153,8 +153,8 @@ async function handleVoiceRequest(audioInput: Buffer) {
 For real-time audio output as the agent generates text:
 
 ```ts
-import { agent } from 'fluxion';
-import { OpenAIVoiceProvider } from 'fluxion/voice';
+import { agent } from 'confused-ai';
+import { OpenAIVoiceProvider } from 'confused-ai/voice';
 
 const voice = new OpenAIVoiceProvider({ apiKey: process.env.OPENAI_API_KEY! });
 const ai = agent({ model: 'gpt-4o', instructions: '...' });
@@ -180,7 +180,7 @@ await ai.run('Tell me a short story.', {
 Bring any TTS/STT provider:
 
 ```ts
-import type { VoiceProvider, TTSResult, STTResult, VoiceConfig } from 'fluxion/voice';
+import type { VoiceProvider, TTSResult, STTResult, VoiceConfig } from 'confused-ai/voice';
 
 class MyVoiceProvider implements VoiceProvider {
   async textToSpeech(text: string, config?: VoiceConfig): Promise<TTSResult> {

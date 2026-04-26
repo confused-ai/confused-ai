@@ -3,7 +3,7 @@
     {
       "name": "DS_PROMETHEUS",
       "label": "Prometheus",
-      "description": "Prometheus datasource for fluxion OTLP metrics",
+      "description": "Prometheus datasource for confused-ai OTLP metrics",
       "type": "datasource",
       "pluginId": "prometheus",
       "pluginName": "Prometheus"
@@ -11,7 +11,7 @@
     {
       "name": "DS_LOKI",
       "label": "Loki",
-      "description": "Loki datasource for fluxion structured logs",
+      "description": "Loki datasource for confused-ai structured logs",
       "type": "datasource",
       "pluginId": "loki",
       "pluginName": "Loki"
@@ -40,7 +40,7 @@
       }
     ]
   },
-  "description": "fluxion agent framework — production observability dashboard",
+  "description": "confused-ai agent framework — production observability dashboard",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -411,7 +411,7 @@
   ],
   "refresh": "30s",
   "schemaVersion": 38,
-  "tags": ["fluxion", "agent", "llm", "observability"],
+  "tags": ["confused-ai", "agent", "llm", "observability"],
   "templating": {
     "list": [
       {
@@ -438,8 +438,8 @@
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "fluxion — Agent Observability",
-  "uid": "fluxion-v1",
+  "title": "confused-ai — Agent Observability",
+  "uid": "confused-ai-v1",
   "version": 1,
   "weekStart": ""
 }

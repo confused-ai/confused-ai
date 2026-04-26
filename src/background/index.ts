@@ -7,8 +7,8 @@
  * ## Quick start
  *
  * ```ts
- * import { agent } from 'fluxion';
- * import { queueHook, InMemoryBackgroundQueue } from 'fluxion/background';
+ * import { agent } from 'confused-ai';
+ * import { queueHook, InMemoryBackgroundQueue } from 'confused-ai/background';
  *
  * // Default: in-memory worker pool (no extra deps)
  * const queue = new InMemoryBackgroundQueue({ concurrency: 5 });

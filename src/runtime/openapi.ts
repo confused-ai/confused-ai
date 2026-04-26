@@ -6,7 +6,7 @@ export function getRuntimeOpenApiJson(): Record<string, unknown> {
     return {
         openapi: '3.0.3',
         info: {
-            title: 'fluxion HTTP runtime',
+            title: 'confused-ai HTTP runtime',
             version: '1.0.0',
             description:
                 'Stateless Node HTTP service: health, agent listing, session creation, and chat (JSON or SSE).',
@@ -26,7 +26,7 @@ export function getRuntimeOpenApiJson(): Record<string, unknown> {
                                         required: ['status', 'service', 'time'],
                                         properties: {
                                             status: { type: 'string', example: 'ok' },
-                                            service: { type: 'string', example: 'fluxion' },
+                                            service: { type: 'string', example: 'confused-ai' },
                                             time: { type: 'string', format: 'date-time' },
                                         },
                                     },

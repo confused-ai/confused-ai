@@ -21,7 +21,7 @@ export default defineConfig({
         voice: 'src/voice/index.ts',
         runtime: 'src/runtime/index.ts',
         shared: 'src/shared/index.ts',
-        /** Subpath `fluxion/create-agent` — lean entry without pulling the full umbrella bundle */
+        /** Subpath `confused-ai/create-agent` — lean entry without pulling the full umbrella bundle */
         'create-agent': 'src/create-agent.ts',
         cli: 'src/cli/index.ts',
         /** Shell tools — separate entry to avoid accidental exposure */
@@ -83,5 +83,6 @@ export default defineConfig({
         '@aws-sdk/client-sqs',
         'bun:sqlite',
         'bun:ffi',
+        '@opentelemetry/api',
     ],
 });

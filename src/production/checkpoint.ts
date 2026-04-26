@@ -7,8 +7,8 @@
  *
  * @example
  * ```ts
- * import { createAgent } from 'fluxion';
- * import { createSqliteCheckpointStore } from 'fluxion/production';
+ * import { createAgent } from 'confused-ai';
+ * import { createSqliteCheckpointStore } from 'confused-ai/production';
  *
  * const agent = createAgent({
  *   name: 'LongTask',

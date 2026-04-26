@@ -9,7 +9,7 @@ This gives complex tasks (math, planning, multi-step debugging) dramatically mor
 ## Quick start
 
 ```ts
-import { ReasoningManager, ReasoningEventType } from 'fluxion';
+import { ReasoningManager, ReasoningEventType } from 'confused-ai';
 
 const manager = new ReasoningManager({
   // Provider-agnostic: pass any async function that calls your LLM
@@ -105,7 +105,7 @@ interface ReasoningStep {
 If you only need the conclusion and don't want to stream intermediate steps:
 
 ```ts
-import { ReasoningManager, ReasoningEventType } from 'fluxion';
+import { ReasoningManager, ReasoningEventType } from 'confused-ai';
 
 async function reason(prompt: string): Promise<string> {
   const manager = new ReasoningManager({ generate, maxSteps: 10 });
@@ -156,7 +156,7 @@ For each step respond with JSON:
 `REASONING_SYSTEM_PROMPT` exports the default prompt string for reference or extension:
 
 ```ts
-import { REASONING_SYSTEM_PROMPT } from 'fluxion';
+import { REASONING_SYSTEM_PROMPT } from 'confused-ai';
 ```
 
 ---
@@ -166,8 +166,8 @@ import { REASONING_SYSTEM_PROMPT } from 'fluxion';
 Use `beforeRun` to replace the agent's single-shot answer with a CoT-derived one:
 
 ```ts
-import { createAgent } from 'fluxion';
-import { ReasoningManager, ReasoningEventType } from 'fluxion';
+import { createAgent } from 'confused-ai';
+import { ReasoningManager, ReasoningEventType } from 'confused-ai';
 
 const reasoner = new ReasoningManager({ generate, maxSteps: 6 });
 

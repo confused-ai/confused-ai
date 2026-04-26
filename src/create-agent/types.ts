@@ -78,7 +78,7 @@ export interface CreateAgentOptions {
      * @example
      * ```ts
      * // Option A — registry (auto-selects first adapter per category)
-     * import { createAdapterRegistry, InMemoryCacheAdapter } from 'fluxion/adapters';
+     * import { createAdapterRegistry, InMemoryCacheAdapter } from 'confused-ai/adapters';
      * const registry = createAdapterRegistry();
      * registry.register(new RedisAdapter({ url: process.env.REDIS_URL! }));
      * registry.register(new PineconeAdapter({ apiKey: process.env.PINECONE_API_KEY! }));
@@ -123,7 +123,7 @@ export interface CreateAgentOptions {
      *
      * @example
      * ```ts
-     * import { createSqliteCheckpointStore } from 'fluxion/production';
+     * import { createSqliteCheckpointStore } from 'confused-ai/production';
      * createAgent({
      *   checkpointStore: createSqliteCheckpointStore('./agent.db'),
      * });
@@ -137,7 +137,7 @@ export interface CreateAgentOptions {
      *
      * @example
      * ```ts
-     * import { createSqliteIdempotencyStore } from 'fluxion/production';
+     * import { createSqliteIdempotencyStore } from 'confused-ai/production';
      *
      * const agent = createAgent({
      *   name: 'Safe',
@@ -199,7 +199,7 @@ export interface CreateAgentResult {
      * await agent.run('What is TypeScript?');
      *
      * // With an image (vision)
-     * import { multiModal, imageUrl } from 'fluxion';
+     * import { multiModal, imageUrl } from 'confused-ai';
      * await agent.run(await multiModal('Describe this image', imageUrl('https://...')));
      */
     run(prompt: string | MultiModalInput, options?: AgentRunOptions): Promise<AgenticRunResult>;

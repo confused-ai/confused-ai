@@ -6,9 +6,9 @@
 
 ```ts
 import { createServer }              from 'node:http';
-import { createHttpService }         from 'fluxion/runtime';
-import { attachWebSocketTransport }  from 'fluxion/runtime';
-import { createAgent }               from 'fluxion';
+import { createHttpService }         from 'confused-ai/runtime';
+import { attachWebSocketTransport }  from 'confused-ai/runtime';
+import { createAgent }               from 'confused-ai';
 
 const assistant = createAgent({ name: 'assistant', llm, instructions: 'You are a helpful assistant.' });
 const coder     = createAgent({ name: 'coder',     llm, instructions: 'You write TypeScript code.' });

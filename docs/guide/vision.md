@@ -1,6 +1,6 @@
 # Vision & Multimodal
 
-Fluxion agents can process images, audio, and files alongside text. Pass a `multiModal` option to `agent.run()` (or `createAgent.run()`) and the framework converts your inputs into the correct provider-specific content parts before the LLM call.
+Confused-AI agents can process images, audio, and files alongside text. Pass a `multiModal` option to `agent.run()` (or `createAgent.run()`) and the framework converts your inputs into the correct provider-specific content parts before the LLM call.
 
 Supported input types: URL strings, local file paths (Node.js), raw `ArrayBuffer` / `Uint8Array`, and pre-built `ContentPart` arrays.
 
@@ -9,7 +9,7 @@ Supported input types: URL strings, local file paths (Node.js), raw `ArrayBuffer
 ## Quick start — image URL
 
 ```ts
-import { agent, imageUrl } from 'fluxion';
+import { agent, imageUrl } from 'confused-ai';
 
 const ai = agent({ model: 'gpt-4o', instructions: 'You are an image analyst.' });
 
@@ -30,7 +30,7 @@ console.log(result.text);
 ### URL
 
 ```ts
-import { imageUrl } from 'fluxion';
+import { imageUrl } from 'confused-ai';
 
 // Simple URL
 const img = imageUrl('https://example.com/photo.png');
@@ -42,7 +42,7 @@ const detailed = imageUrl('https://example.com/chart.png', 'high');
 ### Local file (Node.js)
 
 ```ts
-import { imageFile } from 'fluxion';
+import { imageFile } from 'confused-ai';
 
 // Auto-detects MIME type from extension
 const img = imageFile('./screenshots/dashboard.png');
@@ -54,7 +54,7 @@ const img2 = imageFile('./export.bin', 'image/png');
 ### Raw buffer
 
 ```ts
-import { imageBuffer } from 'fluxion';
+import { imageBuffer } from 'confused-ai';
 
 const bytes = await fs.readFile('./photo.jpg');
 const img = imageBuffer(bytes, 'image/jpeg');
@@ -88,7 +88,7 @@ const result = await ai.run('Compare these two charts and identify the trend.', 
 Pass audio files for speech-to-text or audio-aware models (e.g., GPT-4o Audio):
 
 ```ts
-import { audioFile, audioBuffer } from 'fluxion';
+import { audioFile, audioBuffer } from 'confused-ai';
 
 const result = await ai.run('Transcribe this recording.', {
   multiModal: {
@@ -120,8 +120,8 @@ The `AgentRunOptions.multiModal` field accepts this shape. The framework calls `
 Not all models support vision. Use the LLM router to automatically select a vision-capable model when multimodal input is detected:
 
 ```ts
-import { agent, createSmartRouter } from 'fluxion';
-import { OpenAIProvider, AnthropicProvider } from 'fluxion';
+import { agent, createSmartRouter } from 'confused-ai';
+import { OpenAIProvider, AnthropicProvider } from 'confused-ai';
 
 const router = createSmartRouter([
   { provider: new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY }),
@@ -145,13 +145,13 @@ For the task type `'multimodal'`, the router scores vision-capable models higher
 
 | Function | Import | Description |
 |----------|--------|-------------|
-| `imageUrl(url, detail?)` | `fluxion` | Create an `ImageUrl` source |
-| `imageFile(path, mimeType?)` | `fluxion` | Create an `ImageFile` source (Node.js) |
-| `imageBuffer(data, mimeType, detail?)` | `fluxion` | Create an `ImageBuffer` source |
-| `audioFile(path, mimeType?)` | `fluxion` | Create an `AudioSource` from a file |
-| `audioBuffer(data, mimeType)` | `fluxion` | Create an `AudioSource` from a buffer |
-| `multiModalToMessage(input)` | `fluxion` | Convert `MultiModalInput` to a `Message` |
-| `isMultiModalInput(value)` | `fluxion` | Type guard — checks if a value is `MultiModalInput` |
+| `imageUrl(url, detail?)` | `confused-ai` | Create an `ImageUrl` source |
+| `imageFile(path, mimeType?)` | `confused-ai` | Create an `ImageFile` source (Node.js) |
+| `imageBuffer(data, mimeType, detail?)` | `confused-ai` | Create an `ImageBuffer` source |
+| `audioFile(path, mimeType?)` | `confused-ai` | Create an `AudioSource` from a file |
+| `audioBuffer(data, mimeType)` | `confused-ai` | Create an `AudioSource` from a buffer |
+| `multiModalToMessage(input)` | `confused-ai` | Convert `MultiModalInput` to a `Message` |
+| `isMultiModalInput(value)` | `confused-ai` | Type guard — checks if a value is `MultiModalInput` |
 
 ---
 

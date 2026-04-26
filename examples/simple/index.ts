@@ -1,4 +1,4 @@
-import { agent } from 'fluxion';
+import { agent } from 'confused-ai';
 
 const myAgent = agent({
   model: 'gpt-4o-mini',                    // or 'claude-3-haiku', 'gemini-flash', ...

@@ -101,7 +101,7 @@ export interface RedisSessionStoreConfig {
  * @example
  * ```ts
  * import Redis from 'ioredis';
- * import { RedisSessionStore } from 'fluxion/session';
+ * import { RedisSessionStore } from 'confused-ai/session';
  *
  * const redis = new Redis(process.env.REDIS_URL);
  * const sessions = new RedisSessionStore({ redis });
@@ -305,12 +305,12 @@ export interface RedisLlmCacheKeyInput {
  * Distributed Redis-backed LLM response cache.
  *
  * Compatible with the in-memory LLMCache API. Wire into any LLMProvider via the
- * caching wrapper in `fluxion/llm`.
+ * caching wrapper in `confused-ai/llm`.
  *
  * @example
  * ```ts
  * import Redis from 'ioredis';
- * import { RedisLlmCache } from 'fluxion/session';
+ * import { RedisLlmCache } from 'confused-ai/session';
  *
  * const cache = new RedisLlmCache({ redis: new Redis(process.env.REDIS_URL) });
  * // Wrap your provider:

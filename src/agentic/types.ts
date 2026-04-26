@@ -186,7 +186,7 @@ export interface AgenticLifecycleHooks {
  *
  * @example
  * ```ts
- * import { agent, background } from 'fluxion';
+ * import { agent, background } from 'confused-ai';
  *
  * const ai = agent({
  *   model: 'gpt-4o',

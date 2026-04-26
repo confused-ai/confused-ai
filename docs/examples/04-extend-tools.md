@@ -17,7 +17,7 @@ without touching the original code.
 
 ```ts
 import { z } from 'zod';
-import { tool, extendTool } from 'fluxion';
+import { tool, extendTool } from 'confused-ai';
 
 // Original tool (imagine this comes from a library you can't modify)
 const fetchWeather = tool({
@@ -77,7 +77,7 @@ Think of this like Express middleware — each layer can modify the request,
 call `next()`, and modify the response.
 
 ```ts
-import { wrapTool } from 'fluxion';
+import { wrapTool } from 'confused-ai';
 
 // In-memory cache (swap with Redis for production)
 const cache = new Map<string, { data: unknown; expiresAt: number }>();
@@ -128,7 +128,7 @@ Feed the output of one tool directly into the input of another.
 
 ```ts
 import { z } from 'zod';
-import { tool, pipeTools } from 'fluxion';
+import { tool, pipeTools } from 'confused-ai';
 
 // Tool 1: Fetch raw HTML from a URL
 const fetchUrl = tool({
@@ -171,7 +171,7 @@ const result = await fetchAndRead.execute({ url: 'https://example.com' }, {});
 ## 4 · `versionTool()` — Version Management
 
 ```ts
-import { versionTool } from 'fluxion';
+import { versionTool } from 'confused-ai';
 
 // Tag with a version (non-breaking)
 const searchV2 = versionTool(searchTool, '2.0', {

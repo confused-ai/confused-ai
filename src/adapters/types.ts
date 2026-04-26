@@ -605,7 +605,7 @@ export interface SessionMessage {
  *
  * @example
  * ```ts
- * import { createAdapterRegistry } from 'fluxion/adapters';
+ * import { createAdapterRegistry } from 'confused-ai/adapters';
  * const registry = createAdapterRegistry();
  * registry.register(myRedisSessionAdapter);
  * ```

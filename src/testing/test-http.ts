@@ -8,9 +8,9 @@
  * @example
  * ```ts
  * import { describe, it, afterEach, expect } from 'vitest';
- * import { createTestHttpService } from 'fluxion/testing';
- * import { MockLLMProvider } from 'fluxion/testing';
- * import { createAgent } from 'fluxion';
+ * import { createTestHttpService } from 'confused-ai/testing';
+ * import { MockLLMProvider } from 'confused-ai/testing';
+ * import { createAgent } from 'confused-ai';
  *
  * describe('my agent API', () => {
  *   let server: Awaited<ReturnType<typeof createTestHttpService>>;

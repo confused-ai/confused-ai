@@ -1,7 +1,7 @@
 /**
  * Adapters — Universal extensibility layer.
  *
- * Import path: `fluxion/adapters`
+ * Import path: `confused-ai/adapters`
  *
  * @example
  * ```ts
@@ -9,7 +9,7 @@
  *   createAdapterRegistry,
  *   InMemoryCacheAdapter,
  *   InMemoryVectorAdapter,
- * } from 'fluxion/adapters';
+ * } from 'confused-ai/adapters';
  *
  * const registry = createAdapterRegistry();
  *

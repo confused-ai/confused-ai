@@ -158,7 +158,7 @@ export class BrowserTool extends BaseTool<typeof BrowserToolParameters, BrowserP
                 headers: {
                     Accept: 'text/html, application/xhtml+xml, */*',
                     'User-Agent':
-                        'Mozilla/5.0 (compatible; ConfusedAI/1.0; +https://github.com/fluxion)',
+                        'Mozilla/5.0 (compatible; ConfusedAI/1.0; +https://github.com/confused-ai)',
                 },
                 signal: controller.signal,
             });

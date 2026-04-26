@@ -202,7 +202,7 @@ export interface PromptInjectionGuardrailOptions {
  *
  * @example
  * ```ts
- * import { createPromptInjectionRule } from 'fluxion/guardrails';
+ * import { createPromptInjectionRule } from 'confused-ai/guardrails';
  * const rule = createPromptInjectionRule({ threshold: 0.7, applyTo: 'input' });
  * ```
  */

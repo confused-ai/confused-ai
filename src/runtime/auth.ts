@@ -51,7 +51,7 @@ interface AuthStrategyBase {
     publicPaths?: string[];
     /**
      * Realm for WWW-Authenticate challenge header.
-     * Default: `'fluxion'`
+     * Default: `'confused-ai'`
      */
     realm?: string;
 }
@@ -245,7 +245,7 @@ export function createAuthMiddleware(
     options: AuthMiddlewareOptions
 ): (req: IncomingMessage, res: ServerResponse) => Promise<AuthContext | null> {
     const publicPaths = options.publicPaths ?? DEFAULT_PUBLIC_PATHS;
-    const realm = options.realm ?? 'fluxion';
+    const realm = options.realm ?? 'confused-ai';
 
     return async (req: IncomingMessage, res: ServerResponse): Promise<AuthContext | null> => {
         const path = (req.url ?? '/').split('?')[0] ?? '/';

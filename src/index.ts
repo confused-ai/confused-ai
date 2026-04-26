@@ -14,8 +14,8 @@ export * from './core/index.js';
 
 // Memory exports
 // Memory: conversation history, vector memory, session stores
-// Note: OpenAIEmbeddingProvider is exported from `fluxion/llm` in this barrel.
-// Import it from 'fluxion/memory' directly if you want the memory-specific version.
+// Note: OpenAIEmbeddingProvider is exported from `confused-ai/llm` in this barrel.
+// Import it from 'confused-ai/memory' directly if you want the memory-specific version.
 export { InMemoryStore } from './memory/in-memory-store.js';
 export { VectorMemoryStore } from './memory/vector-store.js';
 export type { VectorMemoryStoreConfig } from './memory/vector-store.js';
@@ -118,13 +118,13 @@ export type { BackgroundQueue, BackgroundTask, BackgroundTaskHandler, EnqueueOpt
 // Video generation utilities
 export * from './video/index.js';
 
-// Contracts — available as `fluxion/contracts` subpath.
+// Contracts — available as `confused-ai/contracts` subpath.
 // Not re-exported here to avoid name collisions with existing module exports.
-// import { AgentState, LLMProvider, ... } from 'fluxion/contracts';
+// import { AgentState, LLMProvider, ... } from 'confused-ai/contracts';
 
-// Adapters — available as `fluxion/adapters` subpath.
+// Adapters — available as `confused-ai/adapters` subpath.
 // Not re-exported from main barrel to avoid name collisions (TraceSpan, etc.).
-// import { createAdapterRegistry, InMemoryCacheAdapter, ... } from 'fluxion/adapters';
+// import { createAdapterRegistry, InMemoryCacheAdapter, ... } from 'confused-ai/adapters';
 
 // Plugin system — cross-cutting concerns (logging, rate-limiting, telemetry)
 export * from './plugins/index.js';

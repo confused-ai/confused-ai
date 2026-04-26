@@ -26,7 +26,7 @@ interface PendingTask {
  *
  * @example
  * ```ts
- * import { InMemoryBackgroundQueue } from 'fluxion/background';
+ * import { InMemoryBackgroundQueue } from 'confused-ai/background';
  *
  * const queue = new InMemoryBackgroundQueue({ concurrency: 4 });
  * ```

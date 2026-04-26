@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { createTestAgent, MockLLMProvider } from 'fluxion/testing';
+ * import { createTestAgent, MockLLMProvider } from 'confused-ai/testing';
  *
  * const { agent, llm, sessionStore } = createTestAgent({
  *   response: 'Paris',

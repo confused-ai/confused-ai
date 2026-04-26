@@ -1,6 +1,6 @@
 # All Modules
 
-Complete reference for every module in fluxion — what it does, every export, and how to use it.
+Complete reference for every module in confused-ai — what it does, every export, and how to use it.
 
 ---
 
@@ -9,7 +9,7 @@ Complete reference for every module in fluxion — what it does, every export, a
 The fastest way to create a production agent. Resolves the LLM from env vars, wires defaults (HTTP + Browser tools, in-memory session), and returns a `run()` interface.
 
 ```ts
-import { agent } from 'fluxion';
+import { agent } from 'confused-ai';
 
 const ai = agent({
   // LLM — string shorthand or explicit provider
@@ -87,7 +87,7 @@ Every provider implements `LLMProvider` — swap them freely.
 ### OpenAI
 
 ```ts
-import { OpenAIProvider } from 'fluxion';
+import { OpenAIProvider } from 'confused-ai';
 
 const llm = new OpenAIProvider({
   apiKey: process.env.OPENAI_API_KEY,
@@ -99,7 +99,7 @@ const llm = new OpenAIProvider({
 ### Anthropic
 
 ```ts
-import { AnthropicProvider } from 'fluxion';
+import { AnthropicProvider } from 'confused-ai';
 
 const llm = new AnthropicProvider({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -110,7 +110,7 @@ const llm = new AnthropicProvider({
 ### Google Gemini
 
 ```ts
-import { GoogleProvider } from 'fluxion';
+import { GoogleProvider } from 'confused-ai';
 
 const llm = new GoogleProvider({
   apiKey: process.env.GOOGLE_API_KEY,
@@ -121,7 +121,7 @@ const llm = new GoogleProvider({
 ### AWS Bedrock
 
 ```ts
-import { BedrockConverseProvider } from 'fluxion';
+import { BedrockConverseProvider } from 'confused-ai';
 
 const llm = new BedrockConverseProvider({
   region: 'us-east-1',
@@ -132,7 +132,7 @@ const llm = new BedrockConverseProvider({
 ### OpenRouter (multi-model gateway)
 
 ```ts
-import { createOpenRouterProvider } from 'fluxion';
+import { createOpenRouterProvider } from 'confused-ai';
 
 const llm = createOpenRouterProvider({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -155,7 +155,7 @@ import {
   createCohereProvider,
   createPerplexityProvider,
   createAzureOpenAIProvider,
-} from 'fluxion';
+} from 'confused-ai';
 
 const groq    = createGroqProvider({ apiKey: process.env.GROQ_API_KEY, model: 'llama-3.3-70b-versatile' });
 const xai     = createXAIProvider({ apiKey: process.env.XAI_API_KEY, model: 'grok-2-1212' });
@@ -174,7 +174,7 @@ const azure = createAzureOpenAIProvider({
 ### Model string shorthand
 
 ```ts
-import { resolveModelString } from 'fluxion';
+import { resolveModelString } from 'confused-ai';
 
 // "gpt-4o"            → OpenAIProvider
 // "claude-3-5-sonnet" → AnthropicProvider  
@@ -195,8 +195,8 @@ const { provider } = resolveModelString('claude-opus-4-5', {
 Route each request to the best model by task type, cost, speed, or quality — with automatic fallback.
 
 ```ts
-import { LLMRouter, createSmartRouter } from 'fluxion';
-import { OpenAIProvider, AnthropicProvider } from 'fluxion';
+import { LLMRouter, createSmartRouter } from 'confused-ai';
+import { OpenAIProvider, AnthropicProvider } from 'confused-ai';
 
 const openai    = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY, model: 'gpt-4o' });
 const anthropic = new AnthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY, model: 'claude-opus-4-5' });
@@ -226,8 +226,8 @@ const ai = agent({ llmProvider: router, instructions: '...' });
 Deduplicate identical requests — cut cost, reduce latency.
 
 ```ts
-import { LLMCache } from 'fluxion';
-import { OpenAIProvider } from 'fluxion';
+import { LLMCache } from 'confused-ai';
+import { OpenAIProvider } from 'confused-ai';
 
 const cache = new LLMCache({
   maxEntries: 1000,
@@ -256,7 +256,7 @@ const stats = cache.getStats();
 Auto-truncate or summarize messages when they approach the model's context limit.
 
 ```ts
-import { ContextWindowManager, estimateTokenCount } from 'fluxion';
+import { ContextWindowManager, estimateTokenCount } from 'confused-ai';
 
 const manager = new ContextWindowManager({
   model: 'gpt-4o',          // or set maxTokens directly
@@ -278,7 +278,7 @@ const count = estimateTokenCount('Hello world');
 Type-safe JSON from any LLM with Zod schema validation.
 
 ```ts
-import { agent } from 'fluxion';
+import { agent } from 'confused-ai';
 import { z } from 'zod';
 
 const SentimentSchema = z.object({
@@ -300,7 +300,7 @@ const data = result.structuredOutput as z.infer<typeof SentimentSchema>;
 Lower-level utilities:
 
 ```ts
-import { extractJson, validateStructuredOutput, CommonSchemas } from 'fluxion';
+import { extractJson, validateStructuredOutput, CommonSchemas } from 'confused-ai';
 
 // Extract JSON from any LLM text (handles ```json fences, trailing commas, etc.)
 const obj = extractJson('Here is the result: ```json\n{"ok": true}\n```');
@@ -324,7 +324,7 @@ Store and recall conversation history and long-term facts.
 ### In-memory (dev/test)
 
 ```ts
-import { InMemoryStore } from 'fluxion';
+import { InMemoryStore } from 'confused-ai';
 
 const memory = new InMemoryStore();
 await memory.add({ role: 'user', content: 'My name is Bob.' });
@@ -334,7 +334,7 @@ const messages = await memory.getAll();
 ### Vector memory (semantic recall)
 
 ```ts
-import { VectorMemoryStore, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'fluxion';
+import { VectorMemoryStore, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai';
 
 const memory = new VectorMemoryStore({
   embedder: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY }),
@@ -351,7 +351,7 @@ const relevant = await memory.search('Who made TypeScript?');
 ### Cloud vector stores
 
 ```ts
-import { PineconeVectorStore, QdrantVectorStore, PgVectorStore } from 'fluxion';
+import { PineconeVectorStore, QdrantVectorStore, PgVectorStore } from 'confused-ai';
 
 const pinecone = new PineconeVectorStore({
   apiKey: process.env.PINECONE_API_KEY,
@@ -388,8 +388,8 @@ const ai = agent({
 Retrieval-Augmented Generation — ingest documents, query them at runtime.
 
 ```ts
-import { KnowledgeEngine, TextLoader, JSONLoader, CSVLoader, URLLoader } from 'fluxion';
-import { OpenAIEmbeddingProvider, InMemoryVectorStore } from 'fluxion';
+import { KnowledgeEngine, TextLoader, JSONLoader, CSVLoader, URLLoader } from 'confused-ai';
+import { OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai';
 
 const engine = new KnowledgeEngine({
   embedder: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY }),
@@ -401,7 +401,7 @@ const engine = new KnowledgeEngine({
 
 // Ingest documents
 await engine.addDocuments([
-  { id: 'doc-1', content: 'fluxion is a TypeScript agent framework.' },
+  { id: 'doc-1', content: 'confused-ai is a TypeScript agent framework.' },
   { id: 'doc-2', content: 'It supports OpenAI, Anthropic, Google, and Bedrock.' },
 ]);
 
@@ -431,8 +431,8 @@ const ai = agent({
 Persist conversation history across runs. Swap backend without changing agent code.
 
 ```ts
-import { InMemorySessionStore, createSqliteSessionStore } from 'fluxion';
-import { SqlSessionStore, RedisSessionStore } from 'fluxion';
+import { InMemorySessionStore, createSqliteSessionStore } from 'confused-ai';
+import { SqlSessionStore, RedisSessionStore } from 'confused-ai';
 
 // In-memory (dev)
 const sessionStore = new InMemorySessionStore();
@@ -462,7 +462,7 @@ const messages = await ai.getSessionMessages(sessionId);
 ### Redis LLM Cache (session-aware)
 
 ```ts
-import { RedisLlmCache } from 'fluxion';
+import { RedisLlmCache } from 'confused-ai';
 
 const cache = new RedisLlmCache({
   url: process.env.REDIS_URL,
@@ -478,7 +478,7 @@ const cache = new RedisLlmCache({
 Generic typed key-value store. Back it with memory, file system, or any custom adapter.
 
 ```ts
-import { createStorage, MemoryStorageAdapter, FileStorageAdapter } from 'fluxion';
+import { createStorage, MemoryStorageAdapter, FileStorageAdapter } from 'confused-ai';
 
 // In-memory
 const store = createStorage();
@@ -516,7 +516,7 @@ Multi-agent coordination patterns.
 ### Pipeline — sequential stages
 
 ```ts
-import { createPipeline, createRunnableAgent } from 'fluxion';
+import { createPipeline, createRunnableAgent } from 'confused-ai';
 
 const researcher = createRunnableAgent({ name: 'Researcher', agent: researchAgent });
 const writer     = createRunnableAgent({ name: 'Writer',     agent: writerAgent });
@@ -534,7 +534,7 @@ const result = await pipeline.run('Write a 500-word blog post about WebAssembly'
 ### Supervisor — delegate and coordinate
 
 ```ts
-import { createSupervisor, createRole } from 'fluxion';
+import { createSupervisor, createRole } from 'confused-ai';
 
 const supervisor = createSupervisor({
   name: 'Manager',
@@ -552,7 +552,7 @@ const result = await supervisor.run('Produce a market analysis report for EV bat
 ### Swarm — parallel sub-tasks
 
 ```ts
-import { createSwarm, createSwarmAgent } from 'fluxion';
+import { createSwarm, createSwarmAgent } from 'confused-ai';
 
 const swarm = createSwarm({
   name: 'ResearchSwarm',
@@ -572,7 +572,7 @@ const result = await swarm.run('Compile a comprehensive report on quantum comput
 ### Team — group agents with a shared goal
 
 ```ts
-import { Team, createResearchTeam, createDecisionTeam } from 'fluxion';
+import { Team, createResearchTeam, createDecisionTeam } from 'confused-ai';
 
 // Built-in team presets
 const team = createResearchTeam({ agents: [agent1, agent2, agent3], llm: myLlm });
@@ -585,7 +585,7 @@ const result = await team.run('Should we migrate from REST to GraphQL?');
 ### AgentRouter — capability-based routing
 
 ```ts
-import { createAgentRouter } from 'fluxion';
+import { createAgentRouter } from 'confused-ai';
 
 const router = createAgentRouter({
   agents: {
@@ -603,7 +603,7 @@ const result = await router.route('What is the standard notice period?');
 ### Handoff — structured agent-to-agent pass
 
 ```ts
-import { createHandoff } from 'fluxion';
+import { createHandoff } from 'confused-ai';
 
 const handoff = createHandoff({
   fromAgent: 'Triage',
@@ -621,7 +621,7 @@ const result = await handoff.execute({
 ### Consensus — multi-agent voting
 
 ```ts
-import { createConsensus } from 'fluxion';
+import { createConsensus } from 'confused-ai';
 
 const consensus = createConsensus({
   agents: [model1, model2, model3],
@@ -638,7 +638,7 @@ const result = await consensus.decide('Is this code production-ready?', codeSnip
 ### MessageBus — event-driven agent communication
 
 ```ts
-import { MessageBusImpl } from 'fluxion';
+import { MessageBusImpl } from 'confused-ai';
 
 const bus = new MessageBusImpl();
 
@@ -670,7 +670,7 @@ import {
   createMaxLengthRule,
   detectPii,
   detectPromptInjection,
-} from 'fluxion';
+} from 'confused-ai';
 
 const guardrails = new GuardrailValidator({
   rules: [
@@ -715,7 +715,7 @@ const injection = detectPromptInjection('Ignore previous instructions and...');
 ### OpenAI Moderation
 
 ```ts
-import { createOpenAiModerationRule } from 'fluxion';
+import { createOpenAiModerationRule } from 'confused-ai';
 
 const moderation = createOpenAiModerationRule({
   apiKey: process.env.OPENAI_API_KEY,
@@ -731,13 +731,13 @@ const moderation = createOpenAiModerationRule({
 Execute complex, stateful multi-agent workflows as a **directed acyclic graph (DAG)**. Supports topological scheduling, parallel execution, event sourcing, durable resume, and distributed workers.
 
 ```ts
-import { createGraph, DAGEngine, DurableExecutor, NodeKind, InMemoryEventStore, SqliteEventStore, computeWaves, BackpressureController } from 'fluxion/graph';
+import { createGraph, DAGEngine, DurableExecutor, NodeKind, InMemoryEventStore, SqliteEventStore, computeWaves, BackpressureController } from 'confused-ai/graph';
 ```
 
 ### Building and running a graph
 
 ```ts
-import { createGraph, DAGEngine, NodeKind } from 'fluxion/graph';
+import { createGraph, DAGEngine, NodeKind } from 'confused-ai/graph';
 
 const graph = createGraph('my-pipeline')
   .addNode({ id: 'fetch',   kind: NodeKind.TASK, execute: async (ctx) => ({ data: 'hello' }) })
@@ -749,7 +749,7 @@ const engine = new DAGEngine(graph, new InMemoryEventStore());
 const result = await engine.execute();
 ```
 
-### `fluxion/graph` exports
+### `confused-ai/graph` exports
 
 | Export | Description |
 |--------|-------------|
@@ -767,7 +767,7 @@ const result = await engine.execute();
 | `RedisTaskQueue` | Redis-backed task queue (requires ioredis peer dep) |
 | `GraphWorker` | Worker process that polls a task queue and executes nodes |
 | `MultiAgentOrchestrator` | Orchestrates an agent graph using `agentNode` definitions |
-| `agentNode(id, agent, opts?)` | Creates a graph node backed by a `FluxionAgent` |
+| `agentNode(id, agent, opts?)` | Creates a graph node backed by a `Confused-AIAgent` |
 | `TelemetryPlugin` | Emits OTLP spans per node execution |
 | `LoggingPlugin` | Logs node lifecycle events |
 | `AuditPlugin` | Writes per-node entries to an `AuditStore` |
@@ -776,7 +776,7 @@ const result = await engine.execute();
 ### Durable execution
 
 ```ts
-import { DurableExecutor, SqliteEventStore } from 'fluxion/graph';
+import { DurableExecutor, SqliteEventStore } from 'confused-ai/graph';
 
 const store    = SqliteEventStore.create('./graph-events.db');
 const executor = new DurableExecutor(graph, store);
@@ -789,7 +789,7 @@ const resumed = await executor.resume(result.executionId);
 ### Wave scheduling and backpressure
 
 ```ts
-import { computeWaves, BackpressureController } from 'fluxion/graph';
+import { computeWaves, BackpressureController } from 'confused-ai/graph';
 
 const waves = computeWaves(graph); // [['a','b'], ['c'], ['d']]
 
@@ -804,10 +804,10 @@ console.log(bp.inflight, bp.queueDepth);
 
 | Command | Description |
 |---------|-------------|
-| `fluxion replay --run-id <id> [--db path] [--json] [--from seq]` | Stream event timeline for a past run |
-| `fluxion inspect --run-id <id> [--db path]` | Per-node execution summary (status, retries, duration) |
-| `fluxion export --run-id <id> [--db path] [--out file] [--pretty]` | Export events to JSON |
-| `fluxion diff --run-id-a <id> --run-id-b <id> [--db path]` | Compare two runs node-by-node; exits `1` if divergent |
+| `confused-ai replay --run-id <id> [--db path] [--json] [--from seq]` | Stream event timeline for a past run |
+| `confused-ai inspect --run-id <id> [--db path]` | Per-node execution summary (status, retries, duration) |
+| `confused-ai export --run-id <id> [--db path] [--out file] [--pretty]` | Export events to JSON |
+| `confused-ai diff --run-id-a <id> --run-id-b <id> [--db path]` | Compare two runs node-by-node; exits `1` if divergent |
 
 ---
 
@@ -816,7 +816,7 @@ console.log(bp.inflight, bp.queueDepth);
 ### Console logger (dev)
 
 ```ts
-import { ConsoleLogger } from 'fluxion';
+import { ConsoleLogger } from 'confused-ai';
 
 const logger = new ConsoleLogger({ level: 'debug', prefix: 'MyAgent' });
 
@@ -828,7 +828,7 @@ logger.error('Run failed', { error: 'timeout' });
 ### Tracer
 
 ```ts
-import { InMemoryTracer } from 'fluxion';
+import { InMemoryTracer } from 'confused-ai';
 
 const tracer = new InMemoryTracer();
 
@@ -842,7 +842,7 @@ const spans = tracer.getSpans();
 ### OTLP Export (Jaeger / Tempo / Datadog)
 
 ```ts
-import { OTLPTraceExporter, OTLPMetricsExporter } from 'fluxion';
+import { OTLPTraceExporter, OTLPMetricsExporter } from 'confused-ai';
 
 const traceExporter = new OTLPTraceExporter({
   endpoint: 'http://jaeger:4318/v1/traces',
@@ -861,7 +861,7 @@ await traceExporter.export(spans);
 ### Langfuse / LangSmith ingest
 
 ```ts
-import { sendLangfuseBatch, sendLangSmithRunBatch } from 'fluxion';
+import { sendLangfuseBatch, sendLangSmithRunBatch } from 'confused-ai';
 
 await sendLangfuseBatch({
   publicKey: process.env.LANGFUSE_PUBLIC_KEY,
@@ -878,7 +878,7 @@ await sendLangSmithRunBatch({
 ### Metrics
 
 ```ts
-import { MetricsCollectorImpl } from 'fluxion';
+import { MetricsCollectorImpl } from 'confused-ai';
 
 const metrics = new MetricsCollectorImpl();
 
@@ -892,7 +892,7 @@ const snapshot = metrics.getSnapshot();
 ### LLM-as-Judge eval
 
 ```ts
-import { runLlmAsJudge, createMultiCriteriaJudge, runEvalBatch, AGENT_CRITERIA } from 'fluxion';
+import { runLlmAsJudge, createMultiCriteriaJudge, runEvalBatch, AGENT_CRITERIA } from 'confused-ai';
 
 // Single score
 const result = await runLlmAsJudge({
@@ -929,7 +929,7 @@ const summary = await runEvalBatch({
 ### Text metrics (no LLM needed)
 
 ```ts
-import { ExactMatchAccuracy, PartialMatchAccuracy, wordOverlapF1, rougeLWords } from 'fluxion';
+import { ExactMatchAccuracy, PartialMatchAccuracy, wordOverlapF1, rougeLWords } from 'confused-ai';
 
 const exact   = new ExactMatchAccuracy();
 const partial = new PartialMatchAccuracy();
@@ -951,7 +951,7 @@ rougeLWords('the cat sat on',  'the cat sat on the mat');  // ROUGE-L
 Prevent cascading failures when a dependency is down.
 
 ```ts
-import { CircuitBreaker, createLLMCircuitBreaker } from 'fluxion';
+import { CircuitBreaker, createLLMCircuitBreaker } from 'confused-ai';
 
 // General circuit breaker
 const breaker = new CircuitBreaker({
@@ -973,7 +973,7 @@ const llmBreaker = createLLMCircuitBreaker(myLlmProvider, {
 ### Rate Limiter
 
 ```ts
-import { RateLimiter, createOpenAIRateLimiter } from 'fluxion';
+import { RateLimiter, createOpenAIRateLimiter } from 'confused-ai';
 
 const limiter = new RateLimiter({
   name: 'openai',
@@ -995,7 +995,7 @@ const openaiLimiter = createOpenAIRateLimiter(); // 60 rpm default
 ### Redis Rate Limiter (distributed)
 
 ```ts
-import { RedisRateLimiter } from 'fluxion';
+import { RedisRateLimiter } from 'confused-ai';
 
 const limiter = new RedisRateLimiter({
   redis: redisClient,
@@ -1008,7 +1008,7 @@ const limiter = new RedisRateLimiter({
 ### `withResilience` — one-line production hardening
 
 ```ts
-import { withResilience } from 'fluxion';
+import { withResilience } from 'confused-ai';
 
 const ai = agent({ model: 'gpt-4o', instructions: '...' });
 
@@ -1035,7 +1035,7 @@ import {
   createSessionStoreHealthCheck,
   createHttpHealthCheck,
   createCustomHealthCheck,
-} from 'fluxion';
+} from 'confused-ai';
 
 const health = new HealthCheckManager({
   version: '1.2.0',
@@ -1060,7 +1060,7 @@ app.get('/health', async (_req, res) => {
 ### Graceful Shutdown
 
 ```ts
-import { createGracefulShutdown, withShutdownGuard } from 'fluxion';
+import { createGracefulShutdown, withShutdownGuard } from 'confused-ai';
 
 const shutdown = createGracefulShutdown({
   timeoutMs: 10_000,
@@ -1081,7 +1081,7 @@ const result = await withShutdownGuard(shutdown, () => ai.run(prompt));
 Resume interrupted SSE streams without re-running the agent.
 
 ```ts
-import { createResumableStream, formatSSE } from 'fluxion';
+import { createResumableStream, formatSSE } from 'confused-ai';
 
 const stream = createResumableStream({
   id: 'run-abc123',
@@ -1104,7 +1104,7 @@ await stream.run(() => ai.run(prompt, { onChunk: stream.push }));
 Cross-cutting concerns applied globally to all agents.
 
 ```ts
-import { createPluginRegistry, createLoggingPlugin } from 'fluxion';
+import { createPluginRegistry, createLoggingPlugin } from 'confused-ai';
 
 const plugins = createPluginRegistry();
 
@@ -1150,7 +1150,7 @@ plugins.unregister('my-analytics');
 Persist user preferences and knowledge across sessions.
 
 ```ts
-import { InMemoryUserProfileStore, LearningMode } from 'fluxion';
+import { InMemoryUserProfileStore, LearningMode } from 'confused-ai';
 
 const profiles = new InMemoryUserProfileStore();
 
@@ -1179,7 +1179,7 @@ await profiles.delete('user-123');
 Learning modes:
 
 ```ts
-import { LearningMode } from 'fluxion';
+import { LearningMode } from 'confused-ai';
 
 LearningMode.ALWAYS   // auto-persist every interaction
 LearningMode.AGENTIC  // agent decides when to store (via explicit tool calls)
@@ -1194,7 +1194,7 @@ Dispatch long-running hook work to an external queue backend instead of running 
 > **Full guide:** [Background Queues](./background-queues.md)
 
 ```ts
-import { queueHook, InMemoryBackgroundQueue } from 'fluxion/background';
+import { queueHook, InMemoryBackgroundQueue } from 'confused-ai/background';
 
 const queue = new InMemoryBackgroundQueue({ concurrency: 5 });
 
@@ -1217,11 +1217,11 @@ await queue.consume('analytics', async (task) => {
 Swap `InMemoryBackgroundQueue` for any production backend:
 
 ```ts
-import { BullMQBackgroundQueue }       from 'fluxion/background'; // Redis (recommended)
-import { KafkaBackgroundQueue }         from 'fluxion/background'; // Kafka
-import { RabbitMQBackgroundQueue }      from 'fluxion/background'; // AMQP
-import { SQSBackgroundQueue }           from 'fluxion/background'; // AWS SQS
-import { RedisPubSubBackgroundQueue }   from 'fluxion/background'; // Redis Pub/Sub
+import { BullMQBackgroundQueue }       from 'confused-ai/background'; // Redis (recommended)
+import { KafkaBackgroundQueue }         from 'confused-ai/background'; // Kafka
+import { RabbitMQBackgroundQueue }      from 'confused-ai/background'; // AMQP
+import { SQSBackgroundQueue }           from 'confused-ai/background'; // AWS SQS
+import { RedisPubSubBackgroundQueue }   from 'confused-ai/background'; // Redis Pub/Sub
 
 const queue = new BullMQBackgroundQueue({
   connection: { host: 'localhost', port: 6379 },
@@ -1238,7 +1238,7 @@ Text-to-speech and speech-to-text via OpenAI or ElevenLabs.
 > **Full guide:** [Voice](./voice.md)
 
 ```ts
-import { createVoiceProvider } from 'fluxion/voice';
+import { createVoiceProvider } from 'confused-ai/voice';
 
 const voice = createVoiceProvider(); // auto-selects from env
 
@@ -1254,8 +1254,8 @@ console.log(text);
 Providers:
 
 ```ts
-import { OpenAIVoiceProvider }     from 'fluxion/voice'; // tts-1, tts-1-hd, whisper-1
-import { ElevenLabsVoiceProvider } from 'fluxion/voice'; // premium voices, voice cloning
+import { OpenAIVoiceProvider }     from 'confused-ai/voice'; // tts-1, tts-1-hd, whisper-1
+import { ElevenLabsVoiceProvider } from 'confused-ai/voice'; // premium voices, voice cloning
 ```
 
 ---
@@ -1265,7 +1265,7 @@ import { ElevenLabsVoiceProvider } from 'fluxion/voice'; // premium voices, voic
 Hard USD caps per run, per user (daily), or globally (monthly).
 
 ```ts
-import { createAgent } from 'fluxion';
+import { createAgent } from 'confused-ai';
 
 const agent = createAgent({
   name: 'Safe',
@@ -1279,8 +1279,8 @@ const agent = createAgent({
 ```
 
 ```ts
-import { BudgetExceededError, InMemoryBudgetStore } from 'fluxion/production';
-import type { BudgetStore, BudgetConfig } from 'fluxion/production';
+import { BudgetExceededError, InMemoryBudgetStore } from 'confused-ai/production';
+import type { BudgetStore, BudgetConfig } from 'confused-ai/production';
 ```
 
 See [Production — Budget enforcement](./production.md#budget-enforcement).
@@ -1292,8 +1292,8 @@ See [Production — Budget enforcement](./production.md#budget-enforcement).
 Survive process restarts mid-execution. The agentic runner saves state after each step.
 
 ```ts
-import { createAgent } from 'fluxion';
-import { createSqliteCheckpointStore } from 'fluxion/production';
+import { createAgent } from 'confused-ai';
+import { createSqliteCheckpointStore } from 'confused-ai/production';
 
 const agent = createAgent({
   name: 'LongTask',
@@ -1306,8 +1306,8 @@ const result = await agent.run('Process 500 records', { runId: 'batch-001' });
 ```
 
 ```ts
-import { InMemoryCheckpointStore, SqliteCheckpointStore, createSqliteCheckpointStore } from 'fluxion/production';
-import type { AgentCheckpointStore, AgentRunState } from 'fluxion/production';
+import { InMemoryCheckpointStore, SqliteCheckpointStore, createSqliteCheckpointStore } from 'confused-ai/production';
+import type { AgentCheckpointStore, AgentRunState } from 'confused-ai/production';
 ```
 
 ---
@@ -1317,8 +1317,8 @@ import type { AgentCheckpointStore, AgentRunState } from 'fluxion/production';
 Prevent duplicate side-effects on client retries.
 
 ```ts
-import { createHttpService } from 'fluxion/runtime';
-import { createSqliteIdempotencyStore } from 'fluxion/production';
+import { createHttpService } from 'confused-ai/runtime';
+import { createSqliteIdempotencyStore } from 'confused-ai/production';
 
 createHttpService({
   agents: { assistant },
@@ -1332,8 +1332,8 @@ createHttpService({
 Clients send `X-Idempotency-Key: <unique-key>` — retries replay the cached response without re-running the agent.
 
 ```ts
-import { InMemoryIdempotencyStore } from 'fluxion/production';
-import type { IdempotencyStore, IdempotencyOptions } from 'fluxion/production';
+import { InMemoryIdempotencyStore } from 'confused-ai/production';
+import type { IdempotencyStore, IdempotencyOptions } from 'confused-ai/production';
 ```
 
 ---
@@ -1343,8 +1343,8 @@ import type { IdempotencyStore, IdempotencyOptions } from 'fluxion/production';
 Persistent, queryable audit trail for every agent run (SOC 2 / HIPAA).
 
 ```ts
-import { createHttpService } from 'fluxion/runtime';
-import { createSqliteAuditStore } from 'fluxion/production';
+import { createHttpService } from 'confused-ai/runtime';
+import { createSqliteAuditStore } from 'confused-ai/production';
 
 createHttpService({
   agents: { assistant },
@@ -1361,8 +1361,8 @@ const entries = await auditStore.query({
 ```
 
 ```ts
-import { InMemoryAuditStore } from 'fluxion/production';
-import type { AuditStore, AuditEntry, AuditFilter } from 'fluxion/production';
+import { InMemoryAuditStore } from 'confused-ai/production';
+import type { AuditStore, AuditEntry, AuditFilter } from 'confused-ai/production';
 ```
 
 ---
@@ -1374,7 +1374,7 @@ Pause execution at high-risk tool calls and require a human decision.
 > **Full guide:** [HITL](./hitl.md)
 
 ```ts
-import { createSqliteApprovalStore, waitForApproval, ApprovalRejectedError } from 'fluxion/production';
+import { createSqliteApprovalStore, waitForApproval, ApprovalRejectedError } from 'confused-ai/production';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
 
@@ -1396,8 +1396,8 @@ The HTTP runtime auto-exposes:
 - `POST /v1/approvals/:id` — submit a decision
 
 ```ts
-import { InMemoryApprovalStore, ApprovalRejectedError, waitForApproval } from 'fluxion/production';
-import type { ApprovalStore, HitlRequest, ApprovalDecision, ApprovalStatus } from 'fluxion/production';
+import { InMemoryApprovalStore, ApprovalRejectedError, waitForApproval } from 'confused-ai/production';
+import type { ApprovalStore, HitlRequest, ApprovalDecision, ApprovalStatus } from 'confused-ai/production';
 ```
 
 ---
@@ -1409,7 +1409,7 @@ Per-tenant isolation for sessions, rate limits, and cost tracking.
 > **Full guide:** [Multi-Tenancy](./multi-tenancy.md)
 
 ```ts
-import { createTenantContext } from 'fluxion/production';
+import { createTenantContext } from 'confused-ai/production';
 
 const ctx = createTenantContext('tenant-acme', {
   sessionStore: baseSessionStore,
@@ -1423,21 +1423,21 @@ const agent = createAgent({
 ```
 
 ```ts
-import { TenantScopedSessionStore } from 'fluxion/production';
-import type { TenantContext, TenantConfig, TenantContextOptions } from 'fluxion/production';
+import { TenantScopedSessionStore } from 'confused-ai/production';
+import type { TenantContext, TenantConfig, TenantContextOptions } from 'confused-ai/production';
 ```
 
 ---
 
 ## Extensions
 
-Utilities for wiring the framework into larger systems. Import from `fluxion` (main barrel) or `fluxion/extensions`.
+Utilities for wiring the framework into larger systems. Import from `confused-ai` (main barrel) or `confused-ai/extensions`.
 
 ### Tool logging middleware
 
 ```ts
-import { createLoggingToolMiddleware } from 'fluxion';
-// or: import { createLoggingToolMiddleware } from 'fluxion/extensions';
+import { createLoggingToolMiddleware } from 'confused-ai';
+// or: import { createLoggingToolMiddleware } from 'confused-ai/extensions';
 
 const logMiddleware = createLoggingToolMiddleware((msg, meta) => {
   logger.info(msg, meta);
@@ -1453,8 +1453,8 @@ const ai = agent({
 ### Wrap a high-level agent for orchestration
 
 ```ts
-import { wrapAgentForOrchestration } from 'fluxion';
-// or: import { wrapAgentForOrchestration } from 'fluxion/extensions';
+import { wrapAgentForOrchestration } from 'confused-ai';
+// or: import { wrapAgentForOrchestration } from 'confused-ai/extensions';
 
 const highLevelAgent = agent({ name: 'Researcher', instructions: '...' });
 const coreAgent = wrapAgentForOrchestration(highLevelAgent);
@@ -1467,11 +1467,11 @@ const pipeline = createPipeline({ agents: [coreAgent, writerCoreAgent] });
 
 ## DX — Minimal & Fluent Agent APIs
 
-The `fluxion/dx` subpath exposes the best-DX entry points. Everything here is also re-exported from the main `fluxion` barrel.
+The `confused-ai/dx` subpath exposes the best-DX entry points. Everything here is also re-exported from the main `confused-ai` barrel.
 
 ```ts
-import { agent, bare, defineAgent, compose, pipe, definePersona } from 'fluxion/dx';
-import { createDevLogger, createDevToolMiddleware }                from 'fluxion/dx';
+import { agent, bare, defineAgent, compose, pipe, definePersona } from 'confused-ai/dx';
+import { createDevLogger, createDevToolMiddleware }                from 'confused-ai/dx';
 ```
 
 | Export | Purpose |
@@ -1490,17 +1490,17 @@ import { createDevLogger, createDevToolMiddleware }                from 'fluxion
 
 ## SDK — Typed Agents & Workflows
 
-The `fluxion/sdk` subpath provides typed agent definitions, multi-step workflows, and orchestration adapters.
+The `confused-ai/sdk` subpath provides typed agent definitions, multi-step workflows, and orchestration adapters.
 
 ```ts
-import { defineAgent, createWorkflow, asOrchestratorAgent } from 'fluxion/sdk';
-import type { AgentDefinitionConfig, WorkflowStep, WorkflowResult } from 'fluxion/sdk';
+import { defineAgent, createWorkflow, asOrchestratorAgent } from 'confused-ai/sdk';
+import type { AgentDefinitionConfig, WorkflowStep, WorkflowResult } from 'confused-ai/sdk';
 ```
 
 ### `defineAgent` (typed)
 
 ```ts
-import { defineAgent } from 'fluxion/sdk';
+import { defineAgent } from 'confused-ai/sdk';
 
 const ResearchAgent = defineAgent({
   name: 'Researcher',
@@ -1509,13 +1509,13 @@ const ResearchAgent = defineAgent({
 });
 
 // From the main barrel, `defineTypedAgent` is the SDK version to avoid name collision
-import { defineTypedAgent } from 'fluxion';
+import { defineTypedAgent } from 'confused-ai';
 ```
 
 ### `createWorkflow`
 
 ```ts
-import { createWorkflow } from 'fluxion/sdk';
+import { createWorkflow } from 'confused-ai/sdk';
 
 const workflow = createWorkflow({
   name: 'ResearchAndWrite',
@@ -1530,7 +1530,7 @@ const result = await workflow.run('Write a report on quantum computing in 2025')
 ```
 
 ```ts
-import { createLoggingToolMiddleware } from 'fluxion';
+import { createLoggingToolMiddleware } from 'confused-ai';
 
 const logMiddleware = createLoggingToolMiddleware((msg, meta) => {
   logger.info(msg, meta);
@@ -1546,7 +1546,7 @@ const ai = agent({
 ### Wrap a high-level agent for orchestration
 
 ```ts
-import { wrapAgentForOrchestration } from 'fluxion';
+import { wrapAgentForOrchestration } from 'confused-ai';
 
 const highLevelAgent = agent({ name: 'Researcher', instructions: '...' });
 const coreAgent = wrapAgentForOrchestration(highLevelAgent);
@@ -1562,8 +1562,8 @@ const pipeline = createPipeline({ agents: [coreAgent, writerCoreAgent] });
 Build fast, deterministic agent tests without calling real LLM APIs.
 
 ```ts
-import { MockLLMProvider, MockSessionStore } from 'fluxion';
-import { createAgent } from 'fluxion';
+import { MockLLMProvider, MockSessionStore } from 'confused-ai';
+import { createAgent } from 'confused-ai';
 
 // Deterministic responses
 const mockLlm = new MockLLMProvider({
@@ -1612,8 +1612,8 @@ import {
   createMockLLMProvider,
   expectEventSequence,
   assertExactEventSequence,
-} from 'fluxion/testing';
-import { GraphEventType } from 'fluxion/graph';
+} from 'confused-ai/testing';
+import { GraphEventType } from 'confused-ai/graph';
 
 const runner = createTestRunner({ maxConcurrency: 2 });
 const result = await runner.run(graph, { input: 'hello' });
@@ -1647,7 +1647,7 @@ const llm = createMockLLMProvider('mock', [
 Create typed output artifacts alongside the text response.
 
 ```ts
-import { createMarkdownArtifact, createTextArtifact } from 'fluxion';
+import { createMarkdownArtifact, createTextArtifact } from 'confused-ai';
 
 const mdArtifact = createMarkdownArtifact('report', '# My Report\n\n...');
 // {
@@ -1669,7 +1669,7 @@ await writeFile(result.markdown.name, result.markdown.content);
 Swap any backend via adapter bindings without changing agent code.
 
 ```ts
-import { agent } from 'fluxion';
+import { agent } from 'confused-ai';
 
 const ai = agent({
   model: 'gpt-4o',
@@ -1689,7 +1689,7 @@ const ai = agent({
 Build an adapter registry for shared configuration across multiple agents:
 
 ```ts
-import { createAdapterRegistry } from 'fluxion/adapters';
+import { createAdapterRegistry } from 'confused-ai/adapters';
 
 const registry = createAdapterRegistry({
   sessionStore: redisSessionStore,
@@ -1708,7 +1708,7 @@ const agent2 = agent({ model: 'claude-opus-4-5', instructions: '...', adapters: 
 Load and validate config from environment variables.
 
 ```ts
-import { loadConfig, validateConfig } from 'fluxion';
+import { loadConfig, validateConfig } from 'confused-ai';
 
 const config = loadConfig(); // reads process.env
 
@@ -1746,164 +1746,164 @@ Quick reference for every named export location:
 
 ```ts
 // Core agent factory
-import { agent, createAgent }           from 'fluxion';
+import { agent, createAgent }           from 'confused-ai';
 
 // LLM providers
-import { OpenAIProvider, AnthropicProvider, GoogleProvider, BedrockConverseProvider } from 'fluxion';
-import { createGroqProvider, createDeepSeekProvider, createMistralProvider }          from 'fluxion';
-import { LLMRouter, createSmartRouter }  from 'fluxion';
-import { LLMCache }                      from 'fluxion';
-import { ContextWindowManager }          from 'fluxion';
+import { OpenAIProvider, AnthropicProvider, GoogleProvider, BedrockConverseProvider } from 'confused-ai';
+import { createGroqProvider, createDeepSeekProvider, createMistralProvider }          from 'confused-ai';
+import { LLMRouter, createSmartRouter }  from 'confused-ai';
+import { LLMCache }                      from 'confused-ai';
+import { ContextWindowManager }          from 'confused-ai';
 
 // Structured output
-import { extractJson, validateStructuredOutput, CommonSchemas } from 'fluxion';
+import { extractJson, validateStructuredOutput, CommonSchemas } from 'confused-ai';
 
 // Memory
-import { InMemoryStore, VectorMemoryStore, OpenAIEmbeddingProvider } from 'fluxion';
-import { InMemoryVectorStore, PineconeVectorStore, QdrantVectorStore, PgVectorStore } from 'fluxion';
+import { InMemoryStore, VectorMemoryStore, OpenAIEmbeddingProvider } from 'confused-ai';
+import { InMemoryVectorStore, PineconeVectorStore, QdrantVectorStore, PgVectorStore } from 'confused-ai';
 
 // Knowledge / RAG
-import { KnowledgeEngine, TextLoader, JSONLoader, CSVLoader, URLLoader } from 'fluxion';
+import { KnowledgeEngine, TextLoader, JSONLoader, CSVLoader, URLLoader } from 'confused-ai';
 
 // Session
-import { InMemorySessionStore, createSqliteSessionStore, SqlSessionStore, RedisSessionStore } from 'fluxion';
-import { createBunSqliteSessionStore }                                from 'fluxion'; // Bun-native SQLite
+import { InMemorySessionStore, createSqliteSessionStore, SqlSessionStore, RedisSessionStore } from 'confused-ai';
+import { createBunSqliteSessionStore }                                from 'confused-ai'; // Bun-native SQLite
 
 // Storage
-import { createStorage, MemoryStorageAdapter } from 'fluxion';
+import { createStorage, MemoryStorageAdapter } from 'confused-ai';
 
 // Orchestration
-import { createPipeline, createSupervisor, createRole, createSwarm }  from 'fluxion';
-import { createAgentRouter, createHandoff, createConsensus }           from 'fluxion';
-import { MessageBusImpl, RoundRobinLoadBalancer }                      from 'fluxion';
-import { Team, createResearchTeam, createDecisionTeam }                from 'fluxion';
+import { createPipeline, createSupervisor, createRole, createSwarm }  from 'confused-ai';
+import { createAgentRouter, createHandoff, createConsensus }           from 'confused-ai';
+import { MessageBusImpl, RoundRobinLoadBalancer }                      from 'confused-ai';
+import { Team, createResearchTeam, createDecisionTeam }                from 'confused-ai';
 
 // Guardrails
-import { GuardrailValidator, createPiiDetectionRule, createPromptInjectionRule } from 'fluxion';
-import { detectPii, detectPromptInjection }                                       from 'fluxion';
+import { GuardrailValidator, createPiiDetectionRule, createPromptInjectionRule } from 'confused-ai';
+import { detectPii, detectPromptInjection }                                       from 'confused-ai';
 
 // Observability
-import { ConsoleLogger, InMemoryTracer, MetricsCollectorImpl }         from 'fluxion';
-import { OTLPTraceExporter, OTLPMetricsExporter }                      from 'fluxion';
-import { runLlmAsJudge, createMultiCriteriaJudge, runEvalBatch }       from 'fluxion';
-import { sendLangfuseBatch, sendLangSmithRunBatch }                    from 'fluxion';
-import { ExactMatchAccuracy, wordOverlapF1, rougeLWords }              from 'fluxion';
+import { ConsoleLogger, InMemoryTracer, MetricsCollectorImpl }         from 'confused-ai';
+import { OTLPTraceExporter, OTLPMetricsExporter }                      from 'confused-ai';
+import { runLlmAsJudge, createMultiCriteriaJudge, runEvalBatch }       from 'confused-ai';
+import { sendLangfuseBatch, sendLangSmithRunBatch }                    from 'confused-ai';
+import { ExactMatchAccuracy, wordOverlapF1, rougeLWords }              from 'confused-ai';
 
 // Production
-import { CircuitBreaker, RateLimiter, withResilience }                 from 'fluxion';
-import { HealthCheckManager, createLLMHealthCheck }                    from 'fluxion';
-import { createGracefulShutdown, withShutdownGuard }                   from 'fluxion';
-import { createResumableStream, formatSSE }                            from 'fluxion';
+import { CircuitBreaker, RateLimiter, withResilience }                 from 'confused-ai';
+import { HealthCheckManager, createLLMHealthCheck }                    from 'confused-ai';
+import { createGracefulShutdown, withShutdownGuard }                   from 'confused-ai';
+import { createResumableStream, formatSSE }                            from 'confused-ai';
 
 // Plugins
-import { createPluginRegistry, createLoggingPlugin }                   from 'fluxion';
+import { createPluginRegistry, createLoggingPlugin }                   from 'confused-ai';
 
 // Tools
-import { tool, createTool, defineTool, ToolBuilder, extendTool, wrapTool, pipeTools } from 'fluxion';
-import { TavilyToolkit, GitHubToolkit, CalculatorToolkit /* ... */ }   from 'fluxion';
+import { tool, createTool, defineTool, ToolBuilder, extendTool, wrapTool, pipeTools } from 'confused-ai';
+import { TavilyToolkit, GitHubToolkit, CalculatorToolkit /* ... */ }   from 'confused-ai';
 // Tool category subpaths (tree-shakeable)
-import { TavilySearchTool, ExaToolkit, FirecrawlToolkit, GoogleMapsToolkit } from 'fluxion/tools/search';
-import { SlackToolkit, GmailToolkit, DiscordToolkit, TelegramToolkit }       from 'fluxion/tools/communication';
-import { GitHubToolkit as GH, DockerToolkit, JavaScriptExecTool, PythonExecTool, ShellCommandTool } from 'fluxion/tools/devtools';
-import { ClickUpToolkit, ConfluenceToolkit }                                  from 'fluxion/tools/productivity';
-import { GoogleCalendarToolkit, GoogleSheetsToolkit }                         from 'fluxion/tools/productivity';
-import { TrelloToolkit }                                                      from 'fluxion/tools/productivity';
-import { SpotifyToolkit }                                                     from 'fluxion/tools/social';
-import { DatabaseToolkit, RedisToolkit, CsvToolkit, Neo4jToolkit }           from 'fluxion/tools/data';
-import { StripeToolkit, YFinanceTool }                                        from 'fluxion/tools/finance';
-import { OpenAIToolkit, SerpApiToolkit }                                      from 'fluxion/tools/ai';
-import { WikipediaSearchTool, HackerNewsToolkit, PlaywrightPageTitleTool }   from 'fluxion/tools/scraping';
-import { ShellTool }                                                           from 'fluxion/tools/shell'; // explicit for security
+import { TavilySearchTool, ExaToolkit, FirecrawlToolkit, GoogleMapsToolkit } from 'confused-ai/tools/search';
+import { SlackToolkit, GmailToolkit, DiscordToolkit, TelegramToolkit }       from 'confused-ai/tools/communication';
+import { GitHubToolkit as GH, DockerToolkit, JavaScriptExecTool, PythonExecTool, ShellCommandTool } from 'confused-ai/tools/devtools';
+import { ClickUpToolkit, ConfluenceToolkit }                                  from 'confused-ai/tools/productivity';
+import { GoogleCalendarToolkit, GoogleSheetsToolkit }                         from 'confused-ai/tools/productivity';
+import { TrelloToolkit }                                                      from 'confused-ai/tools/productivity';
+import { SpotifyToolkit }                                                     from 'confused-ai/tools/social';
+import { DatabaseToolkit, RedisToolkit, CsvToolkit, Neo4jToolkit }           from 'confused-ai/tools/data';
+import { StripeToolkit, YFinanceTool }                                        from 'confused-ai/tools/finance';
+import { OpenAIToolkit, SerpApiToolkit }                                      from 'confused-ai/tools/ai';
+import { WikipediaSearchTool, HackerNewsToolkit, PlaywrightPageTitleTool }   from 'confused-ai/tools/scraping';
+import { ShellTool }                                                           from 'confused-ai/tools/shell'; // explicit for security
 
 // Testing
-import { MockLLMProvider, MockSessionStore }                           from 'fluxion';
+import { MockLLMProvider, MockSessionStore }                           from 'confused-ai';
 
 // Config
-import { loadConfig }                                                   from 'fluxion';
+import { loadConfig }                                                   from 'confused-ai';
 
 // Extensions (also available as subpath)
-import { createLoggingToolMiddleware, wrapAgentForOrchestration }      from 'fluxion';
-import { toToolRegistry }                                               from 'fluxion/extensions';
+import { createLoggingToolMiddleware, wrapAgentForOrchestration }      from 'confused-ai';
+import { toToolRegistry }                                               from 'confused-ai/extensions';
 
 // DX — minimal & fluent APIs (also in main barrel)
-import { agent, bare, defineAgent, compose, pipe, definePersona }      from 'fluxion/dx';
-import { createDevLogger, createDevToolMiddleware }                     from 'fluxion/dx';
+import { agent, bare, defineAgent, compose, pipe, definePersona }      from 'confused-ai/dx';
+import { createDevLogger, createDevToolMiddleware }                     from 'confused-ai/dx';
 
 // SDK — typed agents & workflows (also in main barrel)
-import { defineAgent as defineTypedAgent, createWorkflow }             from 'fluxion/sdk';
-import { asOrchestratorAgent }                                          from 'fluxion/sdk';
+import { defineAgent as defineTypedAgent, createWorkflow }             from 'confused-ai/sdk';
+import { asOrchestratorAgent }                                          from 'confused-ai/sdk';
 
 // Learning
-import { InMemoryUserProfileStore, LearningMode }                      from 'fluxion';
+import { InMemoryUserProfileStore, LearningMode }                      from 'confused-ai';
 
 // Background queues
-import { queueHook, InMemoryBackgroundQueue, generateTaskId }          from 'fluxion/background';
-import { BullMQBackgroundQueue, KafkaBackgroundQueue }                 from 'fluxion/background';
-import { RabbitMQBackgroundQueue, SQSBackgroundQueue }                 from 'fluxion/background';
-import { RedisPubSubBackgroundQueue }                                   from 'fluxion/background';
+import { queueHook, InMemoryBackgroundQueue, generateTaskId }          from 'confused-ai/background';
+import { BullMQBackgroundQueue, KafkaBackgroundQueue }                 from 'confused-ai/background';
+import { RabbitMQBackgroundQueue, SQSBackgroundQueue }                 from 'confused-ai/background';
+import { RedisPubSubBackgroundQueue }                                   from 'confused-ai/background';
 
 // Runtime — HTTP server, JWT auth, WebSocket
-import { createRuntimeServer }                                          from 'fluxion/runtime';
-import { attachWebSocketTransport }                                     from 'fluxion/runtime';
-import { ElevenLabsVoiceProvider }                                      from 'fluxion/voice';
+import { createRuntimeServer }                                          from 'confused-ai/runtime';
+import { attachWebSocketTransport }                                     from 'confused-ai/runtime';
+import { ElevenLabsVoiceProvider }                                      from 'confused-ai/voice';
 
 // Production — budget, checkpoint, idempotency, audit, HITL, tenant
-import { BudgetEnforcer, BudgetExceededError, InMemoryBudgetStore }    from 'fluxion/production';
-import { InMemoryCheckpointStore, createSqliteCheckpointStore }        from 'fluxion/production';
-import { InMemoryIdempotencyStore }                                     from 'fluxion/production';
-import { InMemoryAuditStore, createSqliteAuditStore }                  from 'fluxion/production';
-import { InMemoryApprovalStore, createSqliteApprovalStore }            from 'fluxion/production';
-import { waitForApproval, ApprovalRejectedError }                      from 'fluxion/production';
-import { createTenantContext, TenantScopedSessionStore }               from 'fluxion/production';
-import { RedisRateLimiter }                                             from 'fluxion/production';
+import { BudgetEnforcer, BudgetExceededError, InMemoryBudgetStore }    from 'confused-ai/production';
+import { InMemoryCheckpointStore, createSqliteCheckpointStore }        from 'confused-ai/production';
+import { InMemoryIdempotencyStore }                                     from 'confused-ai/production';
+import { InMemoryAuditStore, createSqliteAuditStore }                  from 'confused-ai/production';
+import { InMemoryApprovalStore, createSqliteApprovalStore }            from 'confused-ai/production';
+import { waitForApproval, ApprovalRejectedError }                      from 'confused-ai/production';
+import { createTenantContext, TenantScopedSessionStore }               from 'confused-ai/production';
+import { RedisRateLimiter }                                             from 'confused-ai/production';
 
 // Graph engine
-import { createGraph, DAGEngine, DurableExecutor, NodeKind }           from 'fluxion/graph';
-import { InMemoryEventStore, SqliteEventStore, computeWaves }          from 'fluxion/graph';
-import { BackpressureController, DistributedEngine, GraphWorker }      from 'fluxion/graph';
+import { createGraph, DAGEngine, DurableExecutor, NodeKind }           from 'confused-ai/graph';
+import { InMemoryEventStore, SqliteEventStore, computeWaves }          from 'confused-ai/graph';
+import { BackpressureController, DistributedEngine, GraphWorker }      from 'confused-ai/graph';
 
 // Planner
-import { LLMPlanner, ClassicalPlanner, PlanValidator }                 from 'fluxion/planner';
-import { PlanningAlgorithm, TaskPriority }                             from 'fluxion/planner';
+import { LLMPlanner, ClassicalPlanner, PlanValidator }                 from 'confused-ai/planner';
+import { PlanningAlgorithm, TaskPriority }                             from 'confused-ai/planner';
 
 // Vision / Multimodal
-import { imageUrl, imageBuffer, imageFile }                            from 'fluxion';
-import { audioFile, audioBuffer, multiModalToMessage }                 from 'fluxion';
-import type { MultiModalInput, ImageUrl, ImageBuffer, ImageFile }      from 'fluxion';
+import { imageUrl, imageBuffer, imageFile }                            from 'confused-ai';
+import { audioFile, audioBuffer, multiModalToMessage }                 from 'confused-ai';
+import type { MultiModalInput, ImageUrl, ImageBuffer, ImageFile }      from 'confused-ai';
 
 // Artifacts
-import { InMemoryArtifactStorage }                                     from 'fluxion/artifacts';
-import { createTextArtifact, createMarkdownArtifact, createDataArtifact } from 'fluxion/artifacts';
-import { createReasoningArtifact, createPlanArtifact }                 from 'fluxion/artifacts';
-import type { ArtifactStorage, Artifact, ArtifactType }               from 'fluxion/artifacts';
+import { InMemoryArtifactStorage }                                     from 'confused-ai/artifacts';
+import { createTextArtifact, createMarkdownArtifact, createDataArtifact } from 'confused-ai/artifacts';
+import { createReasoningArtifact, createPlanArtifact }                 from 'confused-ai/artifacts';
+import type { ArtifactStorage, Artifact, ArtifactType }               from 'confused-ai/artifacts';
 
 // Learning Machine
-import { LearningMachine, LearningMode }                               from 'fluxion';
-import { InMemoryUserMemoryStore, InMemorySessionContextStore }        from 'fluxion';
-import { InMemoryEntityMemoryStore, InMemoryLearnedKnowledgeStore }    from 'fluxion';
-import { InMemoryUserProfileStore }                                    from 'fluxion';
+import { LearningMachine, LearningMode }                               from 'confused-ai';
+import { InMemoryUserMemoryStore, InMemorySessionContextStore }        from 'confused-ai';
+import { InMemoryEntityMemoryStore, InMemoryLearnedKnowledgeStore }    from 'confused-ai';
+import { InMemoryUserProfileStore }                                    from 'confused-ai';
 
 // Reasoning
-import { ReasoningManager, ReasoningEventType, NextAction }            from 'fluxion';
-import type { ReasoningStep, ReasoningEvent }                          from 'fluxion';
+import { ReasoningManager, ReasoningEventType, NextAction }            from 'confused-ai';
+import type { ReasoningStep, ReasoningEvent }                          from 'confused-ai';
 
 // Compression
-import { CompressionManager }                                          from 'fluxion';
-import type { CompressibleMessage }                                    from 'fluxion';
+import { CompressionManager }                                          from 'confused-ai';
+import type { CompressibleMessage }                                    from 'confused-ai';
 
 // Context Providers
-import { ContextProvider, ContextBackend, ContextMode }                from 'fluxion';
+import { ContextProvider, ContextBackend, ContextMode }                from 'confused-ai';
 
 // Scheduler
-import { ScheduleManager, InMemoryScheduleStore, validateCronExpr }   from 'fluxion';
-import { InMemoryScheduleRunStore }                                    from 'fluxion';
+import { ScheduleManager, InMemoryScheduleStore, validateCronExpr }   from 'confused-ai';
+import { InMemoryScheduleRunStore }                                    from 'confused-ai';
 
 // Video
-import { VideoOrchestrator }                                           from 'fluxion';
+import { VideoOrchestrator }                                           from 'confused-ai';
 
 // Testing (graph)
-import { createTestRunner, createMockLLMProvider }                     from 'fluxion/testing';
-import { expectEventSequence, assertExactEventSequence }               from 'fluxion/testing';
+import { createTestRunner, createMockLLMProvider }                     from 'confused-ai/testing';
+import { expectEventSequence, assertExactEventSequence }               from 'confused-ai/testing';
 ```
 
 
@@ -1922,7 +1922,7 @@ import {
   InMemoryLearnedKnowledgeStore,
   InMemoryUserProfileStore,
   LearningMode,
-} from 'fluxion';
+} from 'confused-ai';
 
 const machine = new LearningMachine({
   userMemoryStore:       new InMemoryUserMemoryStore(),
@@ -1961,7 +1961,7 @@ const memories = await machine.recall('user-123', 'agent-id', 'programming prefe
 `ReasoningManager` runs a structured CoT loop and streams typed events.
 
 ```ts
-import { ReasoningManager, ReasoningEventType, NextAction } from 'fluxion';
+import { ReasoningManager, ReasoningEventType, NextAction } from 'confused-ai';
 
 const reasoning = new ReasoningManager({
   llmProvider: myLlm,
@@ -1992,7 +1992,7 @@ for await (const event of reasoning.reason('Is 3599 a prime number?')) {
 `CompressionManager` summarizes large tool results before they consume context window budget.
 
 ```ts
-import { CompressionManager } from 'fluxion';
+import { CompressionManager } from 'confused-ai';
 
 const compressor = new CompressionManager({
   llmProvider:    myLlm,
@@ -2019,7 +2019,7 @@ const asyncSummary = await compressor.acompress(toolResult, 'database_query');
 `ContextProvider` and `ContextBackend` are abstract classes for injecting dynamic context (docs, tools, answers) before each agent run.
 
 ```ts
-import { ContextProvider, ContextBackend, ContextMode } from 'fluxion';
+import { ContextProvider, ContextBackend, ContextMode } from 'confused-ai';
 
 // Custom provider
 class DocsContextProvider extends ContextProvider {
@@ -2054,7 +2054,7 @@ const ai = agent({
 `ScheduleManager` runs cron jobs that trigger agent tasks on a schedule.
 
 ```ts
-import { ScheduleManager, InMemoryScheduleStore, InMemoryScheduleRunStore } from 'fluxion';
+import { ScheduleManager, InMemoryScheduleStore, InMemoryScheduleRunStore } from 'confused-ai';
 
 const manager = new ScheduleManager({
   store:    new InMemoryScheduleStore(),
@@ -2087,7 +2087,7 @@ await manager.start();
 `ClassicalPlanner` and `LLMPlanner` decompose goals into ordered, dependency-aware task lists.
 
 ```ts
-import { ClassicalPlanner, LLMPlanner, PlanValidator, PlanningAlgorithm, TaskPriority } from 'fluxion/planner';
+import { ClassicalPlanner, LLMPlanner, PlanValidator, PlanningAlgorithm, TaskPriority } from 'confused-ai/planner';
 
 // Classical (deterministic, no LLM)
 const planner = new ClassicalPlanner({ algorithm: PlanningAlgorithm.HIERARCHICAL });
@@ -2116,8 +2116,8 @@ for (const task of plan.tasks) {
 Pass images, audio, and files to vision-capable models.
 
 ```ts
-import { imageUrl, imageBuffer, imageFile, audioFile, multiModalToMessage } from 'fluxion';
-import type { MultiModalInput } from 'fluxion';
+import { imageUrl, imageBuffer, imageFile, audioFile, multiModalToMessage } from 'confused-ai';
+import type { MultiModalInput } from 'confused-ai';
 
 const result = await ai.run('What is in this image?', {
   multiModal: {
@@ -2149,7 +2149,7 @@ const comparison = {
 Typed, versioned outputs with full history.
 
 ```ts
-import { InMemoryArtifactStorage, createMarkdownArtifact, createDataArtifact } from 'fluxion/artifacts';
+import { InMemoryArtifactStorage, createMarkdownArtifact, createDataArtifact } from 'confused-ai/artifacts';
 
 const storage = new InMemoryArtifactStorage();
 
@@ -2179,7 +2179,7 @@ const reports = await storage.list({ type: 'markdown', limit: 20 });
 Generate YouTube Shorts from a topic string using OpenAI TTS and Pexels footage.
 
 ```ts
-import { VideoOrchestrator } from 'fluxion';
+import { VideoOrchestrator } from 'confused-ai';
 
 const orchestrator = new VideoOrchestrator();
 const result = await orchestrator.generateShort('The history of TypeScript');

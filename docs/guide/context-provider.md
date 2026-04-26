@@ -22,8 +22,8 @@
 Extend `ContextProvider` and implement `query()`:
 
 ```ts
-import { ContextProvider, ContextMode } from 'fluxion';
-import type { Answer, QueryOptions } from 'fluxion';
+import { ContextProvider, ContextMode } from 'confused-ai';
+import type { Answer, QueryOptions } from 'confused-ai';
 
 class DocsContextProvider extends ContextProvider {
   private docs: Array<{ id: string; title: string; content: string }>;
@@ -111,8 +111,8 @@ const ai = agent({
 `ContextBackend` is the lower-level primitive. Use it when you want to build a backend that a `ContextProvider` will compose:
 
 ```ts
-import { ContextBackend } from 'fluxion';
-import type { BackendTool } from 'fluxion';
+import { ContextBackend } from 'confused-ai';
+import type { BackendTool } from 'confused-ai';
 
 class SlackBackend extends ContextBackend {
   readonly name = 'slack';

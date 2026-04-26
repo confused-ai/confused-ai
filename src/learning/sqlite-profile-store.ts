@@ -5,8 +5,8 @@
  *
  * @example
  * ```ts
- * import { createAgent } from 'fluxion';
- * import { createSqliteUserProfileStore } from 'fluxion/learning';
+ * import { createAgent } from 'confused-ai';
+ * import { createSqliteUserProfileStore } from 'confused-ai/learning';
  *
  * const agent = createAgent({
  *   name: 'PersonalAssistant',

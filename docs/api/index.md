@@ -1,6 +1,6 @@
 # API Reference
 
-Full API reference for all fluxion modules.
+Full API reference for all confused-ai modules.
 
 ## Run result (`AgenticRunResult`)
 
@@ -21,7 +21,7 @@ Every `agent.run()` call returns this object:
 ### Using `result.markdown`
 
 ```ts
-import { agent } from 'fluxion';
+import { agent } from 'confused-ai';
 import { writeFile } from 'node:fs/promises';
 
 const ai = agent({ instructions: 'You write technical docs.' });
@@ -66,100 +66,100 @@ console.log(result.markdown.type);      // "markdown"
 
 | Export | From | Description |
 |--------|------|-------------|
-| `KnowledgeEngine` | `fluxion/knowledge` | RAG engine |
-| `TextLoader` | `fluxion/knowledge` | Load .txt / .md files |
-| `JSONLoader` | `fluxion/knowledge` | Load .json files |
-| `CSVLoader` | `fluxion/knowledge` | Load .csv files |
-| `URLLoader` | `fluxion/knowledge` | Load web pages |
-| `OpenAIEmbeddingProvider` | `fluxion/memory` | Text embeddings via OpenAI |
-| `InMemoryVectorStore` | `fluxion/memory` | In-process vector store |
-| `DocumentLoader` | `fluxion/knowledge` | Loader interface |
-| `KnowledgeEngineConfig` | `fluxion/knowledge` | Engine config type |
+| `KnowledgeEngine` | `confused-ai/knowledge` | RAG engine |
+| `TextLoader` | `confused-ai/knowledge` | Load .txt / .md files |
+| `JSONLoader` | `confused-ai/knowledge` | Load .json files |
+| `CSVLoader` | `confused-ai/knowledge` | Load .csv files |
+| `URLLoader` | `confused-ai/knowledge` | Load web pages |
+| `OpenAIEmbeddingProvider` | `confused-ai/memory` | Text embeddings via OpenAI |
+| `InMemoryVectorStore` | `confused-ai/memory` | In-process vector store |
+| `DocumentLoader` | `confused-ai/knowledge` | Loader interface |
+| `KnowledgeEngineConfig` | `confused-ai/knowledge` | Engine config type |
 
 ## Memory
 
 | Export | From | Description |
 |--------|------|-------------|
-| `InMemoryStore` | `fluxion/memory` | In-memory conversation history |
-| `VectorMemoryStore` | `fluxion/memory` | Semantic long-term memory |
-| `OpenAIEmbeddingProvider` | `fluxion/memory` | Text embeddings |
-| `InMemoryVectorStore` | `fluxion/memory` | In-process vector store |
+| `InMemoryStore` | `confused-ai/memory` | In-memory conversation history |
+| `VectorMemoryStore` | `confused-ai/memory` | Semantic long-term memory |
+| `OpenAIEmbeddingProvider` | `confused-ai/memory` | Text embeddings |
+| `InMemoryVectorStore` | `confused-ai/memory` | In-process vector store |
 
 ## Storage
 
 | Export | From | Description |
 |--------|------|-------------|
-| `createStorage(options?)` | `fluxion/storage` | Create a storage instance |
-| `MemoryStorageAdapter` | `fluxion/storage` | In-memory adapter |
-| `FileStorageAdapter` | `fluxion/storage` | File-system adapter |
-| `Storage` | `fluxion/storage` | High-level storage interface |
-| `StorageAdapter` | `fluxion/storage` | Low-level adapter interface |
-| `StorageOptions` | `fluxion/storage` | `createStorage()` options type |
+| `createStorage(options?)` | `confused-ai/storage` | Create a storage instance |
+| `MemoryStorageAdapter` | `confused-ai/storage` | In-memory adapter |
+| `FileStorageAdapter` | `confused-ai/storage` | File-system adapter |
+| `Storage` | `confused-ai/storage` | High-level storage interface |
+| `StorageAdapter` | `confused-ai/storage` | Low-level adapter interface |
+| `StorageOptions` | `confused-ai/storage` | `createStorage()` options type |
 
 ## Session
 
 | Export | From | Description |
 |--------|------|-------------|
-| `InMemorySessionStore` | `fluxion/session` | In-memory sessions |
-| `SqlSessionStore` | `fluxion/session` | SQL-backed sessions |
-| `createSqliteSessionStore` | `fluxion/session` | SQLite session factory |
-| `SessionDbDriver` | `fluxion/session` | DB driver interface |
+| `InMemorySessionStore` | `confused-ai/session` | In-memory sessions |
+| `SqlSessionStore` | `confused-ai/session` | SQL-backed sessions |
+| `createSqliteSessionStore` | `confused-ai/session` | SQLite session factory |
+| `SessionDbDriver` | `confused-ai/session` | DB driver interface |
 
 ## Orchestration
 
 | Export | From | Description |
 |--------|------|-------------|
-| `AgentRouter` | `fluxion/orchestration` | Route to matching agent |
-| `createHandoff` | `fluxion/orchestration` | Create handoff protocol |
-| `ConsensusProtocol` | `fluxion/orchestration` | Multi-agent voting |
-| `Supervisor` | `fluxion/orchestration` | Supervisor + workers |
-| `Swarm` | `fluxion/orchestration` | Peer-to-peer agent swarm |
-| `Pipeline` | `fluxion/orchestration` | Sequential agent pipeline |
-| `MessageBus` | `fluxion/orchestration` | Pub/sub message bus |
-| `LoadBalancer` | `fluxion/orchestration` | Distribute across agent pool |
-| `McpClient` | `fluxion/orchestration` | MCP server client |
-| `HttpA2AClient` | `fluxion/orchestration` | Outbound A2A message client (POST to broker) |
-| `createHttpA2AClient` | `fluxion/orchestration` | Factory for `HttpA2AClient` |
-| `A2AClient` | `fluxion/orchestration` | A2A client interface |
-| `A2AMessage` | `fluxion/orchestration` | A2A message shape |
-| `team` | `fluxion` | Parallel agent team |
+| `AgentRouter` | `confused-ai/orchestration` | Route to matching agent |
+| `createHandoff` | `confused-ai/orchestration` | Create handoff protocol |
+| `ConsensusProtocol` | `confused-ai/orchestration` | Multi-agent voting |
+| `Supervisor` | `confused-ai/orchestration` | Supervisor + workers |
+| `Swarm` | `confused-ai/orchestration` | Peer-to-peer agent swarm |
+| `Pipeline` | `confused-ai/orchestration` | Sequential agent pipeline |
+| `MessageBus` | `confused-ai/orchestration` | Pub/sub message bus |
+| `LoadBalancer` | `confused-ai/orchestration` | Distribute across agent pool |
+| `McpClient` | `confused-ai/orchestration` | MCP server client |
+| `HttpA2AClient` | `confused-ai/orchestration` | Outbound A2A message client (POST to broker) |
+| `createHttpA2AClient` | `confused-ai/orchestration` | Factory for `HttpA2AClient` |
+| `A2AClient` | `confused-ai/orchestration` | A2A client interface |
+| `A2AMessage` | `confused-ai/orchestration` | A2A message shape |
+| `team` | `confused-ai` | Parallel agent team |
 
 ## Production
 
 | Export | From | Description |
 |--------|------|-------------|
-| `ResilientAgent` | `fluxion/production` | Retries + circuit breaker |
-| `HealthMonitor` | `fluxion/production` | Agent health checks |
-| `createFallbackChain` | `fluxion/llm` | LLM failover chain |
-| `CostTracker` | `fluxion/llm` | Track LLM spending |
-| `ContextWindowManager` | `fluxion/llm` | Token limit management |
-| `LLMRouter` | `fluxion/llm` | Intelligent model router (task-aware, strategy-based) |
-| `createSmartRouter` | `fluxion/llm` | **Adaptive** multi-criteria routing (recommended) |
-| `scoreTaskTypesForRouting` | `fluxion/llm` | Inspect / reuse built-in task scores |
-| `createBalancedRouter` | `fluxion/llm` | Balanced routing factory |
-| `createCostOptimizedRouter` | `fluxion/llm` | Cost-first routing factory |
-| `createQualityFirstRouter` | `fluxion/llm` | Quality-first routing factory |
-| `createSpeedOptimizedRouter` | `fluxion/llm` | Speed-first routing factory |
+| `ResilientAgent` | `confused-ai/production` | Retries + circuit breaker |
+| `HealthMonitor` | `confused-ai/production` | Agent health checks |
+| `createFallbackChain` | `confused-ai/llm` | LLM failover chain |
+| `CostTracker` | `confused-ai/llm` | Track LLM spending |
+| `ContextWindowManager` | `confused-ai/llm` | Token limit management |
+| `LLMRouter` | `confused-ai/llm` | Intelligent model router (task-aware, strategy-based) |
+| `createSmartRouter` | `confused-ai/llm` | **Adaptive** multi-criteria routing (recommended) |
+| `scoreTaskTypesForRouting` | `confused-ai/llm` | Inspect / reuse built-in task scores |
+| `createBalancedRouter` | `confused-ai/llm` | Balanced routing factory |
+| `createCostOptimizedRouter` | `confused-ai/llm` | Cost-first routing factory |
+| `createQualityFirstRouter` | `confused-ai/llm` | Quality-first routing factory |
+| `createSpeedOptimizedRouter` | `confused-ai/llm` | Speed-first routing factory |
 
 ## Observability
 
 | Export | From | Description |
 |--------|------|-------------|
-| `ConsoleLogger` | `fluxion/observability` | Structured console logging |
-| `OtlpExporter` | `fluxion/observability` | OTLP trace exporter |
-| `Metrics` | `fluxion/observability` | Metrics collection |
-| `evaluate` | `fluxion/observability` | Agent evaluation runner |
+| `ConsoleLogger` | `confused-ai/observability` | Structured console logging |
+| `OtlpExporter` | `confused-ai/observability` | OTLP trace exporter |
+| `Metrics` | `confused-ai/observability` | Metrics collection |
+| `evaluate` | `confused-ai/observability` | Agent evaluation runner |
 
 ## Guardrails
 
 | Export | From | Description |
 |--------|------|-------------|
-| `createGuardrails` | `fluxion/guardrails` | Create guardrail config |
-| `GuardrailValidator` | `fluxion/guardrails` | Custom validator interface |
+| `createGuardrails` | `confused-ai/guardrails` | Create guardrail config |
+| `GuardrailValidator` | `confused-ai/guardrails` | Custom validator interface |
 
 ## Adapters
 
-All adapter interfaces and built-in implementations. Import from `fluxion/adapters`.
+All adapter interfaces and built-in implementations. Import from `confused-ai/adapters`.
 
 | Export | Description |
 |--------|-------------|
@@ -203,114 +203,114 @@ All adapter interfaces and built-in implementations. Import from `fluxion/adapte
 
 | Export | From | Description |
 |--------|------|-------------|
-| `loggingPlugin` | `fluxion/plugins` | Structured logging |
-| `rateLimitPlugin` | `fluxion/plugins` | Rate limiting |
-| `telemetryPlugin` | `fluxion/plugins` | OpenTelemetry integration |
-| `AgentPlugin` | `fluxion/plugins` | Plugin type |
+| `loggingPlugin` | `confused-ai/plugins` | Structured logging |
+| `rateLimitPlugin` | `confused-ai/plugins` | Rate limiting |
+| `telemetryPlugin` | `confused-ai/plugins` | OpenTelemetry integration |
+| `AgentPlugin` | `confused-ai/plugins` | Plugin type |
 
 ## Background Queues
 
 | Export | From | Description |
 |--------|------|-------------|
-| `queueHook` | `fluxion/background` | Wrap a hook to dispatch tasks to a queue |
-| `InMemoryBackgroundQueue` | `fluxion/background` | In-process queue (dev/test) |
-| `BullMQBackgroundQueue` | `fluxion/background` | Redis-backed durable queue |
-| `KafkaBackgroundQueue` | `fluxion/background` | Kafka high-throughput queue |
-| `RabbitMQBackgroundQueue` | `fluxion/background` | AMQP queue |
-| `SQSBackgroundQueue` | `fluxion/background` | AWS SQS queue |
-| `RedisPubSubBackgroundQueue` | `fluxion/background` | Redis Pub/Sub fanout queue |
-| `BackgroundQueue` | `fluxion/background` | Interface — bring any backend |
-| `BackgroundTask` | `fluxion/background` | Task shape (type) |
-| `BackgroundTaskHandler` | `fluxion/background` | Worker handler type |
-| `EnqueueOptions` | `fluxion/background` | Enqueue options type |
-| `QueuedHook` | `fluxion/background` | Hook wrapper return type |
+| `queueHook` | `confused-ai/background` | Wrap a hook to dispatch tasks to a queue |
+| `InMemoryBackgroundQueue` | `confused-ai/background` | In-process queue (dev/test) |
+| `BullMQBackgroundQueue` | `confused-ai/background` | Redis-backed durable queue |
+| `KafkaBackgroundQueue` | `confused-ai/background` | Kafka high-throughput queue |
+| `RabbitMQBackgroundQueue` | `confused-ai/background` | AMQP queue |
+| `SQSBackgroundQueue` | `confused-ai/background` | AWS SQS queue |
+| `RedisPubSubBackgroundQueue` | `confused-ai/background` | Redis Pub/Sub fanout queue |
+| `BackgroundQueue` | `confused-ai/background` | Interface — bring any backend |
+| `BackgroundTask` | `confused-ai/background` | Task shape (type) |
+| `BackgroundTaskHandler` | `confused-ai/background` | Worker handler type |
+| `EnqueueOptions` | `confused-ai/background` | Enqueue options type |
+| `QueuedHook` | `confused-ai/background` | Hook wrapper return type |
 
 ## Voice
 
 | Export | From | Description |
 |--------|------|-------------|
-| `createVoiceProvider` | `fluxion/voice` | Factory — auto-selects provider from env |
-| `OpenAIVoiceProvider` | `fluxion/voice` | OpenAI TTS-1 / Whisper |
-| `ElevenLabsVoiceProvider` | `fluxion/voice` | ElevenLabs premium voices |
-| `VoiceProvider` | `fluxion/voice` | Interface — bring any provider |
-| `VoiceConfig` | `fluxion/voice` | Configuration type |
-| `TTSResult` | `fluxion/voice` | TTS result shape |
-| `STTResult` | `fluxion/voice` | STT result shape |
-| `OpenAIVoice` | `fluxion/voice` | Union of OpenAI voice names |
+| `createVoiceProvider` | `confused-ai/voice` | Factory — auto-selects provider from env |
+| `OpenAIVoiceProvider` | `confused-ai/voice` | OpenAI TTS-1 / Whisper |
+| `ElevenLabsVoiceProvider` | `confused-ai/voice` | ElevenLabs premium voices |
+| `VoiceProvider` | `confused-ai/voice` | Interface — bring any provider |
+| `VoiceConfig` | `confused-ai/voice` | Configuration type |
+| `TTSResult` | `confused-ai/voice` | TTS result shape |
+| `STTResult` | `confused-ai/voice` | STT result shape |
+| `OpenAIVoice` | `confused-ai/voice` | Union of OpenAI voice names |
 
 ## Budget Enforcement
 
 | Export | From | Description |
 |--------|------|-------------|
-| `BudgetEnforcer` | `fluxion/production` | Enforces budget caps on agent runs |
-| `BudgetExceededError` | `fluxion/production` | Thrown when a cap is exceeded |
-| `InMemoryBudgetStore` | `fluxion/production` | In-memory budget store |
-| `BudgetConfig` | `fluxion/production` | Budget configuration type |
-| `BudgetStore` | `fluxion/production` | Interface — bring any backend |
-| `estimateCostUsdFromBudget` | `fluxion/production` | Estimate cost from token counts |
+| `BudgetEnforcer` | `confused-ai/production` | Enforces budget caps on agent runs |
+| `BudgetExceededError` | `confused-ai/production` | Thrown when a cap is exceeded |
+| `InMemoryBudgetStore` | `confused-ai/production` | In-memory budget store |
+| `BudgetConfig` | `confused-ai/production` | Budget configuration type |
+| `BudgetStore` | `confused-ai/production` | Interface — bring any backend |
+| `estimateCostUsdFromBudget` | `confused-ai/production` | Estimate cost from token counts |
 
 ## Agent Checkpointing
 
 | Export | From | Description |
 |--------|------|-------------|
-| `InMemoryCheckpointStore` | `fluxion/production` | In-memory checkpoint store (dev/test) |
-| `SqliteCheckpointStore` | `fluxion/production` | SQLite-backed checkpoint store |
-| `createSqliteCheckpointStore` | `fluxion/production` | SQLite checkpoint factory |
-| `AgentCheckpointStore` | `fluxion/production` | Interface — bring any backend |
-| `AgentRunState` | `fluxion/production` | Checkpoint snapshot shape |
+| `InMemoryCheckpointStore` | `confused-ai/production` | In-memory checkpoint store (dev/test) |
+| `SqliteCheckpointStore` | `confused-ai/production` | SQLite-backed checkpoint store |
+| `createSqliteCheckpointStore` | `confused-ai/production` | SQLite checkpoint factory |
+| `AgentCheckpointStore` | `confused-ai/production` | Interface — bring any backend |
+| `AgentRunState` | `confused-ai/production` | Checkpoint snapshot shape |
 
 ## Idempotency
 
 | Export | From | Description |
 |--------|------|-------------|
-| `InMemoryIdempotencyStore` | `fluxion/production` | In-memory idempotency store |
-| `IdempotencyStore` | `fluxion/production` | Interface — bring any backend |
-| `IdempotencyOptions` | `fluxion/production` | Config type for `createHttpService` |
-| `IdempotencyEntry` | `fluxion/production` | Cached response entry type |
+| `InMemoryIdempotencyStore` | `confused-ai/production` | In-memory idempotency store |
+| `IdempotencyStore` | `confused-ai/production` | Interface — bring any backend |
+| `IdempotencyOptions` | `confused-ai/production` | Config type for `createHttpService` |
+| `IdempotencyEntry` | `confused-ai/production` | Cached response entry type |
 
 ## Audit Log
 
 | Export | From | Description |
 |--------|------|-------------|
-| `InMemoryAuditStore` | `fluxion/production` | In-memory audit store (dev/test) |
-| `createSqliteAuditStore` | `fluxion/production` | SQLite audit store factory |
-| `AuditStore` | `fluxion/production` | Interface — bring any backend |
-| `AuditEntry` | `fluxion/production` | Audit log entry shape |
-| `AuditFilter` | `fluxion/production` | Query filter type |
+| `InMemoryAuditStore` | `confused-ai/production` | In-memory audit store (dev/test) |
+| `createSqliteAuditStore` | `confused-ai/production` | SQLite audit store factory |
+| `AuditStore` | `confused-ai/production` | Interface — bring any backend |
+| `AuditEntry` | `confused-ai/production` | Audit log entry shape |
+| `AuditFilter` | `confused-ai/production` | Query filter type |
 
 ## Human-in-the-Loop (HITL)
 
 | Export | From | Description |
 |--------|------|-------------|
-| `waitForApproval` | `fluxion/production` | Poll store until human decides (or times out) |
-| `createSqliteApprovalStore` | `fluxion/production` | SQLite-backed approval store |
-| `InMemoryApprovalStore` | `fluxion/production` | In-memory approval store (tests) |
-| `SqliteApprovalStore` | `fluxion/production` | Class-based SQLite approval store |
-| `ApprovalRejectedError` | `fluxion/production` | Thrown when approval is rejected or times out |
-| `ApprovalStore` | `fluxion/production` | Interface — bring any backend |
-| `HitlRequest` | `fluxion/production` | Pending approval request shape |
-| `ApprovalDecision` | `fluxion/production` | Decision shape |
-| `ApprovalStatus` | `fluxion/production` | `'pending' \| 'approved' \| 'rejected' \| 'expired'` |
+| `waitForApproval` | `confused-ai/production` | Poll store until human decides (or times out) |
+| `createSqliteApprovalStore` | `confused-ai/production` | SQLite-backed approval store |
+| `InMemoryApprovalStore` | `confused-ai/production` | In-memory approval store (tests) |
+| `SqliteApprovalStore` | `confused-ai/production` | Class-based SQLite approval store |
+| `ApprovalRejectedError` | `confused-ai/production` | Thrown when approval is rejected or times out |
+| `ApprovalStore` | `confused-ai/production` | Interface — bring any backend |
+| `HitlRequest` | `confused-ai/production` | Pending approval request shape |
+| `ApprovalDecision` | `confused-ai/production` | Decision shape |
+| `ApprovalStatus` | `confused-ai/production` | `'pending' \| 'approved' \| 'rejected' \| 'expired'` |
 
 ## Multi-Tenancy
 
 | Export | From | Description |
 |--------|------|-------------|
-| `createTenantContext` | `fluxion/production` | Create a tenant-scoped context |
-| `TenantScopedSessionStore` | `fluxion/production` | Prefix-wrapping session store |
-| `TenantContext` | `fluxion/production` | Context shape (type) |
-| `TenantContextOptions` | `fluxion/production` | Config type |
+| `createTenantContext` | `confused-ai/production` | Create a tenant-scoped context |
+| `TenantScopedSessionStore` | `confused-ai/production` | Prefix-wrapping session store |
+| `TenantContext` | `confused-ai/production` | Context shape (type) |
+| `TenantContextOptions` | `confused-ai/production` | Config type |
 
 ## Redis Rate Limiter
 
 | Export | From | Description |
 |--------|------|-------------|
-| `RedisRateLimiter` | `fluxion/production` | Distributed fixed-window rate limiter |
-| `RedisRateLimiterConfig` | `fluxion/production` | Config type |
+| `RedisRateLimiter` | `confused-ai/production` | Distributed fixed-window rate limiter |
+| `RedisRateLimiterConfig` | `confused-ai/production` | Config type |
 
 ## Extension Contracts
 
-All pluggable interfaces, in one place. Import from `fluxion/contracts/extensions`.
+All pluggable interfaces, in one place. Import from `confused-ai/contracts/extensions`.
 
 | Interface | Description |
 |-----------|-------------|
@@ -336,30 +336,30 @@ All pluggable interfaces, in one place. Import from `fluxion/contracts/extension
 
 ```ts
 // Import any extension interface:
-import type { BudgetStore } from 'fluxion/contracts/extensions';
-import type { SessionStore } from 'fluxion/contracts/extensions';
-import type { LLMProvider } from 'fluxion/contracts/extensions';
+import type { BudgetStore } from 'confused-ai/contracts/extensions';
+import type { SessionStore } from 'confused-ai/contracts/extensions';
+import type { LLMProvider } from 'confused-ai/contracts/extensions';
 ```
 
 ## Subpath imports
 
-All modules are available as top-level exports from `fluxion` and as dedicated subpath imports:
+All modules are available as top-level exports from `confused-ai` and as dedicated subpath imports:
 
 ```ts
 // Top-level (everything)
-import { agent, defineTool, KnowledgeEngine, createStorage } from 'fluxion';
+import { agent, defineTool, KnowledgeEngine, createStorage } from 'confused-ai';
 
 // Subpath (tree-shakeable, faster)
-import { defineTool } from 'fluxion/tools';
-import { KnowledgeEngine } from 'fluxion/knowledge';
-import { createStorage } from 'fluxion/storage';
-import { InMemorySessionStore } from 'fluxion/session';
-import { AgentRouter } from 'fluxion/orchestration';
-import { ResilientAgent } from 'fluxion/production';
-import { LLMRouter, createSmartRouter, createBalancedRouter } from 'fluxion/llm';
-import { ConsoleLogger } from 'fluxion/observability';
-import { queueHook, InMemoryBackgroundQueue, BullMQBackgroundQueue } from 'fluxion/background';
-import { createVoiceProvider, OpenAIVoiceProvider } from 'fluxion/voice';
+import { defineTool } from 'confused-ai/tools';
+import { KnowledgeEngine } from 'confused-ai/knowledge';
+import { createStorage } from 'confused-ai/storage';
+import { InMemorySessionStore } from 'confused-ai/session';
+import { AgentRouter } from 'confused-ai/orchestration';
+import { ResilientAgent } from 'confused-ai/production';
+import { LLMRouter, createSmartRouter, createBalancedRouter } from 'confused-ai/llm';
+import { ConsoleLogger } from 'confused-ai/observability';
+import { queueHook, InMemoryBackgroundQueue, BullMQBackgroundQueue } from 'confused-ai/background';
+import { createVoiceProvider, OpenAIVoiceProvider } from 'confused-ai/voice';
 import {
   BudgetEnforcer, BudgetExceededError,
   createSqliteCheckpointStore,
@@ -369,7 +369,7 @@ import {
   waitForApproval,
   createTenantContext,
   RedisRateLimiter,
-} from 'fluxion/production';
+} from 'confused-ai/production';
 import {
   createAdapterRegistry,
   createProductionSetup,
@@ -377,8 +377,8 @@ import {
   InMemorySessionStoreAdapter,
   InMemoryRateLimitAdapter,
   InMemoryAuditLogAdapter,
-} from 'fluxion/adapters';
+} from 'confused-ai/adapters';
 
 // Extension interfaces — bring-your-own implementations
-import type { BudgetStore, SessionStore, LLMProvider, Tool } from 'fluxion/contracts/extensions';
+import type { BudgetStore, SessionStore, LLMProvider, Tool } from 'confused-ai/contracts/extensions';
 ```

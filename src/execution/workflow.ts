@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { createWorkflow, createStep } from 'fluxion';
+ * import { createWorkflow, createStep } from 'confused-ai';
  * import { z } from 'zod';
  *
  * const fetchData = createStep({

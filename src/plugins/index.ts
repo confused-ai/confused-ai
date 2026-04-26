@@ -5,7 +5,7 @@
  *
  * @example
  * ```ts
- * import { createPluginRegistry, createLoggingPlugin, createRateLimitPlugin } from 'fluxion/plugins';
+ * import { createPluginRegistry, createLoggingPlugin, createRateLimitPlugin } from 'confused-ai/plugins';
  *
  * const plugins = createPluginRegistry();
  * plugins.register(createLoggingPlugin());

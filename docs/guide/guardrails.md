@@ -9,7 +9,7 @@ Guardrails validate and filter agent inputs and outputs to enforce safety, compl
 Restrict topics the agent will engage with:
 
 ```ts
-import { createGuardrails } from 'fluxion/guardrails';
+import { createGuardrails } from 'confused-ai/guardrails';
 
 const guardrails = createGuardrails({
   // Only allow these topics
@@ -61,7 +61,7 @@ const rawAgent = defineAgent({
 For complex guardrails that need external services (content moderation APIs, etc.):
 
 ```ts
-import type { GuardrailValidator } from 'fluxion/guardrails';
+import type { GuardrailValidator } from 'confused-ai/guardrails';
 
 const moderationGuardrail: GuardrailValidator = {
   async validateInput(input) {
@@ -85,7 +85,7 @@ const guardrails = createGuardrails({ validators: [moderationGuardrail] });
 `createOpenAiModerationRule` — call the OpenAI Moderation API as a guardrail rule. Automatically blocks flagged inputs.
 
 ```ts
-import { createGuardrails, createOpenAiModerationRule } from 'fluxion/guardrails';
+import { createGuardrails, createOpenAiModerationRule } from 'confused-ai/guardrails';
 
 const guardrails = createGuardrails({
   validators: [
@@ -105,7 +105,7 @@ const guardrails = createGuardrails({
 `createPiiDetectionRule` — detect and optionally block messages containing PII (emails, phone numbers, SSNs, credit card numbers, IP addresses).
 
 ```ts
-import { createGuardrails, createPiiDetectionRule } from 'fluxion/guardrails';
+import { createGuardrails, createPiiDetectionRule } from 'confused-ai/guardrails';
 
 const guardrails = createGuardrails({
   validators: [
@@ -122,7 +122,7 @@ const guardrails = createGuardrails({
 To detect PII programmatically without a guardrail:
 
 ```ts
-import { detectPii } from 'fluxion/guardrails';
+import { detectPii } from 'confused-ai/guardrails';
 
 const result = detectPii('Call me at 555-123-4567 or SSN 123-45-6789');
 console.log(result.found);   // true
@@ -134,7 +134,7 @@ console.log(result.types);   // ['phone', 'ssn']
 `createPromptInjectionRule` — heuristic detection of prompt injection attempts (jailbreaks, role-override instructions, etc.).
 
 ```ts
-import { createGuardrails, createPromptInjectionRule } from 'fluxion/guardrails';
+import { createGuardrails, createPromptInjectionRule } from 'confused-ai/guardrails';
 
 const guardrails = createGuardrails({
   validators: [
@@ -151,7 +151,7 @@ const guardrails = createGuardrails({
 To inspect injection signals directly:
 
 ```ts
-import { detectPromptInjection } from 'fluxion/guardrails';
+import { detectPromptInjection } from 'confused-ai/guardrails';
 
 const result = detectPromptInjection('Ignore all previous instructions and...');
 console.log(result.score);    // 0.9
@@ -161,8 +161,8 @@ console.log(result.signals);  // ['role-override', 'jailbreak-phrase']
 For higher accuracy, add an LLM classifier on top of heuristics:
 
 ```ts
-import { createLlmInjectionClassifier } from 'fluxion/guardrails';
-import { OpenAIProvider } from 'fluxion/llm';
+import { createLlmInjectionClassifier } from 'confused-ai/guardrails';
+import { OpenAIProvider } from 'confused-ai/llm';
 
 const classifier = createLlmInjectionClassifier({
   llm: new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o-mini' }),
@@ -175,7 +175,7 @@ const classifier = createLlmInjectionClassifier({
 `createForbiddenTopicsRule` — block any input that matches a list of forbidden topic keywords or patterns.
 
 ```ts
-import { createGuardrails, createForbiddenTopicsRule } from 'fluxion/guardrails';
+import { createGuardrails, createForbiddenTopicsRule } from 'confused-ai/guardrails';
 
 const guardrails = createGuardrails({
   validators: [

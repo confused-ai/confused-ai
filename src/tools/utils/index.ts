@@ -14,5 +14,5 @@ export {
     CalculatorToolkit,
 } from './calculator.js';
 // Shell tools are intentionally NOT re-exported here for security.
-// Import from 'fluxion/tools/shell' explicitly.
+// Import from 'confused-ai/tools/shell' explicitly.
 export type { ShellToolConfig } from './shell.js';

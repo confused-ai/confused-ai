@@ -1,7 +1,7 @@
 /**
  * Minimal agent using the framework.
  *
- * Uses the lean `create-agent` entry (in apps: `import { createAgent } from "fluxion/create-agent"`).
+ * Uses the lean `create-agent` entry (in apps: `import { createAgent } from "confused-ai/create-agent"`).
  *
  * Requires: OPENAI_API_KEY in `examples/.env` (or your env) — see `resolveLlmForCreateAgent`.
  *
@@ -27,7 +27,7 @@ async function main() {
     const agent = createAgent({
         name: 'SimpleAssistant',
         instructions: 'You are a helpful assistant. Be concise.',
-        /** No tools — chat only. Add HttpClientTool, etc. from `fluxion/tools` when needed. */
+        /** No tools — chat only. Add HttpClientTool, etc. from `confused-ai/tools` when needed. */
         tools: [],
         dev: true,
         learningMode: LearningMode.AGENTIC,

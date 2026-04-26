@@ -13,27 +13,27 @@
  *
  *   Category         Package (community / official)
  *   ─────────────────────────────────────────────────
- *   sql/postgres     fluxion-adapter-postgres     (pg / postgres.js)
- *   sql/mysql        fluxion-adapter-mysql         (mysql2)
- *   sql/sqlite       fluxion-adapter-sqlite        (better-sqlite3)
- *   nosql/mongodb    fluxion-adapter-mongodb       (@mongodb/driver)
- *   nosql/dynamodb   fluxion-adapter-dynamodb      (@aws-sdk/client-dynamodb)
- *   vector/pinecone  fluxion-adapter-pinecone      (@pinecone-database/pinecone)
- *   vector/qdrant    fluxion-adapter-qdrant        (@qdrant/js-client-rest)
- *   vector/weaviate  fluxion-adapter-weaviate      (weaviate-client)
- *   analytics/duckdb fluxion-adapter-duckdb        (duckdb-async)
- *   analytics/ch     fluxion-adapter-clickhouse    (@clickhouse/client)
- *   search/elastic   fluxion-adapter-elasticsearch (@elastic/elasticsearch)
- *   search/typesense fluxion-adapter-typesense     (typesense)
- *   cache/redis      fluxion-adapter-redis         (ioredis / @upstash/redis)
- *   object/s3        fluxion-adapter-s3            (@aws-sdk/client-s3)
- *   object/gcs       fluxion-adapter-gcs           (@google-cloud/storage)
- *   ts/influxdb      fluxion-adapter-influxdb      (@influxdata/influxdb-client)
- *   graph/neo4j      fluxion-adapter-neo4j         (neo4j-driver)
- *   queue/bullmq     fluxion-adapter-bullmq        (bullmq)
- *   queue/kafka      fluxion-adapter-kafka         (kafkajs)
- *   obs/otel         fluxion-adapter-otel          (@opentelemetry/sdk-node)
- *   embed/openai     fluxion-adapter-openai-embed  (openai)
+ *   sql/postgres     confused-ai-adapter-postgres     (pg / postgres.js)
+ *   sql/mysql        confused-ai-adapter-mysql         (mysql2)
+ *   sql/sqlite       confused-ai-adapter-sqlite        (better-sqlite3)
+ *   nosql/mongodb    confused-ai-adapter-mongodb       (@mongodb/driver)
+ *   nosql/dynamodb   confused-ai-adapter-dynamodb      (@aws-sdk/client-dynamodb)
+ *   vector/pinecone  confused-ai-adapter-pinecone      (@pinecone-database/pinecone)
+ *   vector/qdrant    confused-ai-adapter-qdrant        (@qdrant/js-client-rest)
+ *   vector/weaviate  confused-ai-adapter-weaviate      (weaviate-client)
+ *   analytics/duckdb confused-ai-adapter-duckdb        (duckdb-async)
+ *   analytics/ch     confused-ai-adapter-clickhouse    (@clickhouse/client)
+ *   search/elastic   confused-ai-adapter-elasticsearch (@elastic/elasticsearch)
+ *   search/typesense confused-ai-adapter-typesense     (typesense)
+ *   cache/redis      confused-ai-adapter-redis         (ioredis / @upstash/redis)
+ *   object/s3        confused-ai-adapter-s3            (@aws-sdk/client-s3)
+ *   object/gcs       confused-ai-adapter-gcs           (@google-cloud/storage)
+ *   ts/influxdb      confused-ai-adapter-influxdb      (@influxdata/influxdb-client)
+ *   graph/neo4j      confused-ai-adapter-neo4j         (neo4j-driver)
+ *   queue/bullmq     confused-ai-adapter-bullmq        (bullmq)
+ *   queue/kafka      confused-ai-adapter-kafka         (kafkajs)
+ *   obs/otel         confused-ai-adapter-otel          (@opentelemetry/sdk-node)
+ *   embed/openai     confused-ai-adapter-openai-embed  (openai)
  */
 
 import type {
@@ -125,7 +125,7 @@ abstract class BaseAdapter {
  * Stores rows in plain Maps. Supports basic SELECT / INSERT / UPDATE / DELETE
  * without an external dependency.  Use for testing and prototyping.
  *
- * For real SQL, swap with fluxion-adapter-postgres / -mysql / -sqlite.
+ * For real SQL, swap with confused-ai-adapter-postgres / -mysql / -sqlite.
  */
 export class InMemorySqlAdapter extends BaseAdapter implements SqlAdapter {
     readonly name = 'memory';
@@ -208,7 +208,7 @@ export class InMemorySqlAdapter extends BaseAdapter implements SqlAdapter {
  * In-memory NoSQL / document adapter.
  * Each collection is a Map of id → document.
  *
- * For production, swap with fluxion-adapter-mongodb or -dynamodb.
+ * For production, swap with confused-ai-adapter-mongodb or -dynamodb.
  */
 export class InMemoryNoSqlAdapter extends BaseAdapter implements NoSqlAdapter {
     readonly name = 'memory';
@@ -361,7 +361,7 @@ export class InMemoryVectorAdapter extends BaseAdapter implements VectorAdapter 
 
 /**
  * In-memory analytics adapter — stores imported data in Maps, executes a
- * very small SQL-like DSL.  For real analytics use fluxion-adapter-duckdb.
+ * very small SQL-like DSL.  For real analytics use confused-ai-adapter-duckdb.
  */
 export class InMemoryAnalyticsAdapter extends BaseAdapter implements AnalyticsAdapter {
     readonly name = 'memory';
@@ -403,7 +403,7 @@ export class InMemoryAnalyticsAdapter extends BaseAdapter implements AnalyticsAd
 
 /**
  * In-memory full-text search adapter — simple substring matching.
- * For production use fluxion-adapter-elasticsearch or -typesense.
+ * For production use confused-ai-adapter-elasticsearch or -typesense.
  */
 export class InMemorySearchAdapter extends BaseAdapter implements SearchAdapter {
     readonly name = 'memory';
@@ -454,7 +454,7 @@ export class InMemorySearchAdapter extends BaseAdapter implements SearchAdapter 
 
 /**
  * In-memory cache adapter with optional TTL.
- * For production use fluxion-adapter-redis or fluxion-adapter-upstash.
+ * For production use confused-ai-adapter-redis or confused-ai-adapter-upstash.
  */
 export class InMemoryCacheAdapter extends BaseAdapter implements CacheAdapter {
     readonly name = 'memory';
@@ -530,7 +530,7 @@ export class InMemoryCacheAdapter extends BaseAdapter implements CacheAdapter {
 
 /**
  * In-memory object / blob storage.
- * For production use fluxion-adapter-s3 or fluxion-adapter-gcs.
+ * For production use confused-ai-adapter-s3 or confused-ai-adapter-gcs.
  */
 export class InMemoryObjectStorageAdapter extends BaseAdapter implements ObjectStorageAdapter {
     readonly name = 'memory';
@@ -589,7 +589,7 @@ export class InMemoryObjectStorageAdapter extends BaseAdapter implements ObjectS
 
 /**
  * In-memory time-series adapter.
- * For production use fluxion-adapter-influxdb or -timescaledb.
+ * For production use confused-ai-adapter-influxdb or -timescaledb.
  */
 export class InMemoryTimeSeriesAdapter extends BaseAdapter implements TimeSeriesAdapter {
     readonly name = 'memory';
@@ -624,7 +624,7 @@ export class InMemoryTimeSeriesAdapter extends BaseAdapter implements TimeSeries
 
 /**
  * In-memory graph adapter.
- * For production use fluxion-adapter-neo4j or -arangodb.
+ * For production use confused-ai-adapter-neo4j or -arangodb.
  */
 export class InMemoryGraphAdapter extends BaseAdapter implements GraphAdapter {
     readonly name = 'memory';
@@ -682,7 +682,7 @@ export class InMemoryGraphAdapter extends BaseAdapter implements GraphAdapter {
 
 /**
  * In-memory message queue with basic pub/sub.
- * For production use fluxion-adapter-bullmq (Redis) or -kafka.
+ * For production use confused-ai-adapter-bullmq (Redis) or -kafka.
  */
 export class InMemoryMessageQueueAdapter extends BaseAdapter implements MessageQueueAdapter {
     readonly name = 'memory';
@@ -748,7 +748,7 @@ export class InMemoryMessageQueueAdapter extends BaseAdapter implements MessageQ
 
 /**
  * Console-based observability adapter (logs to stdout, traces to stdout).
- * For production use fluxion-adapter-otel or fluxion-adapter-datadog.
+ * For production use confused-ai-adapter-otel or confused-ai-adapter-datadog.
  */
 export class ConsoleObservabilityAdapter extends BaseAdapter implements ObservabilityAdapter {
     readonly name = 'console';
@@ -803,7 +803,7 @@ export class NullObservabilityAdapter extends BaseAdapter implements Observabili
 /**
  * Deterministic in-memory embedding adapter — generates pseudo-embeddings
  * from character codes.  Useful for testing. NOT suitable for semantic search.
- * For production use fluxion-adapter-openai-embed or fluxion-adapter-cohere.
+ * For production use confused-ai-adapter-openai-embed or confused-ai-adapter-cohere.
  */
 export class InMemoryEmbeddingAdapter extends BaseAdapter implements EmbeddingAdapter {
     readonly name = 'memory';
@@ -838,7 +838,7 @@ export class InMemoryEmbeddingAdapter extends BaseAdapter implements EmbeddingAd
 /**
  * In-memory session store adapter.
  * Stores sessions in a Map — lost on restart.
- * For production use fluxion-adapter-redis-sessions or fluxion-adapter-pg-sessions.
+ * For production use confused-ai-adapter-redis-sessions or confused-ai-adapter-pg-sessions.
  */
 export class InMemorySessionStoreAdapter extends BaseAdapter implements SessionStoreAdapter {
     readonly name = 'memory';
@@ -923,7 +923,7 @@ export class InMemorySessionStoreAdapter extends BaseAdapter implements SessionS
  * In-memory memory store adapter.
  * Semantic search uses cosine similarity on stored embeddings (if present),
  * otherwise falls back to keyword matching.
- * For production use fluxion-adapter-pinecone, fluxion-adapter-qdrant, etc.
+ * For production use confused-ai-adapter-pinecone, confused-ai-adapter-qdrant, etc.
  */
 export class InMemoryMemoryStoreAdapter extends BaseAdapter implements MemoryStoreAdapter {
     readonly name = 'memory';
@@ -1021,7 +1021,7 @@ export class InMemoryMemoryStoreAdapter extends BaseAdapter implements MemorySto
 
 /**
  * No-op guardrail adapter — every check passes.
- * Useful for development. Replace with fluxion-adapter-azure-content-safety or
+ * Useful for development. Replace with confused-ai-adapter-azure-content-safety or
  * a custom implementation that calls your moderation API.
  */
 export class PassThroughGuardrailAdapter extends BaseAdapter implements GuardrailAdapter {
@@ -1054,7 +1054,7 @@ export class PassThroughGuardrailAdapter extends BaseAdapter implements Guardrai
  * In-memory RAG adapter.
  * Splits documents by sentence, indexes in a plain Map, and retrieves
  * by keyword overlap (TF-IDF-ish scoring). For production use
- * fluxion-adapter-pinecone, fluxion-adapter-qdrant, or fluxion-adapter-pgvector.
+ * confused-ai-adapter-pinecone, confused-ai-adapter-qdrant, or confused-ai-adapter-pgvector.
  */
 export class InMemoryRagAdapter extends BaseAdapter implements RagAdapter {
     readonly name = 'memory';
@@ -1122,7 +1122,7 @@ export class InMemoryRagAdapter extends BaseAdapter implements RagAdapter {
 
 /**
  * In-memory tool registry adapter — store and look up tool descriptors locally.
- * For production use fluxion-adapter-mcp-registry or a remote HTTP registry.
+ * For production use confused-ai-adapter-mcp-registry or a remote HTTP registry.
  */
 export class InMemoryToolRegistryAdapter extends BaseAdapter implements ToolRegistryAdapter {
     readonly name = 'memory';
@@ -1161,7 +1161,7 @@ export class InMemoryToolRegistryAdapter extends BaseAdapter implements ToolRegi
 
 /**
  * No-op auth adapter — every token is valid; returns a generic service identity.
- * Replace with fluxion-adapter-jwt, fluxion-adapter-oauth2, etc.
+ * Replace with confused-ai-adapter-jwt, confused-ai-adapter-oauth2, etc.
  */
 export class NoOpAuthAdapter extends BaseAdapter implements AuthAdapter {
     readonly name = 'noop';
@@ -1201,7 +1201,7 @@ interface RateLimitBucket {
 
 /**
  * In-memory token-bucket rate limiter.
- * For production use fluxion-adapter-redis-rate-limit (Upstash, ioredis).
+ * For production use confused-ai-adapter-redis-rate-limit (Upstash, ioredis).
  */
 export class InMemoryRateLimitAdapter extends BaseAdapter implements RateLimitAdapter {
     readonly name = 'memory';
@@ -1278,7 +1278,7 @@ export class InMemoryRateLimitAdapter extends BaseAdapter implements RateLimitAd
 /**
  * In-memory audit log adapter.
  * Events are stored in a ring-buffer (max 10 000 entries).
- * For production use fluxion-adapter-pg-audit, fluxion-adapter-cloudwatch-audit, etc.
+ * For production use confused-ai-adapter-pg-audit, confused-ai-adapter-cloudwatch-audit, etc.
  */
 export class InMemoryAuditLogAdapter extends BaseAdapter implements AuditLogAdapter {
     readonly name = 'memory';

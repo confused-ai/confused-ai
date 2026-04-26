@@ -21,9 +21,9 @@ server restarts.
 
 ```ts
 // memory-agent.ts
-import { createAgent } from 'fluxion';
-import { InMemoryStore } from 'fluxion/memory';
-import { createStorage } from 'fluxion/storage';
+import { createAgent } from 'confused-ai';
+import { InMemoryStore } from 'confused-ai/memory';
+import { createStorage } from 'confused-ai/storage';
 
 // ── Long-term memory store ─────────────────────────────────────────────────
 // Use FileStorageAdapter to persist across restarts
@@ -125,8 +125,8 @@ const agentForBob   = createUserAgent('bob');
 When you have thousands of memories, use vector search instead of key-value lookup:
 
 ```ts
-import { InMemoryVectorStore } from 'fluxion/memory';
-import { OpenAIEmbeddingProvider } from 'fluxion/memory';
+import { InMemoryVectorStore } from 'confused-ai/memory';
+import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 
 const agent = createAgent({
   model: 'gpt-4o-mini',

@@ -8,7 +8,7 @@
  *
  * @example
  * ```ts
- * import { SQSBackgroundQueue } from 'fluxion/background';
+ * import { SQSBackgroundQueue } from 'confused-ai/background';
  *
  * const queue = new SQSBackgroundQueue({
  *   queueUrl: process.env.SQS_QUEUE_URL!,

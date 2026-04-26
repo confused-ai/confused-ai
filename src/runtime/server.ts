@@ -205,7 +205,7 @@ export function createHttpService(
                 sendJson(
                     res,
                     200,
-                    { status: 'ok', service: 'fluxion', time: new Date().toISOString() },
+                    { status: 'ok', service: 'confused-ai', time: new Date().toISOString() },
                     cors,
                     rid
                 );

@@ -1,4 +1,4 @@
-# Contributing to fluxion
+# Contributing to confused-ai
 
 Thank you for contributing! This guide covers how to set up the project, the coding standards, and the PR process.
 
@@ -36,7 +36,7 @@ src/
   agentic/        # Agentic runner (multi-step LLM loop)
   artifacts/      # Structured agent output (markdown, JSON, images)
   background/     # Background job queues (BullMQ)
-  cli/            # fluxion CLI commands
+  cli/            # confused-ai CLI commands
   config/         # Configuration loading
   core/           # Core utilities (circuit breaker, retry, rate limiter)
   execution/      # Tool execution sandbox
@@ -90,8 +90,8 @@ docs/             # Documentation
 Use the testing utilities in `src/testing/`:
 
 ```ts
-import { createTestAgent } from 'fluxion/testing';
-import { MockToolRegistry } from 'fluxion/testing';
+import { createTestAgent } from 'confused-ai/testing';
+import { MockToolRegistry } from 'confused-ai/testing';
 
 const { agent, llm } = await createTestAgent({
   instructions: 'You are a test agent',
@@ -125,7 +125,7 @@ const result = await agent.run('Hello');
 ## Adding a New Tool
 
 ```ts
-import type { Tool } from 'fluxion/tools';
+import type { Tool } from 'confused-ai/tools';
 
 export const myTool: Tool = {
   name: 'my_tool',

@@ -2,7 +2,7 @@
  * Test utilities for agent framework testing
  *
  * Provides helpers for unit tests, integration tests, and e2e tests.
- * Import via `fluxion/testing`.
+ * Import via `confused-ai/testing`.
  */
 
 export * from './mock-llm.js';
