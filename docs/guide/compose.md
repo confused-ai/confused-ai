@@ -1,103 +1,145 @@
 # Compose & Pipe
 
-`compose()` and `pipe()` let you combine agent configurations, hooks, and middleware without subclassing.
+`compose()` and `pipe()` build **agent pipelines** — the output of each agent becomes the input to the next. They are the primary building blocks for multi-step agentic workflows without subclassing.
 
 ## `compose()`
 
-Merge two or more agent hook sets. Both hook sets execute for each event.
+Chain agents sequentially. The final result of agent N is automatically passed as the prompt to agent N+1.
 
 ```ts
-import { compose, defineAgent } from 'fluxion';
+import { compose, createAgent } from 'fluxion';
+import { OpenAIProvider } from 'fluxion/llm';
 
-const loggingHooks = {
-  beforeRun: async (ctx) => console.log('Run started:', ctx.runId),
-  afterRun: async (output) => console.log('Run ended'),
-};
+const llm = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o' });
 
-const tracingHooks = {
-  beforeRun: async (ctx) => startTrace(ctx.runId),
-  afterRun: async (output, ctx) => endTrace(ctx.runId),
-};
+const researcher = createAgent({ name: 'researcher', llm, instructions: 'Find key facts about the topic.' });
+const writer     = createAgent({ name: 'writer',     llm, instructions: 'Write a blog post from the research notes.' });
+const editor     = createAgent({ name: 'editor',     llm, instructions: 'Polish the blog post for clarity and style.' });
 
-// Both hook sets will execute
-const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
-  .hooks(compose(loggingHooks, tracingHooks));
+const pipeline = compose(researcher, writer, editor);
+
+const result = await pipeline.run('The history of quantum computing');
+console.log(result.text); // polished blog post
 ```
 
-## `pipe()`
+## `ComposeOptions`
 
-Chain transformations sequentially. Each stage receives the output of the previous one. Useful for `buildSystemPrompt` hooks:
+All options can be passed as the last argument to `compose()`:
 
 ```ts
-import { pipe, defineAgent } from 'fluxion';
+export interface ComposeOptions {
+  // Stop early if this returns false — later agents in the chain are skipped
+  when?: (result: AgenticRunResult, stepIndex: number) => boolean | Promise<boolean>;
 
-const addUserContext = {
-  buildSystemPrompt: async (base, ctx) => {
-    const user = await userDb.get(ctx.metadata.userId);
-    return `${base}\n\nUser: ${user.name}, Plan: ${user.plan}`;
-  },
-};
+  // Transform the output before passing it to the next agent
+  transform?: (result: AgenticRunResult, stepIndex: number) => string | Promise<string>;
 
-const addDateTime = {
-  buildSystemPrompt: async (base) => {
-    return `${base}\n\nCurrent date: ${new Date().toISOString()}`;
-  },
-};
-
-const addFeatureFlags = {
-  buildSystemPrompt: async (base, ctx) => {
-    const flags = await featureFlags.get(ctx.metadata.userId);
-    return flags.betaFeatures ? `${base}\n\nBeta features: enabled` : base;
-  },
-};
-
-// Prompts are built in order: base → user context → date → feature flags
-const myAgent = defineAgent({ model: 'gpt-4o', instructions: 'You are an assistant.' })
-  .hooks(pipe(addUserContext, addDateTime, addFeatureFlags));
+  // Share a session across all agents in the pipeline
+  sessionId?: string;
+}
 ```
 
-## Combining compose and pipe
+### Early stopping with `when`
 
 ```ts
-const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
-  .hooks(
-    compose(
-      loggingHooks,
-      tracingHooks,
-      pipe(addUserContext, addDateTime), // pipe is nested inside compose
-    )
-  );
+import { compose, createAgent } from 'fluxion';
+
+const classifier = createAgent({ name: 'classifier', llm, instructions: 'Classify the input as RELEVANT or IRRELEVANT.' });
+const responder  = createAgent({ name: 'responder',  llm, instructions: 'Answer the question in detail.' });
+
+const pipeline = compose(
+  classifier,
+  responder,
+  {
+    // Only pass to the responder if the classifier says RELEVANT
+    when: (result) => result.text.toUpperCase().includes('RELEVANT'),
+  },
+);
+
+const result = await pipeline.run('What is the weather?');
 ```
 
-## Reusable hook packages
-
-Extract hooks into reusable packages:
+### Transforming output between stages
 
 ```ts
-// hooks/analytics.ts
-export const analyticsHooks = {
-  afterRun: async (output, ctx) => {
-    await analytics.track('agent_run_completed', {
-      runId: ctx.runId,
-      model: ctx.model,
-      tokens: ctx.tokens,
-    });
+const pipeline = compose(
+  researcher,
+  writer,
+  {
+    // Prepend a header before the writer receives the researcher's output
+    transform: (result, stepIndex) => {
+      if (stepIndex === 0) return `## Research Notes\n\n${result.text}`;
+      return result.text;
+    },
   },
-};
-
-// hooks/rate-limit.ts
-export const rateLimitHooks = {
-  beforeRun: async (ctx) => {
-    const allowed = await rateLimiter.check(ctx.sessionId);
-    if (!allowed) return false; // abort run
-  },
-};
-
-// agent.ts
-import { compose, defineAgent } from 'fluxion';
-import { analyticsHooks } from './hooks/analytics';
-import { rateLimitHooks } from './hooks/rate-limit';
-
-export const myAgent = defineAgent({ model: 'gpt-4o', instructions: '...' })
-  .hooks(compose(analyticsHooks, rateLimitHooks));
+);
 ```
+
+## `pipe()` — fluent builder
+
+`pipe()` builds the same kind of pipeline but with a fluent `.then()` chain. Useful when different stages need different options.
+
+```ts
+import { pipe, createAgent } from 'fluxion';
+
+const result = await pipe(researcher)
+  .then(writer, {
+    transform: (r) => `## Research\n${r.text}`,
+  })
+  .then(editor, {
+    when: (r) => r.text.length > 100,  // skip editor for very short drafts
+  })
+  .run('Quantum computing history', {
+    onChunk: (text) => process.stdout.write(text), // stream last stage
+  });
+```
+
+## Shared session across the pipeline
+
+Pass a `sessionId` so all agents share conversation history:
+
+```ts
+const sessionId = crypto.randomUUID();
+
+const pipeline = compose(researchAgent, summaryAgent, { sessionId });
+
+// Both agents see the same conversation history
+const result = await pipeline.run('Tell me about CRISPR', { sessionId });
+```
+
+## API reference
+
+### `compose(...agents): ComposedAgent`
+### `compose(...agents, options: ComposeOptions): ComposedAgent`
+
+Returns a `ComposedAgent` with:
+
+```ts
+interface ComposedAgent {
+  run(
+    prompt: string,
+    options?: {
+      onChunk?: (text: string) => void; // stream output from the last agent
+      sessionId?: string;
+    },
+  ): Promise<AgenticRunResult>;
+}
+```
+
+### `pipe(first: CreateAgentResult): PipelineBuilder`
+
+Returns a `PipelineBuilder` with:
+
+```ts
+class PipelineBuilder {
+  then(agent: CreateAgentResult, options?: ComposeOptions): PipelineBuilder;
+  run(
+    prompt: string,
+    options?: { onChunk?: (text: string) => void; sessionId?: string },
+  ): Promise<AgenticRunResult>;
+}
+```
+
+::: tip Hooks vs Pipelines
+`compose()` / `pipe()` connect **separate agents** in a pipeline where output flows downstream. To merge multiple **hook sets** onto a single agent, use [`defineAgent().hooks()`](./hooks.md) directly.
+:::

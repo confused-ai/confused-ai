@@ -1,9 +1,7 @@
 /**
  * SQLite-backed User Profile Store — persistent learning across sessions.
  *
- * Agno's memory module stores user facts automatically across restarts.
- * This store provides the same capability for fluxion: user profiles
- * survive process restarts when backed by SQLite (or Postgres).
+ * User profiles persist automatically across restarts when backed by SQLite (or Postgres).
  *
  * @example
  * ```ts

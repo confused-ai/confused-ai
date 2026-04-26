@@ -1,5 +1,5 @@
 /**
- * Voice Provider - VoltAgent-Style TTS/STT Support
+ * Voice Provider — TTS/STT Support
  *
  * Text-to-speech and speech-to-text capabilities:
  * - OpenAI voice support

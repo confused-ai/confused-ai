@@ -1,8 +1,5 @@
 /**
  * Pipeline pattern: run agents in sequence, passing output of one as input to the next.
- *
- * Inspired by VoltAgent's pipeline pattern:
- * https://github.com/VoltAgent/voltagent/blob/main/website/blog/2025-07-16-ai-agent-orchestration/index.md
  */
 
 import type { Agent, AgentInput, AgentOutput, AgentContext } from '../core/types.js';

@@ -11,6 +11,13 @@
  * 7. Multi-agent orchestration
  * 8. Memory system
  * 9. Plugin system
+ * 10. DurableExecutor: crash recovery + idempotency
+ * 11. computeWaves + BackpressureController
+ * 12. createTestRunner + mock utilities
+
+ * 7. Multi-agent orchestration
+ * 8. Memory system
+ * 9. Plugin system
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -22,12 +29,15 @@ import {
   // Engine
   DAGEngine,
   replayState,
+  DurableExecutor,
   // Event store
   InMemoryEventStore,
   // Scheduler
   InMemoryTaskQueue,
   DefaultScheduler,
   GraphWorker,
+  computeWaves,
+  BackpressureController,
   // Orchestrator
   AgentRuntime,
   MultiAgentOrchestrator,
@@ -54,6 +64,13 @@ import {
   type AgentDef,
   type GraphPlugin,
 } from '../src/graph/index.js';
+
+import {
+  createTestRunner,
+  createMockLLMProvider,
+  expectEventSequence,
+  assertExactEventSequence,
+} from '../src/testing/graph-runner.js';
 
 // ── Test Helpers ────────────────────────────────────────────────────────────
 
@@ -1053,3 +1070,353 @@ describe('Integration', () => {
     expect(audit.getAuditLog().length).toBeGreaterThan(0);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DurableExecutor Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('DurableExecutor', () => {
+  it('should run a graph and persist events', async () => {
+    const store = new InMemoryEventStore();
+    const graph = createGraph('durable-basic')
+      .addNode('a', { kind: 'task', execute: async () => 'a-out' })
+      .addNode('b', { kind: 'task', execute: async () => 'b-out' })
+      .chain('a', 'b')
+      .build();
+
+    const durable = new DurableExecutor(graph, store);
+    const result = await durable.run();
+
+    expect(result.status).toBe(ExecutionStatus.COMPLETED);
+
+    // Events must be persisted to the store
+    const stored = await store.load(result.executionId);
+    expect(stored.length).toBeGreaterThan(0);
+    expect(stored.some(e => e.type === GraphEventType.EXECUTION_STARTED)).toBe(true);
+    expect(stored.some(e => e.type === GraphEventType.EXECUTION_COMPLETED)).toBe(true);
+  });
+
+  it('should resume a completed run without re-executing nodes', async () => {
+    const store = new InMemoryEventStore();
+    const executions: string[] = [];
+
+    const graph = createGraph('durable-resume')
+      .addNode('once', {
+        kind: 'task',
+        execute: async () => {
+          executions.push('ran');
+          return 'result';
+        },
+      })
+      .build();
+
+    const durable = new DurableExecutor(graph, store);
+    const first = await durable.run();
+
+    expect(first.status).toBe(ExecutionStatus.COMPLETED);
+    expect(executions.length).toBe(1);
+
+    // Resume the already-completed run — no node should re-execute
+    const resumed = await durable.resume(first.executionId);
+    expect(resumed.status).toBe(ExecutionStatus.COMPLETED);
+    expect(executions.length).toBe(1); // No re-execution
+  });
+
+  it('should detect graph version mismatch on resume', async () => {
+    const store = new InMemoryEventStore();
+
+    // Seed a start event with v1.0.0
+    await store.append([{
+      id: 'ev1',
+      type: GraphEventType.EXECUTION_STARTED,
+      executionId: 'old-run' as any,
+      graphId: 'g1' as any,
+      timestamp: Date.now(),
+      sequence: 1,
+      data: { graphVersion: '1.0.0' },
+    }]);
+
+    const graph = createGraph('versioned', { version: '2.0.0' })
+      .addNode('a', { kind: 'task', execute: async () => {} })
+      .build();
+
+    const durable = new DurableExecutor(graph, store);
+    await expect(durable.resume('old-run' as any))
+      .rejects.toThrow(/version mismatch/);
+  });
+
+  it('should throw when resuming unknown run-id', async () => {
+    const store = new InMemoryEventStore();
+    const graph = createGraph('g')
+      .addNode('a', { kind: 'task', execute: async () => {} })
+      .build();
+
+    const durable = new DurableExecutor(graph, store);
+    await expect(durable.resume('nonexistent' as any))
+      .rejects.toThrow(/no events found/i);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// computeWaves & BackpressureController Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeWaves', () => {
+  it('should assign a single root node to wave 0', () => {
+    const graph = createGraph('single')
+      .addNode('only', { kind: 'task', execute: async () => {} })
+      .build();
+
+    const waves = computeWaves(graph);
+    expect(waves.length).toBe(1);
+    expect(waves[0].length).toBe(1);
+  });
+
+  it('should produce three waves for a linear 3-node chain', () => {
+    const graph = createGraph('chain')
+      .addNode('a', { kind: 'task', execute: async () => {} })
+      .addNode('b', { kind: 'task', execute: async () => {} })
+      .addNode('c', { kind: 'task', execute: async () => {} })
+      .chain('a', 'b', 'c')
+      .build();
+
+    const waves = computeWaves(graph);
+    expect(waves.length).toBe(3);
+    waves.forEach(w => expect(w.length).toBe(1));
+  });
+
+  it('should place parallel branches in the same wave', () => {
+    // start → [b, c] → end
+    const graph = createGraph('fan')
+      .addNode('start', { kind: 'start' })
+      .addNode('b', { kind: 'task', execute: async () => {} })
+      .addNode('c', { kind: 'task', execute: async () => {} })
+      .addNode('end', { kind: 'end' })
+      .addEdge('start', 'b')
+      .addEdge('start', 'c')
+      .addEdge('b', 'end')
+      .addEdge('c', 'end')
+      .build();
+
+    const waves = computeWaves(graph);
+    // Wave 0: start
+    // Wave 1: b, c  (parallel)
+    // Wave 2: end
+    expect(waves.length).toBe(3);
+    expect(waves[1].length).toBe(2); // b and c run together
+  });
+
+  it('should throw on a cyclic graph', () => {
+    // Build a valid graph first, then patch its adjacency to introduce a cycle
+    const graph = createGraph('ok')
+      .addNode('a', { kind: 'task', execute: async () => {} })
+      .addNode('b', { kind: 'task', execute: async () => {} })
+      .chain('a', 'b')
+      .build();
+
+    const [aId, bId] = Array.from(graph.nodes.keys());
+    const fakeEdgeId = 'e_cycle' as any;
+
+    // Add a back-edge b → a to introduce a cycle
+    const patchedOutgoing = new Map(graph.outgoing);
+    patchedOutgoing.set(bId, [...(patchedOutgoing.get(bId) ?? []), fakeEdgeId]);
+
+    const patchedIncoming = new Map(graph.incoming);
+    patchedIncoming.set(aId, [...(patchedIncoming.get(aId) ?? []), fakeEdgeId]);
+
+    const patchedEdges = new Map(graph.edges);
+    patchedEdges.set(fakeEdgeId, { id: fakeEdgeId, from: bId, to: aId });
+
+    const cyclic = { ...graph, outgoing: patchedOutgoing, incoming: patchedIncoming, edges: patchedEdges };
+
+    expect(() => computeWaves(cyclic as any)).toThrow(/cycle/i);
+  });
+});
+
+describe('BackpressureController', () => {
+  it('should allow up to maxConcurrency acquires without blocking', async () => {
+    const bp = new BackpressureController(3);
+    // Three immediate acquires should not block
+    await bp.acquire();
+    await bp.acquire();
+    await bp.acquire();
+    expect(bp.inflight).toBe(3);
+    expect(bp.queueDepth).toBe(0);
+  });
+
+  it('should queue a fourth acquire when limit is reached', async () => {
+    const bp = new BackpressureController(2);
+    await bp.acquire();
+    await bp.acquire();
+    expect(bp.inflight).toBe(2);
+
+    let resolved = false;
+    const waiting = bp.acquire().then(() => { resolved = true; });
+
+    // Not yet resolved — still blocked
+    expect(resolved).toBe(false);
+    expect(bp.queueDepth).toBe(1);
+
+    // Release one slot — waiter should resolve
+    bp.release();
+    await waiting;
+    expect(resolved).toBe(true);
+    expect(bp.inflight).toBe(2); // still 2: waiter took the released slot
+  });
+
+  it('should increment available after release when no waiters', async () => {
+    const bp = new BackpressureController(2);
+    await bp.acquire();
+    bp.release();
+    expect(bp.inflight).toBe(0);
+    expect(bp.queueDepth).toBe(0);
+  });
+
+  it('should throw for maxConcurrency < 1', () => {
+    expect(() => new BackpressureController(0)).toThrow(/maxConcurrency/);
+  });
+
+  it('should enforce parallelism under load', async () => {
+    const bp = new BackpressureController(2);
+    const maxInFlight: number[] = [];
+    let current = 0;
+
+    const task = async () => {
+      await bp.acquire();
+      current++;
+      maxInFlight.push(current);
+      await delay(10);
+      current--;
+      bp.release();
+    };
+
+    await Promise.all(Array.from({ length: 6 }, task));
+    // Peak concurrency should never exceed 2
+    expect(Math.max(...maxInFlight)).toBeLessThanOrEqual(2);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// createTestRunner Tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('createTestRunner', () => {
+  it('should run a graph and return event types', async () => {
+    const runner = createTestRunner();
+    const graph = createGraph('runner-test')
+      .addNode('a', { kind: 'task', execute: async () => 'hello' })
+      .build();
+
+    const result = await runner.run(graph);
+
+    expect(result.status).toBe(ExecutionStatus.COMPLETED);
+    expect(result.eventTypes).toContain(GraphEventType.EXECUTION_STARTED);
+    expect(result.eventTypes).toContain(GraphEventType.NODE_STARTED);
+    expect(result.eventTypes).toContain(GraphEventType.NODE_COMPLETED);
+    expect(result.eventTypes).toContain(GraphEventType.EXECUTION_COMPLETED);
+  });
+
+  it('should forward initialState as variables', async () => {
+    const runner = createTestRunner();
+    const graph = createGraph('with-vars')
+      .addNode('reader', {
+        kind: 'task',
+        execute: async (ctx) => ctx.getVariable<string>('msg'),
+      })
+      .build();
+
+    const result = await runner.run(graph, { msg: 'hello-world' });
+    expect(result.state.results['reader']).toBe('hello-world');
+  });
+
+  it('should expose the embedded event store', async () => {
+    const runner = createTestRunner();
+    const graph = createGraph('store-access')
+      .addNode('x', { kind: 'task', execute: async () => 42 })
+      .build();
+
+    const result = await runner.run(graph);
+    const fromStore = await result.eventStore.load(result.executionId);
+    expect(fromStore.length).toBe(result.storedEvents.length);
+  });
+});
+
+describe('expectEventSequence / assertExactEventSequence', () => {
+  it('expectEventSequence should pass for a matching subsequence', () => {
+    const actual = [
+      GraphEventType.EXECUTION_STARTED,
+      GraphEventType.NODE_STARTED,
+      GraphEventType.NODE_COMPLETED,
+      GraphEventType.EXECUTION_COMPLETED,
+    ];
+    expect(() =>
+      expectEventSequence(actual, [
+        GraphEventType.EXECUTION_STARTED,
+        GraphEventType.NODE_COMPLETED,
+        GraphEventType.EXECUTION_COMPLETED,
+      ]),
+    ).not.toThrow();
+  });
+
+  it('expectEventSequence should throw when a type is missing', () => {
+    const actual = [GraphEventType.EXECUTION_STARTED, GraphEventType.EXECUTION_COMPLETED];
+    expect(() =>
+      expectEventSequence(actual, [GraphEventType.NODE_STARTED]),
+    ).toThrow(/could not find/);
+  });
+
+  it('assertExactEventSequence should pass for exact match', () => {
+    const types = [GraphEventType.EXECUTION_STARTED, GraphEventType.EXECUTION_COMPLETED];
+    expect(() => assertExactEventSequence(types, types)).not.toThrow();
+  });
+
+  it('assertExactEventSequence should throw on length mismatch', () => {
+    expect(() =>
+      assertExactEventSequence(
+        [GraphEventType.EXECUTION_STARTED],
+        [GraphEventType.EXECUTION_STARTED, GraphEventType.EXECUTION_COMPLETED],
+      ),
+    ).toThrow(/length mismatch/);
+  });
+
+  it('assertExactEventSequence should throw on type mismatch', () => {
+    expect(() =>
+      assertExactEventSequence(
+        [GraphEventType.EXECUTION_STARTED, GraphEventType.NODE_FAILED],
+        [GraphEventType.EXECUTION_STARTED, GraphEventType.EXECUTION_COMPLETED],
+      ),
+    ).toThrow(/mismatch at index/);
+  });
+});
+
+describe('createMockLLMProvider', () => {
+  it('should drain responses in order', async () => {
+    const llm = createMockLLMProvider('test-llm', [
+      { content: 'response-1' },
+      { content: 'response-2' },
+    ]);
+
+    const r1 = await llm.generate([{ role: 'user', content: 'q1' }]);
+    const r2 = await llm.generate([{ role: 'user', content: 'q2' }]);
+    // Third call beyond queue end returns last entry
+    const r3 = await llm.generate([{ role: 'user', content: 'q3' }]);
+
+    expect(r1.content).toBe('response-1');
+    expect(r2.content).toBe('response-2');
+    expect(r3.content).toBe('response-2'); // last repeated
+  });
+
+  it('should set finishReason=tool_calls when toolCalls present', async () => {
+    const llm = createMockLLMProvider('tool-llm', [
+      { content: '', toolCalls: [{ id: 'tc1', name: 'search', arguments: {} }] },
+    ]);
+
+    const r = await llm.generate([{ role: 'user', content: 'search something' }]);
+    expect(r.finishReason).toBe('tool_calls');
+  });
+
+  it('should throw when given empty responses array', () => {
+    expect(() => createMockLLMProvider('empty', [])).toThrow(/must not be empty/);
+  });
+});
+

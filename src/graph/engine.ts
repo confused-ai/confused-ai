@@ -823,6 +823,119 @@ export class DAGEngine {
   }
 }
 
+// ── Durable Executor ────────────────────────────────────────────────────────
+
+/**
+ * DurableExecutor — crash-safe wrapper over DAGEngine.
+ *
+ * Every state transition is persisted to an EventStore. On resume,
+ * events are replayed to reconstruct state; nodes that already have a
+ * NODE_COMPLETED event are not re-executed (idempotency guarantee).
+ *
+ * @example
+ *   const durable = new DurableExecutor(graph, store);
+ *   const result  = await durable.run({ variables: { x: 1 } });
+ *   // process crashes …
+ *   const resumed = await durable.resume(result.executionId);
+ */
+export class DurableExecutor {
+  constructor(
+    private readonly graph: GraphDef,
+    private readonly eventStore: EventStore,
+  ) {}
+
+  /** Start a fresh execution. An execution ID is auto-generated. */
+  async run(options: Omit<ExecuteOptions, 'eventStore' | 'resumeFrom'> = {}): Promise<ExecutionResult> {
+    const engine = new DAGEngine(this.graph);
+    return engine.execute({ ...options, eventStore: this.eventStore });
+  }
+
+  /**
+   * Resume an interrupted execution from its persisted event log.
+   *
+   * Steps:
+   * 1. Load all events for `executionId` from the EventStore.
+   * 2. Reconstruct state via `replayState()`.
+   * 3. If the run already reached a terminal status, return immediately.
+   * 4. Verify graph version compatibility (optional — only when both sides carry a version).
+   * 5. Reset nodes that were RUNNING at crash time back to PENDING.
+   * 6. Resume execution from the reconstructed checkpoint.
+   */
+  async resume(
+    executionId: ExecutionId,
+    options: Omit<ExecuteOptions, 'eventStore' | 'resumeFrom' | 'executionId'> = {},
+  ): Promise<ExecutionResult> {
+    const storedEvents = await this.eventStore.load(executionId);
+    if (storedEvents.length === 0) {
+      throw new Error(`DurableExecutor: no events found for execution "${executionId}"`);
+    }
+
+    // Optional graph version compatibility check
+    const startEvent = storedEvents.find(e => e.type === GraphEventType.EXECUTION_STARTED);
+    const runVersion = startEvent?.data?.graphVersion as string | undefined;
+    if (runVersion && this.graph.version && runVersion !== this.graph.version) {
+      throw new Error(
+        `DurableExecutor: graph version mismatch — run started with v${runVersion}, ` +
+        `current graph is v${this.graph.version}. Cannot safely resume.`,
+      );
+    }
+
+    // Reconstruct state from the event log
+    const reconstituted = replayState(storedEvents, this.graph);
+
+    // Already terminal — nothing to re-execute
+    if (
+      reconstituted.status === ExecutionStatus.COMPLETED ||
+      reconstituted.status === ExecutionStatus.FAILED ||
+      reconstituted.status === ExecutionStatus.CANCELLED
+    ) {
+      return {
+        executionId,
+        status: reconstituted.status,
+        state: reconstituted,
+        events: storedEvents,
+        durationMs: 0,
+        error: reconstituted.error,
+      };
+    }
+
+    // Idempotency: collect node IDs that have a NODE_COMPLETED record
+    const completedNodeIds = new Set<string>(
+      storedEvents
+        .filter(e => e.type === GraphEventType.NODE_COMPLETED && e.nodeId)
+        .map(e => e.nodeId!),
+    );
+
+    // Reset mid-flight nodes (crashed while RUNNING / RETRYING) back to PENDING
+    for (const [nid, ns] of Object.entries(reconstituted.nodes)) {
+      if (
+        (ns.status === NodeStatus.RUNNING || ns.status === NodeStatus.RETRYING) &&
+        !completedNodeIds.has(nid)
+      ) {
+        reconstituted.nodes[nid] = { ...ns, status: NodeStatus.PENDING, attempts: 0 };
+      }
+    }
+    reconstituted.activeNodes = [];
+    reconstituted.status = ExecutionStatus.RUNNING;
+
+    const lastSeq = storedEvents.reduce((m, e) => Math.max(m, e.sequence), 0);
+
+    const engine = new DAGEngine(this.graph);
+    return engine.execute({
+      ...options,
+      executionId,
+      eventStore: this.eventStore,
+      resumeFrom: {
+        executionId,
+        graphId: this.graph.id,
+        state: reconstituted,
+        sequence: lastSeq,
+        timestamp: Date.now(),
+      },
+    });
+  }
+}
+
 // ── Replay Engine ───────────────────────────────────────────────────────────
 
 /**

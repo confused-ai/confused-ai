@@ -47,7 +47,7 @@ export {
 } from './graceful-shutdown.js';
 export type { GracefulShutdownConfig, CleanupHandler, ShutdownEvent } from './graceful-shutdown.js';
 
-// Resumable Streaming (VoltAgent-style)
+// Resumable Streaming
 export {
     ResumableStreamManager,
     formatSSE,

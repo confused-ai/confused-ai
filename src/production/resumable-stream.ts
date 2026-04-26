@@ -1,5 +1,5 @@
 /**
- * Resumable Streaming - VoltAgent-Style Stream Reconnection
+ * Resumable Streaming — Stream Reconnection
  *
  * Enables clients to reconnect to in-flight streams after refresh/disconnect:
  * - Checkpoint-based stream state persistence

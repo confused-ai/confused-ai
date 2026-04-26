@@ -4,8 +4,6 @@
  * Combines circuit breaker, rate limiter, health checks, and graceful shutdown
  * into a single composable wrapper around any Agent instance.
  *
- * Pattern inspired by: Mastra's production defaults, AI SDK's middleware wrapping.
- *
  * @example
  * ```ts
  * import { Agent } from 'fluxion';

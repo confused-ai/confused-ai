@@ -2,7 +2,6 @@
  * Agent Router — Capability-based dynamic agent routing.
  *
  * Routes tasks to the best-fit agent based on capabilities, load, and history.
- * Pattern inspired by: CrewAI's task delegation, Mastra's supervisor agents.
  *
  * @example
  * ```ts

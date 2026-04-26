@@ -226,3 +226,125 @@ configureTelemetry({
   serviceVersion: '1.0.0',
 });
 ```
+
+---
+
+## Eval Store
+
+`EvalStore` + `runEvalSuite()` give you a **self-hosted, persistent evaluation framework** — no external SaaS required. Run regression-detected evaluations in CI against a golden baseline.
+
+### Quick start
+
+```ts
+import { runEvalSuite, SqliteEvalStore } from 'fluxion/observability';
+import { createAgent } from 'fluxion';
+
+const agent = createAgent({ name: 'qa-bot', llm, instructions: 'Answer questions accurately.' });
+
+const store = SqliteEvalStore.create('./evals.db'); // persists across CI runs
+
+const report = await runEvalSuite({
+  suiteName: 'factual-accuracy',
+  store,
+  agent,
+  dataset: [
+    { input: 'Capital of France?',  expectedOutput: 'Paris' },
+    { input: 'Capital of Germany?', expectedOutput: 'Berlin' },
+    { input: 'Capital of Japan?',   expectedOutput: 'Tokyo' },
+  ],
+  passingScore:       0.8,  // suite fails if averageScore < 0.8
+  regressionThreshold: 0.05, // fail if score drops > 5% from baseline
+});
+
+console.log(`Score: ${report.averageScore.toFixed(2)}`);
+console.log(`Passed: ${report.passedCount}/${report.totalCount}`);
+
+// CI-friendly exit code
+if (!report.passed) process.exit(1);
+```
+
+### Custom scorer
+
+The default scorer is exact string match. Provide your own for fuzzy or semantic scoring:
+
+```ts
+import { runEvalSuite } from 'fluxion/observability';
+
+const report = await runEvalSuite({
+  suiteName: 'semantic-accuracy',
+  agent,
+  dataset: [...],
+  scorer: async (input, expected, actual) => {
+    // Return a score between 0.0 and 1.0
+    if (!expected) return 1;
+    const sim = cosineSimilarity(await embed(expected), await embed(actual));
+    return sim;
+  },
+});
+```
+
+### Baseline and regression detection
+
+Save a run as the baseline. Future runs that drop more than `regressionThreshold` below the baseline will fail.
+
+```ts
+// First run — mark as baseline
+const baseline = await runEvalSuite({
+  suiteName: 'factual-accuracy',
+  store,
+  agent,
+  dataset,
+  setBaseline: true,  // ← saves this run as the reference point
+});
+
+// Subsequent runs — automatically compared against baseline
+const followUp = await runEvalSuite({
+  suiteName: 'factual-accuracy',
+  store,
+  agent,
+  dataset,
+  regressionThreshold: 0.05, // default — fail if > 5% below baseline
+});
+
+console.log(`Baseline score: ${followUp.baselineScore}`);
+console.log(`This run:       ${followUp.averageScore}`);
+console.log(`Delta:          ${followUp.regressionDelta}`); // positive = improvement
+```
+
+### `EvalReport` fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `suiteRunId` | `string` | ID of this run |
+| `suiteName` | `string` | Suite identifier |
+| `averageScore` | `number` | Mean score across all samples |
+| `passedCount` | `number` | Samples with score ≥ `passingScore` |
+| `totalCount` | `number` | Total samples evaluated |
+| `samples` | `EvalDatasetResult[]` | Per-sample detail |
+| `passed` | `boolean` | `true` when `averageScore >= passingScore` and no regression |
+| `regressionDelta` | `number \| null` | `score - baselineScore`; positive = improvement |
+| `baselineScore` | `number \| null` | Baseline average score; `null` if none saved |
+
+### `EvalStore` implementations
+
+| Store | Import | Notes |
+|-------|--------|-------|
+| `InMemoryEvalStore` | `fluxion/observability` | Dev/test — data lost on restart |
+| `SqliteEvalStore.create(path)` | `fluxion/observability` | Durable default; survives CI runs |
+| `createSqliteEvalStore(path)` | `fluxion/observability` | Factory shorthand |
+
+### `runEvalSuite()` options reference
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `suiteName` | `string` | required | Name for grouping runs in the store |
+| `dataset` | `EvalDatasetItem[]` | required | `{ input, expectedOutput?, metadata? }` |
+| `agent` | `CreateAgentResult` | required | The agent under evaluation |
+| `store` | `EvalStore` | — | Omit for transient (no persistence) |
+| `scorer` | `EvalScorer` | exact match | `(input, expected, actual) => 0..1` |
+| `passingScore` | `number` | `0` | Minimum per-sample score to count as passed |
+| `regressionThreshold` | `number` | `0.05` | Max tolerated score drop from baseline |
+| `setBaseline` | `boolean` | `false` | Save this run as the new baseline |
+| `onSample` | `callback` | — | Progress hook: `(index, total, sample)` |
+| `sampleTimeoutMs` | `number` | `60_000` | Per-sample agent timeout |
+| `concurrency` | `number` | `1` | Run N samples concurrently |

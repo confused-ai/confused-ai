@@ -639,3 +639,137 @@ export class DistributedEngine {
     this.eventStore?.append([event]).catch(() => {});
   }
 }
+
+// ── Execution Waves ──────────────────────────────────────────────────────────
+
+/**
+ * Compute execution waves for a DAG via topological level assignment.
+ *
+ * Each wave contains nodes whose dependencies are fully satisfied by
+ * earlier waves, so all nodes within a wave can run concurrently.
+ * A node's wave index equals the length of the longest dependency path
+ * leading to it, ensuring fan-in nodes are placed after all of their
+ * upstream branches.
+ *
+ * @example
+ *   //  A → B → D
+ *   //  A → C → D
+ *   // Wave 0: [A]
+ *   // Wave 1: [B, C]  ← independent, run in parallel
+ *   // Wave 2: [D]     ← fan-in, waits for B and C
+ *
+ * @throws if the graph contains a cycle (detected via Kahn's algorithm)
+ */
+export function computeWaves(graph: GraphDef): NodeId[][] {
+  // Mutable in-degree copy for Kahn's algorithm
+  const inDegree = new Map<NodeId, number>();
+  for (const [nid] of graph.nodes) {
+    inDegree.set(nid, graph.incoming.get(nid)?.length ?? 0);
+  }
+
+  // level[nid] = longest path from any root to nid (wave index)
+  const level = new Map<NodeId, number>();
+  const queue: NodeId[] = [];
+
+  for (const [nid, deg] of inDegree) {
+    if (deg === 0) {
+      queue.push(nid);
+      level.set(nid, 0);
+    }
+  }
+
+  const processed: NodeId[] = [];
+
+  while (queue.length > 0) {
+    const nid = queue.shift()!;
+    processed.push(nid);
+
+    const myLevel = level.get(nid) ?? 0;
+    const outEdgeIds = graph.outgoing.get(nid) ?? [];
+
+    for (const eid of outEdgeIds) {
+      const edge = graph.edges.get(eid)!;
+      // A successor's level is at least (myLevel + 1); take the max across all predecessors
+      const candidateLevel = myLevel + 1;
+      const currentLevel = level.get(edge.to) ?? 0;
+      level.set(edge.to, Math.max(currentLevel, candidateLevel));
+
+      const newDeg = (inDegree.get(edge.to) ?? 1) - 1;
+      inDegree.set(edge.to, newDeg);
+      if (newDeg === 0) {
+        queue.push(edge.to);
+      }
+    }
+  }
+
+  if (processed.length !== graph.nodes.size) {
+    throw new Error('computeWaves: cycle detected in graph');
+  }
+
+  // Group nodes by their assigned level
+  const waves: NodeId[][] = [];
+  for (const [nid, lv] of level) {
+    if (!waves[lv]) waves[lv] = [];
+    waves[lv].push(nid);
+  }
+
+  return waves;
+}
+
+// ── Backpressure Controller ──────────────────────────────────────────────────
+
+/**
+ * Semaphore-based backpressure controller.
+ *
+ * Limits the number of concurrently executing nodes. When the limit is
+ * reached, `acquire()` suspends the caller until a slot is released.
+ *
+ * @example
+ *   const bp = new BackpressureController(4);
+ *   await bp.acquire();        // blocks if 4 nodes already in-flight
+ *   try { await runNode(); }
+ *   finally { bp.release(); }
+ */
+export class BackpressureController {
+  private available: number;
+  private readonly waiters: Array<() => void> = [];
+
+  constructor(readonly maxConcurrency: number) {
+    if (maxConcurrency < 1) {
+      throw new RangeError(`BackpressureController: maxConcurrency must be ≥ 1, got ${maxConcurrency}`);
+    }
+    this.available = maxConcurrency;
+  }
+
+  /** Acquire a slot. Returns immediately if capacity is available; otherwise awaits. */
+  acquire(): Promise<void> {
+    if (this.available > 0) {
+      this.available--;
+      return Promise.resolve();
+    }
+    return new Promise<void>(resolve => {
+      this.waiters.push(resolve);
+    });
+  }
+
+  /** Release a slot, waking the next queued waiter if any. */
+  release(): void {
+    if (this.waiters.length > 0) {
+      // The released slot goes directly to the next waiter — `available` stays the same
+      const next = this.waiters.shift()!;
+      next();
+    } else {
+      this.available = Math.min(this.available + 1, this.maxConcurrency);
+    }
+  }
+
+  /** Number of nodes currently holding a slot. */
+  get inflight(): number {
+    return this.maxConcurrency - this.available;
+  }
+
+  /** Number of callers waiting for an available slot. */
+  get queueDepth(): number {
+    return this.waiters.length;
+  }
+}

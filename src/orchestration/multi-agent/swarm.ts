@@ -1,8 +1,6 @@
 /**
  * Agent Swarm Implementation
  *
- * Inspired by Kimi K2.5's Agent Swarm architecture with PARL (Parallel-Agent Reinforcement Learning)
- *
  * Key concepts:
  * - Orchestrator decomposes tasks into parallelizable subtasks
  * - Dynamic subagent instantiation (up to 100 sub-agents)
@@ -170,7 +168,7 @@ interface TaskDecomposition {
 }
 
 /**
- * Swarm Orchestrator - Inspired by Kimi K2.5's PARL architecture
+ * Swarm Orchestrator
  *
  * The orchestrator:
  * 1. Decomposes complex tasks into parallelizable subtasks
@@ -894,7 +892,7 @@ Provide a detailed, helpful response to the user's request.`;
     }
 
     /**
-     * Calculate critical steps metric (inspired by Kimi's Critical Steps formula)
+     * Calculate critical steps metric
      */
     private calculateCriticalSteps(stages: ExecutionStage[]): number {
         return stages.reduce((sum, stage) => {

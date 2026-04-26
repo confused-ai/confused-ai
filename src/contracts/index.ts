@@ -4,8 +4,6 @@
  * This is the dependency-free foundation layer. All modules import types from here
  * instead of cross-importing from each other. This eliminates circular dependencies
  * and creates a clean dependency graph.
- *
- * Pattern inspired by: Mastra's `@mastra/core` types, AI SDK's foundation types.
  */
 
 // ── Identity ───────────────────────────────────────────────────────────────
@@ -202,7 +200,6 @@ export interface StreamOptions extends GenerateOptions {
  * LLM provider interface.
  *
  * Implement for OpenAI, Anthropic, Google, local models, etc.
- * Pattern: ai-sdk's model abstraction + Mastra's model router.
  */
 export interface LLMProvider {
     /** Generate a single response (and optional tool calls) from messages. */
@@ -261,7 +258,7 @@ export interface ToolExecutionMetadata {
 }
 
 /**
- * Tool interface — AI SDK–style `tool()` pattern.
+ * Tool interface.
  *
  * Generic over parameters (Zod schema) and output type.
  */
@@ -305,7 +302,7 @@ export interface ToolRegistry {
     clear(): void;
 }
 
-/** Tool middleware for intercepting tool calls (AI SDK onToolCallStart/onToolCallFinish pattern). */
+/** Tool middleware for intercepting tool calls. */
 export interface ToolMiddleware {
     beforeExecute?: (tool: Tool, params: unknown, context: ToolContext) => Promise<void> | void;
     afterExecute?: (tool: Tool, result: ToolResult, context: ToolContext) => Promise<void> | void;
@@ -638,7 +635,6 @@ export interface RAGEngine {
  * Plugin interface for cross-cutting concerns.
  *
  * Plugins can hook into agent lifecycle, tool execution, and observability.
- * Inspired by Mastra's middleware processors + AI SDK's middleware pattern.
  */
 export interface Plugin {
     readonly id: string;
@@ -665,7 +661,7 @@ export interface PluginContext {
     readonly metadata: Record<string, unknown>;
 }
 
-// ── Workflow Contracts (Mastra-style) ──────────────────────────────────────
+// ── Workflow Contracts ──────────────────────────────────────────────────────
 
 /** Status of a workflow step. */
 export enum StepStatus {

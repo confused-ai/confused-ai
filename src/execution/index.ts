@@ -7,7 +7,7 @@ export { ExecutionEngineImpl } from './engine.js';
 export { ExecutionGraphBuilder } from './graph-builder.js';
 export { WorkerPool } from './worker-pool.js';
 
-// Workflow — Mastra-style step-chaining workflows
+// Workflow — step-chaining workflows
 export {
     createWorkflow as createStepWorkflow,
     createStep,

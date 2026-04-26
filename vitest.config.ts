@@ -11,6 +11,11 @@ export default defineConfig({
         
         // Test file patterns
         include: ['tests/**/*.test.ts', 'src/**/*.test.ts'],
+
+        // Benchmark file patterns
+        benchmark: {
+            include: ['benchmarks/**/*.bench.ts'],
+        },
         
         // Coverage configuration
         coverage: {
@@ -20,6 +25,7 @@ export default defineConfig({
                 'node_modules/**',
                 'dist/**',
                 'tests/**',
+                'benchmarks/**',
                 '**/*.d.ts',
             ],
         },

@@ -2,9 +2,8 @@
  * Tenant Context — per-tenant isolation for session stores, rate limiters,
  * cost trackers, and audit logs.
  *
- * Agno handles user_id / session_id isolation automatically. This module
- * brings the same capability to fluxion: call `createTenantContext(tenantId)`
- * and get back a set of stores that automatically namespace all keys.
+ * Provides per-tenant isolation for user_id / session_id automatically. Call
+ * `createTenantContext(tenantId)` and get back a set of stores that automatically namespace all keys.
  *
  * @example
  * ```ts

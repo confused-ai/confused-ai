@@ -7,6 +7,30 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.7.0] — 2026-04-27
+
+### Added
+
+#### Budget Enforcement
+- `budget?: BudgetConfig` added to `CreateAgentOptions` — configure `maxUsdPerRun`, `maxUsdPerUser`, `maxUsdPerMonth`, and `onExceeded` behaviour (`'throw' | 'warn' | 'truncate'`)
+- `BudgetEnforcer` instantiated in factory.ts; `budgetEnforcer?.resetRun()` called before each run
+- `addStepCost()` called in `runner.ts` after each LLM call when `result.usage` is present
+- `recordAndCheck(userId)` called in runner.ts after the run loop to enforce per-user daily + monthly caps
+- `userId?: string` added to `AgenticRunConfig` for per-user cap enforcement
+- `BudgetExceededError` thrown when a cap is crossed and `onExceeded === 'throw'`
+
+#### HITL Approval HTTP Endpoints
+- `approvalStore?: ApprovalStore` added to `CreateHttpServiceOptions`
+- `GET /v1/approvals` — lists all pending approval requests
+- `POST /v1/approvals/:id` — submits a decision `{ approved: boolean, comment?: string, decidedBy: string }`
+- Both routes wired in `server.ts` and documented in the OpenAPI spec
+
+#### Distributed Trace Context
+- `extractTraceContext()` imported and called in `server.ts` from incoming request headers (`traceparent`, `tracestate`)
+- `traceId` from the incoming trace is propagated in JSON responses and SSE event streams
+
+---
+
 ## [Unreleased]
 
 ### Added
@@ -14,7 +38,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [0.6.0] — Current
+## [0.6.0]
 
 ### Added
 

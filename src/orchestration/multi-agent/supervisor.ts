@@ -1,9 +1,6 @@
 /**
  * Supervisor pattern: a "boss" agent that delegates to specialist sub-agents
  * and coordinates their results.
- *
- * Inspired by VoltAgent's supervisor pattern:
- * https://github.com/VoltAgent/voltagent/blob/main/website/blog/2025-07-16-ai-agent-orchestration/index.md
  */
 
 import type { Agent, AgentInput, AgentOutput, AgentContext } from '../core/types.js';

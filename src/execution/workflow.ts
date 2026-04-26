@@ -1,10 +1,8 @@
 /**
- * Workflow — Mastra-style workflow creation with step chaining.
+ * Workflow — Step-based workflow creation with step chaining.
  *
  * Provides a fluent, type-safe API for creating multi-step workflows
  * with Zod-validated inputs/outputs, conditional branching, and suspend/resume.
- *
- * Pattern taken from: Mastra's `createWorkflow()` / `createStep()` + AI SDK step patterns.
  *
  * @example
  * ```ts

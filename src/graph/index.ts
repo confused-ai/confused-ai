@@ -140,6 +140,7 @@ export {
 export {
   DAGEngine,
   replayState,
+  DurableExecutor,
   type ExecuteOptions,
   type ExecutionResult,
 } from './engine.js';
@@ -159,6 +160,8 @@ export {
   DefaultScheduler,
   GraphWorker,
   DistributedEngine,
+  computeWaves,
+  BackpressureController,
   type WorkerStats,
 } from './scheduler.js';
 

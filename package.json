@@ -1,6 +1,6 @@
 {
     "name": "fluxion",
-    "version": "0.8.1",
+    "version": "0.9.1",
     "description": "TypeScript framework for building production-grade AI agents, teams, and services",
     "type": "module",
     "files": [
@@ -274,6 +274,9 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
+        "bench": "vitest bench",
+        "lint": "eslint src/contracts src/core --max-warnings 0",
+        "lint:full": "eslint src --max-warnings 0",
         "docs:dev": "vitepress dev docs",
         "docs:build": "vitepress build docs",
         "docs:preview": "vitepress preview docs",

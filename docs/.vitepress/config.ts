@@ -114,6 +114,8 @@ export default defineConfig({
                     items: [
                         { text: 'Orchestration', link: '/guide/orchestration' },
                         { text: 'Execution Workflows', link: '/guide/workflows' },
+                        { text: 'Graph Engine', link: '/guide/graph' },
+                        { text: 'LLM Router', link: '/guide/llm-router' },
                     ],
                 },
                 {
@@ -127,6 +129,9 @@ export default defineConfig({
                         { text: 'Human-in-the-Loop', link: '/guide/hitl' },
                         { text: 'Multi-Tenancy', link: '/guide/multi-tenancy' },
                         { text: 'Background Queues', link: '/guide/background-queues' },
+                        { text: 'WebSocket Transport', link: '/guide/websocket' },
+                        { text: 'Admin API', link: '/guide/admin-api' },
+                        { text: 'Secret Manager', link: '/guide/secret-manager' },
                         { text: 'Voice (TTS/STT)', link: '/guide/voice' },
                         { text: 'MCP Client & Server', link: '/guide/mcp' },
                         { text: 'Plugins', link: '/guide/plugins' },

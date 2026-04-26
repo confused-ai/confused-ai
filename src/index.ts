@@ -135,4 +135,16 @@ export * from './runtime/index.js';
 // Storage: key-value + blob with pluggable adapters (memory, file, custom S3/Redis/etc.)
 export * from './storage/index.js';
 
+// Reasoning: Chain-of-Thought step manager, ReasoningEvent streaming
+export * from './reasoning/index.js';
+
+// Compression: LLM-based tool result / message compression
+export * from './compression/index.js';
+
+// Context: ContextProvider / ContextBackend abstraction layer
+export * from './context/index.js';
+
+// Scheduler: cron-based job scheduling with in-process handler registry
+export * from './scheduler/index.js';
+
 recordFrameworkStartup({ version: VERSION, runtime: 'node' });

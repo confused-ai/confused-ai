@@ -3,7 +3,6 @@
  *
  * Multiple agents independently analyze the same input, then vote
  * on the best answer using configurable consensus strategies.
- * Pattern inspired by: AutoGen's group chat consensus, Mastra's decision teams.
  *
  * @example
  * ```ts

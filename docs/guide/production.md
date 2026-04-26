@@ -2,31 +2,79 @@
 
 Production-grade resilience: circuit breakers, rate limiting, retries, and graceful degradation.
 
-## ResilientAgent
+## `withResilience()`
 
-Wraps any agent with automatic retries, circuit breaking, fallback models, and health checks:
+Wraps any agent with automatic retries, circuit breaking, rate limiting, and health checks:
 
 ```ts
-import { ResilientAgent } from 'fluxion/production';
-import { agent } from 'fluxion';
+import { withResilience } from 'fluxion/production';
+import { createAgent } from 'fluxion';
 
-const myAgent = agent({ model: 'gpt-4o', instructions: '...' });
+const myAgent = createAgent({ name: 'assistant', llm, instructions: '...' });
 
-const resilient = new ResilientAgent(myAgent, {
-  retries: 3,                    // retry failed runs up to 3 times
-  retryDelay: 1000,              // ms between retries (exponential backoff)
+const resilient = withResilience(myAgent, {
   circuitBreaker: {
-    threshold: 5,                // open circuit after 5 consecutive failures
-    resetAfter: 30_000,          // try again after 30s
+    failureThreshold: 5,     // open circuit after 5 consecutive failures
+    resetTimeoutMs:   30_000, // try again after 30s
+    callTimeoutMs:    60_000, // abort individual calls after 60s
   },
-  fallbackModel: 'claude-3-haiku-20240307',  // use this model when primary fails
-  timeout: 60_000,               // abort after 60s
-  onFallback: (error) => console.warn('Falling back:', error.message),
+  rateLimit: {
+    maxRpm: 60,              // max runs per minute
+  },
+  retry: {
+    maxRetries:   2,         // retry failed runs up to 2 times
+    backoffMs:    500,       // initial retry delay
+    maxBackoffMs: 5_000,     // cap on exponential backoff
+  },
+  healthCheck:      true,   // enable .health() reporting
+  gracefulShutdown: true,   // flush in-flight runs on SIGTERM
 });
 
-// Use exactly like a normal agent
+// Drop-in replacement — identical run() interface
 const result = await resilient.run('Process this data');
 ```
+
+### Health report
+
+`withResilience()` returns a `ResilientAgent` with an extra `.health()` method:
+
+```ts
+const report = resilient.health();
+// {
+//   status: 'healthy' | 'degraded' | 'unhealthy',
+//   circuitState: 'closed' | 'open' | 'half-open' | 'disabled',
+//   totalRuns: 142,
+//   totalFailures: 3,
+//   averageLatencyMs: 823,
+//   uptime: 3600,
+//   lastError?: 'Rate limit exceeded',
+//   lastRunAt?: Date,
+// }
+
+// Expose via HTTP
+app.get('/agent/health', (req, res) => {
+  const h = resilient.health();
+  res.status(h.status === 'unhealthy' ? 503 : 200).json(h);
+});
+```
+
+### All defaults
+
+All `ResilienceConfig` fields are optional — `withResilience(agent)` with no config is valid and uses these defaults:
+
+| Option | Default |
+|--------|---------|
+| `circuitBreaker.failureThreshold` | `5` |
+| `circuitBreaker.resetTimeoutMs` | `30_000` |
+| `circuitBreaker.callTimeoutMs` | `60_000` |
+| `rateLimit.maxRpm` | `60` |
+| `retry.maxRetries` | `2` |
+| `retry.backoffMs` | `500` |
+| `retry.maxBackoffMs` | `5_000` |
+| `healthCheck` | `true` |
+| `gracefulShutdown` | `true` |
+
+Pass `circuitBreaker: false` or `rateLimit: false` to disable those subsystems entirely.
 
 ## Guardrails
 

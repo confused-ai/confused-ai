@@ -87,9 +87,13 @@ Full control, zero magic. You're responsible for everything.
 
 ```ts
 import { bare } from 'fluxion';
+import { OpenAIProvider } from 'fluxion/llm';
+
+// bare() requires an explicit LLMProvider — it never auto-resolves from env
+const llm = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o' });
 
 const rawAgent = bare({
-  model: 'gpt-4o',
+  llm,
   instructions: 'You are a raw agent.',
   // No memory, no session, no guardrails, no telemetry
   // Everything is opt-in

@@ -9,6 +9,10 @@ import { registerListTemplatesCommand } from './commands/list-templates.js';
 import { registerDoctorCommand } from './commands/doctor.js';
 import { registerServeCommand } from './commands/serve-cmd.js';
 import { registerEvalCommand } from './commands/eval-cmd.js';
+import { registerReplayCommand } from './commands/replay-cmd.js';
+import { registerInspectCommand } from './commands/inspect-cmd.js';
+import { registerExportCommand } from './commands/export-cmd.js';
+import { registerDiffCommand } from './commands/diff-cmd.js';
 import { VERSION } from '../shared/version.js';
 
 /**
@@ -31,6 +35,10 @@ export function buildProgram(): Command {
     registerExecuteCommand(program);
     registerListTemplatesCommand(program);
     registerDoctorCommand(program);
+    registerReplayCommand(program);
+    registerInspectCommand(program);
+    registerExportCommand(program);
+    registerDiffCommand(program);
 
     return program;
 }

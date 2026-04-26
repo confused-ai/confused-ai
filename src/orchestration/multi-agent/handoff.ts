@@ -2,7 +2,6 @@
  * Handoff Protocol — Structured agent-to-agent task handoff.
  *
  * Enables typed, traceable handoffs between agents with context preservation.
- * Pattern inspired by: OpenAI Swarm handoffs, Mastra's supervisor delegation.
  *
  * @example
  * ```ts

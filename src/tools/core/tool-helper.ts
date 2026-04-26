@@ -1,10 +1,8 @@
 /**
- * AI SDK–style `tool()` helper — one-line tool definition.
+ * `tool()` helper — one-line tool definition.
  *
  * Provides a fluent, minimal API for defining tools with Zod schemas,
  * automatic validation, and type-safe execution.
- *
- * Pattern taken from: Vercel AI SDK `tool()` + Mastra `createTool()`.
  *
  * @example
  * ```ts
@@ -41,7 +39,7 @@ import { ToolCategory } from '../../contracts/index.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-/** Options for the AI SDK-style `tool()` helper. */
+/** Options for the `tool()` helper. */
 export interface ToolHelperConfig<TSchema extends ZodObject<ZodRawShape>, TOutput = unknown> {
     /** Unique tool name (used as ID). */
     readonly name: string;
@@ -111,7 +109,7 @@ export interface LightweightTool<TSchema extends ZodObject<ZodRawShape> = ZodObj
 // ── Implementation ─────────────────────────────────────────────────────────
 
 /**
- * Create a tool with AI SDK-style DX.
+ * Create a tool with a fluent DX.
  *
  * One function, Zod parameters, auto-validation, type-safe execute.
  */
@@ -367,7 +365,7 @@ export function createTools<
 }
 
 /**
- * Alias for `tool()` — Mastra-compatible name.
+ * Alias for `tool()`.
  *
  * @example
  * ```ts

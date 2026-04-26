@@ -179,7 +179,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
     // sessionStore resolution order:
     //   1. Explicit sessionStore option
     //   2. Adapter binding (cache → session store shim; sql/nosql → future)
-    //   3. Auto-SQLite when AGENT_DB_PATH env var is set (matches Agno durable-default behavior)
+    //   3. Auto-SQLite when AGENT_DB_PATH env var is set (durable-default behavior)
     //   4. In-memory default
     const agentDbPath = typeof process !== 'undefined' ? process.env?.['AGENT_DB_PATH'] : undefined;
     const sessionStore =

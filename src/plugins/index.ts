@@ -2,7 +2,6 @@
  * Plugin Registry — Global system for cross-cutting concerns.
  *
  * Register plugins once; they apply to all agents, tools, and workflows.
- * Pattern inspired by: AI SDK's `wrapLanguageModel` middleware, Mastra's processors.
  *
  * @example
  * ```ts
