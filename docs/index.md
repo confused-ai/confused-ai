@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: "Confused-AI"
-  text: "Production AI Agents,\nShipped in TypeScript"
+  text: "Production Ready AI Agents,\nShipped in TypeScript"
   tagline: "The only TypeScript AI agent framework with smart defaults AND full control. 100+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, OTLP — from prototype to enterprise in one package."
   image:
     src: /logo.svg
