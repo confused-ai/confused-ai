@@ -63,8 +63,8 @@ export interface AgentOptions {
     userProfileStore?: CreateAgentOptions['userProfileStore'];
     /** Memory store (memories that accumulate, knowledge that transfers) */
     memoryStore?: CreateAgentOptions['memoryStore'];
-    /** RAG engine (agentic RAG, hybrid search, reranking) */
-    ragEngine?: CreateAgentOptions['ragEngine'];
+    /** Knowledgebase (agentic RAG, hybrid search, reranking) */
+    knowledgebase?: CreateAgentOptions['knowledgebase'];
     /** Type-safe input/output schemas (Zod) */
     inputSchema?: CreateAgentOptions['inputSchema'];
     outputSchema?: CreateAgentOptions['outputSchema'];
@@ -111,7 +111,7 @@ export class Agent {
             learningMode,
             userProfileStore,
             memoryStore,
-            ragEngine,
+            knowledgebase,
             inputSchema,
             outputSchema,
         } = options;
@@ -134,7 +134,7 @@ export class Agent {
             learningMode,
             userProfileStore,
             memoryStore,
-            ragEngine,
+            knowledgebase,
             inputSchema,
             outputSchema,
         };

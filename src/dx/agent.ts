@@ -68,7 +68,7 @@ export function agent(instructionsOrOptions: string | AgentMinimalOptions): Crea
         learningMode: opts.learningMode,
         userProfileStore: opts.userProfileStore,
         memoryStore: opts.memoryStore,
-        ragEngine: opts.ragEngine,
+        knowledgebase: opts.knowledgebase,
         inputSchema: opts.inputSchema,
         outputSchema: opts.outputSchema,
         hooks: opts.hooks,

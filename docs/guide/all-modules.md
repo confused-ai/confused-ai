@@ -27,7 +27,7 @@ const ai = agent({
   // sessionStore: createSqliteSessionStore('./sessions.db'),
 
   // Optional: wire RAG
-  // ragEngine: myKnowledgeEngine,
+  // knowledgebase: myKnowledgeEngine,
 
   // Optional: wire memory
   // memoryStore: new VectorMemoryStore({ ... }),
@@ -420,7 +420,7 @@ const results = await engine.query('How do I add tools?');
 const ai = agent({
   model: 'gpt-4o',
   instructions: 'Answer questions using the knowledge base.',
-  ragEngine: engine,
+  knowledgebase: engine,
 });
 ```
 

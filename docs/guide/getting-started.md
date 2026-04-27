@@ -78,7 +78,7 @@ await knowledge.ingest([{ id: 'readme', content: 'confused-ai is a TypeScript fr
 const ragAgent = agent({
   model: 'gpt-4o-mini',
   instructions: 'Answer questions using the knowledge base.',
-  ragEngine: knowledge,
+  knowledgebase: knowledge,
 });
 
 const r = await ragAgent.run('What is confused-ai?');

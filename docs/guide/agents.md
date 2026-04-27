@@ -18,7 +18,7 @@ const myAgent = agent({
   tools: [...],
   memoryStore: myMemoryStore,
   sessionStore: mySessionStore,
-  ragEngine: myKnowledge,
+  knowledgebase: myKnowledge,
   guardrails: myGuardrailEngine,     // GuardrailEngine | false
   maxSteps: 10,
 });

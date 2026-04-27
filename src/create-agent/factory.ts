@@ -255,6 +255,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
         guardrails,
         hooks: agentHooks,
         checkpointStore: options.checkpointStore,
+        knowledgebase: options.knowledgebase,
         budgetEnforcer,
         budgetModelId: model,
     });
@@ -317,6 +318,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
 
             let result;
             try {
+                const ragContext = options.knowledgebase ? await options.knowledgebase.buildContext(promptText) : undefined;
                 result = await agent.run(
                     {
                         prompt: messages ? '' : promptText,
@@ -324,6 +326,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
                         messages,
                         maxSteps,
                         timeoutMs,
+                        ragContext,
                         ...(runOptions?.runId && { runId: runOptions.runId }),
                         ...(runOptions?.userId && { userId: runOptions.userId }),
                     },

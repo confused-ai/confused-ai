@@ -193,7 +193,7 @@ export function tool<TSchema extends ZodObject<ZodRawShape>, TOutput = unknown>(
                 const endTime = new Date();
                 return {
                     success: true,
-                    data: result,
+                    data: (toModelOutput ? await toModelOutput(result) : result) as TOutput,
                     executionTimeMs: endTime.getTime() - startTime.getTime(),
                     metadata: { startTime, endTime, retries: 0 },
                 };

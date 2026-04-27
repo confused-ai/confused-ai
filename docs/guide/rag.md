@@ -78,7 +78,8 @@ const ragAgent = agent({
     Use the knowledge base to answer questions.
     Always cite document IDs when you reference content.
   `,
-  ragEngine: knowledge,
+  knowledgebase: knowledge,
+  tools: [], // Disable default tools (web fetching) to strictly rely on the knowledgebase
 });
 
 const answer = await ragAgent.run('How do I add lifecycle hooks?');

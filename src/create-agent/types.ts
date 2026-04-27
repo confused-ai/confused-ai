@@ -64,7 +64,7 @@ export interface CreateAgentOptions {
     learningMode?: LearningMode;
     userProfileStore?: UserProfileStore;
     memoryStore?: MemoryStore;
-    ragEngine?: RAGEngine;
+    knowledgebase?: RAGEngine;
     inputSchema?: z.ZodType;
     outputSchema?: z.ZodType;
     dev?: boolean;
@@ -102,7 +102,7 @@ export interface CreateAgentOptions {
      * Coexists with `guardrails` — adapter-based check runs after the GuardrailEngine check.
      */
     guardrailAdapter?: GuardrailAdapter;
-    /** Convenience: plug in a RAG adapter (overrides `ragEngine`). */
+    /** Convenience: plug in a RAG adapter (overrides `knowledgebase`). */
     ragAdapter?: RagAdapter;
     /** Convenience: plug in a session-store adapter (overrides `sessionStore`). */
     sessionStoreAdapter?: SessionStoreAdapter;

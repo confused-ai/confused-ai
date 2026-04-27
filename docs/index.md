@@ -212,7 +212,7 @@ const support = createAgent({
   model: openai('gpt-4o-mini'),
   tools:        [lookupOrder],
   sessionStore: sessions,
-  ragEngine:    knowledge,
+  knowledgebase: knowledge,
   guardrails,
   budget:       { maxUsdPerRun: 0.10 },
   hooks: {
@@ -479,7 +479,7 @@ const support = agent({
   model:        'gpt-4o-mini',
   tools:        [lookupOrder],
   sessionStore: sessions,
-  ragEngine:    knowledge,
+  knowledgebase: knowledge,
   guardrails,
   hooks: {
     afterRun: async (result) => { await analytics.track('support_run', { steps: result.steps }); return result; },

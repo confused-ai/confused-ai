@@ -52,7 +52,7 @@ export function createAgenticAgent(config: {
     name: string;
     instructions: string;
     run(
-        runConfig: { prompt: string; instructions?: string; messages?: import('../providers/types.js').Message[]; maxSteps?: number; timeoutMs?: number; runId?: string; userId?: string },
+        runConfig: { prompt: string; instructions?: string; messages?: import('../providers/types.js').Message[]; maxSteps?: number; timeoutMs?: number; runId?: string; userId?: string; ragContext?: string },
         hooks?: AgenticStreamHooks
     ): Promise<AgenticRunResult>;
 } {
@@ -92,6 +92,7 @@ export function createAgenticAgent(config: {
                 messages: runConfig.messages,
                 maxSteps: runConfig.maxSteps,
                 timeoutMs: runConfig.timeoutMs,
+                ragContext: runConfig.ragContext,
                 ...(runConfig.runId && { runId: runConfig.runId }),
                 ...(runConfig.userId && { userId: runConfig.userId }),
             };

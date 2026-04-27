@@ -229,7 +229,7 @@ export interface AgenticRunnerConfig {
     readonly timeoutMs?: number;
     readonly retry?: AgenticRetryPolicy;
     /** Optional RAG engine for knowledge retrieval during runs */
-    readonly ragEngine?: import('../knowledge/types.js').RAGEngine;
+    readonly knowledgebase?: import('../knowledge/types.js').RAGEngine;
     /** Optional tool middleware for cross-tool integration (logging, rate limit, etc.) */
     readonly toolMiddleware?: ToolMiddleware[];
     /** Optional observability for production (tracer + metrics) */

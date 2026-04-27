@@ -209,7 +209,7 @@ const { results } = await createWorkflow().task('plan', planner).execute({ goal:
 | `sessionStore` | In-memory default; plug in SQLite/Redis/Postgres for production |
 | `guardrails` | `true` (sensitive-data rule), `false`, or a `GuardrailEngine` |
 | `budget` | `{ maxUsdPerRun?, maxUsdPerUser? }` — hard USD caps |
-| `ragEngine` | `RAGEngine` for automatic retrieval-augmented generation |
+| `knowledgebase` | `RAGEngine` for automatic retrieval-augmented generation |
 | `maxSteps`, `timeoutMs` | Loop limits |
 | `retry` | Retry policy for LLM / tool calls |
 | `logger` | `ConsoleLogger` or custom |
@@ -309,7 +309,7 @@ await knowledge.ingest([
 
 const agent = createAgent({
   instructions: 'Answer questions using the knowledge base.',
-  ragEngine:    knowledge,
+  knowledgebase: knowledge,
 });
 ```
 

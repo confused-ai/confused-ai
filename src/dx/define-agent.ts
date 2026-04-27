@@ -44,7 +44,7 @@ export interface DefineAgentOptions
         | 'learningMode'
         | 'userProfileStore'
         | 'memoryStore'
-        | 'ragEngine'
+        | 'knowledgebase'
         | 'inputSchema'
         | 'outputSchema'
         | 'hooks'
@@ -231,7 +231,7 @@ class AgentBuilder {
             learningMode: opts.learningMode,
             userProfileStore: opts.userProfileStore,
             memoryStore: opts.memoryStore,
-            ragEngine: opts.ragEngine,
+            knowledgebase: opts.knowledgebase,
             inputSchema: opts.inputSchema,
             outputSchema: opts.outputSchema,
             hooks: opts.hooks,
