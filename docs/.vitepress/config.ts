@@ -7,7 +7,7 @@ export default defineConfig({
     base,
     title: 'Confused-AI',
     titleTemplate: ':title — Confused-AI',
-    description: 'TypeScript framework for building production-grade AI agents, teams, and services. ReAct loop, 50+ tools, multi-agent orchestration, circuit breakers, HITL, budget enforcement — all in one package.',
+    description: 'TypeScript framework for building production-grade AI agents, teams, and services. ReAct loop, 100+ tools, multi-agent orchestration, circuit breakers, HITL, budget enforcement — all in one package.',
     lang: 'en-US',
 
     cleanUrls: true,
@@ -27,14 +27,14 @@ export default defineConfig({
         ['meta', { property: 'og:type', content: 'website' }],
         ['meta', { property: 'og:site_name', content: 'Confused-AI' }],
         ['meta', { property: 'og:title', content: 'Confused-AI — Production-Grade AI Agent Framework' }],
-        ['meta', { property: 'og:description', content: 'Build and ship AI agents in TypeScript. 50+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, MCP, OTLP tracing — zero magic, every escape hatch open.' }],
+        ['meta', { property: 'og:description', content: 'Build and ship AI agents in TypeScript. 100+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, MCP, OTLP tracing — zero magic, every escape hatch open.' }],
         ['meta', { property: 'og:image', content: `${SITE_URL}/og-banner.png` }],
         ['meta', { property: 'og:url', content: SITE_URL }],
 
         // Twitter / X
         ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
         ['meta', { name: 'twitter:title', content: 'Confused-AI — Production-Grade AI Agent Framework' }],
-        ['meta', { name: 'twitter:description', content: 'Build and ship AI agents in TypeScript. 50+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, MCP.' }],
+        ['meta', { name: 'twitter:description', content: 'Build and ship AI agents in TypeScript. 100+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, MCP.' }],
         ['meta', { name: 'twitter:image', content: `${SITE_URL}/og-banner.png` }],
 
         // SEO
@@ -91,7 +91,7 @@ export default defineConfig({
                     collapsed: false,
                     items: [
                         { text: 'Creating Agents', link: '/guide/agents' },
-                        { text: 'Built-in Tools (50+)', link: '/guide/tools' },
+                        { text: 'Built-in Tools (100+)', link: '/guide/tools' },
                         { text: 'Custom Tools', link: '/guide/custom-tools' },
                         { text: 'Lifecycle Hooks', link: '/guide/hooks' },
                         { text: 'Compose & Pipe', link: '/guide/compose' },

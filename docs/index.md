@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "Confused-AI"
   text: "Production AI Agents,\nShipped in TypeScript"
-  tagline: "The only TypeScript AI agent framework with smart defaults AND full control. 50+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, OTLP — from prototype to enterprise in one package."
+  tagline: "The only TypeScript AI agent framework with smart defaults AND full control. 100+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, OTLP — from prototype to enterprise in one package."
   image:
     src: /logo.svg
     alt: Confused-AI
@@ -26,7 +26,7 @@ features:
     link: /guide/getting-started
     linkText: Quick start
   - icon: 🔧
-    title: 50+ built-in tools
+    title: 100+ built-in tools
     details: "HTTP, browser, email, Slack, Discord, GitHub, PostgreSQL, MySQL, SQLite, Redis, Stripe, CSV, DuckDuckGo, Wikipedia, file system, and more — every tool Zod-validated and tree-shakeable."
     link: /guide/tools
     linkText: Browse tools
@@ -240,23 +240,26 @@ listenService(service, { port: 3000 });
 
 <div class="comparison-table">
 
-| Capability | Confused-AI | LangChain.js | Vercel AI SDK | Mastra |
-|------------|:-----------:|:------------:|:-------------:|:------:|
-| Zero-config start | ✅ | ⚠️ | ✅ | ⚠️ |
-| 50+ built-in tools | ✅ | ✅ | ❌ | ⚠️ |
-| Multi-agent orchestration | ✅ | ✅ | ❌ | ✅ |
-| Circuit breakers | ✅ | ❌ | ❌ | ❌ |
-| Budget enforcement (USD caps) | ✅ | ❌ | ❌ | ❌ |
-| Human-in-the-Loop (HITL) | ✅ | ⚠️ | ❌ | ⚠️ |
-| MCP client + server | ✅ | ✅ | ✅ | ✅ |
-| OTLP distributed tracing | ✅ | ⚠️ | ❌ | ⚠️ |
-| Multi-tenancy | ✅ | ❌ | ❌ | ❌ |
-| Audit log (SOC2/HIPAA) | ✅ | ❌ | ❌ | ❌ |
-| Idempotency keys | ✅ | ❌ | ❌ | ❌ |
-| LLM router (by task type) | ✅ | ❌ | ❌ | ❌ |
-| Voice (TTS + STT) | ✅ | ⚠️ | ❌ | ❌ |
-| TypeScript-first | ✅ | ✅ | ✅ | ✅ |
-| MIT license | ✅ | ✅ | ✅ | ✅ |
+| Enterprise Capability | Confused-AI | LangChain.js | Vercel AI SDK | Mastra |
+|-----------------------|:-----------:|:------------:|:-------------:|:------:|
+| **Zero-Config Progressive DX** | ✅ | ⚠️ | ✅ | ⚠️ |
+| **First-Class TypeScript** | ✅ | ⚠️ | ✅ | ✅ |
+| **100+ Built-In Tools** | ✅ | ✅ | ❌ | ⚠️ |
+| **Multi-Agent Orchestration** | ✅ | ✅ | ❌ | ✅ |
+| **Durable DAG Graph Engine** | ✅ | ⚠️ *(LangGraph)* | ❌ | ❌ |
+| **Native MCP Support** | ✅ | ⚠️ | ❌ | ✅ |
+| **OTLP Distributed Tracing** | ✅ | ⚠️ *(LangSmith)* | ⚠️ | ⚠️ |
+| **Circuit Breakers & Retries** | ✅ | ❌ | ❌ | ❌ |
+| **USD Budget Enforcement** | ✅ | ❌ | ❌ | ❌ |
+| **Multi-Tenancy Context** | ✅ | ❌ | ❌ | ❌ |
+| **SOC2/HIPAA Audit Logging** | ✅ | ❌ | ❌ | ❌ |
+| **Idempotency Keys** | ✅ | ❌ | ❌ | ❌ |
+| **Human-in-the-Loop (HITL)** | ✅ | ⚠️ | ❌ | ⚠️ |
+| **Intelligent LLM Router** | ✅ | ❌ | ❌ | ❌ |
+| **Automatic REST API** | ✅ | ❌ | ❌ | ⚠️ |
+| **Background Job Queues** | ✅ | ❌ | ❌ | ❌ |
+| **Voice (TTS/STT) & Video** | ✅ | ⚠️ | ❌ | ❌ |
+| **MIT license** | ✅ | ✅ | ✅ | ✅ |
 
 </div>
 
@@ -280,7 +283,7 @@ Import only what you need — every module is independently tree-shakeable:
 | `confused-ai` | Main barrel: `createAgent`, `agent`, tools, session, LLM, orchestration |
 | `confused-ai/create-agent` | Lean `createAgent` + env helpers |
 | `confused-ai/llm` | Providers, model resolution, embeddings |
-| `confused-ai/tools` | `BaseTool`, registries, 50+ built-in tools |
+| `confused-ai/tools` | `BaseTool`, registries, 100+ built-in tools |
 | `confused-ai/orchestration` | Pipelines, supervisor, swarm, team, router |
 | `confused-ai/knowledge` | RAG engine, loaders, vector store |
 | `confused-ai/session` | Session stores (in-memory, SQL, SQLite) |

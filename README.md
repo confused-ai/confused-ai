@@ -3,7 +3,7 @@
   <h1>Confused-AI</h1>
   <p><strong>TypeScript AI Agent Framework — Build Production-Grade LLM Agents in Minutes</strong></p>
   <p>
-    ReAct-loop agents · 50+ built-in tools · Multi-agent orchestration · RAG · MCP · Circuit breakers · Budget caps · HITL · OTLP tracing
+    ReAct-loop agents · 100+ built-in tools · Multi-agent orchestration · RAG · MCP · Circuit breakers · Budget caps · HITL · OTLP tracing
   </p>
 
   [![CI](https://github.com/rvuyyuru2/agent-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/rvuyyuru2/agent-framework/actions/workflows/ci.yml)
@@ -29,7 +29,7 @@
 
 ---
 
-> **Confused-AI** is a TypeScript-first AI agent framework designed for production. It gives you a complete stack — LLM providers, 50+ tools, multi-agent orchestration, RAG, session memory, guardrails, circuit breakers, budget enforcement, OTLP tracing, and an HTTP runtime — so you never have to stitch libraries together again.
+> **Confused-AI** is a TypeScript-first AI agent framework designed for production. It gives you a complete stack — LLM providers, 100+ tools, multi-agent orchestration, RAG, session memory, guardrails, circuit breakers, budget enforcement, OTLP tracing, and an HTTP runtime — so you never have to stitch libraries together again.
 
 ---
 
@@ -75,7 +75,7 @@ No config files. No wiring. No boilerplate. Add tools, sessions, RAG, guardrails
 - [What You Can Build](#what-you-can-build)
 - [Why confused-ai](#why-confused-ai--feature-comparison)
 - [Creating Agents](#creating-agents)
-- [50+ Built-in Tools](#50-built-in-tools)
+- [100+ Built-in Tools](#50-built-in-tools)
 - [Custom Tools](#custom-tools)
 - [Multi-Agent Orchestration](#multi-agent-orchestration)
 - [Intelligent LLM Router](#intelligent-llm-router)
@@ -126,23 +126,25 @@ confused-ai covers the entire spectrum of LLM-powered applications:
 
 Most AI agent frameworks stop at the prototype. confused-ai ships production infrastructure out of the box:
 
-| Capability | **confused-ai** | LangChain.js | Vercel AI SDK | Mastra |
-|---|:---:|:---:|:---:|:---:|
-| Zero-config quickstart | ✅ | ⚠️ | ✅ | ⚠️ |
-| 50+ built-in tools | ✅ | ✅ | ❌ | ⚠️ |
-| Multi-agent orchestration | ✅ | ✅ | ❌ | ✅ |
-| Circuit breakers | ✅ | ❌ | ❌ | ❌ |
-| USD budget enforcement | ✅ | ❌ | ❌ | ❌ |
-| Human-in-the-Loop (HITL) | ✅ | ⚠️ | ❌ | ⚠️ |
-| MCP client + server | ✅ | ✅ | ✅ | ✅ |
-| OTLP distributed tracing | ✅ | ⚠️ | ❌ | ⚠️ |
-| Multi-tenancy | ✅ | ❌ | ❌ | ❌ |
-| Audit log (SOC 2 / HIPAA) | ✅ | ❌ | ❌ | ❌ |
-| Idempotency keys | ✅ | ❌ | ❌ | ❌ |
-| Intelligent LLM router | ✅ | ❌ | ❌ | ❌ |
-| DAG graph engine + durable execution | ✅ | ⚠️ | ❌ | ❌ |
-| Voice TTS + STT | ✅ | ⚠️ | ❌ | ❌ |
-| TypeScript-first | ✅ | ✅ | ✅ | ✅ |
+| Enterprise Capability | **Confused-AI** | LangChain.js | Vercel AI SDK | Mastra |
+|-----------------------|:---:|:---:|:---:|:---:|
+| **Zero-Config Progressive DX** | ✅ | ⚠️ | ✅ | ⚠️ |
+| **First-Class TypeScript** | ✅ | ⚠️ | ✅ | ✅ |
+| **100+ Built-In Tools** | ✅ | ✅ | ❌ | ⚠️ |
+| **Multi-Agent Orchestration** | ✅ | ✅ | ❌ | ✅ |
+| **Durable DAG Graph Engine** | ✅ | ⚠️ *(LangGraph)* | ❌ | ❌ |
+| **Native MCP Support** | ✅ | ⚠️ | ❌ | ✅ |
+| **OTLP Distributed Tracing** | ✅ | ⚠️ *(LangSmith)* | ⚠️ | ⚠️ |
+| **Circuit Breakers & Retries** | ✅ | ❌ | ❌ | ❌ |
+| **USD Budget Enforcement** | ✅ | ❌ | ❌ | ❌ |
+| **Multi-Tenancy Context** | ✅ | ❌ | ❌ | ❌ |
+| **SOC2/HIPAA Audit Logging** | ✅ | ❌ | ❌ | ❌ |
+| **Idempotency Keys** | ✅ | ❌ | ❌ | ❌ |
+| **Human-in-the-Loop (HITL)** | ✅ | ⚠️ | ❌ | ⚠️ |
+| **Intelligent LLM Router** | ✅ | ❌ | ❌ | ❌ |
+| **Automatic REST API** | ✅ | ❌ | ❌ | ⚠️ |
+| **Background Job Queues** | ✅ | ❌ | ❌ | ❌ |
+| **Voice (TTS/STT) & Video** | ✅ | ⚠️ | ❌ | ❌ |
 
 ---
 
@@ -215,7 +217,7 @@ const { results } = await createWorkflow().task('plan', planner).execute({ goal:
 
 ---
 
-## Tools (50+)
+## Tools (100+)
 
 ```ts
 import {
