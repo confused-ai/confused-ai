@@ -6,6 +6,19 @@
  * memory, storage, knowledge, observability, queue, analytics …) can declare
  * the adapter category it needs and the registry provides the right driver.
  *
+ * ## Relationship with contracts/index.ts
+ *
+ * `contracts/index.ts` defines **domain-model** interfaces (MemoryStore, SessionStore,
+ * LLMProvider, ToolRegistry) used by the agent planning/execution subsystem.
+ *
+ * This file (`adapters/types.ts`) defines **infrastructure** interfaces — pluggable
+ * persistence backends that implement specific storage categories (SQL, NoSQL,
+ * vector, cache, etc.) and framework-level adapters (SessionStoreAdapter,
+ * MemoryStoreAdapter, GuardrailAdapter, etc.).
+ *
+ * The canonical import surface for pluggable interfaces is `contracts/extensions.ts`,
+ * which re-exports from the authoritative source module for each interface.
+ *
  * Categories
  * ──────────────────────────────────────────────────────────────────────────
  *  sql           – PostgreSQL, MySQL, SQLite, MS SQL, CockroachDB, PlanetScale

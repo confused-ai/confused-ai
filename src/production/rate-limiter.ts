@@ -10,6 +10,7 @@
  */
 
 import type { MetricsCollector } from '../observability/types.js';
+import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/errors.js';
 
 /** Rate limiter configuration */
 export interface RateLimiterConfig {
@@ -32,12 +33,16 @@ export interface RateLimiterConfig {
 }
 
 /** Rate limit exceeded error */
-export class RateLimitError extends Error {
+export class RateLimitError extends AgentError {
     readonly limiterName: string;
     readonly retryAfterMs: number;
 
     constructor(name: string, retryAfterMs: number) {
-        super(`Rate limit exceeded for '${name}'. Retry after ${retryAfterMs}ms`);
+        super(`Rate limit exceeded for '${name}'. Retry after ${retryAfterMs}ms`, {
+            code: ErrorCode.RATE_LIMITED as ErrorCodeType,
+            retryable: true,
+            context: { limiterName: name, retryAfterMs },
+        });
         this.name = 'RateLimitError';
         this.limiterName = name;
         this.retryAfterMs = retryAfterMs;

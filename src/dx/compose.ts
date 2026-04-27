@@ -4,6 +4,16 @@
  * The output of each agent is passed as the input to the next.
  * You control when to hand off via a predicate or always.
  *
+ * ## When to use compose() vs graph engine
+ *
+ * - **compose() / pipe()** — Best for linear, sequential pipelines where each
+ *   agent processes the previous agent's output. Lightweight, no extra deps.
+ *
+ * - **graph engine** (`confused-ai/graph`) — Best for complex orchestration:
+ *   supervisor patterns, consensus voting, competitive racing, DAG workflows
+ *   with branching/joining, distributed execution, and durable checkpointing.
+ *   See `MultiAgentOrchestrator` and `AgentRuntime` in `confused-ai/graph`.
+ *
  * @example
  * ```ts
  * import { agent, compose } from 'confused-ai';

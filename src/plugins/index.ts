@@ -236,3 +236,6 @@ export function createTelemetryPlugin(metrics: import('../contracts/index.js').M
 
 // Re-export contract types for convenience
 export type { Plugin, PluginContext } from '../contracts/index.js';
+
+// Hooks ↔ Plugin bridge and interception order documentation
+export { hooksToPlugin, INTERCEPTION_ORDER, type HooksPluginAdapter } from './hooks-adapter.js';

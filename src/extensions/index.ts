@@ -76,14 +76,31 @@ export interface RunnableHighLevelAgent {
  * Wrap a high-level agent (createAgent / Agent) so it can be used with
  * Orchestrator, Supervisor, and Pipeline (core.Agent with run(AgentInput, AgentContext) => AgentOutput).
  *
+ * @deprecated Prefer the graph engine's `AgentRuntime` and `MultiAgentOrchestrator`
+ * from `confused-ai/graph`, which provide full tracing, checkpointing, and error
+ * handling. For lightweight sequential pipelines, use `compose()` or `pipe()`
+ * from `confused-ai/dx/compose` — they work directly with `createAgent()` results
+ * without requiring a wrapper.
+ *
+ * Migration:
+ * ```ts
+ * // Before:
+ * const coreAgent = wrapAgentForOrchestration(createAgent({ ... }));
+ * pipeline.addAgent(coreAgent);
+ *
+ * // After (graph engine):
+ * import { AgentRuntime, wrapCoreLLM } from 'confused-ai/graph';
+ * const runtime = new AgentRuntime({ name: 'Agent', instructions: '...', llm: wrapCoreLLM('gpt-4o', provider) });
+ *
+ * // After (compose):
+ * import { compose } from 'confused-ai';
+ * const pipeline = compose(agent1, agent2);
+ * ```
+ *
  * @example
  * const highLevelAgent = createAgent({ name: 'Researcher', instructions: '...' });
  * const coreAgent = wrapAgentForOrchestration(highLevelAgent);
  * const pipeline = createPipeline({ name: 'Research', agents: [coreAgent, writerAgent] });
- *
- * @example
- * const agent = new Agent({ instructions: '...' });
- * const coreAgent = wrapAgentForOrchestration(agent);
  */
 export function wrapAgentForOrchestration(agent: RunnableHighLevelAgent): Agent {
     return new OrchestrationAgentAdapter(agent);

@@ -33,6 +33,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/errors.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -87,13 +88,17 @@ export interface ApprovalStore {
 }
 
 /** Thrown inside the agentic loop when an approval is rejected or times out. */
-export class ApprovalRejectedError extends Error {
+export class ApprovalRejectedError extends AgentError {
     readonly approvalId: string;
     readonly toolName: string;
     readonly comment?: string;
 
     constructor(opts: { approvalId: string; toolName: string; comment?: string }) {
-        super(`Approval rejected for tool '${opts.toolName}'${opts.comment ? `: ${opts.comment}` : ''}`);
+        super(`Approval rejected for tool '${opts.toolName}'${opts.comment ? `: ${opts.comment}` : ''}`, {
+            code: ErrorCode.APPROVAL_REJECTED as ErrorCodeType,
+            retryable: false,
+            context: { approvalId: opts.approvalId, toolName: opts.toolName },
+        });
         this.name = 'ApprovalRejectedError';
         this.approvalId = opts.approvalId;
         this.toolName = opts.toolName;

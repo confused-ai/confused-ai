@@ -20,6 +20,7 @@
  */
 
 import { MODEL_PRICING } from '../providers/cost-tracker.js';
+import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/errors.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ export interface BudgetStore {
 }
 
 /** Thrown when a budget cap is exceeded (when onExceeded === 'throw'). */
-export class BudgetExceededError extends Error {
+export class BudgetExceededError extends AgentError {
     readonly cap: 'run' | 'user_daily' | 'monthly';
     readonly limitUsd: number;
     readonly spentUsd: number;
@@ -67,7 +68,12 @@ export class BudgetExceededError extends Error {
     }) {
         super(
             `Budget exceeded [${opts.cap}]: spent $${opts.spentUsd.toFixed(4)} of $${opts.limitUsd.toFixed(4)} limit ` +
-            `(this run: $${opts.runCostUsd.toFixed(4)})`
+            `(this run: $${opts.runCostUsd.toFixed(4)})`,
+            {
+                code: ErrorCode.BUDGET_EXCEEDED as ErrorCodeType,
+                retryable: false,
+                context: { cap: opts.cap, limitUsd: opts.limitUsd, spentUsd: opts.spentUsd, runCostUsd: opts.runCostUsd },
+            }
         );
         this.name = 'BudgetExceededError';
         this.cap = opts.cap;

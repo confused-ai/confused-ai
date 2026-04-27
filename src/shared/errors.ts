@@ -27,13 +27,23 @@ export const ErrorCode = {
     PERMISSION_DENIED: 'PERMISSION_DENIED',
     /** Max steps reached without final answer */
     MAX_STEPS: 'MAX_STEPS',
+    /** Circuit breaker is open — downstream dependency failing */
+    CIRCUIT_OPEN: 'CIRCUIT_OPEN',
+    /** Rate limit exceeded — too many requests */
+    RATE_LIMITED: 'RATE_LIMITED',
+    /** Budget cap exceeded — spending limit hit */
+    BUDGET_EXCEEDED: 'BUDGET_EXCEEDED',
+    /** Human-in-the-loop approval was rejected or expired */
+    APPROVAL_REJECTED: 'APPROVAL_REJECTED',
 } as const;
 
 export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
 
-/** Base agent error with code and context */
+/** Base agent error with code, retryable flag, and context */
 export class AgentError extends Error {
     readonly code: ErrorCodeType;
+    /** Whether this error represents a transient failure that may succeed on retry. */
+    readonly retryable: boolean;
     readonly cause?: Error;
     readonly context?: Record<string, unknown>;
 
@@ -41,6 +51,7 @@ export class AgentError extends Error {
         message: string,
         options: {
             code?: ErrorCodeType;
+            retryable?: boolean;
             cause?: Error;
             context?: Record<string, unknown>;
         } = {}
@@ -48,6 +59,7 @@ export class AgentError extends Error {
         super(message);
         this.name = 'AgentError';
         this.code = options.code ?? ErrorCode.AGENT_ERROR;
+        this.retryable = options.retryable ?? false;
         this.cause = options.cause;
         this.context = options.context;
         Object.setPrototypeOf(this, AgentError.prototype);
@@ -58,6 +70,7 @@ export class AgentError extends Error {
             name: this.name,
             message: this.message,
             code: this.code,
+            retryable: this.retryable,
             context: this.context,
             cause: this.cause?.message,
         };
@@ -68,9 +81,9 @@ export class AgentError extends Error {
 export class LLMError extends AgentError {
     constructor(
         message: string,
-        options: { cause?: Error; context?: Record<string, unknown> } = {}
+        options: { cause?: Error; context?: Record<string, unknown>; retryable?: boolean } = {}
     ) {
-        super(message, { ...options, code: ErrorCode.LLM_ERROR });
+        super(message, { ...options, code: ErrorCode.LLM_ERROR, retryable: options.retryable ?? true });
         this.name = 'LLMError';
         Object.setPrototypeOf(this, LLMError.prototype);
     }
@@ -120,9 +133,9 @@ export class TimeoutError extends AgentError {
 
     constructor(
         message: string,
-        options: { timeoutMs?: number; context?: Record<string, unknown> } = {}
+        options: { timeoutMs?: number; context?: Record<string, unknown>; retryable?: boolean } = {}
     ) {
-        super(message, { ...options, code: ErrorCode.TIMEOUT });
+        super(message, { ...options, code: ErrorCode.TIMEOUT, retryable: options.retryable ?? true });
         this.name = 'TimeoutError';
         this.timeoutMs = options.timeoutMs;
         Object.setPrototypeOf(this, TimeoutError.prototype);

@@ -13,6 +13,7 @@ import { createDevLogger, createDevToolMiddleware } from '../dx/dev-logger.js';
 import { BudgetEnforcer } from '../production/budget.js';
 import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions } from './types.js';
 import type { AdapterRegistry, AdapterBindings } from '../adapters/index.js';
+import type { AppConfig } from '../config/types.js';
 import {
     resolveLlmForCreateAgent,
     ENV_API_KEY,
@@ -134,6 +135,24 @@ function mergeLifecycleHooks(
     };
 }
 
+// ── Lazy config singleton ──────────────────────────────────────────────────
+// Loaded once on first createAgent call; provides validated fallback defaults.
+// Never throws — returns null if config loading fails (e.g. missing env vars).
+let _cachedConfig: AppConfig | null | undefined;
+function getFrameworkConfig(): AppConfig | null {
+    if (_cachedConfig === undefined) {
+        try {
+            // Dynamic import to avoid circular dependency at module load time
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { loadConfig } = require('../config/loader.js') as typeof import('../config/loader.js');
+            _cachedConfig = loadConfig();
+        } catch {
+            _cachedConfig = null;
+        }
+    }
+    return _cachedConfig;
+}
+
 /**
  * One-line production agent. Wires LLM (from env or options), tools, session store, and optional guardrails.
  *
@@ -144,12 +163,20 @@ function mergeLifecycleHooks(
  * - `hooks`               → intercept every stage of the agentic loop
  */
 export function createAgent(options: CreateAgentOptions): CreateAgentResult {
+    // Load framework config as fallback (explicit options > env vars > config)
+    const cfg = getFrameworkConfig();
     const {
         name,
         instructions,
-        model = typeof process !== 'undefined' && process.env?.[ENV_MODEL] ? process.env[ENV_MODEL]! : 'gpt-4o',
-        apiKey = typeof process !== 'undefined' && process.env?.[ENV_API_KEY] ? process.env[ENV_API_KEY] : undefined,
-        baseURL = typeof process !== 'undefined' && process.env?.[ENV_BASE_URL] ? process.env[ENV_BASE_URL] : undefined,
+        model = typeof process !== 'undefined' && process.env?.[ENV_MODEL]
+            ? process.env[ENV_MODEL]!
+            : (cfg?.llm.model || 'gpt-4o'),
+        apiKey = typeof process !== 'undefined' && process.env?.[ENV_API_KEY]
+            ? process.env[ENV_API_KEY]
+            : (cfg?.llm.apiKey || undefined),
+        baseURL = typeof process !== 'undefined' && process.env?.[ENV_BASE_URL]
+            ? process.env[ENV_BASE_URL]
+            : (cfg?.llm.baseUrl || undefined),
         toolMiddleware,
         guardrails: guardrailsOption = false,
         maxSteps = 10,

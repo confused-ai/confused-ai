@@ -10,6 +10,7 @@
  */
 
 import type { MetricsCollector } from '../observability/types.js';
+import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/errors.js';
 
 /** Circuit breaker states */
 export enum CircuitState {
@@ -49,13 +50,17 @@ export interface CircuitBreakerResult<T> {
 }
 
 /** Error thrown when circuit is open */
-export class CircuitOpenError extends Error {
+export class CircuitOpenError extends AgentError {
     readonly circuitName: string;
     readonly state: CircuitState;
     readonly resetAt: Date;
 
     constructor(name: string, resetAt: Date) {
-        super(`Circuit '${name}' is OPEN. Retry after ${resetAt.toISOString()}`);
+        super(`Circuit '${name}' is OPEN. Retry after ${resetAt.toISOString()}`, {
+            code: ErrorCode.CIRCUIT_OPEN as ErrorCodeType,
+            retryable: true,
+            context: { circuitName: name, resetAt: resetAt.toISOString() },
+        });
         this.name = 'CircuitOpenError';
         this.circuitName = name;
         this.state = CircuitState.OPEN;

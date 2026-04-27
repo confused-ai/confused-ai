@@ -201,3 +201,70 @@ export {
   type LogLevel,
   type LogEntry,
 } from './plugins.js';
+
+// ── Core ↔ Graph Bridge ─────────────────────────────────────────────────────
+
+import type { LLMProvider as CoreLLMProvider, Message as CoreMessage, GenerateResult } from '../providers/types.js';
+import type { LLMProvider as GraphLLMProvider, LLMMessage, LLMResponse } from './types.js';
+
+/**
+ * Bridge a canonical `providers/types.ts` LLMProvider into the graph engine's
+ * `LLMProvider` interface. Use this when you want to pass the same LLM provider
+ * you use with `createAgent()` into the graph engine or `AgentRuntime`.
+ *
+ * @example
+ * ```ts
+ * import { wrapCoreLLM } from 'confused-ai/graph';
+ * import { OpenAIProvider } from 'confused-ai';
+ *
+ * const core = new OpenAIProvider({ model: 'gpt-4o' });
+ * const graphLlm = wrapCoreLLM('gpt-4o', core);
+ *
+ * const agent: AgentDef = {
+ *   name: 'Researcher',
+ *   instructions: '...',
+ *   llm: graphLlm,
+ * };
+ * ```
+ */
+export function wrapCoreLLM(name: string, provider: CoreLLMProvider): GraphLLMProvider {
+  return {
+    name,
+    async generate(messages: LLMMessage[], options): Promise<LLMResponse> {
+      // Bridge LLMMessage → core Message (compatible role + content)
+      const coreMessages: CoreMessage[] = messages.map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      const result: GenerateResult = await provider.generateText(coreMessages, {
+        temperature: options?.temperature,
+        maxTokens: options?.maxTokens,
+        stop: options?.stop,
+        tools: options?.tools?.map(t => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
+      });
+
+      return {
+        content: result.text,
+        toolCalls: result.toolCalls?.map(tc => ({
+          id: tc.id,
+          type: 'function' as const,
+          function: {
+            name: tc.name,
+            arguments: JSON.stringify(tc.arguments),
+          },
+        })),
+        usage: result.usage ? {
+          promptTokens: result.usage.promptTokens ?? 0,
+          completionTokens: result.usage.completionTokens ?? 0,
+          totalTokens: result.usage.totalTokens ?? 0,
+        } : undefined,
+        finishReason: result.finishReason === 'stop' ? 'stop' : undefined,
+      };
+    },
+  };
+}

@@ -10,6 +10,9 @@
  *
  * Use when you want to build an agent entirely from scratch.
  *
+ * Internally delegates to `createAgent()` with all defaults explicitly disabled,
+ * ensuring consistent behavior across the framework's agent creation pipeline.
+ *
  * @example
  * ```ts
  * import { bare } from 'confused-ai';
@@ -34,9 +37,7 @@ import type { LLMProvider } from '../providers/types.js';
 import type { Tool, ToolRegistry } from '../tools/core/types.js';
 import type { AgenticLifecycleHooks } from '../agentic/types.js';
 import type { CreateAgentResult } from '../create-agent/types.js';
-import { createAgenticAgent } from '../agentic/index.js';
-import { toToolRegistry, type ToolProvider } from '../tools/core/registry.js';
-import type { Message } from '../providers/types.js';
+import { createAgent } from '../create-agent/factory.js';
 
 export interface BareAgentOptions {
     /** Agent name. Default: 'Agent' */
@@ -76,47 +77,18 @@ export function bare(options: BareAgentOptions): CreateAgentResult {
         hooks,
     } = options;
 
-    const tools =
-        toolsOpt === false || toolsOpt === undefined
-            ? toToolRegistry([])
-            : toToolRegistry(toolsOpt as ToolProvider);
-
-    const agenticAgent = createAgenticAgent({
+    // Delegate to createAgent with all defaults explicitly disabled.
+    // This ensures bare() agents go through the same middleware, error handling,
+    // and resolution pipeline as all other agents.
+    return createAgent({
         name,
-        instructions,
+        instructions: instructions || ' ', // createAgent requires non-empty instructions
         llm,
-        tools,
+        tools: toolsOpt === false || toolsOpt === undefined ? false : toolsOpt,
+        sessionStore: false,
+        guardrails: false,
         maxSteps,
         timeoutMs,
         hooks,
     });
-
-    // Bare: no session store — stateless stubs
-    return {
-        name,
-        instructions,
-        async run(prompt: string, runOptions?: { messages?: Message[]; onChunk?: (t: string) => void; onToolCall?: (n: string, a: Record<string, unknown>) => void; onToolResult?: (n: string, r: unknown) => void; onStep?: (s: number) => void }) {
-            return agenticAgent.run(
-                {
-                    prompt,
-                    instructions,
-                    messages: runOptions?.messages,
-                    maxSteps,
-                    timeoutMs,
-                },
-                {
-                    onChunk: runOptions?.onChunk,
-                    onToolCall: runOptions?.onToolCall,
-                    onToolResult: runOptions?.onToolResult,
-                    onStep: runOptions?.onStep,
-                }
-            );
-        },
-        async createSession() {
-            throw new Error('bare() agents are stateless. Use createAgent() or pass a sessionStore for session support.');
-        },
-        async getSessionMessages() {
-            return [];
-        },
-    };
 }

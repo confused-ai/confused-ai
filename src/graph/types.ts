@@ -426,7 +426,16 @@ export interface GraphPlugin {
   onEvent?: (event: GraphEvent) => Promise<void> | void;
 }
 
-// ── Memory Types ────────────────────────────────────────────────────────────
+// ── Graph-Specific Memory Types ─────────────────────────────────────────────
+//
+// These are the graph engine's KV-style memory interfaces. They differ from
+// the core `memory/types.ts` MemoryStore (which tracks MemoryEntry objects
+// with embeddings, types, and timestamps) — the graph MemoryStore is a simpler
+// key-value abstraction used for ephemeral per-execution state.
+//
+// Canonical core types:
+//   import type { MemoryStore as CoreMemoryStore } from '../memory/types.js';
+//   import type { MemoryEntry } from '../memory/types.js';
 
 export interface MemoryStore {
   /** Get a value by key */
@@ -458,7 +467,24 @@ export interface VectorSearchResult {
   metadata?: Record<string, unknown>;
 }
 
-// ── LLM Provider Types ──────────────────────────────────────────────────────
+// ── Graph-Specific LLM Types ────────────────────────────────────────────────
+//
+// The graph engine uses a simplified LLM interface (`generate()` with `LLMMessage[]`)
+// that is structurally different from the canonical `providers/types.ts` LLMProvider
+// (which uses `generateText()` with `Message[]`).
+//
+// To bridge a canonical provider into the graph engine, use:
+//   const graphLlm: LLMProvider = {
+//     name: 'my-llm',
+//     generate: (msgs, opts) => coreProvider.generateText(
+//       msgs.map(m => ({ role: m.role, content: m.content })),
+//       opts,
+//     ).then(r => ({ content: r.text, toolCalls: ..., usage: r.usage })),
+//   };
+//
+// Canonical core types:
+//   import type { LLMProvider as CoreLLMProvider } from '../providers/types.js';
+//   import type { Message } from '../providers/types.js';
 
 export interface LLMProvider {
   name: string;
@@ -512,7 +538,16 @@ export interface LLMChunk {
   finishReason?: string;
 }
 
-// ── Tool Types ──────────────────────────────────────────────────────────────
+// ── Graph-Specific Tool Types ───────────────────────────────────────────────
+//
+// The graph engine's ToolDef is a simpler interface than the canonical
+// `tools/core/types.ts` Tool (which has Zod schemas, permissions, categories,
+// versioning, and validation). This is intentional — graph tools are
+// lightweight function descriptors for the orchestrator's ReAct loop.
+//
+// Canonical core types:
+//   import type { Tool } from '../tools/core/types.js';
+//   import type { ToolContext as CoreToolContext } from '../tools/core/types.js';
 
 export interface ToolDef<TInput = unknown, TOutput = unknown> {
   name: string;
@@ -529,3 +564,4 @@ export interface ToolContext {
   agentName?: string;
   metadata?: Record<string, unknown>;
 }
+

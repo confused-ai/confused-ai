@@ -310,6 +310,18 @@ export interface ToolMiddleware {
 }
 
 // ── Memory Contracts ───────────────────────────────────────────────────────
+//
+// NOTE: These are the *domain-model* memory types used by the planning/agent
+// subsystem. For the *adapter-level* memory store (pluggable persistence
+// backends), see `adapters/types.ts → MemoryStoreAdapter`.
+//
+// Summary of similarly-named interfaces:
+//   contracts/index.ts  → MemoryStore     (domain: store/retrieve MemoryEntry with embeddings)
+//   adapters/types.ts   → MemoryStoreAdapter (adapter: add/search/getByAgent persistence)
+//   graph/types.ts      → MemoryStore     (graph: simple KV get/set for execution state)
+//
+// Use `contracts/extensions.ts` for the canonical import of each:
+//   import type { MemoryStore, MemoryEntry } from 'confused-ai/contracts/extensions';
 
 /** Types of memory supported. */
 export enum MemoryType {
@@ -387,6 +399,14 @@ export interface EmbeddingProvider {
 }
 
 // ── Session Contracts ──────────────────────────────────────────────────────
+//
+// NOTE: These are the *domain-model* session types. For the *adapter-level*
+// session store (pluggable persistence backends), see:
+//   adapters/types.ts  → SessionStoreAdapter  (adapter: CRUD for StoredSession)
+//   session/types.ts   → SessionStore         (runtime: addMessages/getMessages)
+//
+// The canonical pluggable interface is re-exported from:
+//   import type { SessionStore } from 'confused-ai/contracts/extensions';
 
 /** Session state. */
 export enum SessionState {

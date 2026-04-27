@@ -13,7 +13,10 @@ import { HttpClientTool } from './tools/utils/http.js';
 import { BrowserTool } from './tools/utils/browser.js';
 import type { AgenticRunResult } from './agentic/types.js';
 
-/** Options for the {@link Agent} class. */
+/**
+ * Options for the {@link Agent} class.
+ * @deprecated Use `CreateAgentOptions` with `createAgent()` instead. Will be removed in v2.0.
+ */
 export interface AgentOptions {
     /** Agent name (default: 'Agent') */
     name?: string;
@@ -70,34 +73,17 @@ export interface AgentOptions {
 /**
  * `Agent` — create once, then call `run()` for each turn. Sessions carry conversation state when enabled.
  *
- * @example
- * // One line – uses OPENAI_API_KEY, default tools (http + browser), session memory
- * const agent = new Agent({
- *   instructions: 'You are a helpful assistant. Use the web when needed.',
- * });
- * const result = await agent.run('What is the weather in Tokyo?');
+ * @deprecated Use `createAgent()` instead — it provides the same functionality with consistent naming
+ * (`sessionStore` instead of `db`, no `learning` flag). The Agent class will be removed in v2.0.
  *
- * @example
- * // With session (learning) – remembers conversation
- * const agent = new Agent({ instructions: '...', learning: true });
- * const sessionId = await agent.createSession('user-1');
- * const r1 = await agent.run('My name is Alice.', { sessionId });
- * const r2 = await agent.run('What is my name?', { sessionId }); // "Alice"
+ * Migration:
+ * ```ts
+ * // Before:
+ * const agent = new Agent({ instructions: '...', db: myStore, learning: true });
  *
- * @example
- * // Model from env or explicit
- * const agent = new Agent({
- *   instructions: '...',
- *   model: 'openai:gpt-4o',  // or just 'gpt-4o' with OPENAI_API_KEY set
- * });
- *
- * @example
- * // Local Ollama
- * const agent = new Agent({
- *   instructions: '...',
- *   baseURL: 'http://localhost:11434/v1',
- *   model: 'llama3.2',
- * });
+ * // After:
+ * const agent = createAgent({ name: 'Agent', instructions: '...', sessionStore: myStore });
+ * ```
  */
 export class Agent {
     readonly name: string;
