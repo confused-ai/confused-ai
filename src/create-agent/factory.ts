@@ -369,5 +369,53 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
             }
             return sessionStore.getMessages(sessionId);
         },
+        stream(prompt: string | import('../providers/vision.js').MultiModalInput, runOptions?: Omit<AgentRunOptions, 'onChunk'>) {
+            // `this` is the CreateAgentResult object — bound at call time via method shorthand
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
+            const self = this as import('./types.js').CreateAgentResult;
+
+            async function* generate(): AsyncGenerator<string> {
+                const queue: string[] = [];
+                let notify: (() => void) | null = null;
+                let finished = false;
+                let runError: unknown;
+
+                const runPromise = self.run(prompt, {
+                    ...runOptions,
+                    onChunk: (chunk: string) => {
+                        queue.push(chunk);
+                        notify?.();
+                        notify = null;
+                    },
+                }).catch((e: unknown) => { runError = e; }).finally(() => {
+                    finished = true;
+                    notify?.();
+                    notify = null;
+                });
+
+                while (true) {
+                    // Drain any queued chunks first
+                    while (queue.length > 0) {
+                        yield queue.shift()!;
+                    }
+                    if (finished) {
+                        // Drain again for chunks that arrived concurrently with completion
+                        while (queue.length > 0) yield queue.shift()!;
+                        await runPromise; // re-throws if run failed
+                        if (runError) throw runError;
+                        return;
+                    }
+                    // Wait for the next chunk or completion signal
+                    await new Promise<void>((r) => { notify = r; });
+                }
+            }
+
+            const iter = generate();
+            return {
+                [Symbol.asyncIterator]() {
+                    return iter;
+                },
+            };
+        },
     };
 }

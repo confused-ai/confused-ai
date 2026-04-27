@@ -97,6 +97,12 @@ export class DAGEngine {
   private abortController: AbortController;
   private eventListeners: Map<string, Set<(event: GraphEvent) => void>> = new Map();
   private pendingSignals: Map<string, (value?: unknown) => void> = new Map();
+  // O(1) active-node tracking (array kept in sync for checkpoint serialisation)
+  private _activeNodeSet: Set<NodeId> = new Set();
+  // Promise-based completion notification — replaces 5 ms polling
+  private _completionResolvers: Set<() => void> = new Set();
+  // Candidate nodes that might be ready — avoids O(V+E) full scan per loop tick
+  private _readyCandidates: Set<NodeId> = new Set();
 
   constructor(graph: GraphDef) {
     this.graph = graph;
@@ -131,6 +137,8 @@ export class DAGEngine {
     if (options.resumeFrom) {
       this.state = { ...options.resumeFrom.state };
       this.sequence = options.resumeFrom.sequence;
+      // Rebuild in-memory Set from restored serialised array
+      this._activeNodeSet = new Set(this.state.activeNodes);
       this._emitEvent(GraphEventType.CHECKPOINT_LOADED, undefined, {
         sequence: options.resumeFrom.sequence,
       });
@@ -277,6 +285,8 @@ export class DAGEngine {
   // ── Core Execution Loop ───────────────────────────────────────────────
 
   private async _runLoop(): Promise<void> {
+    // Seed the candidate set from current state (fresh run or checkpoint resume)
+    this._initReadyCandidates();
     while (true) {
       if (this.abortController.signal.aborted) {
         this.state.status = ExecutionStatus.CANCELLED;
@@ -292,18 +302,18 @@ export class DAGEngine {
 
       if (readyNodes.length === 0) {
         // Check if there are still running nodes
-        const hasRunning = this.state.activeNodes.length > 0;
+        const hasRunning = this._activeNodeSet.size > 0;
         if (!hasRunning) {
           // No ready nodes and nothing running — we're done
           return;
         }
-        // Wait for running nodes to complete
+        // Wait for a running node to complete (Promise-based, no polling)
         await this._waitForAnyCompletion();
         continue;
       }
 
       // Execute ready nodes in parallel, respecting concurrency limit
-      const available = this.maxConcurrency - this.state.activeNodes.length;
+      const available = this.maxConcurrency - this._activeNodeSet.size;
       const batch = readyNodes.slice(0, Math.max(1, available));
 
       // Execute batch in parallel
@@ -313,18 +323,44 @@ export class DAGEngine {
   }
 
   /**
+   * Seed the ready-candidate set from the current execution state.
+   * Called once at the start of _runLoop (works for both fresh runs and resumes).
+   */
+  private _initReadyCandidates(): void {
+    this._readyCandidates.clear();
+    for (const [nid] of this.graph.nodes) {
+      const nodeState = this.state.nodes[nid];
+      if (!nodeState || (nodeState.status !== NodeStatus.PENDING && nodeState.status !== NodeStatus.READY)) {
+        continue;
+      }
+      const incomingEdgeIds = this.graph.incoming.get(nid) ?? [];
+      if (incomingEdgeIds.length === 0) {
+        // Start nodes — always candidates
+        this._readyCandidates.add(nid);
+        continue;
+      }
+      // Add nodes whose at least one predecessor is already complete
+      const anyPredComplete = incomingEdgeIds.some(eid => {
+        const edge = this.graph.edges.get(eid)!;
+        return this.state.nodes[edge.from]?.status === NodeStatus.COMPLETED;
+      });
+      if (anyPredComplete) this._readyCandidates.add(nid);
+    }
+  }
+
+  /**
    * Determine which nodes are ready to execute.
-   * A node is ready when:
-   * 1. It has status PENDING or READY
-   * 2. All its incoming edges' source nodes are COMPLETED
-   * 3. For conditional edges, the condition is met
+   * Checks only _readyCandidates — O(candidates) instead of O(V+E) per loop tick.
+   * Stale candidates (no longer PENDING/READY) are pruned inline.
    */
   private _getReadyNodes(): NodeId[] {
     const ready: NodeId[] = [];
+    const stale: NodeId[] = [];
 
-    for (const [nid, nodeDef] of this.graph.nodes) {
+    for (const nid of this._readyCandidates) {
       const nodeState = this.state.nodes[nid];
       if (!nodeState || (nodeState.status !== NodeStatus.PENDING && nodeState.status !== NodeStatus.READY)) {
+        stale.push(nid);
         continue;
       }
 
@@ -344,9 +380,10 @@ export class DAGEngine {
         return sourceState?.status === NodeStatus.COMPLETED;
       });
 
-      if (!anySourceCompleted) continue;
+      if (!anySourceCompleted) continue; // Stay in candidates — predecessor may complete later
 
       // For JOIN nodes, check join strategy
+      const nodeDef = this.graph.nodes.get(nid)!;
       const joinStrategy = nodeDef.metadata?.joinStrategy as string | undefined;
       if (nodeDef.kind === NodeKind.JOIN || joinStrategy) {
         const strategy = joinStrategy ?? 'all';
@@ -357,7 +394,7 @@ export class DAGEngine {
             const sourceState = this.state.nodes[edge.from];
             return sourceState?.status === NodeStatus.COMPLETED || sourceState?.status === NodeStatus.SKIPPED;
           });
-          if (!allCompleted) continue;
+          if (!allCompleted) continue; // Stay in candidates
         }
         // 'race' and 'settled': at least one completed is enough
       }
@@ -365,6 +402,7 @@ export class DAGEngine {
       ready.push(nid);
     }
 
+    for (const nid of stale) this._readyCandidates.delete(nid);
     return ready;
   }
 
@@ -381,7 +419,8 @@ export class DAGEngine {
       attempts: attempt,
       startedAt: Date.now(),
     });
-    this.state.activeNodes.push(nid);
+    this._activeNodeSet.add(nid);
+    this.state.activeNodes = Array.from(this._activeNodeSet);
 
     this._emitEvent(GraphEventType.NODE_STARTED, nid, { attempt, kind: nodeDef.kind });
 
@@ -434,6 +473,11 @@ export class DAGEngine {
       // Store result by name
       this.state.results[nodeDef.name] = output;
 
+      // Successors of this node may now be ready — add them to the candidate set
+      for (const eid of (this.graph.outgoing.get(nid) ?? [])) {
+        this._readyCandidates.add(this.graph.edges.get(eid)!.to);
+      }
+
       this._emitEvent(GraphEventType.NODE_COMPLETED, nid, {
         durationMs: completedAt - (nodeState?.startedAt ?? completedAt),
         hasOutput: output !== undefined,
@@ -446,8 +490,11 @@ export class DAGEngine {
     } catch (err) {
       await this._handleNodeError(nid, nodeDef, err, attempt);
     } finally {
-      // Remove from active nodes
-      this.state.activeNodes = this.state.activeNodes.filter(id => id !== nid);
+      // Remove from active nodes (O(1) with Set)
+      this._activeNodeSet.delete(nid);
+      this.state.activeNodes = Array.from(this._activeNodeSet);
+      // Wake up the run loop waiting in _waitForAnyCompletion
+      this._notifyCompletion();
     }
 
     // Checkpoint periodically
@@ -490,8 +537,9 @@ export class DAGEngine {
       const edge = this.graph.edges.get(eid)!;
       if (edge.label === routeLabel) {
         this._emitEvent(GraphEventType.EDGE_TAKEN, nid, { edgeId: eid, to: edge.to, label: routeLabel });
-        // Mark the target as ready
+        // Mark the target as ready and add to the candidate set
         this._updateNodeState(edge.to, { status: NodeStatus.READY, attempts: 0 });
+        this._readyCandidates.add(edge.to);
         taken = true;
       } else {
         // Skip nodes on non-taken routes
@@ -706,8 +754,6 @@ export class DAGEngine {
       input = collected;
     }
 
-    const variableMutations: Array<{ key: string; value: unknown }> = [];
-
     return {
       executionId: this.exId,
       nodeId: nid,
@@ -715,7 +761,6 @@ export class DAGEngine {
       input,
       state: Object.freeze({ ...this.state }),
       setVariable: (key, value) => {
-        variableMutations.push({ key, value });
         this.state.variables[key] = value;
         this._emitEvent(GraphEventType.VARIABLE_SET, nid, { key, value });
       },
@@ -735,16 +780,17 @@ export class DAGEngine {
 
   private _markSubtreeSkipped(startNodeId: NodeId, _fromNodeId: NodeId): void {
     const visited = new Set<NodeId>();
-    const queue = [startNodeId];
+    const queue: NodeId[] = [startNodeId];
+    let head = 0; // head pointer — O(1) dequeue instead of O(n) shift()
 
-    while (queue.length > 0) {
-      const current = queue.shift()!;
+    while (head < queue.length) {
+      const current = queue[head++];
       if (visited.has(current)) continue;
+      visited.add(current);
 
       const nodeState = this.state.nodes[current];
       // Only skip nodes that haven't started
       if (nodeState && (nodeState.status === NodeStatus.PENDING || nodeState.status === NodeStatus.READY)) {
-        visited.add(current);
         this._updateNodeState(current, { status: NodeStatus.SKIPPED });
         this._emitEvent(GraphEventType.NODE_SKIPPED, current);
 
@@ -758,17 +804,22 @@ export class DAGEngine {
     }
   }
 
+  /** Notify all waiters that a node has completed. */
+  private _notifyCompletion(): void {
+    if (this._completionResolvers.size === 0) return;
+    const resolvers = this._completionResolvers;
+    this._completionResolvers = new Set();
+    for (const r of resolvers) r();
+  }
+
   private _waitForAnyCompletion(): Promise<void> {
-    // Poll until an active node completes or execution is cancelled
-    return new Promise(resolve => {
-      const check = () => {
-        if (this.state.activeNodes.length === 0 || this.abortController.signal.aborted) {
-          resolve();
-          return;
-        }
-        setTimeout(check, 5);
-      };
-      setTimeout(check, 1);
+    // Fast path: nothing active
+    if (this._activeNodeSet.size === 0 || this.abortController.signal.aborted) {
+      return Promise.resolve();
+    }
+    // Suspend until _notifyCompletion() is called from _executeNode's finally block
+    return new Promise<void>(resolve => {
+      this._completionResolvers.add(resolve);
     });
   }
 

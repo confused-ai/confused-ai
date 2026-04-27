@@ -98,6 +98,70 @@ export const MODEL_PRICING: Record<
     'sonar-reasoning-pro': { input: 2, output: 8 },
     'sonar-reasoning': { input: 1, output: 5 },
 
+    // ── Cerebras ──────────────────────────────────────────────────────────
+    'llama-3.3-70b': { input: 0.85, output: 1.2 },
+    'llama-3.1-8b': { input: 0.1, output: 0.1 },
+    'llama-3.1-70b': { input: 0.85, output: 1.2 },
+
+    // ── SambaNova ─────────────────────────────────────────────────────────
+    'Meta-Llama-3.3-70B-Instruct': { input: 0.6, output: 1.2 },
+    'Meta-Llama-3.1-8B-Instruct': { input: 0.1, output: 0.2 },
+    'Meta-Llama-3.1-405B-Instruct': { input: 5, output: 10 },
+    'Qwen2.5-72B-Instruct-Turbo': { input: 1.2, output: 1.2 },
+
+    // ── NVIDIA NIM ────────────────────────────────────────────────────────
+    'meta/llama-3.3-70b-instruct': { input: 0.77, output: 0.77 },
+    'nvidia/llama-3.1-nemotron-ultra-253b-v1': { input: 4, output: 4 },
+    'deepseek-ai/deepseek-r1': { input: 4, output: 4 },
+
+    // ── AI21 Labs ─────────────────────────────────────────────────────────
+    'jamba-1.5-large': { input: 2, output: 8 },
+    'jamba-1.5-mini': { input: 0.2, output: 0.4 },
+    'jamba-instruct': { input: 0.5, output: 0.7 },
+
+    // ── Hyperbolic ────────────────────────────────────────────────────────
+    'meta-llama/Llama-3.3-70B-Instruct': { input: 0.4, output: 0.4 },
+    'meta-llama/Meta-Llama-3.1-405B-Instruct': { input: 2, output: 2 },
+
+    // ── Lambda Labs ───────────────────────────────────────────────────────
+    'llama3.3-70b-instruct-fp8': { input: 0.6, output: 0.6 },
+    'llama3.1-405b-instruct-fp8': { input: 2.4, output: 2.4 },
+
+    // ── Moonshot (Kimi) ───────────────────────────────────────────────────
+    'moonshot-v1-8k': { input: 1.6, output: 1.6 },
+    'moonshot-v1-32k': { input: 3.3, output: 3.3 },
+    'moonshot-v1-128k': { input: 10, output: 10 },
+    'kimi-latest': { input: 10, output: 10 },
+
+    // ── Alibaba DashScope (Qwen) ──────────────────────────────────────────
+    'qwen-max': { input: 1.6, output: 6.4 },
+    'qwen-plus': { input: 0.4, output: 1.2 },
+    'qwen-turbo': { input: 0.05, output: 0.2 },
+    'qwen2.5-72b-instruct': { input: 0.56, output: 2.24 },
+    'qwq-32b': { input: 0.6, output: 2.4 },
+
+    // ── Zhipu AI (GLM) ────────────────────────────────────────────────────
+    'glm-4-plus': { input: 7, output: 7 },
+    'glm-4': { input: 14, output: 14 },
+    'glm-4-air': { input: 1.4, output: 1.4 },
+    'glm-4-flash': { input: 0.1, output: 0.1 },
+
+    // ── 01.AI (Yi) ────────────────────────────────────────────────────────
+    'yi-large': { input: 3, output: 3 },
+    'yi-medium': { input: 2.5, output: 2.5 },
+    'yi-large-turbo': { input: 0.12, output: 0.12 },
+
+    // ── Upstage (Solar) ───────────────────────────────────────────────────
+    'solar-pro': { input: 9, output: 9 },
+    'solar-mini': { input: 0.6, output: 0.6 },
+
+    // ── Novita AI ─────────────────────────────────────────────────────────
+    'meta-llama/llama-3.3-70b-instruct': { input: 0.4, output: 0.4 },
+
+    // ── Writer (Palmyra) ──────────────────────────────────────────────────
+    'palmyra-x5': { input: 6, output: 30 },
+    'palmyra-x4': { input: 2.5, output: 10 },
+
     // ── Open-source / local (free) ────────────────────────────────────────
     'llama-2-7b': { input: 0, output: 0 },
     'llama-2-13b': { input: 0, output: 0 },

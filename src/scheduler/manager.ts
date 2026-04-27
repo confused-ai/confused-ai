@@ -87,23 +87,33 @@ export class InMemoryScheduleStore implements ScheduleStore {
 }
 
 export class InMemoryScheduleRunStore implements ScheduleRunStore {
-    private runs: ScheduleRun[] = [];
+    // Keyed by scheduleId for O(1) per-schedule lookup instead of O(n) filter
+    private runsBySchedule = new Map<string, ScheduleRun[]>();
+    // Reverse lookup runId -> scheduleId for O(1) update
+    private runIndex = new Map<string, string>();
 
     async add(run: ScheduleRun): Promise<ScheduleRun> {
-        this.runs.push(run);
+        const arr = this.runsBySchedule.get(run.scheduleId) ?? [];
+        arr.push(run);
+        this.runsBySchedule.set(run.scheduleId, arr);
+        this.runIndex.set(run.id, run.scheduleId);
         return run;
     }
 
     async list(scheduleId: string, limit = 100): Promise<ScheduleRun[]> {
-        return this.runs
-            .filter(r => r.scheduleId === scheduleId)
-            .slice(-limit);
+        const arr = this.runsBySchedule.get(scheduleId);
+        if (!arr) return [];
+        return arr.slice(-limit);
     }
 
     async update(runId: string, patch: Partial<ScheduleRun>): Promise<boolean> {
-        const idx = this.runs.findIndex(r => r.id === runId);
+        const scheduleId = this.runIndex.get(runId);
+        if (!scheduleId) return false;
+        const arr = this.runsBySchedule.get(scheduleId);
+        if (!arr) return false;
+        const idx = arr.findIndex(r => r.id === runId);
         if (idx === -1) return false;
-        this.runs[idx] = { ...this.runs[idx]!, ...patch };
+        arr[idx] = { ...arr[idx]!, ...patch };
         return true;
     }
 }

@@ -48,6 +48,9 @@ export interface DefineAgentOptions
         | 'inputSchema'
         | 'outputSchema'
         | 'hooks'
+        | 'budget'
+        | 'checkpointStore'
+        | 'adapters'
     > {
     /** Enable dev mode: console logger + tool call logging */
     dev?: boolean;
@@ -188,6 +191,56 @@ class AgentBuilder {
     }
 
     /**
+     * Set a USD spend budget — enforced per-run, per-user, and/or per-month.
+     * Throws `BudgetExceededError` (or warns) when a cap is crossed.
+     *
+     * @example
+     * ```ts
+     * defineAgent()
+     *   .instructions('...')
+     *   .budget({ maxUsdPerRun: 0.50, maxUsdPerUser: 10, onExceeded: 'throw' })
+     *   .build()
+     * ```
+     */
+    budget(config: NonNullable<CreateAgentOptions['budget']>): AgentBuilder {
+        return new AgentBuilder({ ...this.options, budget: config });
+    }
+
+    /**
+     * Set a durable checkpoint store — enables resume after process crash.
+     * Pair with a stable `runId` in `run({ runId: '...' })`.
+     *
+     * @example
+     * ```ts
+     * import { createSqliteCheckpointStore } from 'confused-ai/production';
+     * defineAgent()
+     *   .instructions('...')
+     *   .checkpoint(createSqliteCheckpointStore('./agent.db'))
+     *   .build()
+     * ```
+     */
+    checkpoint(store: NonNullable<CreateAgentOptions['checkpointStore']>): AgentBuilder {
+        return new AgentBuilder({ ...this.options, checkpointStore: store });
+    }
+
+    /**
+     * Plug in an adapter registry or explicit adapter bindings.
+     * Lets you swap storage, vector DB, rate-limiting, auth, etc. without changing agent code.
+     *
+     * @example
+     * ```ts
+     * import { createAdapterRegistry } from 'confused-ai/adapters';
+     * defineAgent()
+     *   .instructions('...')
+     *   .adapters(createAdapterRegistry().register(new RedisAdapter(opts)))
+     *   .build()
+     * ```
+     */
+    adapters(adapters: NonNullable<CreateAgentOptions['adapters']>): AgentBuilder {
+        return new AgentBuilder({ ...this.options, adapters });
+    }
+
+    /**
      * Opt out of ALL framework defaults.
      * After calling this, build() will not inject any tools, session, or guardrails
      * unless you explicitly set them via .tools(), .withSession(), .withGuardrails().
@@ -235,6 +288,9 @@ class AgentBuilder {
             inputSchema: opts.inputSchema,
             outputSchema: opts.outputSchema,
             hooks: opts.hooks,
+            budget: opts.budget,
+            checkpointStore: opts.checkpointStore,
+            adapters: opts.adapters,
         };
 
         if (opts.dev) {

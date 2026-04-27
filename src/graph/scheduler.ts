@@ -49,6 +49,7 @@ import {
  */
 export class InMemoryTaskQueue implements TaskQueue {
   private queue: TaskEnvelope[] = [];
+  private queueHead = 0; // head pointer — O(1) dequeue instead of O(n) shift()
   private handler?: (task: TaskEnvelope) => Promise<TaskResult>;
   private processing = new Set<string>();
   private closed = false;
@@ -95,9 +96,15 @@ export class InMemoryTaskQueue implements TaskQueue {
   }
 
   private async _processNext(): Promise<void> {
-    if (!this.handler || this.queue.length === 0) return;
+    if (!this.handler || this.queueHead >= this.queue.length) return;
 
-    const task = this.queue.shift();
+    const task = this.queue[this.queueHead++];
+
+    // Compact the array when the consumed prefix is large enough to matter
+    if (this.queueHead > 128 && this.queueHead > this.queue.length >> 1) {
+      this.queue = this.queue.slice(this.queueHead);
+      this.queueHead = 0;
+    }
     if (!task) return;
 
     const key = `${task.executionId}:${task.nodeId}`;

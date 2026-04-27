@@ -24,6 +24,8 @@ export function toToolRegistry(tools: ToolProvider): ToolRegistry {
 export class ToolRegistryImpl implements ToolRegistry {
     private tools: Map<EntityId, Tool> = new Map();
     private nameIndex: Map<string, EntityId> = new Map();
+    // Inverted index: category → Set<EntityId> for O(1) listByCategory
+    private categoryIndex: Map<ToolCategory, Set<EntityId>> = new Map();
 
     /**
      * Register a tool
@@ -39,6 +41,13 @@ export class ToolRegistryImpl implements ToolRegistry {
 
         this.tools.set(tool.id, tool);
         this.nameIndex.set(tool.name, tool.id);
+
+        // Update category index
+        if (tool.category) {
+            const catSet = this.categoryIndex.get(tool.category) ?? new Set<EntityId>();
+            catSet.add(tool.id);
+            this.categoryIndex.set(tool.category, catSet);
+        }
     }
 
     /**
@@ -52,6 +61,12 @@ export class ToolRegistryImpl implements ToolRegistry {
 
         this.tools.delete(toolId);
         this.nameIndex.delete(tool.name);
+
+        // Update category index
+        if (tool.category) {
+            this.categoryIndex.get(tool.category)?.delete(toolId);
+        }
+
         return true;
     }
 
@@ -84,7 +99,14 @@ export class ToolRegistryImpl implements ToolRegistry {
      * List tools by category
      */
     listByCategory(category: ToolCategory): Tool[] {
-        return this.list().filter(tool => tool.category === category);
+        const ids = this.categoryIndex.get(category);
+        if (!ids) return [];
+        const result: Tool[] = [];
+        for (const id of ids) {
+            const tool = this.tools.get(id);
+            if (tool) result.push(tool);
+        }
+        return result;
     }
 
     /**
@@ -120,6 +142,7 @@ export class ToolRegistryImpl implements ToolRegistry {
     clear(): void {
         this.tools.clear();
         this.nameIndex.clear();
+        this.categoryIndex.clear();
     }
 
     /**

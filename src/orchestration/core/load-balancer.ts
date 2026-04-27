@@ -25,8 +25,16 @@ export class RoundRobinLoadBalancer implements LoadBalancer {
         );
 
         if (available.length === 0) {
-            // All agents at capacity, pick the one with lowest load
-            return candidates.sort((a, b) => a.metadata.currentLoad - b.metadata.currentLoad)[0];
+            // All agents at capacity — linear scan for minimum load, O(n) vs O(n log n) sort
+            let minLoad = Infinity;
+            let best = candidates[0];
+            for (const reg of candidates) {
+                if (reg.metadata.currentLoad < minLoad) {
+                    minLoad = reg.metadata.currentLoad;
+                    best = reg;
+                }
+            }
+            return best;
         }
 
         // Round-robin selection
@@ -80,8 +88,16 @@ export class LeastConnectionsLoadBalancer implements LoadBalancer {
             return undefined;
         }
 
-        // Sort by current load (ascending)
-        return candidates.sort((a, b) => a.metadata.currentLoad - b.metadata.currentLoad)[0];
+        // Linear scan for minimum current load — O(n) vs O(n log n) sort
+        let minLoad = Infinity;
+        let best = candidates[0];
+        for (const reg of candidates) {
+            if (reg.metadata.currentLoad < minLoad) {
+                minLoad = reg.metadata.currentLoad;
+                best = reg;
+            }
+        }
+        return best;
     }
 
     updateMetrics(agentId: EntityId, executionTimeMs: number, success: boolean): void {
@@ -112,25 +128,22 @@ export class WeightedResponseTimeLoadBalancer implements LoadBalancer {
             return undefined;
         }
 
-        // Calculate score based on average response time and current load
-        const scored = candidates.map(reg => {
+        // Linear scan for minimum weighted score — O(n) vs O(n log n) sort
+        let minScore = Infinity;
+        let best = candidates[0];
+        for (const reg of candidates) {
             const metrics = this.agentMetrics.get(reg.agent.id);
             const avgResponseTime = metrics && metrics.totalTasks > 0
                 ? metrics.totalExecutionTime / metrics.totalTasks
-                : 1000; // Default to 1s if no data
-
+                : 1000;
             const loadFactor = reg.metadata.currentLoad / reg.metadata.maxConcurrentTasks;
-
-            // Lower score is better
             const score = avgResponseTime * (1 + loadFactor);
-
-            return { reg, score };
-        });
-
-        // Sort by score (ascending)
-        scored.sort((a, b) => a.score - b.score);
-
-        return scored[0].reg;
+            if (score < minScore) {
+                minScore = score;
+                best = reg;
+            }
+        }
+        return best;
     }
 
     updateMetrics(agentId: EntityId, executionTimeMs: number, success: boolean): void {

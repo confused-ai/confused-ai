@@ -36,7 +36,10 @@ export class TelemetryPlugin implements GraphPlugin {
     failedNodes: 0,
     nodeTimings: new Map(),
     executionTimings: [],
+    executionTimingsHead: 0, // head pointer for O(1) amortised eviction
   };
+  // head pointers per nodeId — stored alongside timings in the Map value
+  private nodeTimingsHead = new Map<NodeId, number>();
 
   async onExecutionStart(_executionId: ExecutionId): Promise<void> {
     this.metrics.totalExecutions++;
@@ -45,9 +48,13 @@ export class TelemetryPlugin implements GraphPlugin {
   async onExecutionComplete(_executionId: ExecutionId, _state: GraphState, durationMs: number): Promise<void> {
     this.metrics.completedExecutions++;
     this.metrics.executionTimings.push(durationMs);
-    // Keep only last 1000 timings
-    if (this.metrics.executionTimings.length > 1000) {
-      this.metrics.executionTimings.shift();
+    // Head-pointer eviction: compact only when > 50% dead and length > 1000
+    const head = this.metrics.executionTimingsHead;
+    if (this.metrics.executionTimings.length - head > 1000) {
+      // Keep newest 1000
+      const live = this.metrics.executionTimings.slice(this.metrics.executionTimings.length - 1000);
+      this.metrics.executionTimings = live;
+      this.metrics.executionTimingsHead = 0;
     }
   }
 
@@ -59,8 +66,12 @@ export class TelemetryPlugin implements GraphPlugin {
     this.metrics.completedNodes++;
     const timings = this.metrics.nodeTimings.get(nodeId) ?? [];
     timings.push(durationMs);
-    if (timings.length > 100) timings.shift();
-    this.metrics.nodeTimings.set(nodeId, timings);
+    // Compact to last 100 only when full
+    if (timings.length > 100) {
+      this.metrics.nodeTimings.set(nodeId, timings.slice(-100));
+    } else {
+      this.metrics.nodeTimings.set(nodeId, timings);
+    }
   }
 
   async onNodeError(_nodeId: NodeId): Promise<void> {
@@ -68,12 +79,12 @@ export class TelemetryPlugin implements GraphPlugin {
   }
 
   getMetrics(): MetricsSummary {
-    const avgExecution = this.metrics.executionTimings.length > 0
-      ? this.metrics.executionTimings.reduce((a, b) => a + b, 0) / this.metrics.executionTimings.length
+    const live = this.metrics.executionTimings;
+    const avgExecution = live.length > 0
+      ? live.reduce((a, b) => a + b, 0) / live.length
       : 0;
 
-    const p99Execution = this._percentile(this.metrics.executionTimings, 0.99);
-
+    const p99Execution = this._percentile(live, 0.99);
     return {
       totalExecutions: this.metrics.totalExecutions,
       completedExecutions: this.metrics.completedExecutions,
@@ -106,6 +117,7 @@ interface MetricsData {
   failedNodes: number;
   nodeTimings: Map<string, number[]>;
   executionTimings: number[];
+  executionTimingsHead: number;
 }
 
 export interface MetricsSummary {
@@ -222,20 +234,29 @@ export class OpenTelemetryPlugin implements GraphPlugin {
   name = 'opentelemetry';
   private tracer: any; // otel.Tracer
   private spans: Map<string, any> = new Map();
+  /** Cached after first successful import — avoids repeated dynamic import per node */
+  private _otelApi: any = null;
 
   constructor(options?: { serviceName?: string; tracer?: any }) {
     // Lazy load OpenTelemetry to avoid hard dependency
     this.tracer = options?.tracer;
   }
 
+  private async _getOtel(): Promise<any | null> {
+    if (this._otelApi) return this._otelApi;
+    try {
+      this._otelApi = await import('@opentelemetry/api' as string);
+      return this._otelApi;
+    } catch {
+      return null;
+    }
+  }
+
   async onExecutionStart(executionId: ExecutionId, graph: GraphDef): Promise<void> {
     if (!this.tracer) {
-      try {
-        const otel = await import('@opentelemetry/api' as string);
-        this.tracer = otel.trace.getTracer('graph-engine');
-      } catch {
-        return; // OpenTelemetry not available
-      }
+      const otel = await this._getOtel();
+      if (!otel) return;
+      this.tracer = otel.trace.getTracer('graph-engine');
     }
 
     const span = this.tracer.startSpan(`graph.execute`, {
@@ -251,12 +272,10 @@ export class OpenTelemetryPlugin implements GraphPlugin {
   async onNodeStart(nodeId: NodeId, ctx: NodeContext): Promise<void> {
     if (!this.tracer) return;
 
+    const otel = await this._getOtel();
     const parentSpan = this.spans.get(`exec:${ctx.executionId}`);
-    const spanCtx = parentSpan
-      ? (await import('@opentelemetry/api' as string)).trace.setSpan(
-          (await import('@opentelemetry/api' as string)).context.active(),
-          parentSpan
-        )
+    const spanCtx = (otel && parentSpan)
+      ? otel.trace.setSpan(otel.context.active(), parentSpan)
       : undefined;
 
     const span = this.tracer.startSpan(
@@ -318,6 +337,10 @@ export class AuditPlugin implements GraphPlugin {
   name = 'audit';
   private events: GraphEvent[] = [];
   private maxEvents: number;
+  /** O(1) lookup indexes — maintained in sync with events[] */
+  private typeIndex = new Map<GraphEventType, GraphEvent[]>();
+  private nodeIndex = new Map<NodeId, GraphEvent[]>();
+  private execIndex = new Map<ExecutionId, GraphEvent[]>();
 
   constructor(options?: { maxEvents?: number }) {
     this.maxEvents = options?.maxEvents ?? 10000;
@@ -325,8 +348,45 @@ export class AuditPlugin implements GraphPlugin {
 
   async onEvent(event: GraphEvent): Promise<void> {
     this.events.push(event);
+
+    // Maintain indexes
+    if (event.type) {
+      const bucket = this.typeIndex.get(event.type);
+      if (bucket) bucket.push(event);
+      else this.typeIndex.set(event.type, [event]);
+    }
+    if (event.nodeId) {
+      const bucket = this.nodeIndex.get(event.nodeId);
+      if (bucket) bucket.push(event);
+      else this.nodeIndex.set(event.nodeId, [event]);
+    }
+    if (event.executionId) {
+      const bucket = this.execIndex.get(event.executionId);
+      if (bucket) bucket.push(event);
+      else this.execIndex.set(event.executionId, [event]);
+    }
+
     if (this.events.length > this.maxEvents) {
-      this.events.shift();
+      // Batch-evict oldest half; rebuild indexes to keep them consistent
+      this.events = this.events.slice(-this.maxEvents);
+      this._rebuildIndexes();
+    }
+  }
+
+  private _rebuildIndexes(): void {
+    this.typeIndex.clear();
+    this.nodeIndex.clear();
+    this.execIndex.clear();
+    for (const e of this.events) {
+      if (e.type) {
+        const b = this.typeIndex.get(e.type); if (b) b.push(e); else this.typeIndex.set(e.type, [e]);
+      }
+      if (e.nodeId) {
+        const b = this.nodeIndex.get(e.nodeId); if (b) b.push(e); else this.nodeIndex.set(e.nodeId, [e]);
+      }
+      if (e.executionId) {
+        const b = this.execIndex.get(e.executionId); if (b) b.push(e); else this.execIndex.set(e.executionId, [e]);
+      }
     }
   }
 
@@ -334,16 +394,19 @@ export class AuditPlugin implements GraphPlugin {
     return this.events;
   }
 
+  /** O(1) — index lookup */
   getEventsByType(type: GraphEventType): GraphEvent[] {
-    return this.events.filter(e => e.type === type);
+    return this.typeIndex.get(type) ?? [];
   }
 
+  /** O(1) — index lookup */
   getEventsForNode(nodeId: NodeId): GraphEvent[] {
-    return this.events.filter(e => e.nodeId === nodeId);
+    return this.nodeIndex.get(nodeId) ?? [];
   }
 
+  /** O(1) — index lookup */
   getEventsForExecution(executionId: ExecutionId): GraphEvent[] {
-    return this.events.filter(e => e.executionId === executionId);
+    return this.execIndex.get(executionId) ?? [];
   }
 }
 

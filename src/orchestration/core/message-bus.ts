@@ -20,6 +20,8 @@ import type { EntityId } from '../../core/types.js';
  */
 export class MessageBusImpl implements MessageBus {
     private messages: AgentMessage[] = [];
+    private messagesHead = 0; // head pointer for O(1) amortised dequeue
+    private static readonly MAX_HISTORY = 10_000; // cap to prevent unbounded growth
     private subscriptions: Map<EntityId, Set<SubscriptionImpl>> = new Map();
     private pendingRequests: Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void; timeout: ReturnType<typeof setTimeout> }> = new Map();
     private messageCounter = 0;
@@ -32,6 +34,11 @@ export class MessageBusImpl implements MessageBus {
         };
 
         this.messages.push(fullMessage);
+
+        // Evict oldest messages when history exceeds cap
+        if (this.messages.length > MessageBusImpl.MAX_HISTORY) {
+            this.messages.shift();
+        }
 
         // Deliver to subscribers
         await this.deliverMessage(fullMessage);
@@ -116,8 +123,12 @@ export class MessageBusImpl implements MessageBus {
         if (!filter) {
             return [...this.messages];
         }
-
-        return this.messages.filter(msg => this.matchesFilter(msg, filter));
+        // Use for-loop to avoid allocating an intermediate filtered array
+        const result: AgentMessage[] = [];
+        for (const msg of this.messages) {
+            if (this.matchesFilter(msg, filter)) result.push(msg);
+        }
+        return result;
     }
 
     private async deliverMessage(message: AgentMessage): Promise<void> {

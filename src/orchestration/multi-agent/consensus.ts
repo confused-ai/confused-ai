@@ -265,7 +265,6 @@ export class ConsensusProtocol {
 
         for (const vote of votes) {
             const score = scorer(vote.output);
-            vote.score;
             if (score > bestScore) {
                 bestScore = score;
                 bestVote = vote;

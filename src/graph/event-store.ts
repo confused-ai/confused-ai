@@ -54,13 +54,13 @@ export class InMemoryEventStore implements EventStore {
   }
 
   async load(executionId: ExecutionId): Promise<GraphEvent[]> {
-    return (this.events.get(executionId) ?? []).sort((a, b) => a.sequence - b.sequence);
+    // Events are appended in sequence order — no sort needed
+    return this.events.get(executionId) ?? [];
   }
 
   async loadAfter(executionId: ExecutionId, afterSequence: number): Promise<GraphEvent[]> {
-    return (this.events.get(executionId) ?? [])
-      .filter(e => e.sequence > afterSequence)
-      .sort((a, b) => a.sequence - b.sequence);
+    // Array is already ordered; filter is O(n) without an extra sort
+    return (this.events.get(executionId) ?? []).filter(e => e.sequence > afterSequence);
   }
 
   async getCheckpoint(executionId: ExecutionId): Promise<Checkpoint | null> {

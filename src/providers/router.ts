@@ -746,6 +746,10 @@ export class LLMRouter implements LLMProvider {
     private recordDecision(decision: RouteDecision): void {
         this.lastDecision = decision;
         this.decisionHistory.push(decision);
+        // Cap to prevent unbounded growth in long-running processes
+        if (this.decisionHistory.length > 1000) {
+            this.decisionHistory = this.decisionHistory.slice(-1000);
+        }
     }
 
     /**

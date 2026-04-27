@@ -247,3 +247,438 @@ export function createAzureOpenAIProvider(config: AzureOpenAIProviderConfig = {}
     const baseURL = `https://${resource}.openai.azure.com/openai/deployments/${deployment}?api-version=${apiVersion}`;
     return new OpenAIProvider({ apiKey, baseURL, model: deployment, debug: config.debug });
 }
+
+// ── Custom / Generic OpenAI-compatible ────────────────────────────────────
+
+export interface OpenAICompatibleProviderConfig {
+    /**
+     * Full base URL of any OpenAI-compatible endpoint.
+     * Examples:
+     *   - "http://localhost:11434/v1"         (Ollama)
+     *   - "https://my-vllm.internal/v1"       (self-hosted vLLM)
+     *   - "https://gateway.example.com/v1"    (custom gateway)
+     */
+    baseURL: string;
+    /** API key — use "not-needed" or any non-empty string for unauthenticated endpoints. */
+    apiKey: string;
+    /** Model id to request. */
+    model: string;
+    /** Optional max-tokens override (currently passed through if supported by the endpoint). */
+    maxTokens?: number;
+    debug?: boolean;
+}
+
+/**
+ * Generic factory for any OpenAI-compatible API.
+ * Use this to integrate private deployments, custom gateways, or new providers
+ * that expose the OpenAI `/chat/completions` interface.
+ *
+ * @example
+ * const provider = createOpenAICompatibleProvider({
+ *   baseURL: 'https://my-vllm.internal/v1',
+ *   apiKey: process.env.MY_API_KEY!,
+ *   model: 'my-fine-tuned-model',
+ * });
+ */
+export function createOpenAICompatibleProvider(config: OpenAICompatibleProviderConfig): LLMProvider {
+    if (!config.baseURL) throw new Error('createOpenAICompatibleProvider requires baseURL');
+    if (!config.apiKey) throw new Error('createOpenAICompatibleProvider requires apiKey');
+    if (!config.model) throw new Error('createOpenAICompatibleProvider requires model');
+    return new OpenAIProvider({
+        apiKey: config.apiKey,
+        baseURL: config.baseURL,
+        model: config.model,
+        debug: config.debug,
+    });
+}
+
+// ── Cerebras ──────────────────────────────────────────────────────────────
+
+export const CEREBRAS_BASE_URL = 'https://api.cerebras.ai/v1';
+
+export interface CerebrasProviderConfig {
+    /** Cerebras API key (or CEREBRAS_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: llama-3.3-70b
+     * Options: llama-3.1-8b, llama-3.1-70b, llama-3.3-70b
+     * Note: Cerebras uses dash-separated names (llama-3.3-70b).
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Cerebras — wafer-scale chip inference, ultra-low latency. */
+export function createCerebrasProvider(config: CerebrasProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.CEREBRAS_API_KEY : undefined);
+    if (!apiKey) throw new Error('CerebrasProvider requires apiKey or CEREBRAS_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: CEREBRAS_BASE_URL,
+        model: config.model ?? 'llama-3.3-70b',
+        debug: config.debug,
+    });
+}
+
+// ── SambaNova ─────────────────────────────────────────────────────────────
+
+export const SAMBANOVA_BASE_URL = 'https://api.sambanova.ai/v1';
+
+export interface SambaNovaProviderConfig {
+    /** SambaNova API key (or SAMBANOVA_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: Meta-Llama-3.3-70B-Instruct
+     * Options: Meta-Llama-3.1-8B-Instruct, Meta-Llama-3.1-405B-Instruct,
+     *          Qwen2.5-72B-Instruct, DeepSeek-R1
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** SambaNova — RDU-based high-throughput inference. */
+export function createSambaNovaProvider(config: SambaNovaProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.SAMBANOVA_API_KEY : undefined);
+    if (!apiKey) throw new Error('SambaNovaProvider requires apiKey or SAMBANOVA_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: SAMBANOVA_BASE_URL,
+        model: config.model ?? 'Meta-Llama-3.3-70B-Instruct',
+        debug: config.debug,
+    });
+}
+
+// ── NVIDIA NIM ────────────────────────────────────────────────────────────
+
+export const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
+
+export interface NvidiaProviderConfig {
+    /** NVIDIA API key (or NVIDIA_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: meta/llama-3.3-70b-instruct
+     * Options: nvidia/llama-3.1-nemotron-ultra-253b-v1,
+     *          mistralai/mixtral-8x22b-instruct-v0.1,
+     *          google/gemma-3-27b-it, deepseek-ai/deepseek-r1
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** NVIDIA NIM — enterprise GPU microservices for AI inference. */
+export function createNvidiaProvider(config: NvidiaProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.NVIDIA_API_KEY : undefined);
+    if (!apiKey) throw new Error('NvidiaProvider requires apiKey or NVIDIA_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: NVIDIA_BASE_URL,
+        model: config.model ?? 'meta/llama-3.3-70b-instruct',
+        debug: config.debug,
+    });
+}
+
+// ── AI21 Labs ─────────────────────────────────────────────────────────────
+
+export const AI21_BASE_URL = 'https://api.ai21.com/studio/v1';
+
+export interface AI21ProviderConfig {
+    /** AI21 API key (or AI21_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: jamba-1.5-large
+     * Options: jamba-1.5-mini, jamba-instruct
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** AI21 Labs — Jamba hybrid SSM-Transformer models. */
+export function createAI21Provider(config: AI21ProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.AI21_API_KEY : undefined);
+    if (!apiKey) throw new Error('AI21Provider requires apiKey or AI21_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: AI21_BASE_URL,
+        model: config.model ?? 'jamba-1.5-large',
+        debug: config.debug,
+    });
+}
+
+// ── Hyperbolic ────────────────────────────────────────────────────────────
+
+export const HYPERBOLIC_BASE_URL = 'https://api.hyperbolic.xyz/v1';
+
+export interface HyperbolicProviderConfig {
+    /** Hyperbolic API key (or HYPERBOLIC_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: meta-llama/Llama-3.3-70B-Instruct
+     * Options: deepseek-ai/DeepSeek-R1, Qwen/Qwen2.5-72B-Instruct,
+     *          meta-llama/Meta-Llama-3.1-405B-Instruct
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Hyperbolic — low-cost GPU cloud inference for open models. */
+export function createHyperbolicProvider(config: HyperbolicProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.HYPERBOLIC_API_KEY : undefined);
+    if (!apiKey) throw new Error('HyperbolicProvider requires apiKey or HYPERBOLIC_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: HYPERBOLIC_BASE_URL,
+        model: config.model ?? 'meta-llama/Llama-3.3-70B-Instruct',
+        debug: config.debug,
+    });
+}
+
+// ── Lambda Labs ───────────────────────────────────────────────────────────
+
+export const LAMBDA_BASE_URL = 'https://api.lambdalabs.com/v1';
+
+export interface LambdaProviderConfig {
+    /** Lambda API key (or LAMBDA_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: llama3.3-70b-instruct-fp8
+     * Options: llama3.1-8b-instruct, llama3.1-70b-instruct-fp8,
+     *          llama3.1-405b-instruct-fp8, hermes3-405b
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Lambda Labs — GPU cloud inference. */
+export function createLambdaProvider(config: LambdaProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.LAMBDA_API_KEY : undefined);
+    if (!apiKey) throw new Error('LambdaProvider requires apiKey or LAMBDA_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: LAMBDA_BASE_URL,
+        model: config.model ?? 'llama3.3-70b-instruct-fp8',
+        debug: config.debug,
+    });
+}
+
+// ── Moonshot AI (Kimi) ────────────────────────────────────────────────────
+
+export const MOONSHOT_BASE_URL = 'https://api.moonshot.cn/v1';
+
+export interface MoonshotProviderConfig {
+    /** Moonshot API key (or MOONSHOT_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: moonshot-v1-32k
+     * Options: moonshot-v1-8k, moonshot-v1-128k, kimi-latest
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Moonshot AI (Kimi) — Chinese frontier model with long context. */
+export function createMoonshotProvider(config: MoonshotProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.MOONSHOT_API_KEY : undefined);
+    if (!apiKey) throw new Error('MoonshotProvider requires apiKey or MOONSHOT_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: MOONSHOT_BASE_URL,
+        model: config.model ?? 'moonshot-v1-32k',
+        debug: config.debug,
+    });
+}
+
+// ── Alibaba DashScope (Qwen) ──────────────────────────────────────────────
+
+export const DASHSCOPE_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+
+export interface DashScopeProviderConfig {
+    /** DashScope API key (or DASHSCOPE_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: qwen-max
+     * Options: qwen-plus, qwen-turbo, qwen-long,
+     *          qwen2.5-72b-instruct, qwq-32b
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Alibaba DashScope — Qwen family models via OpenAI-compatible mode. */
+export function createDashScopeProvider(config: DashScopeProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.DASHSCOPE_API_KEY : undefined);
+    if (!apiKey) throw new Error('DashScopeProvider requires apiKey or DASHSCOPE_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: DASHSCOPE_BASE_URL,
+        model: config.model ?? 'qwen-max',
+        debug: config.debug,
+    });
+}
+
+// ── Zhipu AI (GLM / BigModel) ─────────────────────────────────────────────
+
+export const ZHIPU_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4';
+
+export interface ZhipuProviderConfig {
+    /** Zhipu API key (or ZHIPU_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: glm-4-plus
+     * Options: glm-4, glm-4-air, glm-4-flash, glm-z1-flash
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Zhipu AI — GLM series models from Tsinghua KEG. */
+export function createZhipuProvider(config: ZhipuProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.ZHIPU_API_KEY : undefined);
+    if (!apiKey) throw new Error('ZhipuProvider requires apiKey or ZHIPU_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: ZHIPU_BASE_URL,
+        model: config.model ?? 'glm-4-plus',
+        debug: config.debug,
+    });
+}
+
+// ── 01.AI (Yi) ────────────────────────────────────────────────────────────
+
+export const YI_BASE_URL = 'https://api.lingyiwanwu.com/v1';
+
+export interface YiProviderConfig {
+    /** 01.AI API key (or YI_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: yi-large
+     * Options: yi-medium, yi-spark, yi-large-turbo, yi-large-rag
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** 01.AI — Yi large language models. */
+export function createYiProvider(config: YiProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.YI_API_KEY : undefined);
+    if (!apiKey) throw new Error('YiProvider requires apiKey or YI_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: YI_BASE_URL,
+        model: config.model ?? 'yi-large',
+        debug: config.debug,
+    });
+}
+
+// ── Upstage (Solar) ───────────────────────────────────────────────────────
+
+export const UPSTAGE_BASE_URL = 'https://api.upstage.ai/v1';
+
+export interface UpstageProviderConfig {
+    /** Upstage API key (or UPSTAGE_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: solar-pro
+     * Options: solar-mini, solar-pro2
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Upstage — Solar models optimized for enterprise RAG. */
+export function createUpstageProvider(config: UpstageProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.UPSTAGE_API_KEY : undefined);
+    if (!apiKey) throw new Error('UpstageProvider requires apiKey or UPSTAGE_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: UPSTAGE_BASE_URL,
+        model: config.model ?? 'solar-pro',
+        debug: config.debug,
+    });
+}
+
+// ── Novita AI ─────────────────────────────────────────────────────────────
+
+export const NOVITA_BASE_URL = 'https://api.novita.ai/v3/openai';
+
+export interface NovitaProviderConfig {
+    /** Novita API key (or NOVITA_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: meta-llama/llama-3.3-70b-instruct
+     * Options: deepseek/deepseek-r1, qwen/qwen2.5-72b-instruct,
+     *          mistralai/mistral-nemo
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Novita AI — cost-efficient open-source model hosting. */
+export function createNovitaProvider(config: NovitaProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.NOVITA_API_KEY : undefined);
+    if (!apiKey) throw new Error('NovitaProvider requires apiKey or NOVITA_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: NOVITA_BASE_URL,
+        model: config.model ?? 'meta-llama/llama-3.3-70b-instruct',
+        debug: config.debug,
+    });
+}
+
+// ── Cloudflare Workers AI ─────────────────────────────────────────────────
+
+export interface CloudflareProviderConfig {
+    /** Cloudflare API token (or CLOUDFLARE_API_KEY env var) */
+    apiKey?: string;
+    /** Cloudflare Account ID (or CLOUDFLARE_ACCOUNT_ID env var) */
+    accountId?: string;
+    /**
+     * Model id (Cloudflare model name). Default: @cf/meta/llama-3.3-70b-instruct-fp8-fast
+     * Options: @cf/deepseek-ai/deepseek-r1-distill-qwen-32b,
+     *          @cf/mistral/mistral-7b-instruct-v0.1,
+     *          @hf/google/gemma-7b-it
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Cloudflare Workers AI — serverless GPU inference at the edge. */
+export function createCloudflareProvider(config: CloudflareProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.CLOUDFLARE_API_KEY : undefined);
+    const accountId = config.accountId ?? (typeof process !== 'undefined' ? process.env.CLOUDFLARE_ACCOUNT_ID : undefined);
+    if (!apiKey) throw new Error('CloudflareProvider requires apiKey or CLOUDFLARE_API_KEY env var');
+    if (!accountId) throw new Error('CloudflareProvider requires accountId or CLOUDFLARE_ACCOUNT_ID env var');
+    const baseURL = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1`;
+    return new OpenAIProvider({
+        apiKey,
+        baseURL,
+        model: config.model ?? '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+        debug: config.debug,
+    });
+}
+
+// ── Writer (Palmyra) ──────────────────────────────────────────────────────
+
+export const WRITER_BASE_URL = 'https://api.writer.com/v1';
+
+export interface WriterProviderConfig {
+    /** Writer API key (or WRITER_API_KEY env var) */
+    apiKey?: string;
+    /**
+     * Model id. Default: palmyra-x5
+     * Options: palmyra-x4, palmyra-med, palmyra-fin
+     */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Writer — Palmyra enterprise models for business use cases. */
+export function createWriterProvider(config: WriterProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.WRITER_API_KEY : undefined);
+    if (!apiKey) throw new Error('WriterProvider requires apiKey or WRITER_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: WRITER_BASE_URL,
+        model: config.model ?? 'palmyra-x5',
+        debug: config.debug,
+    });
+}

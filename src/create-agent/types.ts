@@ -203,6 +203,22 @@ export interface CreateAgentResult {
      * await agent.run(await multiModal('Describe this image', imageUrl('https://...')));
      */
     run(prompt: string | MultiModalInput, options?: AgentRunOptions): Promise<AgenticRunResult>;
+    /**
+     * Stream the agent's response as an async iterable of text chunks.
+     *
+     * Chunks arrive in real time as the LLM generates — no need to wait for
+     * the full response. After the loop exhausts, the run has completed.
+     *
+     * @example
+     * ```ts
+     * for await (const chunk of agent.stream('Explain TypeScript generics')) {
+     *   process.stdout.write(chunk);
+     * }
+     * ```
+     *
+     * Errors thrown by the agent are re-thrown when the iterator exhausts.
+     */
+    stream(prompt: string | MultiModalInput, options?: Omit<AgentRunOptions, 'onChunk'>): AsyncIterable<string>;
     createSession(userId?: string): Promise<string>;
     getSessionMessages(sessionId: string): Promise<Message[]>;
     /** All resolved adapter bindings (merged from `adapters` + convenience fields). */

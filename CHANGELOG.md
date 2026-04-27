@@ -7,6 +7,28 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.1.0] — 2026-04-27
+
+### Added
+
+- **`agent.stream()`** — every `CreateAgentResult` now exposes `stream(prompt, options?)` returning `AsyncIterable<string>`. Stream agent output with `for await` loops; accepts all `run()` options except `onChunk`.
+- **`defineAgent().budget(config)`** — set per-run / per-user / monthly USD caps directly on the fluent builder without dropping to `createAgent()`.
+- **`defineAgent().checkpoint(store)`** — wire a durable checkpoint store in one builder call.
+- **`defineAgent().adapters(registry)`** — plug in adapter registry or explicit `AdapterBindings` via the builder.
+
+### Performance
+
+- **`AgenticRunner`** — Zod→JSON Schema conversion (`toolToLLMDef`) is now computed **once** in the constructor and reused on every `run()` call. Previously computed fresh on every run.
+- **Tool execution** — fixed `Promise.race` timer leak: the 30-second timeout handle is now always cleared via `.finally()`, preventing timer accumulation in long-running processes. Timing switched to `performance.now()` for sub-millisecond accuracy.
+- **`AuditPlugin`** — `getEventsByType()`, `getEventsForNode()`, and `getEventsForExecution()` are now O(1) index lookups backed by internal `Map`s maintained on each `onEvent()` call. Previously O(n) full array scans.
+- **`OpenTelemetryPlugin`** — the `@opentelemetry/api` dynamic import is cached after the first successful load. Previously re-imported on every `onNodeStart()` call.
+
+### Fixed
+
+- **`compose()`** — agent detection now uses a precise three-field type guard (`run` + `instructions` + `createSession`) instead of fragile duck-typing, preventing accidental misclassification of option objects as agents.
+
+---
+
 ## [1.0.0] — 2026-05-18
 
 ### Added

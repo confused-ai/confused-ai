@@ -285,7 +285,9 @@ See the [Adapters guide](./adapters.md) for the full reference.
 
 Hard-stop LLM spend per run, per user (daily), or globally (monthly). Unlike `CostTracker` (which measures), `BudgetEnforcer` **stops execution** when a cap is crossed.
 
-```ts
+::: code-group
+
+```ts [createAgent()]
 import { createAgent } from 'confused-ai';
 
 const agent = createAgent({
@@ -300,6 +302,23 @@ const agent = createAgent({
   },
 });
 ```
+
+```ts [defineAgent()]
+import { defineAgent } from 'confused-ai';
+
+const agent = defineAgent()
+  .instructions('...')
+  .model('gpt-4o')
+  .budget({
+    maxUsdPerRun:   0.50,
+    maxUsdPerUser:  10.00,
+    maxUsdPerMonth: 500.00,
+    onExceeded:     'throw',
+  })
+  .build();
+```
+
+:::
 
 ### Persistent budget store
 
@@ -349,9 +368,11 @@ try {
 
 For long-running tasks, save execution state after each step. If the process restarts, resume from the last saved step.
 
-```ts
+::: code-group
+
+```ts [createAgent()]
 import { createAgent } from 'confused-ai';
-import { createSqliteCheckpointStore } from 'confused-ai/guard';
+import { createSqliteCheckpointStore } from 'confused-ai/production';
 
 const agent = createAgent({
   name: 'BatchProcessor',
@@ -362,6 +383,20 @@ const agent = createAgent({
 // Provide a stable runId — if the process restarts, execution resumes
 const result = await agent.run('Process all 500 records', { runId: 'batch-job-001' });
 ```
+
+```ts [defineAgent()]
+import { defineAgent } from 'confused-ai';
+import { createSqliteCheckpointStore } from 'confused-ai/production';
+
+const agent = defineAgent()
+  .instructions('Process a large dataset...')
+  .checkpoint(createSqliteCheckpointStore('./agent.db'))
+  .build();
+
+const result = await agent.run('Process all 500 records', { runId: 'batch-job-001' });
+```
+
+:::
 
 ### Checkpoint stores
 

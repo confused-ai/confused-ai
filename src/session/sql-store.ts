@@ -226,11 +226,12 @@ export class SqlSessionStore implements SessionStore {
         if (!session) throw new Error(`Session not found: ${sessionId}`);
 
         const messages = [...session.messages, message];
-        if (messages.length > this.config.maxMessagesPerSession) {
-            messages.shift();
-        }
+        // slice(-max) is non-mutating and avoids O(n) shift() for large arrays
+        const trimmed = messages.length > this.config.maxMessagesPerSession
+            ? messages.slice(-this.config.maxMessagesPerSession)
+            : messages;
 
-        return this.update(sessionId, { messages, state: SessionState.ACTIVE });
+        return this.update(sessionId, { messages: trimmed, state: SessionState.ACTIVE });
     }
 
     async getMessages(sessionId: SessionId): Promise<Message[]> {

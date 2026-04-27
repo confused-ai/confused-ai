@@ -25,6 +25,11 @@ const myAgent = agent({
 
 const result = await myAgent.run('Hello!');
 console.log(result.text);
+
+// Stream chunks as they arrive
+for await (const chunk of myAgent.stream('Hello!')) {
+  process.stdout.write(chunk);
+}
 ```
 
 ### Run options
@@ -32,11 +37,14 @@ console.log(result.text);
 ```ts
 const result = await myAgent.run('Do something complex', {
   sessionId: 'user-123',
-  metadata: { userId: 'user-123', plan: 'pro' },
-  maxSteps: 20,
-  stream: true,
   onChunk: (chunk) => process.stdout.write(chunk),
 });
+
+// Or use stream() for the same effect as an async iterable
+for await (const chunk of myAgent.stream('Do something complex', { sessionId: 'user-123' })) {
+  process.stdout.write(chunk);
+}
+```
 ```
 
 ---
@@ -44,25 +52,53 @@ const result = await myAgent.run('Do something complex', {
 ## 2. `defineAgent()` — composable, chainable
 
 Use when you want a reusable agent definition you can share and extend.
+The fluent builder exposes every option as a chainable method.
 
 ```ts
 import { defineAgent } from 'confused-ai';
+import { createSqliteCheckpointStore } from 'confused-ai/production';
+import { createAdapterRegistry, RedisAdapter } from 'confused-ai/adapters';
 
-const baseAgent = defineAgent({
-  model: 'gpt-4o',
-  instructions: 'You are a senior engineer.',
-})
-  .use(loggingPlugin)        // attach plugins
-  .hooks({                   // attach lifecycle hooks
+const myAgent = defineAgent()
+  .name('MyAssistant')
+  .instructions('You are a senior engineer.')
+  .model('gpt-4o')
+  .tools([myTool])
+  .withSession()               // in-memory session (pass a store for SQLite/Redis)
+  .withGuardrails(guardrails)  // optional
+  .hooks({
     beforeRun: async (prompt) => { console.log('Starting run:', prompt); return prompt; },
     afterRun:  async (result) => { console.log('Done. Steps:', result.steps); return result; },
-  });
+  })
+  .budget({ maxUsdPerRun: 0.50, maxUsdPerUser: 10.00, onExceeded: 'throw' })
+  .checkpoint(createSqliteCheckpointStore('./agent.db'))
+  .adapters(createAdapterRegistry().register(new RedisAdapter({ url: process.env.REDIS_URL! })))
+  .use(loggingMiddleware)      // tool middleware
+  .dev()                       // console logging + tool visibility
+  .build();
 
-// Create a specialized variant
-const debugAgent = defineAgent({
-  ...baseAgent.config,
-  instructions: 'You are a debugging expert.',
-}).noDefaults();            // skip framework defaults (session, guardrails, etc.)
+const result = await myAgent.run('Review this PR', { runId: 'pr-456' });
+```
+
+### Available builder methods
+
+| Method | Description |
+|--------|-------------|
+| `.name(s)` | Agent name |
+| `.instructions(s)` | System prompt (required) |
+| `.model(s)` | Model id or `"provider:model"` |
+| `.apiKey(s)` | Override API key |
+| `.baseURL(s)` | Override base URL (e.g. Ollama) |
+| `.tools(arr)` | Tools array, registry, or `false` for no tools |
+| `.withSession(store?)` | Enable session; pass store or omit for in-memory |
+| `.withGuardrails(engine)` | Attach guardrails |
+| `.hooks(hooks)` | Lifecycle hooks |
+| `.budget(config)` | USD spend caps per run / user / month |
+| `.checkpoint(store)` | Durable checkpoint store for crash recovery |
+| `.adapters(registry)` | Adapter registry or explicit bindings |
+| `.use(middleware)` | Add tool middleware (stackable) |
+| `.noDefaults()` | Skip all framework defaults |
+| `.dev()` | Console + tool logging |
 ```
 
 ---

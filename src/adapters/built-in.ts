@@ -95,11 +95,44 @@ import type {
     AuditQuery,
 } from './types.js';
 
-// ── Base helper ────────────────────────────────────────────────────────────
+// ── DS helpers ────────────────────────────────────────────────────────────
 
-/** Tiny base class — tracks connection state and provides a default healthCheck. */
-abstract class BaseAdapter {
-    protected _connected = false;
+/**
+ * Return the top-K highest-scoring items without full sort — O(n·k) where k is
+ * typically 5-20, vs O(n log n) for a full sort. For large n and small k this
+ * is substantially faster and allocates no intermediate arrays.
+ */
+function topKByScore<T>(items: T[], getScore: (item: T) => number, k: number): T[] {
+    if (k <= 0) return [];
+    if (items.length <= k) {
+        return [...items].sort((a, b) => getScore(b) - getScore(a));
+    }
+    // Maintain a min-heap of size k using a simple sorted array insert (O(k) per item)
+    const heap: T[] = [];
+    for (const item of items) {
+        const score = getScore(item);
+        if (heap.length < k) {
+            heap.push(item);
+            if (heap.length === k) heap.sort((a, b) => getScore(a) - getScore(b)); // ascending min-heap
+        } else if (score > getScore(heap[0]!)) {
+            heap[0] = item;
+            // Bubble up to maintain ascending order
+            let i = 0;
+            while (i * 2 + 1 < heap.length) {
+                const left = i * 2 + 1;
+                const right = i * 2 + 2;
+                let smallest = i;
+                if (left < heap.length && getScore(heap[left]!) < getScore(heap[smallest]!)) smallest = left;
+                if (right < heap.length && getScore(heap[right]!) < getScore(heap[smallest]!)) smallest = right;
+                if (smallest === i) break;
+                [heap[i], heap[smallest]] = [heap[smallest]!, heap[i]!];
+                i = smallest;
+            }
+        }
+    }
+    return heap.sort((a, b) => getScore(b) - getScore(a));
+}
+
 
     isConnected(): boolean {
         return this._connected;
@@ -339,7 +372,7 @@ export class InMemoryVectorAdapter extends BaseAdapter implements VectorAdapter 
             scored.push({ id: record.id, score: cosineSimilarity(vector, record.vector), payload: record.payload });
         }
 
-        return scored.sort((a, b) => b.score - a.score).slice(0, topK);
+        return topKByScore(scored, m => m.score, topK);
     }
 
     async delete(collection: string, ids: string[]): Promise<void> {
@@ -971,10 +1004,8 @@ export class InMemoryMemoryStoreAdapter extends BaseAdapter implements MemorySto
         });
 
         const threshold = options?.threshold ?? 0;
-        return results
-            .filter((r) => r.score >= threshold)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, options?.limit ?? 10);
+        const filtered = results.filter((r) => r.score >= threshold);
+        return topKByScore(filtered, r => r.score, options?.limit ?? 10);
     }
 
     private _cosine(a: number[], b: number[]): number {
@@ -1088,7 +1119,7 @@ export class InMemoryRagAdapter extends BaseAdapter implements RagAdapter {
             const score = this._score(query, doc.content);
             if (score >= minScore) results.push({ id, content: doc.content, score, source: doc.source, metadata: doc.metadata });
         }
-        return results.sort((a, b) => b.score - a.score).slice(0, topK);
+        return topKByScore(results, r => r.score, topK);
     }
 
     async ingest(document: { id?: string; content: string; source?: string; metadata?: Record<string, unknown> }): Promise<string> {

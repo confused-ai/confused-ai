@@ -44,6 +44,7 @@ export class WorkerPool implements ParallelExecutor {
     private config: Required<WorkerPoolConfig>;
     private workers: Worker[] = [];
     private taskQueue: WorkerTask[] = [];
+    private taskQueueHead = 0; // head-pointer for O(1) dequeue
     private completedTasks = 0;
     private shutdown = false;
     private idleTimeoutId?: ReturnType<typeof setTimeout>;
@@ -77,12 +78,13 @@ export class WorkerPool implements ParallelExecutor {
      * Get current pool status
      */
     getPoolStatus(): WorkerPoolStatus {
-        const activeWorkers = this.workers.filter(w => w.busy).length;
+        let activeWorkers = 0;
+        for (const w of this.workers) if (w.busy) activeWorkers++;
         return {
             totalWorkers: this.workers.length,
             activeWorkers,
             idleWorkers: this.workers.length - activeWorkers,
-            pendingTasks: this.taskQueue.length,
+            pendingTasks: this.taskQueue.length - this.taskQueueHead,
             completedTasks: this.completedTasks,
         };
     }
@@ -99,15 +101,16 @@ export class WorkerPool implements ParallelExecutor {
 
         if (waitForTasks) {
             // Wait for queued tasks to complete
-            while (this.taskQueue.length > 0 || this.workers.some(w => w.busy)) {
+            while (this.taskQueueHead < this.taskQueue.length || this.workers.some(w => w.busy)) {
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
         } else {
             // Reject all pending tasks
-            for (const task of this.taskQueue) {
-                task.reject(new Error('Worker pool is shutting down'));
+            for (let i = this.taskQueueHead; i < this.taskQueue.length; i++) {
+                this.taskQueue[i]!.reject(new Error('Worker pool is shutting down'));
             }
             this.taskQueue = [];
+            this.taskQueueHead = 0;
         }
 
         this.workers = [];
@@ -131,22 +134,34 @@ export class WorkerPool implements ParallelExecutor {
         });
     }
 
+    /** Dequeue front item in O(1); compact when >50% dead slots and array is large enough */
+    private dequeueTask(): WorkerTask | undefined {
+        if (this.taskQueueHead >= this.taskQueue.length) return undefined;
+        const task = this.taskQueue[this.taskQueueHead++]!;
+        // Compact: when >128 dead slots and they account for >50% of the array
+        if (this.taskQueueHead > 128 && this.taskQueueHead > this.taskQueue.length / 2) {
+            this.taskQueue = this.taskQueue.slice(this.taskQueueHead);
+            this.taskQueueHead = 0;
+        }
+        return task;
+    }
+
     /**
      * Process the task queue
      */
     private processQueue(): void {
         if (this.shutdown) return;
 
-        while (this.taskQueue.length > 0) {
+        while (this.taskQueueHead < this.taskQueue.length) {
             const worker = this.getAvailableWorker();
             if (!worker) break;
 
-            const task = this.taskQueue.shift()!;
+            const task = this.dequeueTask()!;
             this.executeTask(worker, task);
         }
 
         // Scale up if needed
-        if (this.taskQueue.length > 0 && this.workers.length < this.config.maxWorkers) {
+        if (this.taskQueueHead < this.taskQueue.length && this.workers.length < this.config.maxWorkers) {
             this.createWorker();
             this.processQueue();
         }

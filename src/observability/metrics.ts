@@ -11,6 +11,15 @@ import { MetricsCollector, MetricValue, MetricType } from './types.js';
  */
 export class MetricsCollectorImpl implements MetricsCollector {
     private metrics: MetricValue[] = [];
+    // Gauge index: canonical key → position in metrics[] for O(1) gauge dedup
+    private gaugeIndex = new Map<string, number>();
+    private static readonly MAX_METRICS = 50_000;
+
+    private _gaugeKey(name: string, labels: Record<string, string>): string {
+        // Stable key regardless of label insertion order
+        const sorted = Object.keys(labels).sort().map(k => `${k}=${labels[k]}`).join(',');
+        return `${name}|${sorted}`;
+    }
 
     counter(name: string, value = 1, labels: Record<string, string> = {}): void {
         this.metrics.push({
@@ -20,23 +29,31 @@ export class MetricsCollectorImpl implements MetricsCollector {
             labels,
             timestamp: new Date(),
         });
+        // Cap total metrics to prevent unbounded growth
+        if (this.metrics.length > MetricsCollectorImpl.MAX_METRICS) {
+            this.metrics = this.metrics.slice(-MetricsCollectorImpl.MAX_METRICS);
+            // Rebuild gauge index after compaction
+            this.gaugeIndex.clear();
+            for (let i = 0; i < this.metrics.length; i++) {
+                const m = this.metrics[i]!;
+                if (m.type === MetricType.GAUGE) {
+                    this.gaugeIndex.set(this._gaugeKey(m.name, m.labels), i);
+                }
+            }
+        }
     }
 
     gauge(name: string, value: number, labels: Record<string, string> = {}): void {
-        // Remove previous gauge with same name and labels
-        this.metrics = this.metrics.filter(m =>
-            !(m.name === name &&
-                m.type === MetricType.GAUGE &&
-                JSON.stringify(m.labels) === JSON.stringify(labels))
-        );
-
-        this.metrics.push({
-            name,
-            type: MetricType.GAUGE,
-            value,
-            labels,
-            timestamp: new Date(),
-        });
+        const key = this._gaugeKey(name, labels);
+        const existing = this.gaugeIndex.get(key);
+        const entry: MetricValue = { name, type: MetricType.GAUGE, value, labels, timestamp: new Date() };
+        if (existing !== undefined && existing < this.metrics.length && this.metrics[existing]?.name === name) {
+            // Update in-place — O(1), avoids filter+rebuild
+            this.metrics[existing] = entry;
+        } else {
+            this.gaugeIndex.set(key, this.metrics.length);
+            this.metrics.push(entry);
+        }
     }
 
     histogram(name: string, value: number, labels: Record<string, string> = {}): void {
@@ -55,6 +72,7 @@ export class MetricsCollectorImpl implements MetricsCollector {
 
     clear(): void {
         this.metrics = [];
+        this.gaugeIndex.clear();
     }
 
     /**
@@ -72,14 +90,15 @@ export class MetricsCollectorImpl implements MetricsCollector {
     }
 
     /**
-     * Get the latest value for a metric
+     * Get the latest value for a metric — O(n) linear scan, no sort
      */
     getLatestValue(name: string): number | undefined {
-        const metrics = this.getMetricsByName(name);
-        if (metrics.length === 0) return undefined;
-
-        return metrics.sort((a, b) =>
-            b.timestamp.getTime() - a.timestamp.getTime()
-        )[0].value;
+        let latest: MetricValue | undefined;
+        for (const m of this.metrics) {
+            if (m.name === name && (!latest || m.timestamp > latest.timestamp)) {
+                latest = m;
+            }
+        }
+        return latest?.value;
     }
 }

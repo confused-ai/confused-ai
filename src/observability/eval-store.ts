@@ -185,7 +185,8 @@ export class InMemoryEvalStore implements EvalStore {
 
     async appendRun(run: EvalSuiteRun): Promise<void> {
         const list = this.runs.get(run.suiteName) ?? [];
-        list.unshift(run);
+        // push() is O(1) amortised; queryRuns slices from tail for newest-first
+        list.push(run);
         this.runs.set(run.suiteName, list);
     }
 
@@ -194,7 +195,11 @@ export class InMemoryEvalStore implements EvalStore {
     }
 
     async queryRuns(suiteName: string, limit = 50): Promise<EvalSuiteRun[]> {
-        return (this.runs.get(suiteName) ?? []).slice(0, limit);
+        const list = this.runs.get(suiteName) ?? [];
+        // Return newest-first without mutating the stored array
+        return list.length <= limit
+            ? list.slice().reverse()
+            : list.slice(-limit).reverse();
     }
 
     async getBaseline(suiteName: string): Promise<{ averageScore: number; runId: string } | null> {

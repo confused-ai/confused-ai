@@ -110,6 +110,74 @@ export const MODEL_CONTEXT_LIMITS: Record<string, number> = {
     'command-r-08-2024': 128_000,
     'command-r7b-12-2024': 128_000,
 
+    // Cerebras (short model names used by Cerebras API)
+    'llama3.3-70b': 128_000,
+    'llama3.1-8b': 128_000,
+    'llama3.1-70b': 128_000,
+
+    // SambaNova
+    'Meta-Llama-3.3-70B-Instruct': 16_384,
+    'Meta-Llama-3.1-8B-Instruct': 16_384,
+    'Meta-Llama-3.1-405B-Instruct': 16_384,
+
+    // NVIDIA NIM
+    'meta/llama-3.3-70b-instruct': 128_000,
+    'nvidia/llama-3.1-nemotron-ultra-253b-v1': 128_000,
+
+    // AI21 Labs
+    'jamba-1.5-large': 256_000,
+    'jamba-1.5-mini': 256_000,
+    'jamba-instruct': 256_000,
+
+    // Hyperbolic
+    'meta-llama/Llama-3.3-70B-Instruct': 128_000,
+    'deepseek-ai/DeepSeek-R1': 64_000,
+    'meta-llama/Meta-Llama-3.1-405B-Instruct': 128_000,
+
+    // Lambda Labs
+    'llama3.3-70b-instruct-fp8': 128_000,
+    'llama3.1-405b-instruct-fp8': 128_000,
+    'hermes3-405b': 128_000,
+
+    // Moonshot (Kimi)
+    'moonshot-v1-8k': 8_192,
+    'moonshot-v1-32k': 32_000,
+    'moonshot-v1-128k': 128_000,
+    'kimi-latest': 128_000,
+
+    // Alibaba DashScope (Qwen)
+    'qwen-max': 32_000,
+    'qwen-plus': 131_072,
+    'qwen-turbo': 1_000_000,
+    'qwen-long': 10_000_000,
+    'qwen2.5-72b-instruct': 131_072,
+    'qwq-32b': 32_768,
+
+    // Zhipu AI (GLM)
+    'glm-4-plus': 128_000,
+    'glm-4': 128_000,
+    'glm-4-air': 128_000,
+    'glm-4-flash': 128_000,
+    'glm-z1-flash': 16_384,
+
+    // 01.AI (Yi)
+    'yi-large': 32_768,
+    'yi-medium': 16_384,
+    'yi-spark': 16_384,
+    'yi-large-turbo': 16_384,
+
+    // Upstage (Solar)
+    'solar-pro': 4_096,
+    'solar-pro2': 4_096,
+    'solar-mini': 4_096,
+
+    // Novita AI
+    'meta-llama/llama-3.3-70b-instruct': 128_000,
+
+    // Writer (Palmyra)
+    'palmyra-x5': 128_000,
+    'palmyra-x4': 32_768,
+
     // Default for unknown models
     '__default__': 4_096,
 };

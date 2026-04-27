@@ -62,9 +62,13 @@ export class AgenticRunner {
     private config: AgenticRunnerConfig;
     private humanInTheLoop?: HumanInTheLoopHooks;
     private guardrails?: GuardrailEngine;
+    /** Cached once at construction — tools never change after agent is created */
+    private readonly _cachedLlmTools: LLMToolDefinition[];
 
     constructor(config: AgenticRunnerConfig) {
         this.config = { ...config, toolMiddleware: config.toolMiddleware ?? [] };
+        // Pre-compute Zod → JSON Schema for all tools once, not on every run()
+        this._cachedLlmTools = config.tools.list().map((t) => toolToLLMDef(t));
     }
 
     /**
@@ -93,8 +97,7 @@ export class AgenticRunner {
         const retry = this.config.retry ?? { maxRetries: DEFAULT_RETRIES, backoffMs: DEFAULT_BACKOFF_MS };
         const lifecycle: AgenticLifecycleHooks = this.config.hooks ?? {};
 
-        const tools = this.config.tools.list();
-        const llmTools: LLMToolDefinition[] = tools.map((t) => toolToLLMDef(t));
+        const llmTools = this._cachedLlmTools;
 
         // ── beforeRun hook ─────────────────────────────────────────────────
         let prompt = runConfig.prompt;
@@ -324,8 +327,8 @@ export class AgenticRunner {
                     permissions: tool.permissions,
                 } as import('../tools/core/types.js').ToolContext;
 
-                // Tool middleware: beforeExecute
-                const middleware = this.config.toolMiddleware ?? [];
+                // Tool middleware: beforeExecute (constructor guarantees this.config.toolMiddleware is [])
+                const middleware = this.config.toolMiddleware!;
                 for (const m of middleware) {
                     if (m.beforeExecute) await m.beforeExecute(tool, effectiveArgs, toolContext);
                 }

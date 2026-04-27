@@ -4,7 +4,9 @@
  * Supported providers:
  *   openai, anthropic, google, groq, xai, together, fireworks,
  *   deepseek, mistral, cohere, perplexity, openrouter, ollama,
- *   azure, llamabarn
+ *   azure, llamabarn, cerebras, sambanova, nvidia, ai21,
+ *   hyperbolic, lambda, moonshot, dashscope, zhipu, yi,
+ *   upstage, novita, writer
  */
 
 export const PROVIDER = {
@@ -23,6 +25,20 @@ export const PROVIDER = {
     OLLAMA: 'ollama',
     AZURE: 'azure',
     LLAMABARN: 'llamabarn',
+    // ── New providers ──────────────────────────────────────────────────
+    CEREBRAS: 'cerebras',
+    SAMBANOVA: 'sambanova',
+    NVIDIA: 'nvidia',
+    AI21: 'ai21',
+    HYPERBOLIC: 'hyperbolic',
+    LAMBDA: 'lambda',
+    MOONSHOT: 'moonshot',
+    DASHSCOPE: 'dashscope',
+    ZHIPU: 'zhipu',
+    YI: 'yi',
+    UPSTAGE: 'upstage',
+    NOVITA: 'novita',
+    WRITER: 'writer',
 } as const;
 
 export type ProviderName = (typeof PROVIDER)[keyof typeof PROVIDER];
@@ -40,6 +56,19 @@ export const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
 export const MISTRAL_BASE_URL = 'https://api.mistral.ai/v1';
 export const COHERE_BASE_URL = 'https://api.cohere.com/compatibility/v1';
 export const PERPLEXITY_BASE_URL = 'https://api.perplexity.ai';
+export const CEREBRAS_BASE_URL = 'https://api.cerebras.ai/v1';
+export const SAMBANOVA_BASE_URL = 'https://api.sambanova.ai/v1';
+export const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
+export const AI21_BASE_URL = 'https://api.ai21.com/studio/v1';
+export const HYPERBOLIC_BASE_URL = 'https://api.hyperbolic.xyz/v1';
+export const LAMBDA_BASE_URL = 'https://api.lambdalabs.com/v1';
+export const MOONSHOT_BASE_URL = 'https://api.moonshot.cn/v1';
+export const DASHSCOPE_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+export const ZHIPU_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4';
+export const YI_BASE_URL = 'https://api.lingyiwanwu.com/v1';
+export const UPSTAGE_BASE_URL = 'https://api.upstage.ai/v1';
+export const NOVITA_BASE_URL = 'https://api.novita.ai/v3/openai';
+export const WRITER_BASE_URL = 'https://api.writer.com/v1';
 
 // ── Env var names ──────────────────────────────────────────────────────────
 
@@ -57,6 +86,19 @@ const ENV: Record<string, string> = {
     PERPLEXITY: 'PERPLEXITY_API_KEY',
     OPENROUTER: 'OPENROUTER_API_KEY',
     LLAMABARN: 'LLAMABARN_API_KEY',
+    CEREBRAS: 'CEREBRAS_API_KEY',
+    SAMBANOVA: 'SAMBANOVA_API_KEY',
+    NVIDIA: 'NVIDIA_API_KEY',
+    AI21: 'AI21_API_KEY',
+    HYPERBOLIC: 'HYPERBOLIC_API_KEY',
+    LAMBDA: 'LAMBDA_API_KEY',
+    MOONSHOT: 'MOONSHOT_API_KEY',
+    DASHSCOPE: 'DASHSCOPE_API_KEY',
+    ZHIPU: 'ZHIPU_API_KEY',
+    YI: 'YI_API_KEY',
+    UPSTAGE: 'UPSTAGE_API_KEY',
+    NOVITA: 'NOVITA_API_KEY',
+    WRITER: 'WRITER_API_KEY',
 };
 
 export interface ResolvedModelConfig {
@@ -144,6 +186,45 @@ export function resolveModelString(
                 apiKey: env(ge, ENV.LLAMABARN) ?? 'not-needed',
                 model: modelId,
             };
+
+        case PROVIDER.CEREBRAS:
+            return { baseURL: CEREBRAS_BASE_URL, apiKey: env(ge, ENV.CEREBRAS), model: modelId };
+
+        case PROVIDER.SAMBANOVA:
+            return { baseURL: SAMBANOVA_BASE_URL, apiKey: env(ge, ENV.SAMBANOVA), model: modelId };
+
+        case PROVIDER.NVIDIA:
+            return { baseURL: NVIDIA_BASE_URL, apiKey: env(ge, ENV.NVIDIA), model: modelId };
+
+        case PROVIDER.AI21:
+            return { baseURL: AI21_BASE_URL, apiKey: env(ge, ENV.AI21), model: modelId };
+
+        case PROVIDER.HYPERBOLIC:
+            return { baseURL: HYPERBOLIC_BASE_URL, apiKey: env(ge, ENV.HYPERBOLIC), model: modelId };
+
+        case PROVIDER.LAMBDA:
+            return { baseURL: LAMBDA_BASE_URL, apiKey: env(ge, ENV.LAMBDA), model: modelId };
+
+        case PROVIDER.MOONSHOT:
+            return { baseURL: MOONSHOT_BASE_URL, apiKey: env(ge, ENV.MOONSHOT), model: modelId };
+
+        case PROVIDER.DASHSCOPE:
+            return { baseURL: DASHSCOPE_BASE_URL, apiKey: env(ge, ENV.DASHSCOPE), model: modelId };
+
+        case PROVIDER.ZHIPU:
+            return { baseURL: ZHIPU_BASE_URL, apiKey: env(ge, ENV.ZHIPU), model: modelId };
+
+        case PROVIDER.YI:
+            return { baseURL: YI_BASE_URL, apiKey: env(ge, ENV.YI), model: modelId };
+
+        case PROVIDER.UPSTAGE:
+            return { baseURL: UPSTAGE_BASE_URL, apiKey: env(ge, ENV.UPSTAGE), model: modelId };
+
+        case PROVIDER.NOVITA:
+            return { baseURL: NOVITA_BASE_URL, apiKey: env(ge, ENV.NOVITA), model: modelId };
+
+        case PROVIDER.WRITER:
+            return { baseURL: WRITER_BASE_URL, apiKey: env(ge, ENV.WRITER), model: modelId };
 
         case PROVIDER.AZURE: {
             // format: azure:resource/deployment

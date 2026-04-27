@@ -263,7 +263,9 @@ getStats(): {
     }));
 
     const totalAttempts = this.callHistory.length;
-    const successfulAttempts = this.callHistory.filter((c) => c.success).length;
+    // Compute successfulAttempts from the already-built providerStats — avoids second O(n) filter
+    let successfulAttempts = 0;
+    for (const stats of providerStats.values()) successfulAttempts += stats.successes;
 
     return {
         totalAttempts,
@@ -284,6 +286,10 @@ getStats(): {
      */
     private recordCall(providerIndex: number, maxTokens: number, success: boolean, error?: string): void {
         this.callHistory.push({ provider: providerIndex, model: `Provider${providerIndex + 1}(${maxTokens}tk)`, success, error });
+        // Cap to prevent unbounded growth
+        if (this.callHistory.length > 1000) {
+            this.callHistory = this.callHistory.slice(-1000);
+        }
     }
 }
 

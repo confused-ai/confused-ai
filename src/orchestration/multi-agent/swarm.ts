@@ -493,23 +493,28 @@ export class SwarmOrchestrator {
     }
 
     /**
-     * Build execution stages from subtasks based on dependencies
+     * Build execution stages from subtasks based on dependencies.
+     * Uses a Map<id→subtask> so the "ready?" check is O(1) per dependency
+     * instead of O(subtasks) per remaining subtask per iteration.
      */
     private buildExecutionStages(subtasks: Subtask[]): ExecutionStage[] {
         const stages: ExecutionStage[] = [];
         const completed = new Set<EntityId>();
-        const remaining = new Set(subtasks.map(s => s.id));
+        const remaining = new Map<EntityId, Subtask>();
+        for (const s of subtasks) remaining.set(s.id, s);
 
         let stageNumber = 1;
 
         while (remaining.size > 0) {
-            // Find subtasks with all dependencies satisfied
-            const readySubtasks = subtasks.filter(
-                s => remaining.has(s.id) && s.dependencies.every(dep => completed.has(dep))
-            );
+            // Find subtasks with all dependencies satisfied — O(remaining) per stage
+            const readySubtasks: Subtask[] = [];
+            for (const [id, s] of remaining) {
+                if (s.dependencies.every(dep => completed.has(dep))) {
+                    readySubtasks.push(s);
+                }
+            }
 
             if (readySubtasks.length === 0) {
-                // Circular dependency or invalid dependency
                 throw new Error('Circular or invalid dependency detected in subtasks');
             }
 
@@ -527,7 +532,6 @@ export class SwarmOrchestrator {
 
             stageNumber++;
 
-            // Safety check
             if (stageNumber > this.config.maxStages) {
                 throw new Error(`Exceeded maximum stages (${this.config.maxStages})`);
             }

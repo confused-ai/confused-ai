@@ -44,6 +44,9 @@ export class OrchestratorImpl implements Orchestrator {
     private messageBus: MessageBus;
     private loadBalancer: LoadBalancer;
     private _isRunning = false;
+    // Inverted indexes for O(1)/O(k) lookups instead of O(n) full scans
+    private readonly _capabilityIndex: Map<string, Set<EntityId>> = new Map();
+    private readonly _roleIndex: Map<string, Set<EntityId>> = new Map();
 
     constructor(
         messageBus?: MessageBus,
@@ -69,6 +72,16 @@ export class OrchestratorImpl implements Orchestrator {
         };
 
         this.agents.set(agent.id, registration);
+
+        // Update inverted indexes
+        for (const cap of role.responsibilities) {
+            let set = this._capabilityIndex.get(cap);
+            if (!set) { set = new Set(); this._capabilityIndex.set(cap, set); }
+            set.add(agent.id);
+        }
+        const roleSet = this._roleIndex.get(role.name) ?? new Set<EntityId>();
+        roleSet.add(agent.id);
+        this._roleIndex.set(role.name, roleSet);
 
         const subscription = this.messageBus.subscribe(
             agent.id,
@@ -127,6 +140,12 @@ export class OrchestratorImpl implements Orchestrator {
         }
         this.agents.delete(agentId);
 
+        // Remove from inverted indexes
+        for (const cap of registration.capabilities) {
+            this._capabilityIndex.get(cap)?.delete(agentId);
+        }
+        this._roleIndex.get(registration.role.name)?.delete(agentId);
+
         await this.broadcast({
             type: 'agent_unregistered',
             agentId,
@@ -142,15 +161,25 @@ export class OrchestratorImpl implements Orchestrator {
     }
 
     findAgentsByRole(roleName: string): AgentRegistration[] {
-        return Array.from(this.agents.values()).filter(
-            reg => reg.role.name === roleName
-        );
+        const ids = this._roleIndex.get(roleName);
+        if (!ids || ids.size === 0) return [];
+        const result: AgentRegistration[] = [];
+        for (const id of ids) {
+            const reg = this.agents.get(id);
+            if (reg) result.push(reg);
+        }
+        return result;
     }
 
     findAgentsByCapability(capability: string): AgentRegistration[] {
-        return Array.from(this.agents.values()).filter(
-            reg => reg.capabilities.includes(capability)
-        );
+        const ids = this._capabilityIndex.get(capability);
+        if (!ids || ids.size === 0) return [];
+        const result: AgentRegistration[] = [];
+        for (const id of ids) {
+            const reg = this.agents.get(id);
+            if (reg) result.push(reg);
+        }
+        return result;
     }
 
     async delegateTask(task: DelegationTask, options?: { timeoutMs?: number; retryCount?: number }): Promise<DelegationResult> {
@@ -333,9 +362,25 @@ export class OrchestratorImpl implements Orchestrator {
         if (!Array.isArray(requiredCapabilities) || requiredCapabilities.length === 0) {
             return Array.from(this.agents.values());
         }
-        return Array.from(this.agents.values()).filter(reg =>
-            requiredCapabilities.every(cap => Array.isArray(reg.capabilities) && reg.capabilities.includes(cap))
-        );
+        // Intersect index sets: start from the smallest to minimise work
+        const sets = requiredCapabilities
+            .map(cap => this._capabilityIndex.get(cap))
+            .filter((s): s is Set<EntityId> => s !== undefined && s.size > 0);
+
+        if (sets.length < requiredCapabilities.length) return []; // some cap has no agents
+
+        // Sort ascending by size so we iterate the smallest set
+        sets.sort((a, b) => a.size - b.size);
+        const [smallest, ...rest] = sets as [Set<EntityId>, ...Set<EntityId>[]];
+
+        const result: AgentRegistration[] = [];
+        for (const id of smallest) {
+            if (rest.every(s => s.has(id))) {
+                const reg = this.agents.get(id);
+                if (reg) result.push(reg);
+            }
+        }
+        return result;
     }
 }
 

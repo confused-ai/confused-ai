@@ -260,7 +260,7 @@ export class LLMCache {
  * Wrap an LLM provider with caching.
  * Note: Model should be passed separately to the cache key.
  */
-export function withCache<T extends {
+export function withLLMCache<T extends {
     generateText(messages: Message[], options?: GenerateOptions): Promise<GenerateResult>;
 }>(
     llm: T,

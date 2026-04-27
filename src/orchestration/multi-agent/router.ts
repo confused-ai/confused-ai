@@ -75,15 +75,24 @@ export class AgentRouter {
     private readonly fallback?: string;
     private roundRobinIndex = 0;
     private loadMap: Map<string, number> = new Map();
+    // Pre-computed to avoid repeated Object.keys() calls and toLowerCase() per route()
+    private readonly agentNames: string[];
+    private readonly capabilityCache: Map<string, Set<string>>; // name -> lowercase cap set
 
     constructor(config: AgentRouterConfig) {
         this.agents = config.agents;
         this.strategy = config.strategy ?? 'capability-match';
         this.customRouter = config.customRouter;
         this.fallback = config.fallback;
+        this.agentNames = Object.keys(this.agents);
 
-        for (const name of Object.keys(this.agents)) {
+        this.capabilityCache = new Map();
+        for (const name of this.agentNames) {
             this.loadMap.set(name, 0);
+            this.capabilityCache.set(
+                name,
+                new Set(this.agents[name]!.capabilities.map(c => c.toLowerCase()))
+            );
         }
     }
 
@@ -156,15 +165,16 @@ export class AgentRouter {
         let bestMatch: string | undefined;
         let bestScore = 0;
 
-        for (const [name, entry] of Object.entries(this.agents)) {
+        for (const name of this.agentNames) {
+            const entry = this.agents[name]!;
+            const caps = this.capabilityCache.get(name)!;
             let score = 0;
-            for (const cap of entry.capabilities) {
-                if (promptLower.includes(cap.toLowerCase())) {
-                    score += 2;
-                }
+
+            for (const cap of caps) {
+                if (promptLower.includes(cap)) score += 2;
             }
             // Also check description
-            if (entry.description && promptLower.includes(entry.description.toLowerCase().split(' ')[0])) {
+            if (entry.description && promptLower.includes(entry.description.toLowerCase().split(' ')[0]!)) {
                 score += 1;
             }
 
@@ -182,9 +192,8 @@ export class AgentRouter {
     }
 
     private selectRoundRobin(): string | undefined {
-        const names = Object.keys(this.agents);
-        if (names.length === 0) return this.fallback;
-        const name = names[this.roundRobinIndex % names.length];
+        if (this.agentNames.length === 0) return this.fallback;
+        const name = this.agentNames[this.roundRobinIndex % this.agentNames.length];
         this.roundRobinIndex++;
         return name;
     }

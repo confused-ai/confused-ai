@@ -143,3 +143,12 @@ class PipelineBuilder {
 ::: tip Hooks vs Pipelines
 `compose()` / `pipe()` connect **separate agents** in a pipeline where output flows downstream. To merge multiple **hook sets** onto a single agent, use [`defineAgent().hooks()`](./hooks.md) directly.
 :::
+
+## Passing agents safely
+
+`compose()` uses a precise type guard to distinguish agents from option objects. A value is treated as an agent only if it has:
+- `run` — a function
+- `instructions` — a string
+- `createSession` — a function
+
+Any plain object without all three is treated as `ComposeOptions`. This means you can safely pass agents created by `agent()`, `createAgent()`, `defineAgent().build()`, or `bare()`.

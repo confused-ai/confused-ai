@@ -11,3 +11,8 @@ export type {
 } from './tool-helper.js';
 export { handleToolGatewayRequest } from './tool-gateway-http.js';
 export type { ToolGatewayResponse } from './tool-gateway-http.js';
+export { ToolCache } from './tool-cache.js';
+export type { ToolCacheConfig, ToolCacheStats } from './tool-cache.js';
+export { ToolCompressor } from './tool-compressor.js';
+export type { ToolCompressorConfig, ToolCompressorStats, CompressionStrategy } from './tool-compressor.js';
+export { withCache, withCompression } from './tool-wrappers.js';

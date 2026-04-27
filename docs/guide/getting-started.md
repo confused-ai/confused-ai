@@ -34,6 +34,36 @@ console.log(result.text);          // "The answer is 96."
 await fs.writeFile('answer.md', result.markdown.content);
 ```
 
+## Streaming responses
+
+Every agent has a built-in `stream()` method that returns an async iterable. Chunks arrive as the model generates — no extra setup needed:
+
+```ts
+import { agent } from 'confused-ai';
+
+const myAgent = agent({
+  model: 'gpt-4o-mini',
+  instructions: 'You are a helpful assistant.',
+});
+
+// Stream to stdout character-by-character
+for await (const chunk of myAgent.stream('Explain TypeScript generics in depth')) {
+  process.stdout.write(chunk);
+}
+
+// Collect chunks into a string
+let response = '';
+for await (const chunk of myAgent.stream('Write a haiku about TypeScript')) {
+  response += chunk;
+}
+console.log(response);
+```
+
+::: tip
+`stream()` accepts the same options as `run()` (except `onChunk`) — `sessionId`, `hooks`, `runId`, etc.
+:::
+```
+
 ## Add a custom tool
 
 ```ts

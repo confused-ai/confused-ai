@@ -106,7 +106,8 @@ export class OTLPTraceExporter {
 
         if (this.spanQueue.length >= this.config.maxQueueSize) {
             this.log('warn', `Queue full (${this.config.maxQueueSize}), dropping oldest spans`);
-            this.spanQueue.shift();
+            // splice(0,1) is O(n) but only fires once per overflow; use slice to batch-drop if very behind
+            this.spanQueue = this.spanQueue.slice(-Math.floor(this.config.maxQueueSize * 0.9));
         }
 
         this.spanQueue.push(span);
@@ -180,8 +181,8 @@ export class OTLPTraceExporter {
             if (!response.ok) {
                 const errorText = await response.text();
                 this.log('error', `Export failed: ${response.status} ${errorText}`);
-                // Re-queue failed spans
-                this.spanQueue.unshift(...batch);
+                // Re-queue failed spans at front — use concat to avoid O(n) unshift
+                this.spanQueue = [...batch, ...this.spanQueue];
                 return { success: false, exported: 0, errors: [errorText] };
             }
 
@@ -190,8 +191,8 @@ export class OTLPTraceExporter {
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             this.log('error', `Export error: ${message}`);
-            // Re-queue failed spans
-            this.spanQueue.unshift(...batch);
+            // Re-queue failed spans at front
+            this.spanQueue = [...batch, ...this.spanQueue];
             return { success: false, exported: 0, errors: [message] };
         }
     }
@@ -318,7 +319,8 @@ export class OTLPMetricsExporter {
         if (this.isShuttingDown) return;
 
         if (this.metricsQueue.length >= this.config.maxQueueSize) {
-            this.metricsQueue.shift();
+            // Batch-evict oldest 10% rather than one-at-a-time shift()
+            this.metricsQueue = this.metricsQueue.slice(-Math.floor(this.config.maxQueueSize * 0.9));
         }
 
         this.metricsQueue.push(metric);
@@ -366,13 +368,13 @@ export class OTLPMetricsExporter {
             });
 
             if (!response.ok) {
-                this.metricsQueue.unshift(...batch);
+                this.metricsQueue = [...batch, ...this.metricsQueue];
                 return { success: false, exported: 0 };
             }
 
             return { success: true, exported: batch.length };
         } catch {
-            this.metricsQueue.unshift(...batch);
+            this.metricsQueue = [...batch, ...this.metricsQueue];
             return { success: false, exported: 0 };
         }
     }

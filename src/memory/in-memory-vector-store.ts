@@ -68,6 +68,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
         magA += a[i] * a[i];
         magB += b[i] * b[i];
     }
-    const denom = Math.sqrt(magA) * Math.sqrt(magB);
+    // Single sqrt(magA * magB) instead of sqrt(magA) * sqrt(magB)
+    const denom = Math.sqrt(magA * magB);
     return denom === 0 ? 0 : dot / denom;
 }

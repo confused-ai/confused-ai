@@ -144,6 +144,7 @@ export function tool<TSchema extends ZodObject<ZodRawShape>, TOutput = unknown>(
         strict,
 
         async execute(params, context) {
+            const t0 = performance.now();
             const startTime = new Date();
             const ctx: SimpleToolContext = {
                 agentId: context?.agentId ?? 'unknown',
@@ -155,11 +156,12 @@ export function tool<TSchema extends ZodObject<ZodRawShape>, TOutput = unknown>(
             const parseResult = parameters.safeParse(params);
 
             if (!parseResult.success) {
+                const executionTimeMs = performance.now() - t0;
                 const endTime = new Date();
                 return {
                     success: false,
                     error: { code: 'VALIDATION_ERROR', message: parseResult.error.message },
-                    executionTimeMs: endTime.getTime() - startTime.getTime(),
+                    executionTimeMs,
                     metadata: { startTime, endTime, retries: 0 },
                 };
             }
@@ -168,36 +170,43 @@ export function tool<TSchema extends ZodObject<ZodRawShape>, TOutput = unknown>(
             onInputAvailable?.(name, parseResult.data as z.infer<TSchema>);
 
             try {
-                // Execute with timeout
+                // Execute with timeout — timer is always cleared to prevent GC leak
+                let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
                 const result = await Promise.race([
                     execute(parseResult.data as z.infer<TSchema>, ctx),
-                    new Promise<never>((_, reject) =>
-                        setTimeout(() => reject(new Error(`Tool '${name}' timed out after ${timeoutMs}ms`)), timeoutMs),
-                    ),
-                ]);
+                    new Promise<never>((_, reject) => {
+                        timeoutHandle = setTimeout(
+                            () => reject(new Error(`Tool '${name}' timed out after ${timeoutMs}ms`)),
+                            timeoutMs,
+                        );
+                    }),
+                ]).finally(() => clearTimeout(timeoutHandle));
 
                 // Validate output if schema provided
                 if (outputSchema) {
                     const outputResult = outputSchema.safeParse(result);
                     if (!outputResult.success) {
+                        const executionTimeMs = performance.now() - t0;
                         const endTime = new Date();
                         return {
                             success: false,
                             error: { code: 'OUTPUT_VALIDATION_ERROR', message: outputResult.error.message },
-                            executionTimeMs: endTime.getTime() - startTime.getTime(),
+                            executionTimeMs,
                             metadata: { startTime, endTime, retries: 0 },
                         };
                     }
                 }
 
+                const executionTimeMs = performance.now() - t0;
                 const endTime = new Date();
                 return {
                     success: true,
                     data: (toModelOutput ? await toModelOutput(result) : result) as TOutput,
-                    executionTimeMs: endTime.getTime() - startTime.getTime(),
+                    executionTimeMs,
                     metadata: { startTime, endTime, retries: 0 },
                 };
             } catch (error) {
+                const executionTimeMs = performance.now() - t0;
                 const endTime = new Date();
                 return {
                     success: false,
@@ -205,7 +214,7 @@ export function tool<TSchema extends ZodObject<ZodRawShape>, TOutput = unknown>(
                         code: 'EXECUTION_ERROR',
                         message: error instanceof Error ? error.message : String(error),
                     },
-                    executionTimeMs: endTime.getTime() - startTime.getTime(),
+                    executionTimeMs,
                     metadata: { startTime, endTime, retries: 0 },
                 };
             }

@@ -30,6 +30,8 @@ export class InMemorySessionStore implements SessionStore {
     private sessions: Map<SessionId, Session> = new Map();
     private runs: Map<string, SessionRun[]> = new Map();
     private config: Required<SessionStoreConfig>;
+    // Inverted index: agentId → insertion-ordered Set of sessionIds for O(1) per-agent queries
+    private agentIndex = new Map<string, Set<SessionId>>();
 
     constructor(config: SessionStoreConfig = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -48,6 +50,11 @@ export class InMemorySessionStore implements SessionStore {
 
         this.sessions.set(id, newSession);
         this.runs.set(id, []);
+
+        // Update agent index
+        const agentSet = this.agentIndex.get(session.agentId) ?? new Set<SessionId>();
+        agentSet.add(id);
+        this.agentIndex.set(session.agentId, agentSet);
 
         // Enforce max sessions per agent
         this.enforceMaxSessions(session.agentId);
@@ -87,6 +94,10 @@ export class InMemorySessionStore implements SessionStore {
     }
 
     async delete(sessionId: SessionId): Promise<boolean> {
+        const session = this.sessions.get(sessionId);
+        if (session) {
+            this.agentIndex.get(session.agentId)?.delete(sessionId);
+        }
         this.runs.delete(sessionId);
         return this.sessions.delete(sessionId);
     }
@@ -132,13 +143,13 @@ export class InMemorySessionStore implements SessionStore {
 
         const messages = [...session.messages, message];
 
-        // Enforce max messages
-        if (messages.length > this.config.maxMessagesPerSession) {
-            messages.shift(); // Remove oldest
-        }
+        // Enforce max messages — slice is O(max), avoids O(n) shift()
+        const trimmed = messages.length > this.config.maxMessagesPerSession
+            ? messages.slice(-this.config.maxMessagesPerSession)
+            : messages;
 
         return this.update(sessionId, {
-            messages,
+            messages: trimmed,
             state: SessionState.ACTIVE,
         });
     }
@@ -221,15 +232,16 @@ export class InMemorySessionStore implements SessionStore {
      * Enforce max sessions per agent
      */
     private enforceMaxSessions(agentId: string): void {
-        const agentSessions = Array.from(this.sessions.values())
-            .filter(s => s.agentId === agentId)
-            .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-
-        const excess = agentSessions.length - this.config.maxSessionsPerAgent;
-        if (excess > 0) {
-            for (let i = 0; i < excess; i++) {
-                this.delete(agentSessions[i].id);
-            }
+        const ids = this.agentIndex.get(agentId);
+        if (!ids) return;
+        const excess = ids.size - this.config.maxSessionsPerAgent;
+        if (excess <= 0) return;
+        // Iterate insertion order (oldest first in Set) and delete excess
+        let removed = 0;
+        for (const id of ids) {
+            if (removed >= excess) break;
+            this.delete(id);
+            removed++;
         }
     }
 }

@@ -28,6 +28,7 @@ export type { OpenRouterProviderConfig } from './openrouter-provider.js';
 
 // OpenAI-compatible provider factories
 export {
+    // Existing
     createGroqProvider,
     createXAIProvider,
     createTogetherProvider,
@@ -37,7 +38,24 @@ export {
     createCohereProvider,
     createPerplexityProvider,
     createAzureOpenAIProvider,
-    // Base URLs
+    // Generic custom OpenAI-compatible
+    createOpenAICompatibleProvider,
+    // New providers
+    createCerebrasProvider,
+    createSambaNovaProvider,
+    createNvidiaProvider,
+    createAI21Provider,
+    createHyperbolicProvider,
+    createLambdaProvider,
+    createMoonshotProvider,
+    createDashScopeProvider,
+    createZhipuProvider,
+    createYiProvider,
+    createUpstageProvider,
+    createNovitaProvider,
+    createCloudflareProvider,
+    createWriterProvider,
+    // Base URLs (existing)
     GROQ_BASE_URL,
     XAI_BASE_URL,
     TOGETHER_BASE_URL,
@@ -46,6 +64,20 @@ export {
     MISTRAL_BASE_URL,
     COHERE_BASE_URL,
     PERPLEXITY_BASE_URL,
+    // Base URLs (new)
+    CEREBRAS_BASE_URL,
+    SAMBANOVA_BASE_URL,
+    NVIDIA_BASE_URL,
+    AI21_BASE_URL,
+    HYPERBOLIC_BASE_URL,
+    LAMBDA_BASE_URL,
+    MOONSHOT_BASE_URL,
+    DASHSCOPE_BASE_URL,
+    ZHIPU_BASE_URL,
+    YI_BASE_URL,
+    UPSTAGE_BASE_URL,
+    NOVITA_BASE_URL,
+    WRITER_BASE_URL,
 } from './compat-providers.js';
 
 export type {
@@ -58,6 +90,21 @@ export type {
     CohereProviderConfig,
     PerplexityProviderConfig,
     AzureOpenAIProviderConfig,
+    OpenAICompatibleProviderConfig,
+    CerebrasProviderConfig,
+    SambaNovaProviderConfig,
+    NvidiaProviderConfig,
+    AI21ProviderConfig,
+    HyperbolicProviderConfig,
+    LambdaProviderConfig,
+    MoonshotProviderConfig,
+    DashScopeProviderConfig,
+    ZhipuProviderConfig,
+    YiProviderConfig,
+    UpstageProviderConfig,
+    NovitaProviderConfig,
+    CloudflareProviderConfig,
+    WriterProviderConfig,
 } from './compat-providers.js';
 
 // ── Model resolution ───────────────────────────────────────────────────────
@@ -118,7 +165,7 @@ export type { FallbackChainConfig } from './fallback-chain.js';
 
 // ── LLM caching ───────────────────────────────────────────────────────────
 
-export { LLMCache, withCache } from './cache.js';
+export { LLMCache, withLLMCache } from './cache.js';
 export type { LLMCacheConfig, CacheKeyInput, CacheStats } from './cache.js';
 
 // ── Intelligent LLM router ─────────────────────────────────────────────────

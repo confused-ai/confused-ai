@@ -65,6 +65,17 @@ export interface ComposedAgent {
     ): Promise<AgenticRunResult>;
 }
 
+/** Type guard: is this value a CreateAgentResult from createAgent() / agent() / defineAgent()? */
+function isCreateAgentResult(v: unknown): v is CreateAgentResult {
+    return (
+        v !== null &&
+        typeof v === 'object' &&
+        typeof (v as Record<string, unknown>).run === 'function' &&
+        typeof (v as Record<string, unknown>).instructions === 'string' &&
+        typeof (v as Record<string, unknown>).createSession === 'function'
+    );
+}
+
 /**
  * Compose multiple agents into a sequential pipeline.
  * The output of each agent becomes the input of the next.
@@ -72,13 +83,13 @@ export interface ComposedAgent {
 export function compose(...args: CreateAgentResult[]): ComposedAgent;
 export function compose(...args: [...CreateAgentResult[], ComposeOptions]): ComposedAgent;
 export function compose(...args: unknown[]): ComposedAgent {
-    // Separate agents from options
+    // Separate agents from options using a reliable type guard
     const agents: CreateAgentResult[] = [];
     let opts: ComposeOptions = {};
 
     for (const arg of args) {
-        if (arg && typeof arg === 'object' && 'run' in (arg as object) && 'instructions' in (arg as object)) {
-            agents.push(arg as CreateAgentResult);
+        if (isCreateAgentResult(arg)) {
+            agents.push(arg);
         } else if (arg && typeof arg === 'object') {
             opts = arg as ComposeOptions;
         }

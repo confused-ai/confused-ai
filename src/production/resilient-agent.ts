@@ -132,6 +132,7 @@ class InlineCircuitBreaker {
 
 class InlineRateLimiter {
     private timestamps: number[] = [];
+    private head = 0; // head pointer — O(1) amortised eviction instead of O(n) filter()
     private readonly maxRpm: number;
 
     constructor(maxRpm: number) {
@@ -140,8 +141,18 @@ class InlineRateLimiter {
 
     check(): void {
         const now = Date.now();
-        this.timestamps = this.timestamps.filter(t => now - t < 60_000);
-        if (this.timestamps.length >= this.maxRpm) {
+        const cutoff = now - 60_000;
+        // Evict expired timestamps from the front (oldest-first order)
+        while (this.head < this.timestamps.length && this.timestamps[this.head] < cutoff) {
+            this.head++;
+        }
+        // Compact once the dead prefix is large enough to be worth the allocation
+        if (this.head > 128 && this.head > this.timestamps.length >> 1) {
+            this.timestamps = this.timestamps.slice(this.head);
+            this.head = 0;
+        }
+        const active = this.timestamps.length - this.head;
+        if (active >= this.maxRpm) {
             throw new Error(`Rate limit exceeded: ${this.maxRpm} requests/minute`);
         }
         this.timestamps.push(now);

@@ -183,13 +183,29 @@ const engine = new DAGEngine(graph, {
 
 ### Available plugins
 
-| Plugin | Key config |
-|--------|-----------|
-| `TelemetryPlugin` | `endpoint?: string` — OTLP HTTP endpoint |
-| `LoggingPlugin` | `level: 'debug' \| 'info' \| 'warn' \| 'error'` |
-| `AuditPlugin` | `store: AuditStore` |
-| `RateLimitPlugin` | `maxConcurrent?: number`, `maxPerMinute?: number` |
-| `OpenTelemetryPlugin` | `tracer?: Tracer` — bring your own OTel tracer |
+| Plugin | Key config | Notes |
+|--------|-----------|-------|
+| `TelemetryPlugin` | `endpoint?: string` — OTLP HTTP endpoint | Tracks per-node p99 latency |
+| `LoggingPlugin` | `level: 'debug' \| 'info' \| 'warn' \| 'error'` | Structured JSON to stdout |
+| `AuditPlugin` | `maxEvents?: number` (default 10000) | O(1) indexed queries — see below |
+| `RateLimitPlugin` | `maxTokensPerSecond: number`, `burst?: number` | Token-bucket rate limiter |
+| `OpenTelemetryPlugin` | `tracer?: Tracer` — bring your own OTel tracer | OTel module imported once and cached |
+
+### `AuditPlugin` — O(1) event queries
+
+`AuditPlugin` maintains internal Maps so all three query methods are O(1) regardless of how many events are stored:
+
+```ts
+const audit = new AuditPlugin({ maxEvents: 50_000 });
+const engine = new DAGEngine(graph, { plugins: [audit] });
+
+await engine.execute({ url: '...' });
+
+// All O(1) — index lookup, not full scan
+const nodeEvents = audit.getEventsForNode('step-b');
+const execEvents = audit.getEventsForExecution(result.executionId);
+const errorEvents = audit.getEventsByType(GraphEventType.NODE_ERROR);
+```
 
 ## Distributed execution
 

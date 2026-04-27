@@ -33,6 +33,8 @@ export class InMemoryStore implements MemoryStore {
     private memories: Map<EntityId, MemoryEntry> = new Map();
     private config: Required<MemoryStoreConfig>;
     private logger: DebugLogger;
+    // Track SHORT_TERM count separately to avoid O(n) scan on every store()
+    private shortTermCount = 0;
 
     constructor(config: MemoryStoreConfig = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -61,6 +63,7 @@ export class InMemoryStore implements MemoryStore {
 
         // Enforce short-term memory limits
         if (entry.type === MemoryType.SHORT_TERM) {
+            this.shortTermCount++;
             this.enforceShortTermLimit();
         }
 
@@ -138,7 +141,12 @@ export class InMemoryStore implements MemoryStore {
     }
 
     async delete(id: EntityId): Promise<boolean> {
-        return this.memories.delete(id);
+        const entry = this.memories.get(id);
+        const deleted = this.memories.delete(id);
+        if (deleted && entry?.type === MemoryType.SHORT_TERM) {
+            this.shortTermCount--;
+        }
+        return deleted;
     }
 
     async clear(type?: MemoryType): Promise<void> {
@@ -146,23 +154,24 @@ export class InMemoryStore implements MemoryStore {
             for (const [id, entry] of this.memories) {
                 if (entry.type === type) {
                     this.memories.delete(id);
+                    if (type === MemoryType.SHORT_TERM) this.shortTermCount--;
                 }
             }
         } else {
             this.memories.clear();
+            this.shortTermCount = 0;
         }
     }
 
     async getRecent(limit: number, type?: MemoryType): Promise<MemoryEntry[]> {
-        let entries = Array.from(this.memories.values());
-
-        if (type) {
-            entries = entries.filter(e => e.type === type);
+        // Map preserves insertion order = creation order. Reverse-iterate for O(n)
+        // instead of sorting the whole array O(n log n).
+        const result: MemoryEntry[] = [];
+        const values = Array.from(this.memories.values());
+        for (let i = values.length - 1; i >= 0 && result.length < limit; i--) {
+            if (!type || values[i].type === type) result.push(values[i]);
         }
-
-        return entries
-            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-            .slice(0, limit);
+        return result;
     }
 
     async snapshot(): Promise<MemoryEntry[]> {
@@ -220,17 +229,24 @@ export class InMemoryStore implements MemoryStore {
     }
 
     /**
-     * Calculate simple similarity score between query and content
-     * In production, use proper embeddings
+     * Calculate simple similarity score between query and content.
+     * Uses a Set for O(1) exact word lookups; falls back to substring scan only
+     * for words that had no exact match — O(n + m) in the common case.
      */
     private calculateSimilarity(query: string, content: string): number {
         const queryWords = query.toLowerCase().split(/\s+/);
         const contentWords = content.toLowerCase().split(/\s+/);
+        const contentSet = new Set(contentWords);
 
         let matches = 0;
         for (const word of queryWords) {
-            if (contentWords.some(cw => cw.includes(word) || word.includes(cw))) {
+            if (contentSet.has(word)) {
                 matches++;
+            } else {
+                // Substring fallback for partial matches
+                for (const cw of contentWords) {
+                    if (cw.includes(word) || word.includes(cw)) { matches++; break; }
+                }
             }
         }
 
@@ -238,18 +254,21 @@ export class InMemoryStore implements MemoryStore {
     }
 
     /**
-     * Enforce short-term memory entry limit
+     * Enforce short-term memory entry limit.
+     * Map preserves insertion order so iterating from the start evicts the oldest
+     * entries first — O(excess) instead of O(n log n) sort.
      */
     private enforceShortTermLimit(): void {
-        const shortTermEntries = Array.from(this.memories.values())
-            .filter(e => e.type === MemoryType.SHORT_TERM)
-            .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-
-        const excess = shortTermEntries.length - this.config.maxShortTermEntries;
-        if (excess > 0) {
-            for (let i = 0; i < excess; i++) {
-                this.memories.delete(shortTermEntries[i].id);
+        if (this.shortTermCount <= this.config.maxShortTermEntries) return;
+        const excess = this.shortTermCount - this.config.maxShortTermEntries;
+        let removed = 0;
+        for (const [id, entry] of this.memories) {
+            if (removed >= excess) break;
+            if (entry.type === MemoryType.SHORT_TERM) {
+                this.memories.delete(id);
+                removed++;
             }
         }
+        this.shortTermCount -= removed;
     }
 }

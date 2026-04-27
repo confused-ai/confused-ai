@@ -13,7 +13,50 @@ The authoritative `CHANGELOG.md` lives in the repository root.
 [View on GitHub →](https://github.com/confused-ai/confused-ai/blob/main/CHANGELOG.md)
 :::
 
-## v1.0.0 — Current
+## v1.1.0 — Current
+
+### Added
+
+#### `agent.stream()` — async iterable streaming on every agent
+- Every `CreateAgentResult` now has a built-in `stream(prompt, options?)` method
+- Returns an `AsyncIterable<string>` — chunks arrive as the LLM generates
+- Works with `for await` loops; no extra setup; accepts all `run()` options except `onChunk`
+
+```ts
+for await (const chunk of agent.stream('Explain quantum computing')) {
+  process.stdout.write(chunk);
+}
+```
+
+#### `defineAgent()` builder — `budget()`, `checkpoint()`, `adapters()`
+- `.budget(config)` — USD spend caps without dropping down to `createAgent()`
+- `.checkpoint(store)` — durable crash recovery wired in one line
+- `.adapters(registry)` — plug in adapter registry or explicit bindings
+- Full builder method table now documented in [Creating Agents](/guide/agents)
+
+### Performance
+
+#### `AgenticRunner` — Zod→JSON Schema cached per agent (not per run)
+- Tool definitions (Zod → JSON Schema) are computed once in the constructor and reused
+- Zero `toolToLLMDef()` overhead on hot-path `run()` calls after initial agent creation
+
+#### Tool execution — timer leak fixed
+- `Promise.race` timeout timer is now always cleared via `.finally()` on every tool call
+- Prevents 30-second timer handles accumulating in long-running processes
+- Timing now uses `performance.now()` for sub-millisecond accuracy
+
+#### `AuditPlugin` — O(1) event queries
+- Internal `Map` indexes maintained on every `onEvent()` call
+- `getEventsByType()`, `getEventsForNode()`, `getEventsForExecution()` are all O(1) index lookups
+- Previously O(n) full scans — eliminates bottleneck on high-event-volume workflows
+
+#### `OpenTelemetryPlugin` — OTel module imported once and cached
+- The `@opentelemetry/api` dynamic import is now cached after the first successful load
+- Previously re-imported on every `onNodeStart()` call
+
+---
+
+## v1.0.0
 
 ### Added
 
