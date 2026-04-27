@@ -147,4 +147,12 @@ export * from './context/index.js';
 // Scheduler: cron-based job scheduling with in-process handler registry
 export * from './scheduler/index.js';
 
+// ── Clean DX convenience re-exports ─────────────────────────────────────────
+// These are the "daily driver" imports that make the framework feel magical.
+// Devs can get started with a single import:
+//   import { agent, openai, tool, compose } from 'confused-ai'
+
+// Model factory shorthands
+export { openai, anthropic, ollama } from './model.js';
+
 recordFrameworkStartup({ version: VERSION, runtime: 'node' });

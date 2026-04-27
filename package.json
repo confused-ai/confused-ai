@@ -258,6 +258,41 @@
             "types": "./dist/graph.d.ts",
             "import": "./dist/graph.js",
             "require": "./dist/graph.cjs"
+        },
+        "./model": {
+            "types": "./dist/model.d.ts",
+            "import": "./dist/model.js",
+            "require": "./dist/model.cjs"
+        },
+        "./tool": {
+            "types": "./dist/tool.d.ts",
+            "import": "./dist/tool.js",
+            "require": "./dist/tool.cjs"
+        },
+        "./workflow": {
+            "types": "./dist/workflow.d.ts",
+            "import": "./dist/workflow.js",
+            "require": "./dist/workflow.cjs"
+        },
+        "./guard": {
+            "types": "./dist/guard.d.ts",
+            "import": "./dist/guard.js",
+            "require": "./dist/guard.cjs"
+        },
+        "./serve": {
+            "types": "./dist/serve.d.ts",
+            "import": "./dist/serve.js",
+            "require": "./dist/serve.cjs"
+        },
+        "./observe": {
+            "types": "./dist/observe.d.ts",
+            "import": "./dist/observe.js",
+            "require": "./dist/observe.cjs"
+        },
+        "./test": {
+            "types": "./dist/test.d.ts",
+            "import": "./dist/test.js",
+            "require": "./dist/test.cjs"
         }
     },
     "scripts": {
