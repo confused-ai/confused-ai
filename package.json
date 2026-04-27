@@ -1,6 +1,6 @@
 {
     "name": "confused-ai",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "description": "TypeScript framework for building production-grade AI agents, teams, and services",
     "type": "module",
     "files": [

@@ -350,14 +350,14 @@ All modules are available as top-level exports from `confused-ai` and as dedicat
 import { agent, defineTool, KnowledgeEngine, createStorage } from 'confused-ai';
 
 // Subpath (tree-shakeable, faster)
-import { defineTool } from 'confused-ai/tools';
+import { defineTool } from 'confused-ai/tool';
 import { KnowledgeEngine } from 'confused-ai/knowledge';
 import { createStorage } from 'confused-ai/storage';
 import { InMemorySessionStore } from 'confused-ai/session';
-import { AgentRouter } from 'confused-ai/orchestration';
-import { ResilientAgent } from 'confused-ai/production';
-import { LLMRouter, createSmartRouter, createBalancedRouter } from 'confused-ai/llm';
-import { ConsoleLogger } from 'confused-ai/observability';
+import { AgentRouter } from 'confused-ai/workflow';
+import { ResilientAgent } from 'confused-ai/guard';
+import { LLMRouter, createSmartRouter, createBalancedRouter } from 'confused-ai/model';
+import { ConsoleLogger } from 'confused-ai/observe';
 import { queueHook, InMemoryBackgroundQueue, BullMQBackgroundQueue } from 'confused-ai/background';
 import { createVoiceProvider, OpenAIVoiceProvider } from 'confused-ai/voice';
 import {
@@ -369,7 +369,7 @@ import {
   waitForApproval,
   createTenantContext,
   RedisRateLimiter,
-} from 'confused-ai/production';
+} from 'confused-ai/guard';
 import {
   createAdapterRegistry,
   createProductionSetup,

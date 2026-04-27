@@ -162,7 +162,7 @@ For higher accuracy, add an LLM classifier on top of heuristics:
 
 ```ts
 import { createLlmInjectionClassifier } from 'confused-ai/guardrails';
-import { OpenAIProvider } from 'confused-ai/llm';
+import { OpenAIProvider } from 'confused-ai/model';
 
 const classifier = createLlmInjectionClassifier({
   llm: new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o-mini' }),

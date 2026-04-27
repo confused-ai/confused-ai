@@ -40,7 +40,7 @@ npm install confused-ai
 ```ts
 // mcp-agent.ts
 import { createAgent } from 'confused-ai';
-import { MCPClient } from 'confused-ai/orchestration';
+import { MCPClient } from 'confused-ai/workflow';
 
 // ── Connect to MCP server ──────────────────────────────────────────────────
 const filesystem = new MCPClient({
@@ -154,7 +154,7 @@ const remoteMCP = new MCPClient({
 Expose any tool as an MCP server (other agents can then use it):
 
 ```ts
-import { MCPServer } from 'confused-ai/orchestration';
+import { MCPServer } from 'confused-ai/workflow';
 import { z } from 'zod';
 
 const server = new MCPServer({ name: 'my-tools', version: '1.0.0' });

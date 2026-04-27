@@ -31,7 +31,7 @@ User message
 // multi-agent-team.ts
 import { z } from 'zod';
 import { createAgent, tool } from 'confused-ai';
-import { Team } from 'confused-ai/orchestration';
+import { Team } from 'confused-ai/workflow';
 
 // ── Specialist tools ───────────────────────────────────────────────────────
 const lookupInvoice = tool({
@@ -161,7 +161,7 @@ const team = new Team({
 An agent can hand off to another mid-conversation:
 
 ```ts
-import { handoff } from 'confused-ai/orchestration';
+import { handoff } from 'confused-ai/workflow';
 
 const triageAgent = createAgent({
   name: 'triage',

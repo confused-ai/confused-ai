@@ -215,7 +215,7 @@ import {
 
   // Data
   csvReadTool, jsonQueryTool,
-} from 'confused-ai/tools';
+} from 'confused-ai/tool';
 ```
 
 See [Database Tools](/guide/database) for DB tool details.

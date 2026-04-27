@@ -155,7 +155,7 @@ The authoritative `CHANGELOG.md` lives in the repository root.
 ## v0.3.0
 
 ### Added
-- ReAct agentic loop with `createAgenticAgent`
+- ReAct agentic loop with `createAgent`
 - `createHttpService` HTTP runtime with OpenAPI
 - 50+ built-in tools
 - RAG / KnowledgeEngine

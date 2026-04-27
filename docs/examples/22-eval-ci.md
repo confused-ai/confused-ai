@@ -45,7 +45,7 @@ import {
   type EvalDatasetItem,
   type EvalReport,
   type EvalScorer,
-} from 'confused-ai/observability';
+} from 'confused-ai/observe';
 ```
 
 ---
@@ -164,7 +164,7 @@ if (!report.passed) {
 Exact match (`===`) is too strict for free-form support answers. Word-overlap F1 rewards partial matches:
 
 ```ts
-import type { EvalScorer } from 'confused-ai/observability';
+import type { EvalScorer } from 'confused-ai/observe';
 
 function tokenize(text: string): Set<string> {
   return new Set(
@@ -242,7 +242,7 @@ function printReport(report: EvalReport) {
 ## 6 · Persistent history (SQLite)
 
 ```ts
-import { SqliteEvalStore } from 'confused-ai/observability';
+import { SqliteEvalStore } from 'confused-ai/observe';
 
 const store = SqliteEvalStore.create('./evals.db');
 // or

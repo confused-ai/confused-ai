@@ -152,12 +152,13 @@ Most AI agent frameworks stop at the prototype. confused-ai ships production inf
 
 ```ts
 import { createAgent } from 'confused-ai';
+import { openai } from 'confused-ai/model';
 import { CalculatorAddTool, HttpClientTool } from 'confused-ai/tools';
 
 const agent = createAgent({
   name:         'Assistant',
   instructions: 'You are a helpful assistant.',
-  model:        'openai:gpt-4o-mini',
+  model:        openai('gpt-4o-mini'),
   tools:        [new CalculatorAddTool(), new HttpClientTool()],
 });
 
@@ -168,11 +169,12 @@ const { text, steps, finishReason } = await agent.run('What is 40 + 2?');
 
 ```ts
 import { defineAgent } from 'confused-ai';
+import { anthropic } from 'confused-ai/model';
 
 const agent = defineAgent()
   .name('Assistant')
   .instructions('You are concise and accurate.')
-  .model('openai:gpt-4o-mini')
+  .model(anthropic('claude-3-5-sonnet-20241022'))
   .tools([new CalculatorAddTool()])
   .withSession()
   .build();
@@ -228,18 +230,18 @@ import {
 } from 'confused-ai/tools';
 ```
 
-Every tool is Zod-validated, tree-shakeable, and dependency-lazy. Build custom tools with `defineTool()`:
+Every tool is Zod-validated, tree-shakeable, and dependency-lazy. Build custom tools with `defineTool()` or `tool()`:
 
 ```ts
-import { defineTool } from 'confused-ai';
+import { tool } from 'confused-ai/tool';
 import { z } from 'zod';
 
-const lookupOrder = defineTool()
-  .name('lookupOrder')
-  .description('Look up an order by ID')
-  .parameters(z.object({ orderId: z.string() }))
-  .execute(async ({ orderId }) => db.orders.findById(orderId))
-  .build();
+const lookupOrder = tool({
+  name: 'lookupOrder',
+  description: 'Look up an order by ID',
+  parameters: z.object({ orderId: z.string() }),
+  execute: async ({ orderId }) => db.orders.findById(orderId)
+});
 ```
 
 ---
@@ -247,8 +249,8 @@ const lookupOrder = defineTool()
 ## Multi-Agent Orchestration
 
 ```ts
-import { agent, compose, createSupervisor } from 'confused-ai';
-import { AgentRouter } from 'confused-ai/orchestration';
+import { agent, compose } from 'confused-ai';
+import { MultiAgentOrchestrator } from 'confused-ai/workflow';
 
 // Sequential pipeline — output of researcher feeds writer
 const pipeline = compose(
@@ -257,16 +259,16 @@ const pipeline = compose(
 );
 const { text } = await pipeline.run('TypeScript 5.5 features');
 
-// Supervisor with sub-agents
-const supervisor = createSupervisor({
-  agents:       [researchAgent, writeAgent, reviewAgent],
-  instructions: 'Coordinate the team to produce a final deliverable.',
-});
+// Orchestrator with sub-agents
+const orchestrator = new MultiAgentOrchestrator()
+  .addAgent({ name: 'Researcher', instructions: 'Find info' })
+  .addAgent({ name: 'Writer', instructions: 'Draft report' });
 
-// Capability-based routing
-const router = new AgentRouter({ strategy: 'capability' });
-router.register(codeAgent,      ['code', 'debug']);
-router.register(analyticsAgent, ['data', 'analysis']);
+const result = await orchestrator.runConsensus({
+  agents: ['Researcher', 'Writer'],
+  task: 'Coordinate to produce a final deliverable.',
+  strategy: 'best'
+});
 ```
 
 ---
@@ -332,6 +334,7 @@ const r2 = await agent.run('What is my name?', { sessionId }); // → "Alice"
 
 ```ts
 import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
+import { createAgent } from 'confused-ai';
 
 const agent = createAgent({
   instructions: 'You are a support agent.',
@@ -435,7 +438,8 @@ const service = createHttpService({
 ## HTTP Runtime
 
 ```ts
-import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createAgent } from 'confused-ai';
+import { createAgentRouter, createHttpService, listenService } from 'confused-ai/serve';
 
 const service = createHttpService({
   agents:   { support: supportAgent },
@@ -455,7 +459,8 @@ Routes: `GET /v1/health` · `GET /v1/agents` · `POST /v1/sessions` · `POST /v1
 ## Observability & Tracing
 
 ```ts
-import { OTLPTraceExporter } from 'confused-ai/observability';
+import { OTLPTraceExporter, OTLPMetricsExporter } from 'confused-ai/observe';
+import { createHttpService } from 'confused-ai/serve';
 
 const service = createHttpService({
   agents:  { support: supportAgent },
@@ -471,7 +476,8 @@ const service = createHttpService({
 ## MCP Client & Server
 
 ```ts
-import { loadMcpToolsFromUrl } from 'confused-ai/tools';
+import { loadMcpToolsFromUrl } from 'confused-ai/tool';
+import { createAgent } from 'confused-ai';
 
 const mcpTools = await loadMcpToolsFromUrl('http://mcp-server:3001');
 const agent = createAgent({ tools: mcpTools, instructions: 'Use MCP filesystem tools.' });
@@ -514,23 +520,19 @@ Includes: `Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`, `k8s.ya
 
 | Import | Contents |
 |--------|---------|
-| `confused-ai` | Main barrel |
-| `confused-ai/create-agent` | Lean createAgent + env resolver |
-| `confused-ai/llm` | Providers, model resolution, embeddings |
-| `confused-ai/tools` | BaseTool, registries, 50+ built-in tools |
-| `confused-ai/orchestration` | Pipelines, supervisor, swarm, router, consensus |
-| `confused-ai/knowledge` | RAG engine, loaders, vector store |
-| `confused-ai/session` | Session stores (in-memory, SQL, SQLite) |
-| `confused-ai/memory` | Memory stores + vector-backed long-term memory |
-| `confused-ai/guardrails` | Validators, rules, content safety |
-| `confused-ai/production` | Circuit breaker, rate limiter, health checks |
-| `confused-ai/observability` | OTLP tracer, metrics, eval store, structured logger |
-| `confused-ai/runtime` | HTTP service, OpenAPI, WebSocket, admin API |
-| `confused-ai/adapters` | 20-category adapter system |
-| `confused-ai/plugins` | Plugin registry + built-in plugins |
-| `confused-ai/graph` | DAGEngine, DurableExecutor, GraphBuilder, event stores, distributed workers |
-| `confused-ai/testing` | MockLLMProvider, MockToolRegistry, fixtures, graph test runner |
-| `confused-ai/contracts` | Shared interfaces — zero runtime code |
+| `confused-ai` | Main barrel (`agent`, `createAgent`) |
+| `confused-ai/model` | Provider classes + factory shorthands (`openai()`, `anthropic()`, `ollama()`) |
+| `confused-ai/tool` | `tool()`, `defineTool()`, MCP client/server |
+| `confused-ai/workflow` | Pipelines, graph engine, multi-agent orchestrator |
+| `confused-ai/guard` | Circuit breakers, rate limits, budgets, HITL |
+| `confused-ai/serve` | HTTP runtime, OpenAPI, WebSocket |
+| `confused-ai/observe` | OTLP tracing, metrics, structured logger |
+| `confused-ai/test` | Mocking utilities (`mockAgent()`, `scenario()`) |
+| `confused-ai/graph` | Advanced graph builder, durable execution, event stores |
+| `confused-ai/adapters` | 20-category adapter registry |
+| `confused-ai/contracts` | Dependency-free shared interfaces |
+
+*(Legacy paths like `confused-ai/tools`, `confused-ai/production`, `confused-ai/runtime` are preserved for backward compatibility).*
 
 ---
 
@@ -551,12 +553,14 @@ Includes: `Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`, `k8s.ya
 ## Testing
 
 ```ts
-import { MockLLMProvider } from 'confused-ai/testing';
+import { mockAgent, scenario } from 'confused-ai/test';
 
-const mockLLM = new MockLLMProvider([{ text: 'The answer is 42', tool_calls: [] }]);
-const agent = createAgenticAgent({ name: 'Test', llm: mockLLM, tools: new MockToolRegistry() });
-const { text } = await agent.run({ prompt: 'What is the answer?' });
-expect(text).toBe('The answer is 42');
+const agent = mockAgent({ responses: ['The answer is 42'] });
+
+await scenario(agent)
+  .send('What is the answer?')
+  .expectText('42')
+  .run();
 ```
 
 ### Graph testing utilities

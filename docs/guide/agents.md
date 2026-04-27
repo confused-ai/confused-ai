@@ -87,7 +87,7 @@ Full control, zero magic. You're responsible for everything.
 
 ```ts
 import { bare } from 'confused-ai';
-import { OpenAIProvider } from 'confused-ai/llm';
+import { OpenAIProvider } from 'confused-ai/model';
 
 // bare() requires an explicit LLMProvider — it never auto-resolves from env
 const llm = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o' });

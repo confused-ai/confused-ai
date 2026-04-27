@@ -7,7 +7,7 @@ confused-ai has built-in logging, metrics, and distributed tracing via OpenTelem
 Zero-config — all agents log to console by default:
 
 ```ts
-import { ConsoleLogger } from 'confused-ai/observability';
+import { ConsoleLogger } from 'confused-ai/observe';
 
 const logger = new ConsoleLogger({ level: 'info' }); // debug | info | warn | error
 
@@ -23,7 +23,7 @@ const myAgent = agent({
 Export traces to any OTLP-compatible backend (Jaeger, Zipkin, Honeycomb, Datadog, etc.):
 
 ```ts
-import { OtlpExporter } from 'confused-ai/observability';
+import { OtlpExporter } from 'confused-ai/observe';
 
 const exporter = new OtlpExporter({
   endpoint: 'http://localhost:4318/v1/traces', // OTLP HTTP endpoint
@@ -42,7 +42,7 @@ const myAgent = agent({
 Track latency, token usage, error rates, and custom counters:
 
 ```ts
-import { Metrics } from 'confused-ai/observability';
+import { Metrics } from 'confused-ai/observe';
 
 const metrics = new Metrics({
   exporter: 'console', // or 'otlp' with endpoint
@@ -65,7 +65,7 @@ orderCount.add(1, { region: 'us-east-1' });
 Score agent outputs against expected results using built-in accuracy scorers:
 
 ```ts
-import { EvalAggregator, ExactMatchAccuracy, LevenshteinAccuracy, wordOverlapF1, rougeLWords } from 'confused-ai/observability';
+import { EvalAggregator, ExactMatchAccuracy, LevenshteinAccuracy, wordOverlapF1, rougeLWords } from 'confused-ai/observe';
 
 const aggregator = new EvalAggregator([
   new ExactMatchAccuracy(),
@@ -90,8 +90,8 @@ const rouge = rougeLWords('the cat sat', 'the cat sat on the mat');        // �
 Use an LLM to score agent outputs with a rubric — ideal for open-ended evaluations where exact-match scorers fall short.
 
 ```ts
-import { runLlmAsJudge, createMultiCriteriaJudge, runEvalBatch } from 'confused-ai/observability';
-import { OpenAIProvider } from 'confused-ai/llm';
+import { runLlmAsJudge, createMultiCriteriaJudge, runEvalBatch } from 'confused-ai/observe';
+import { OpenAIProvider } from 'confused-ai/model';
 
 const llm = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o-mini' });
 
@@ -142,8 +142,8 @@ Send traces and run data to Langfuse or LangSmith without requiring their full S
 ### Langfuse
 
 ```ts
-import { sendLangfuseBatch } from 'confused-ai/observability';
-import type { LangfuseIngestClientConfig } from 'confused-ai/observability';
+import { sendLangfuseBatch } from 'confused-ai/observe';
+import type { LangfuseIngestClientConfig } from 'confused-ai/observe';
 
 const config: LangfuseIngestClientConfig = {
   publicKey: process.env.LANGFUSE_PUBLIC_KEY!,
@@ -163,8 +163,8 @@ await sendLangfuseBatch(config, [
 ### LangSmith
 
 ```ts
-import { sendLangSmithRunBatch } from 'confused-ai/observability';
-import type { LangSmithRunPayload } from 'confused-ai/observability';
+import { sendLangSmithRunBatch } from 'confused-ai/observe';
+import type { LangSmithRunPayload } from 'confused-ai/observe';
 
 const run: LangSmithRunPayload = {
   id: runId,
@@ -236,7 +236,7 @@ configureTelemetry({
 ### Quick start
 
 ```ts
-import { runEvalSuite, SqliteEvalStore } from 'confused-ai/observability';
+import { runEvalSuite, SqliteEvalStore } from 'confused-ai/observe';
 import { createAgent } from 'confused-ai';
 
 const agent = createAgent({ name: 'qa-bot', llm, instructions: 'Answer questions accurately.' });
@@ -268,7 +268,7 @@ if (!report.passed) process.exit(1);
 The default scorer is exact string match. Provide your own for fuzzy or semantic scoring:
 
 ```ts
-import { runEvalSuite } from 'confused-ai/observability';
+import { runEvalSuite } from 'confused-ai/observe';
 
 const report = await runEvalSuite({
   suiteName: 'semantic-accuracy',

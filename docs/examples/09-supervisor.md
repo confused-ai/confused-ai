@@ -33,7 +33,7 @@ User: "Write a market analysis report on EVs"
 // supervisor-workflow.ts
 import { z } from 'zod';
 import { createAgent, tool } from 'confused-ai';
-import { createSupervisor, createRole } from 'confused-ai/orchestration';
+import { createSupervisor, createRole } from 'confused-ai/workflow';
 
 // ── Worker: market research ────────────────────────────────────────────────
 const webSearch = tool({
@@ -133,7 +133,7 @@ handoff tools to delegate to specialists:
 
 ```ts
 import { agent, defineTool } from 'confused-ai';
-import { createHandoff } from 'confused-ai/orchestration';
+import { createHandoff } from 'confused-ai/workflow';
 
 const handoff = createHandoff({
   from: triageAgent,

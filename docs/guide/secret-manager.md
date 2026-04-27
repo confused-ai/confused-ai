@@ -138,7 +138,7 @@ A common pattern — load secrets at startup and inject into the agent:
 ```ts
 import { createSecretManager } from 'confused-ai/config';
 import { createAgent }          from 'confused-ai';
-import { OpenAIProvider }       from 'confused-ai/llm';
+import { OpenAIProvider }       from 'confused-ai/model';
 
 const secrets = createSecretManager({ provider: 'aws', region: 'us-east-1' });
 

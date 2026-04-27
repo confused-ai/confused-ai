@@ -156,7 +156,7 @@ export const webSearch = extendTool(rawSearch, {
 ```ts
 // agent.ts — agent setup with all features
 import { createAgent } from 'confused-ai';
-import { FallbackChain } from 'confused-ai/llm';
+import { FallbackChain } from 'confused-ai/model';
 import { InMemoryStore } from 'confused-ai/memory';
 import { createStorage } from 'confused-ai/storage';
 import { weatherTool, calculator, webSearch } from './tools.js';

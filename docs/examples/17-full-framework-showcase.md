@@ -88,14 +88,14 @@ Use this as a **coverage map** against **`CAPABILITIES.md`** at the repository r
 | Capability | Example import |
 |------------|----------------|
 | Opinionated agent | `import { createAgent } from 'confused-ai'` |
-| ReAct / tool loop (bring your own LLM) | `import { createAgenticAgent } from 'confused-ai/agentic'` |
+| ReAct / tool loop (bring your own LLM) | `import { createAgent } from 'confused-ai/agentic'` |
 | Class-based `Agent` | `import { Agent } from 'confused-ai'` |
 | Fluent DX builder | `import { defineAgent } from 'confused-ai'` (DX chain under `confused-ai` — see [Creating Agents](/guide/agents)) |
 | Typed Zod agents (SDK) | `import { defineAgent, createWorkflow, asOrchestratorAgent } from 'confused-ai'` |
 
 ```ts
 import { createAgent, resolveLlmForCreateAgent } from 'confused-ai';
-import { CalculatorAddTool } from 'confused-ai/tools';
+import { CalculatorAddTool } from 'confused-ai/tool';
 import { InMemorySessionStore } from 'confused-ai/session';
 
 const agent = createAgent({
@@ -114,17 +114,17 @@ const agent = createAgent({
 
 | Capability | Example import |
 |------------|----------------|
-| Built-in tools | `import { … } from 'confused-ai/tools'` |
-| Registry | `import { ToolRegistryImpl, toToolRegistry } from 'confused-ai/tools'` |
-| MCP HTTP client | `import { HttpMcpClient, loadMcpToolsFromUrl } from 'confused-ai/tools'` |
-| MCP HTTP server | `import { McpHttpServer, createMcpServer } from 'confused-ai/tools'` |
-| MCP stdio (minimal) | `import { runMcpStdioToolServer, handleMcpStdioLine } from 'confused-ai/tools'` |
-| JSON tool gateway | `import { handleToolGatewayRequest } from 'confused-ai/tools'` |
-| Playwright (optional peer) | `import { PlaywrightPageTitleTool } from 'confused-ai/tools'` |
+| Built-in tools | `import { … } from 'confused-ai/tool'` |
+| Registry | `import { ToolRegistryImpl, toToolRegistry } from 'confused-ai/tool'` |
+| MCP HTTP client | `import { HttpMcpClient, loadMcpToolsFromUrl } from 'confused-ai/tool'` |
+| MCP HTTP server | `import { McpHttpServer, createMcpServer } from 'confused-ai/tool'` |
+| MCP stdio (minimal) | `import { runMcpStdioToolServer, handleMcpStdioLine } from 'confused-ai/tool'` |
+| JSON tool gateway | `import { handleToolGatewayRequest } from 'confused-ai/tool'` |
+| Playwright (optional peer) | `import { PlaywrightPageTitleTool } from 'confused-ai/tool'` |
 
 ```ts
 import { createWorkflow, defineAgent } from 'confused-ai';
-import { CalculatorAddTool } from 'confused-ai/tools';
+import { CalculatorAddTool } from 'confused-ai/tool';
 import { z } from 'zod';
 
 const analyst = defineAgent({
@@ -191,10 +191,10 @@ const guardrails = new GuardrailValidator({
 
 | Capability | Example import |
 |------------|----------------|
-| Pipeline | `import { createPipeline } from 'confused-ai/orchestration'` |
-| Supervisor, swarm, team, toolkit | `import { … } from 'confused-ai/orchestration'` |
-| Agent router (**orchestration** strategy type) | `import type { AgentRoutingStrategy } from 'confused-ai/orchestration'` |
-| A2A client | `import { HttpA2AClient, createHttpA2AClient } from 'confused-ai/orchestration'` |
+| Pipeline | `import { createPipeline } from 'confused-ai/workflow'` |
+| Supervisor, swarm, team, toolkit | `import { … } from 'confused-ai/workflow'` |
+| Agent router (**orchestration** strategy type) | `import type { AgentRoutingStrategy } from 'confused-ai/workflow'` |
+| A2A client | `import { HttpA2AClient, createHttpA2AClient } from 'confused-ai/workflow'` |
 
 ::: tip
 The **LLM** router uses `RoutingStrategy` from `confused-ai/llm`. The **multi-agent** router uses `AgentRoutingStrategy` from `confused-ai/orchestration`—do not confuse the two.
@@ -204,14 +204,14 @@ The **LLM** router uses `RoutingStrategy` from `confused-ai/llm`. The **multi-ag
 
 | Capability | Example import |
 |------------|----------------|
-| Logging / metrics / tracer | `import { ConsoleLogger, MetricsCollectorImpl, InMemoryTracer } from 'confused-ai/observability'` |
-| Eval metrics | `import { wordOverlapF1, rougeLWords, ExactMatchAccuracy } from 'confused-ai/observability'` |
-| LLM-as-judge | `import { runLlmAsJudge } from 'confused-ai/observability'` |
-| Langfuse / LangSmith (HTTP helpers) | `import { sendLangfuseBatch, sendLangSmithRunBatch } from 'confused-ai/observability'` |
-| OTLP | `import { OTLPTraceExporter, OTLPMetricsExporter } from 'confused-ai/observability'` |
+| Logging / metrics / tracer | `import { ConsoleLogger, MetricsCollectorImpl, InMemoryTracer } from 'confused-ai/observe'` |
+| Eval metrics | `import { wordOverlapF1, rougeLWords, ExactMatchAccuracy } from 'confused-ai/observe'` |
+| LLM-as-judge | `import { runLlmAsJudge } from 'confused-ai/observe'` |
+| Langfuse / LangSmith (HTTP helpers) | `import { sendLangfuseBatch, sendLangSmithRunBatch } from 'confused-ai/observe'` |
+| OTLP | `import { OTLPTraceExporter, OTLPMetricsExporter } from 'confused-ai/observe'` |
 
 ```ts
-import { MetricsCollectorImpl } from 'confused-ai/observability';
+import { MetricsCollectorImpl } from 'confused-ai/observe';
 
 const metrics = new MetricsCollectorImpl();
 metrics.counter('northpeak_queries', 1, { region: 'us-west' });
@@ -221,11 +221,11 @@ metrics.counter('northpeak_queries', 1, { region: 'us-west' });
 
 | Capability | Example import |
 |------------|----------------|
-| Health | `import { HealthCheckManager, createSessionStoreHealthCheck } from 'confused-ai/production'` |
-| Rate limiting (process) | `import { RateLimiter, createOpenAIRateLimiter } from 'confused-ai/production'` |
-| Rate limiting (Redis) | `import { RedisRateLimiter } from 'confused-ai/production'` |
-| Circuit breaker | `import { CircuitBreaker, createLLMCircuitBreaker } from 'confused-ai/production'` |
-| Streams / shutdown | `import { ResumableStreamManager, GracefulShutdown } from 'confused-ai/production'` |
+| Health | `import { HealthCheckManager, createSessionStoreHealthCheck } from 'confused-ai/guard'` |
+| Rate limiting (process) | `import { RateLimiter, createOpenAIRateLimiter } from 'confused-ai/guard'` |
+| Rate limiting (Redis) | `import { RedisRateLimiter } from 'confused-ai/guard'` |
+| Circuit breaker | `import { CircuitBreaker, createLLMCircuitBreaker } from 'confused-ai/guard'` |
+| Streams / shutdown | `import { ResumableStreamManager, GracefulShutdown } from 'confused-ai/guard'` |
 
 ### Artifacts & media
 
@@ -238,10 +238,10 @@ metrics.counter('northpeak_queries', 1, { region: 'us-west' });
 
 | Capability | Example import |
 |------------|----------------|
-| API + SSE + OpenAPI | `import { createHttpService, listenService, getRuntimeOpenApiJson } from 'confused-ai/runtime'` |
+| API + SSE + OpenAPI | `import { createHttpService, listenService, getRuntimeOpenApiJson } from 'confused-ai/serve'` |
 
 ```ts
-import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createHttpService, listenService } from 'confused-ai/serve';
 
 const service = createHttpService(
   { agents: { storeops: agent }, tracing: true, cors: '*' },
@@ -260,15 +260,15 @@ await listenService(service, 8787);
 
 | Capability | Example import |
 |------------|----------------|
-| OpenAI / Anthropic / Google / compat | `import { OpenAIProvider, AnthropicProvider, GoogleProvider, … } from 'confused-ai/llm'` |
-| Bedrock (optional SDK) | `import { BedrockConverseProvider } from 'confused-ai/llm'` |
-| Smart model routing (no extra LLM call) | `import { createSmartRouter, scoreTaskTypesForRouting } from 'confused-ai/llm'` |
-| Stream → Zod | `import { collectStreamText, collectStreamThenValidate } from 'confused-ai/llm'` |
-| Context limits | `import { getContextLimitForModel, ContextWindowManager } from 'confused-ai/llm'` |
+| OpenAI / Anthropic / Google / compat | `import { OpenAIProvider, AnthropicProvider, GoogleProvider, … } from 'confused-ai/model'` |
+| Bedrock (optional SDK) | `import { BedrockConverseProvider } from 'confused-ai/model'` |
+| Smart model routing (no extra LLM call) | `import { createSmartRouter, scoreTaskTypesForRouting } from 'confused-ai/model'` |
+| Stream → Zod | `import { collectStreamText, collectStreamThenValidate } from 'confused-ai/model'` |
+| Context limits | `import { getContextLimitForModel, ContextWindowManager } from 'confused-ai/model'` |
 
 ```ts
 import { z } from 'zod';
-import { collectStreamThenValidate, type StreamDelta } from 'confused-ai/llm';
+import { collectStreamThenValidate, type StreamDelta } from 'confused-ai/model';
 
 async function structuredFromStream(stream: AsyncIterable<StreamDelta>) {
   const schema = z.object({ summary: z.string(), risk: z.enum(['low', 'medium', 'high']) });

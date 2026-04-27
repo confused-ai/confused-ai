@@ -118,7 +118,7 @@ For production workloads, replace `InMemoryVectorStore` with a persistent vector
 
 ```ts
 import { VectorMemoryStore, PineconeVectorStore } from 'confused-ai/memory';
-import { OpenAIEmbeddingProvider } from 'confused-ai/llm';
+import { OpenAIEmbeddingProvider } from 'confused-ai/model';
 
 const vectorMemory = new VectorMemoryStore({
   embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),

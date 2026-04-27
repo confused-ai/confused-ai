@@ -6,8 +6,8 @@
 
 ```ts
 import { createServer }              from 'node:http';
-import { createHttpService }         from 'confused-ai/runtime';
-import { attachWebSocketTransport }  from 'confused-ai/runtime';
+import { createHttpService }         from 'confused-ai/serve';
+import { attachWebSocketTransport }  from 'confused-ai/serve';
 import { createAgent }               from 'confused-ai';
 
 const assistant = createAgent({ name: 'assistant', llm, instructions: 'You are a helpful assistant.' });

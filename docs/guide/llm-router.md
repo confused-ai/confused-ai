@@ -5,7 +5,7 @@ The `LLMRouter` implements the `LLMProvider` interface and **automatically selec
 ## Quick start
 
 ```ts
-import { createBalancedRouter } from 'confused-ai/llm';
+import { createBalancedRouter } from 'confused-ai/model';
 import { createAgent } from 'confused-ai';
 
 const llm = createBalancedRouter(); // balances cost vs quality vs speed
@@ -34,7 +34,7 @@ import {
   createCostOptimizedRouter,
   createQualityFirstRouter,
   createSpeedOptimizedRouter,
-} from 'confused-ai/llm';
+} from 'confused-ai/model';
 
 const balanced  = createBalancedRouter();
 const cheap     = createCostOptimizedRouter();
@@ -67,8 +67,8 @@ const result = await agent.run('Write a merge sort', {
 ## Custom router with `LLMRouter`
 
 ```ts
-import { LLMRouter } from 'confused-ai/llm';
-import { OpenAIProvider, AnthropicProvider } from 'confused-ai/llm';
+import { LLMRouter } from 'confused-ai/model';
+import { OpenAIProvider, AnthropicProvider } from 'confused-ai/model';
 
 const router = new LLMRouter({
   strategy: 'balanced',
@@ -86,7 +86,7 @@ const router = new LLMRouter({
 Each agent in a team can use the same router — the router selects the optimal model per request:
 
 ```ts
-import { createBalancedRouter, createCostOptimizedRouter } from 'confused-ai/llm';
+import { createBalancedRouter, createCostOptimizedRouter } from 'confused-ai/model';
 import { createAgent } from 'confused-ai';
 
 const researchAgent = createAgent({

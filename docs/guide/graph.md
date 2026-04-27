@@ -402,7 +402,7 @@ import {
   createMockLLMProvider,
   expectEventSequence,
   assertExactEventSequence,
-} from 'confused-ai/testing';
+} from 'confused-ai/test';
 import { GraphEventType } from 'confused-ai/graph';
 
 const runner = createTestRunner({ maxConcurrency: 2 });
@@ -434,7 +434,7 @@ assertExactEventSequence(result.eventTypes, [
 ### Mock LLM provider for agent nodes
 
 ```ts
-import { createMockLLMProvider } from 'confused-ai/testing';
+import { createMockLLMProvider } from 'confused-ai/test';
 
 const llm = createMockLLMProvider('test-llm', [
   { content: 'First response' },

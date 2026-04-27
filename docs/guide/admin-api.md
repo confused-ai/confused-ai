@@ -5,7 +5,7 @@ The built-in Admin API exposes a set of management endpoints for monitoring agen
 ## Enable
 
 ```ts
-import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createHttpService, listenService } from 'confused-ai/serve';
 
 const service = createHttpService({
   agents: { assistant },
@@ -134,11 +134,11 @@ Live throughput and error statistics:
 ## Full example with all optional stores
 
 ```ts
-import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createHttpService, listenService } from 'confused-ai/serve';
 import {
   createSqliteAuditStore,
   createSqliteCheckpointStore,
-} from 'confused-ai/production';
+} from 'confused-ai/guard';
 
 const service = createHttpService({
   agents: { assistant },

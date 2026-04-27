@@ -748,8 +748,8 @@ const ai = agent({
 `createMcpServer` / `McpHttpServer` — expose a `ToolRegistry` as a JSON-RPC 2.0 MCP-compatible HTTP endpoint. External clients (Claude Desktop, other agents, any MCP client) can discover and invoke your tools.
 
 ```ts
-import { createMcpServer, toToolRegistry } from 'confused-ai/tools';
-import { CalculatorToolkit, TavilyToolkit } from 'confused-ai/tools';
+import { createMcpServer, toToolRegistry } from 'confused-ai/tool';
+import { CalculatorToolkit, TavilyToolkit } from 'confused-ai/tool';
 
 const registry = toToolRegistry([
   ...CalculatorToolkit.create(),
@@ -793,8 +793,8 @@ Useful for Claude Desktop integrations or any host that spawns MCP servers as ch
 
 ```ts
 // my-mcp-server.ts  — run with: node my-mcp-server.js
-import { runMcpStdioToolServer } from 'confused-ai/tools';
-import { CalculatorToolkit } from 'confused-ai/tools';
+import { runMcpStdioToolServer } from 'confused-ai/tool';
+import { CalculatorToolkit } from 'confused-ai/tool';
 
 await runMcpStdioToolServer(CalculatorToolkit.create(), {
   name: 'calculator-server',
@@ -806,7 +806,7 @@ await runMcpStdioToolServer(CalculatorToolkit.create(), {
 For more control, handle individual lines yourself:
 
 ```ts
-import { handleMcpStdioLine } from 'confused-ai/tools';
+import { handleMcpStdioLine } from 'confused-ai/tool';
 
 const serverInfo = { name: 'my-server', version: '1.0.0' };
 const tools = CalculatorToolkit.create();
@@ -821,8 +821,8 @@ if (response) process.stdout.write(response + '\n');
 `handleToolGatewayRequest` — a lightweight framework-agnostic HTTP bridge. Mount it behind your own auth/router. Not full MCP spec — useful for internal tool gateways or quick demos.
 
 ```ts
-import { handleToolGatewayRequest, toToolRegistry } from 'confused-ai/tools';
-import { CalculatorToolkit } from 'confused-ai/tools';
+import { handleToolGatewayRequest, toToolRegistry } from 'confused-ai/tool';
+import { CalculatorToolkit } from 'confused-ai/tool';
 import { createServer } from 'node:http';
 
 const tools = CalculatorToolkit.create();

@@ -8,7 +8,7 @@ Chain agents sequentially. The final result of agent N is automatically passed a
 
 ```ts
 import { compose, createAgent } from 'confused-ai';
-import { OpenAIProvider } from 'confused-ai/llm';
+import { OpenAIProvider } from 'confused-ai/model';
 
 const llm = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY!, model: 'gpt-4o' });
 

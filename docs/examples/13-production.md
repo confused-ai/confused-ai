@@ -18,7 +18,7 @@ If your primary model is unavailable, automatically fall back to alternatives:
 
 ```ts
 import { createAgent } from 'confused-ai';
-import { FallbackChain } from 'confused-ai/llm';
+import { FallbackChain } from 'confused-ai/model';
 
 // Tries models in order — uses first one that responds
 const resilientModel = new FallbackChain([
@@ -213,7 +213,7 @@ Combine everything:
 
 ```ts
 import { createAgent } from 'confused-ai';
-import { FallbackChain } from 'confused-ai/llm';
+import { FallbackChain } from 'confused-ai/model';
 
 const agent = createAgent({
   name: 'production-agent',

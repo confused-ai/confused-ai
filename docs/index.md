@@ -152,13 +152,14 @@ const { text } = await router.run('What is 2+2?'); // → routed to fast model
 
 ```ts [Production Agent]
 import { createAgent } from 'confused-ai';
+import { openai, anthropic, ollama } from 'confused-ai/model';
 import { createSqliteSessionStore } from 'confused-ai/session';
-import { withResilience } from 'confused-ai/production';
+import { withResilience } from 'confused-ai/guard';
 
 const agent = createAgent({
   name:         'SupportBot',
   instructions: 'You are a helpful support agent.',
-  model:        'openai:gpt-4o-mini',
+  model: openai('gpt-4o-mini'),
   sessionStore: createSqliteSessionStore('./sessions.db'),
   budget:       { maxUsdPerRun: 0.05, maxUsdPerUser: 5.0 },
   guardrails:   true,
@@ -183,7 +184,7 @@ import { createSqliteSessionStore } from 'confused-ai/session';
 import { KnowledgeEngine, TextLoader, InMemoryVectorStore } from 'confused-ai/knowledge';
 import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
 import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
-import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createHttpService, listenService } from 'confused-ai/serve';
 import { z } from 'zod';
 
 // 1. Knowledge base from your docs
@@ -208,7 +209,7 @@ const lookupOrder = defineTool()
 const support = createAgent({
   name:         'SupportBot',
   instructions: 'You are a helpful support agent. Use the knowledge base for policies.',
-  model:        'openai:gpt-4o-mini',
+  model: openai('gpt-4o-mini'),
   tools:        [lookupOrder],
   sessionStore: sessions,
   ragEngine:    knowledge,

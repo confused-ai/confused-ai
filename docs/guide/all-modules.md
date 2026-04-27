@@ -1279,8 +1279,8 @@ const agent = createAgent({
 ```
 
 ```ts
-import { BudgetExceededError, InMemoryBudgetStore } from 'confused-ai/production';
-import type { BudgetStore, BudgetConfig } from 'confused-ai/production';
+import { BudgetExceededError, InMemoryBudgetStore } from 'confused-ai/guard';
+import type { BudgetStore, BudgetConfig } from 'confused-ai/guard';
 ```
 
 See [Production — Budget enforcement](./production.md#budget-enforcement).
@@ -1293,7 +1293,7 @@ Survive process restarts mid-execution. The agentic runner saves state after eac
 
 ```ts
 import { createAgent } from 'confused-ai';
-import { createSqliteCheckpointStore } from 'confused-ai/production';
+import { createSqliteCheckpointStore } from 'confused-ai/guard';
 
 const agent = createAgent({
   name: 'LongTask',
@@ -1306,8 +1306,8 @@ const result = await agent.run('Process 500 records', { runId: 'batch-001' });
 ```
 
 ```ts
-import { InMemoryCheckpointStore, SqliteCheckpointStore, createSqliteCheckpointStore } from 'confused-ai/production';
-import type { AgentCheckpointStore, AgentRunState } from 'confused-ai/production';
+import { InMemoryCheckpointStore, SqliteCheckpointStore, createSqliteCheckpointStore } from 'confused-ai/guard';
+import type { AgentCheckpointStore, AgentRunState } from 'confused-ai/guard';
 ```
 
 ---
@@ -1317,8 +1317,8 @@ import type { AgentCheckpointStore, AgentRunState } from 'confused-ai/production
 Prevent duplicate side-effects on client retries.
 
 ```ts
-import { createHttpService } from 'confused-ai/runtime';
-import { createSqliteIdempotencyStore } from 'confused-ai/production';
+import { createHttpService } from 'confused-ai/serve';
+import { createSqliteIdempotencyStore } from 'confused-ai/guard';
 
 createHttpService({
   agents: { assistant },
@@ -1332,8 +1332,8 @@ createHttpService({
 Clients send `X-Idempotency-Key: <unique-key>` — retries replay the cached response without re-running the agent.
 
 ```ts
-import { InMemoryIdempotencyStore } from 'confused-ai/production';
-import type { IdempotencyStore, IdempotencyOptions } from 'confused-ai/production';
+import { InMemoryIdempotencyStore } from 'confused-ai/guard';
+import type { IdempotencyStore, IdempotencyOptions } from 'confused-ai/guard';
 ```
 
 ---
@@ -1343,8 +1343,8 @@ import type { IdempotencyStore, IdempotencyOptions } from 'confused-ai/productio
 Persistent, queryable audit trail for every agent run (SOC 2 / HIPAA).
 
 ```ts
-import { createHttpService } from 'confused-ai/runtime';
-import { createSqliteAuditStore } from 'confused-ai/production';
+import { createHttpService } from 'confused-ai/serve';
+import { createSqliteAuditStore } from 'confused-ai/guard';
 
 createHttpService({
   agents: { assistant },
@@ -1361,8 +1361,8 @@ const entries = await auditStore.query({
 ```
 
 ```ts
-import { InMemoryAuditStore } from 'confused-ai/production';
-import type { AuditStore, AuditEntry, AuditFilter } from 'confused-ai/production';
+import { InMemoryAuditStore } from 'confused-ai/guard';
+import type { AuditStore, AuditEntry, AuditFilter } from 'confused-ai/guard';
 ```
 
 ---
@@ -1374,7 +1374,7 @@ Pause execution at high-risk tool calls and require a human decision.
 > **Full guide:** [HITL](./hitl.md)
 
 ```ts
-import { createSqliteApprovalStore, waitForApproval, ApprovalRejectedError } from 'confused-ai/production';
+import { createSqliteApprovalStore, waitForApproval, ApprovalRejectedError } from 'confused-ai/guard';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
 
@@ -1396,8 +1396,8 @@ The HTTP runtime auto-exposes:
 - `POST /v1/approvals/:id` — submit a decision
 
 ```ts
-import { InMemoryApprovalStore, ApprovalRejectedError, waitForApproval } from 'confused-ai/production';
-import type { ApprovalStore, HitlRequest, ApprovalDecision, ApprovalStatus } from 'confused-ai/production';
+import { InMemoryApprovalStore, ApprovalRejectedError, waitForApproval } from 'confused-ai/guard';
+import type { ApprovalStore, HitlRequest, ApprovalDecision, ApprovalStatus } from 'confused-ai/guard';
 ```
 
 ---
@@ -1409,7 +1409,7 @@ Per-tenant isolation for sessions, rate limits, and cost tracking.
 > **Full guide:** [Multi-Tenancy](./multi-tenancy.md)
 
 ```ts
-import { createTenantContext } from 'confused-ai/production';
+import { createTenantContext } from 'confused-ai/guard';
 
 const ctx = createTenantContext('tenant-acme', {
   sessionStore: baseSessionStore,
@@ -1423,8 +1423,8 @@ const agent = createAgent({
 ```
 
 ```ts
-import { TenantScopedSessionStore } from 'confused-ai/production';
-import type { TenantContext, TenantConfig, TenantContextOptions } from 'confused-ai/production';
+import { TenantScopedSessionStore } from 'confused-ai/guard';
+import type { TenantContext, TenantConfig, TenantContextOptions } from 'confused-ai/guard';
 ```
 
 ---
@@ -1612,7 +1612,7 @@ import {
   createMockLLMProvider,
   expectEventSequence,
   assertExactEventSequence,
-} from 'confused-ai/testing';
+} from 'confused-ai/test';
 import { GraphEventType } from 'confused-ai/graph';
 
 const runner = createTestRunner({ maxConcurrency: 2 });
@@ -1843,19 +1843,19 @@ import { RabbitMQBackgroundQueue, SQSBackgroundQueue }                 from 'con
 import { RedisPubSubBackgroundQueue }                                   from 'confused-ai/background';
 
 // Runtime — HTTP server, JWT auth, WebSocket
-import { createRuntimeServer }                                          from 'confused-ai/runtime';
-import { attachWebSocketTransport }                                     from 'confused-ai/runtime';
+import { createRuntimeServer }                                          from 'confused-ai/serve';
+import { attachWebSocketTransport }                                     from 'confused-ai/serve';
 import { ElevenLabsVoiceProvider }                                      from 'confused-ai/voice';
 
 // Production — budget, checkpoint, idempotency, audit, HITL, tenant
-import { BudgetEnforcer, BudgetExceededError, InMemoryBudgetStore }    from 'confused-ai/production';
-import { InMemoryCheckpointStore, createSqliteCheckpointStore }        from 'confused-ai/production';
-import { InMemoryIdempotencyStore }                                     from 'confused-ai/production';
-import { InMemoryAuditStore, createSqliteAuditStore }                  from 'confused-ai/production';
-import { InMemoryApprovalStore, createSqliteApprovalStore }            from 'confused-ai/production';
-import { waitForApproval, ApprovalRejectedError }                      from 'confused-ai/production';
-import { createTenantContext, TenantScopedSessionStore }               from 'confused-ai/production';
-import { RedisRateLimiter }                                             from 'confused-ai/production';
+import { BudgetEnforcer, BudgetExceededError, InMemoryBudgetStore }    from 'confused-ai/guard';
+import { InMemoryCheckpointStore, createSqliteCheckpointStore }        from 'confused-ai/guard';
+import { InMemoryIdempotencyStore }                                     from 'confused-ai/guard';
+import { InMemoryAuditStore, createSqliteAuditStore }                  from 'confused-ai/guard';
+import { InMemoryApprovalStore, createSqliteApprovalStore }            from 'confused-ai/guard';
+import { waitForApproval, ApprovalRejectedError }                      from 'confused-ai/guard';
+import { createTenantContext, TenantScopedSessionStore }               from 'confused-ai/guard';
+import { RedisRateLimiter }                                             from 'confused-ai/guard';
 
 // Graph engine
 import { createGraph, DAGEngine, DurableExecutor, NodeKind }           from 'confused-ai/graph';
@@ -1902,8 +1902,8 @@ import { InMemoryScheduleRunStore }                                    from 'con
 import { VideoOrchestrator }                                           from 'confused-ai';
 
 // Testing (graph)
-import { createTestRunner, createMockLLMProvider }                     from 'confused-ai/testing';
-import { expectEventSequence, assertExactEventSequence }               from 'confused-ai/testing';
+import { createTestRunner, createMockLLMProvider }                     from 'confused-ai/test';
+import { expectEventSequence, assertExactEventSequence }               from 'confused-ai/test';
 ```
 
 

@@ -35,7 +35,7 @@ import { defineTool } from 'confused-ai';
 import {
   createSqliteApprovalStore,
   waitForApproval,
-} from 'confused-ai/production';
+} from 'confused-ai/guard';
 import { z } from 'zod';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
@@ -92,8 +92,8 @@ const agent = createAgent({
 Pass `approvalStore` to `createHttpService` — it auto-wires the approval endpoint:
 
 ```ts
-import { createHttpService } from 'confused-ai/runtime';
-import { createSqliteApprovalStore } from 'confused-ai/production';
+import { createHttpService } from 'confused-ai/serve';
+import { createSqliteApprovalStore } from 'confused-ai/guard';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
 
@@ -142,7 +142,7 @@ await approvalStore.decide(approvalId, {
 ### SQLite (durable default)
 
 ```ts
-import { createSqliteApprovalStore } from 'confused-ai/production';
+import { createSqliteApprovalStore } from 'confused-ai/guard';
 
 const store = createSqliteApprovalStore('./agent.db');
 ```
@@ -150,7 +150,7 @@ const store = createSqliteApprovalStore('./agent.db');
 ### In-memory (tests)
 
 ```ts
-import { InMemoryApprovalStore } from 'confused-ai/production';
+import { InMemoryApprovalStore } from 'confused-ai/guard';
 
 const store = new InMemoryApprovalStore();
 ```
@@ -158,7 +158,7 @@ const store = new InMemoryApprovalStore();
 ### Custom (Postgres, Redis, etc.)
 
 ```ts
-import type { ApprovalStore, HitlRequest, ApprovalDecision } from 'confused-ai/production';
+import type { ApprovalStore, HitlRequest, ApprovalDecision } from 'confused-ai/guard';
 
 class PostgresApprovalStore implements ApprovalStore {
   async create(req) { /* INSERT */ }
@@ -199,7 +199,7 @@ interface HitlRequest {
 When an approval is rejected, the agent throws `ApprovalRejectedError`. Handle it gracefully:
 
 ```ts
-import { ApprovalRejectedError } from 'confused-ai/production';
+import { ApprovalRejectedError } from 'confused-ai/guard';
 
 try {
   const result = await agent.run('Send a welcome email to alice@acme.com', { runId: 'run-001' });

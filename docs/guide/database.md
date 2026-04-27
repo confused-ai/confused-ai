@@ -5,7 +5,7 @@ confused-ai ships production-ready database tools for PostgreSQL, MySQL, SQLite,
 ## PostgreSQL
 
 ```ts
-import { postgresQueryTool, postgresExecuteTool } from 'confused-ai/tools';
+import { postgresQueryTool, postgresExecuteTool } from 'confused-ai/tool';
 
 // Query
 const query = postgresQueryTool({
@@ -32,7 +32,7 @@ const result = await dbAgent.run('How many users signed up this week?');
 ## MySQL
 
 ```ts
-import { mysqlQueryTool, mysqlExecuteTool } from 'confused-ai/tools';
+import { mysqlQueryTool, mysqlExecuteTool } from 'confused-ai/tool';
 
 const query = mysqlQueryTool({
   host: 'localhost',
@@ -48,7 +48,7 @@ const query = mysqlQueryTool({
 Great for local development, embedded agents, and CLI tools:
 
 ```ts
-import { sqliteQueryTool, sqliteExecuteTool } from 'confused-ai/tools';
+import { sqliteQueryTool, sqliteExecuteTool } from 'confused-ai/tool';
 
 const query = sqliteQueryTool({ dbPath: './data/app.db' });
 const execute = sqliteExecuteTool({ dbPath: './data/app.db' });
@@ -57,7 +57,7 @@ const execute = sqliteExecuteTool({ dbPath: './data/app.db' });
 ## Redis
 
 ```ts
-import { redisGetTool, redisSetTool, redisDelTool, redisScanTool } from 'confused-ai/tools';
+import { redisGetTool, redisSetTool, redisDelTool, redisScanTool } from 'confused-ai/tool';
 
 const config = { url: 'redis://localhost:6379' };
 const get = redisGetTool(config);
@@ -71,7 +71,7 @@ const scan = redisScanTool(config);
 Read, write, and query CSV files:
 
 ```ts
-import { csvReadTool, csvWriteTool, csvQueryTool } from 'confused-ai/tools';
+import { csvReadTool, csvWriteTool, csvQueryTool } from 'confused-ai/tool';
 
 const read = csvReadTool();
 const write = csvWriteTool();
@@ -94,7 +94,7 @@ import {
   postgresQueryTool,
   csvReadTool,
   jsonQueryTool,
-} from 'confused-ai/tools';
+} from 'confused-ai/tool';
 import { agent } from 'confused-ai';
 
 const dataAgent = agent({

@@ -18,7 +18,7 @@ Without tenant isolation, all users share the same session namespace and rate li
 
 ```ts
 import { createAgent } from 'confused-ai';
-import { createTenantContext } from 'confused-ai/production';
+import { createTenantContext } from 'confused-ai/guard';
 import { createSqliteSessionStore } from 'confused-ai/session';
 
 // Create the base stores once (shared across tenants)
@@ -73,7 +73,7 @@ interface TenantContext {
 ## Per-tenant rate limiting
 
 ```ts
-import { createTenantContext } from 'confused-ai/production';
+import { createTenantContext } from 'confused-ai/guard';
 
 const ctx = createTenantContext('tenant-enterprise', {
   rateLimitConfig: {
@@ -114,7 +114,7 @@ function getTenantContext(tenantId: string, plan: 'free' | 'pro' | 'enterprise')
 The `TenantScopedSessionStore` wraps any `SessionStore` and transparently adds the tenant prefix to every session ID. Use it directly if you want more control:
 
 ```ts
-import { TenantScopedSessionStore } from 'confused-ai/production';
+import { TenantScopedSessionStore } from 'confused-ai/guard';
 import { createSqliteSessionStore } from 'confused-ai/session';
 
 const base = await createSqliteSessionStore('./shared.db');
