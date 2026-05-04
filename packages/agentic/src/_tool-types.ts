@@ -139,11 +139,40 @@ class ToolRegistryImpl implements ToolRegistry {
     }
 }
 
+/** Default permissions used when a simple tool object omits the permissions field. */
+const DEFAULT_PERMISSIONS: ToolPermissions = {
+    allowNetwork: false,
+    allowFileSystem: false,
+    maxExecutionTimeMs: 30_000,
+};
+
+/**
+ * Adapt a simple tool-like object (name/description/parameters/execute) into a
+ * full {@link Tool} by filling in the required but rarely-needed fields with
+ * sensible defaults.  This allows the zero-boilerplate style used in tests and
+ * quick-start examples without sacrificing the typed registry contract.
+ */
+function adaptTool(raw: Partial<Tool> & { name: string; description: string; parameters: ToolParameters; execute: Tool['execute'] }): Tool {
+    return {
+        id:          (raw.id          ?? raw.name) as typeof raw.id & string,
+        name:        raw.name,
+        description: raw.description,
+        parameters:  raw.parameters,
+        permissions: raw.permissions ?? DEFAULT_PERMISSIONS,
+        category:    raw.category    ?? ToolCategory.CUSTOM,
+        version:     raw.version     ?? '1.0.0',
+        execute:     raw.execute,
+        validate:    raw.validate     ?? ((p: unknown): p is z.infer<typeof raw.parameters> => raw.parameters.safeParse(p).success),
+        ...(raw.author && { author: raw.author }),
+        ...(raw.tags   && { tags:   raw.tags }),
+    };
+}
+
 /** Normalize tools to a ToolRegistry (extensible: plug any tools). */
 export function toToolRegistry(tools: ToolProvider): ToolRegistry {
     if (Array.isArray(tools)) {
         const reg = new ToolRegistryImpl();
-        for (const t of tools) reg.register(t);
+        for (const t of tools) reg.register(adaptTool(t as Parameters<typeof adaptTool>[0]));
         return reg;
     }
     return tools;

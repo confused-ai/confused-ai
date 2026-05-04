@@ -98,6 +98,13 @@ const INJECTION_PATTERNS: Array<[string, RegExp, number, string]> = [
         0.9,
         'Attempts to exfiltrate data via URL',
     ],
+    // Memory/context reset — "forget what you were told", "start fresh", etc.
+    [
+        'memory-reset',
+        /\b(?:forget\s+(?:everything|what\s+(?:you\s+(?:were\s+told|know)|i\s+said)|(?:all\s+)?(?:previous|prior)\s+(?:messages?|context|instructions?))|your\s+(?:new|real|true|actual)\s+purpose\s+is|reset\s+(?:your\s+)?(?:memory|context|instructions?|programming)|start\s+(?:fresh|over)\s+(?:and\s+)?(?:now\s+)?(?:you\s+are|your\s+purpose))\b/i,
+        0.85,
+        'Attempts to reset agent memory or reassign its purpose',
+    ],
 ];
 
 // ── Unicode normalization ──────────────────────────────────────────────────
@@ -123,6 +130,8 @@ export interface InjectionSignal {
 export interface PromptInjectionDetectionResult {
     /** Whether an injection was detected. */
     detected: boolean;
+    /** Alias for `detected` — preferred in guard-oriented code. */
+    isInjection: boolean;
     /** Overall suspicion score 0-1. */
     score: number;
     /** Individual signals that contributed to the score. */
@@ -172,6 +181,7 @@ export function detectPromptInjection(
 
     return {
         detected: score >= threshold,
+        isInjection: score >= threshold,
         score,
         signals,
         ...(opts.returnNormalized ? { normalized } : {}),

@@ -135,6 +135,7 @@ export class AgenticRunner {
     constructor(config: AgenticRunnerConfig) {
         this.config = { ...config, toolMiddleware: config.toolMiddleware ?? [] };
         this._cachedLlmTools = config.tools.list().map((t) => toolToLLMDef(t));
+        if (config.guardrails) this.guardrails = config.guardrails;
     }
 
     setHumanInTheLoop(hooks: HumanInTheLoopHooks): void {
@@ -182,6 +183,17 @@ export class AgenticRunner {
         const prompt = lifecycle.beforeRun
             ? await lifecycle.beforeRun(runConfig.prompt, runConfig)
             : runConfig.prompt;
+
+        // ── Input guardrail check — runs BEFORE the LLM loop ─────────────────
+        if (this.guardrails) {
+            const inputCtx: GuardrailContext = { agentId, sessionId, output: prompt };
+            const inputResults = await this.guardrails.checkAll(inputCtx);
+            const inputViolations = this.guardrails.getViolations(inputResults);
+            if (inputViolations.length > 0) {
+                span.setStatus?.({ code: 2 /* ERROR */ });
+                return this._blockedResult(prompt, agentId, sessionId, runConfig);
+            }
+        }
 
         const systemPrompt = await this._buildSystemPrompt(runConfig, lifecycle);
         let messages = this._buildInitialMessages(runConfig, systemPrompt, prompt);
@@ -581,5 +593,25 @@ export class AgenticRunner {
             content: JSON.stringify({ error: message }),
             toolCallId,
         } as Message & { toolCallId: string };
+    }
+
+    /** Construct a short-circuit AgenticRunResult for a blocked (guardrail-rejected) input. */
+    private _blockedResult(
+        prompt: string,
+        agentId: string,
+        sessionId: string,
+        runConfig: AgenticRunConfig,
+    ): AgenticRunResult {
+        const runName = `response-${runConfig.runId ?? Date.now()}.md`;
+        return {
+            text: '',
+            markdown: { name: runName, content: '', mimeType: 'text/markdown', type: 'markdown' },
+            messages: [{ role: 'user', content: prompt }],
+            steps: 0,
+            finishReason: 'human_rejected',
+            ...(runConfig.runId    && { runId:    runConfig.runId }),
+            ...(runConfig.traceId  && { traceId:  runConfig.traceId }),
+        };
+        void agentId; void sessionId; // referenced for future hook plumbing
     }
 }

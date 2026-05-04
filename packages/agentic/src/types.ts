@@ -161,6 +161,11 @@ export interface AgenticRunnerConfig {
     readonly budgetEnforcer?: import('@confused-ai/production').BudgetEnforcer;
     /** Model ID passed to the budget enforcer for cost estimation. Default: 'gpt-4o'. */
     readonly budgetModelId?: string;
+    /**
+     * Optional guardrail engine — checks the input prompt before the run starts
+     * and tool calls / outputs during execution.
+     */
+    readonly guardrails?: import('@confused-ai/guardrails').GuardrailEngine;
 }
 
 /** Convert a framework Tool to LLM tool definition (name, description, parameters as JSON Schema) */

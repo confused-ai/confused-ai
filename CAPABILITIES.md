@@ -149,6 +149,7 @@ All pluggable interfaces, dependency-free, in one place — no circular imports.
 | **Persistent audit** | `auditStore` in `CreateHttpServiceOptions` — replaces 500-entry in-memory ring with durable store |
 | **WebSocket transport** | `websocket: true` in `CreateHttpServiceOptions` — `ws://host/v1/ws` for real-time bidirectional streaming |
 | **Admin API** | `adminApi: { enabled: true, bearerToken, auditStore, checkpointStore }` — `/admin/health`, `/admin/agents`, `/admin/audit`, `/admin/stats`, `/admin/checkpoints` |
+| **Interactive playground UI** | `createPlayground(agents, options?)` — `confused-ai/playground`. Serves a browser-based chat UI at `http://localhost:4000`. Zero frontend deps; CSP-hardened; `GET /`, `POST /api/chat`, `GET /api/agents`, `GET /health`. |
 
 ## Config & environment
 

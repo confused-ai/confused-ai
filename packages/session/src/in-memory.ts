@@ -20,16 +20,20 @@ export class InMemorySessionStore implements SessionStore {
     return Promise.resolve(this._store.get(id));
   }
 
-  create(data: { agentId: string; userId?: string; messages?: SessionMessage[] }): Promise<SessionData> {
-    const id  = crypto.randomUUID();
+  create(data: { agentId: string; userId?: string; messages?: SessionMessage[] } | string): Promise<SessionData> {
+    // When a plain string is passed, use it as the session ID (agentId defaults to 'unknown').
+    const id  = typeof data === 'string' ? data : crypto.randomUUID();
+    const agentId = typeof data === 'string' ? 'unknown' : data.agentId;
+    const userId  = typeof data === 'string' ? undefined  : data.userId;
+    const msgs    = typeof data === 'string' ? []          : (data.messages ?? []);
     const now = Date.now();
     const session: SessionData = {
       id,
-      agentId:   data.agentId,
-      messages:  data.messages ?? [],
+      agentId,
+      messages:  msgs,
       createdAt: now,
       updatedAt: now,
-      ...(data.userId !== undefined && { userId: data.userId }),
+      ...(userId !== undefined && { userId }),
     };
     this._store.set(id, session);
     return Promise.resolve(session);
@@ -45,6 +49,18 @@ export class InMemorySessionStore implements SessionStore {
 
   getMessages(id: string): Promise<SessionMessage[]> {
     return Promise.resolve([...(this._store.get(id)?.messages ?? [])]);
+  }
+
+  appendMessage(id: string, message: SessionMessage): Promise<void> {
+    const existing = this._store.get(id);
+    if (existing) {
+      this._store.set(id, {
+        ...existing,
+        messages: [...existing.messages, message],
+        updatedAt: Date.now(),
+      });
+    }
+    return Promise.resolve();
   }
 
   delete(id: string): Promise<void> {

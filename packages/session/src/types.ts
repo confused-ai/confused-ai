@@ -26,9 +26,17 @@ export interface SessionMessage {
  */
 export interface SessionStore {
   get(id: string): Promise<SessionData | undefined>;
-  create(data: { agentId: string; userId?: string; messages?: SessionMessage[] }): Promise<SessionData>;
+  /**
+   * Create a new session.
+   * - Pass an object `{ agentId, userId?, messages? }` to auto-generate an ID.
+   * - Pass a plain string to create a session with that specific ID (useful in tests
+   *   and resumable-conversation flows where you own the ID).
+   */
+  create(data: { agentId: string; userId?: string; messages?: SessionMessage[] } | string): Promise<SessionData>;
   update(id: string, data: { messages: SessionMessage[] }): Promise<void>;
   getMessages(id: string): Promise<SessionMessage[]>;
+  /** Append a single message to an existing session. */
+  appendMessage(id: string, message: SessionMessage): Promise<void>;
   delete(id: string): Promise<void>;
 }
 

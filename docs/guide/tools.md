@@ -910,6 +910,70 @@ const loggedSearch = wrapTool(new TavilySearchTool(), {
 
 ---
 
+## Tool Caching
+
+`ToolCache` stores tool results in an LRU + TTL cache to cut redundant API calls.
+
+```ts
+import { ToolCache, withCache } from 'confused-ai/tools';
+
+const cache = new ToolCache({
+  maxEntries: 200,          // evict oldest when full (LRU)
+  ttlMs: 5 * 60 * 1000,    // 60 minutes per entry
+  // Optional: custom key function (default: JSON.stringify(args))
+  cacheKeyFn: (args) => `geo:${args.address}`,
+});
+
+// Wrap an existing tool — same interface, transparent caching
+const cachedSearch = withCache(TavilySearchTool, cache);
+
+const ai = agent({
+  tools: [cachedSearch],
+});
+
+// Inspect cache stats at any time
+const stats = cache.stats();
+// { hits: 34, misses: 8, hitRate: 0.81, entries: 12 }
+```
+
+`ToolCache` is agnostic — wrap any tool that accepts serialisable arguments.
+
+---
+
+## Tool Output Compression
+
+`ToolCompressor` truncates or summarises large tool outputs before they reach the LLM, preventing context-window overflow.
+
+```ts
+import { ToolCompressor, withCompression } from 'confused-ai/tools';
+
+const compressor = new ToolCompressor({
+  maxBytes: 4_096,         // hard byte cap on output
+  strategy: 'truncate',    // 'truncate' | 'summarise'
+  // strategy: 'summarise' requires llm + summarisePrompt
+});
+
+// Wrap a tool that returns large payloads
+const compressedScraper = withCompression(BrowserTool, compressor);
+
+const ai = agent({ tools: [compressedScraper] });
+```
+
+Composable with `withCache`:
+
+```ts
+const tool = withCompression(withCache(BrowserTool, cache), compressor);
+```
+
+Compression stats:
+
+```ts
+const stats = compressor.stats();
+// { compressions: 7, bytesIn: 312_000, bytesOut: 28_672 }
+```
+
+---
+
 ## Full Tool Reference
 
 | Category | Tool(s) | Requires |

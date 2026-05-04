@@ -13,7 +13,34 @@ The authoritative `CHANGELOG.md` lives in the repository root.
 [View on GitHub →](https://github.com/confused-ai/confused-ai/blob/main/CHANGELOG.md)
 :::
 
-## v1.1.0 — Current
+## v1.1.6 — Current
+
+### Changed
+
+#### Monorepo restructure — packages fully independent
+- All source code now lives in independently-built workspace packages under `packages/`. The `src/` directory is retained as a backward-compatible re-export barrel — **no breaking API changes**.
+- `packages/tools` rewritten with clean functional `defineTool` implementations; removed all class-based files with broken relative imports.
+- `packages/test-utils` is now a fully standalone package: `createMockLLM`, `createMockAgent`, `runScenario` with zero cross-package dependencies.
+- CI pipeline updated to 4 sequential jobs: `typecheck → lint → test (Node 18 / 20 / 22) → build all packages`.
+
+### Fixed
+
+- **`router/selectForBudget`** — removed incorrect `× 1,000,000` scaling; budget comparison is now a direct dollar-per-million comparison.
+- **`adapter-redis/session-store`** — removed unnecessary optional chain on non-null `hGetAll` result; fixed template literal number type.
+- **`tools/types.ts`** — migrated from deprecated `ZodTypeAny` → `z.ZodType`; `_def` private field access replaced with `.def`.
+- Removed 33 broken package copies that had relative `src/`-path imports causing circular resolution failures.
+- Documentation URLs updated from `rvuyyuru2.github.io/agent-framework` to `confused-ai.github.io/confused-ai` throughout all docs.
+- Version consistency: `ARCHITECTURE.md` and `SECURITY.md` now match the `package.json` version.
+
+### Security
+
+- `SECURITY.md`: added `ShellTool` sandbox requirements section documenting blocked command patterns.
+- `SECURITY.md`: documented `RedisRateLimiter` as the required solution for multi-instance distributed rate limiting.
+- `README.md`: qualified audit-logging claim — removed unqualified SOC 2 / HIPAA label; added compliance footnote.
+
+---
+
+## v1.1.0
 
 ### Added
 

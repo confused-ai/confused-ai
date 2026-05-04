@@ -171,6 +171,82 @@ const azure = createAzureOpenAIProvider({
 });
 ```
 
+### Extended provider catalogue (v1.1.6)
+
+14 additional inference providers are available — all OpenAI-compatible, all factory-created:
+
+```ts
+import {
+  // High-throughput inference
+  createCerebrasProvider,       // CEREBRAS_API_KEY  — llama3.3-70b, llama3.1-8b
+  createSambaNovaProvider,      // SAMBANOVA_API_KEY — Meta-Llama-3.3-70B-Instruct
+  createNvidiaNimProvider,      // NVIDIA_NIM_API_KEY — meta/llama-3.3-70b-instruct
+
+  // Aggregator / model-hub
+  createDeepInfraProvider,      // DEEPINFRA_API_KEY — meta-llama/Llama-3.3-70B-Instruct
+  createHuggingFaceProvider,    // HF_API_KEY — any HF Inference endpoint
+
+  // Affordable GPU clouds
+  createLeptonProvider,         // LEPTON_API_KEY
+  createFeatherlessProvider,    // FEATHERLESS_API_KEY
+  createNovitaProvider,         // NOVITA_API_KEY
+
+  // Enterprise / specialty
+  createAI21Provider,           // AI21_API_KEY — jamba-1.5-large
+  createHyperbolicProvider,     // HYPERBOLIC_API_KEY
+  createLambdaLabsProvider,     // LAMBDA_API_KEY
+
+  // Asia-Pacific
+  createMoonshotProvider,       // MOONSHOT_API_KEY — moonshot-v1-32k (Kimi)
+  createQwenProvider,           // DASHSCOPE_API_KEY — qwen-max (Alibaba)
+  createUpstageProvider,        // UPSTAGE_API_KEY — solar-pro
+
+  // Self-hosted / local
+  createVllmProvider,           // any vLLM server — { baseURL, model }
+  createLmStudioProvider,       // LM Studio local server
+  createCloudflareWorkersAIProvider, // CLOUDFLARE_AI_API_KEY + accountId
+
+  // Any OpenAI-compatible endpoint
+  createOpenAICompatibleProvider,
+} from 'confused-ai';
+
+// Example: Cerebras for ultra-fast inference
+const cerebras = createCerebrasProvider({
+  apiKey: process.env.CEREBRAS_API_KEY,
+  model: 'llama3.3-70b',
+});
+
+// Example: bring your own OpenAI-compatible endpoint
+const custom = createOpenAICompatibleProvider({
+  baseURL: 'https://my-llm-gateway.internal/v1',
+  apiKey: process.env.GATEWAY_API_KEY,
+  model: 'my-fine-tuned-model',
+});
+
+const ai = agent({ llmProvider: custom, instructions: '...' });
+```
+
+| Provider | Factory | Env var | Notes |
+|---|---|---|---|
+| Cerebras | `createCerebrasProvider` | `CEREBRAS_API_KEY` | Ultra-low latency |
+| SambaNova | `createSambaNovaProvider` | `SAMBANOVA_API_KEY` | RDU chips |
+| NVIDIA NIM | `createNvidiaNimProvider` | `NVIDIA_NIM_API_KEY` | GPU cloud |
+| DeepInfra | `createDeepInfraProvider` | `DEEPINFRA_API_KEY` | Serverless inference |
+| HuggingFace | `createHuggingFaceProvider` | `HF_API_KEY` | HF Inference API |
+| Lepton | `createLeptonProvider` | `LEPTON_API_KEY` | Cost-efficient GPU |
+| Featherless | `createFeatherlessProvider` | `FEATHERLESS_API_KEY` | Serverless |
+| Novita AI | `createNovitaProvider` | `NOVITA_API_KEY` | Multi-model |
+| AI21 Labs | `createAI21Provider` | `AI21_API_KEY` | Jamba series |
+| Hyperbolic | `createHyperbolicProvider` | `HYPERBOLIC_API_KEY` | Research-grade |
+| Lambda Labs | `createLambdaLabsProvider` | `LAMBDA_API_KEY` | GPU cloud |
+| Moonshot (Kimi) | `createMoonshotProvider` | `MOONSHOT_API_KEY` | Long-context |
+| Alibaba Qwen | `createQwenProvider` | `DASHSCOPE_API_KEY` | Multilingual |
+| Upstage Solar | `createUpstageProvider` | `UPSTAGE_API_KEY` | Solar-pro |
+| vLLM | `createVllmProvider` | — | Self-hosted |
+| LM Studio | `createLmStudioProvider` | — | Local dev |
+| Cloudflare Workers AI | `createCloudflareWorkersAIProvider` | `CLOUDFLARE_AI_API_KEY` | Edge |
+| Custom | `createOpenAICompatibleProvider` | — | Any OpenAI-compat endpoint |
+
 ### Model string shorthand
 
 ```ts

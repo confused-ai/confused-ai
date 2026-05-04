@@ -198,3 +198,30 @@ model: 'openrouter/meta-llama/llama-3.3-70b-instruct'
 // Fallback chain — auto-failover
 model: ['gpt-4o', 'claude-3-5-sonnet-latest', 'gemini-2.0-flash-exp']
 ```
+
+---
+
+## Parallel tool execution
+
+When an LLM step requests multiple tools at once, the runner dispatches all of them **in parallel** via `Promise.all`. This means a step with 4 tool calls takes as long as the slowest single tool — not the sum.
+
+```ts
+// Agent with 3 tools — if the LLM asks for all 3 in one step,
+// they run concurrently with no extra configuration
+const ai = agent({
+  model: 'gpt-4o',
+  instructions: 'Research assistant.',
+  tools: [new TavilySearchTool({ apiKey }), new HttpClientTool(), new WikipediaSearchTool()],
+});
+
+// If the LLM emits:
+//   tool_call: tavilySearch("TypeScript 5.7")
+//   tool_call: httpGet("https://devblogs.microsoft.com/typescript")
+//   tool_call: wikipediaSearch("TypeScript")
+// …all three fire in parallel. Wall-clock = max(t₁, t₂, t₃)
+const result = await ai.run('Compare TypeScript 5.7 with the Wikipedia summary');
+```
+
+::: tip
+Parallel dispatch happens automatically — no `parallel: true` flag needed. Each tool call still runs through its own guardrail checks, HITL approval, and lifecycle hooks before and after execution.
+:::

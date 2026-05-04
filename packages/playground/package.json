@@ -1,0 +1,48 @@
+{
+  "name": "@confused-ai/playground",
+  "version": "0.1.0",
+  "description": "Interactive browser-based playground UI for confused-ai agents — zero framework, pure Node.js HTTP.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "require": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "node --loader ts-node/esm src/index.ts"
+  },
+  "dependencies": {
+    "@confused-ai/contracts": "workspace:*"
+  },
+  "peerDependencies": {
+    "@confused-ai/agentic": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@confused-ai/agentic": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "tsup": "^8.0.2"
+  }
+}

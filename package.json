@@ -298,6 +298,11 @@
             "types": "./dist/test.d.ts",
             "import": "./dist/test.js",
             "require": "./dist/test.cjs"
+        },
+        "./playground": {
+            "types": "./dist/playground.d.ts",
+            "import": "./dist/playground.js",
+            "require": "./dist/playground.cjs"
         }
     },
     "scripts": {

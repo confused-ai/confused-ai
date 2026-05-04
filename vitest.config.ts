@@ -104,6 +104,7 @@ export default defineConfig({
             '@confused-ai/voice': new URL('./packages/voice/src/index.ts', import.meta.url).pathname,
             '@confused-ai/plugins': new URL('./packages/plugins/src/index.ts', import.meta.url).pathname,
             '@confused-ai/sdk': new URL('./packages/sdk/src/index.ts', import.meta.url).pathname,
+            '@confused-ai/playground': new URL('./packages/playground/src/index.ts', import.meta.url).pathname,
         },
     },
 

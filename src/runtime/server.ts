@@ -229,6 +229,63 @@ export function createHttpService(
                 return;
             }
 
+            // ── POST /v1/agents/:name/run ─────────────────────────────────────
+            // RESTful per-agent run endpoint.  Body: { prompt: string }
+            const agentRunMatch = /^\/v1\/agents\/([^/]+)\/run$/.exec(path);
+            if (method === 'POST' && agentRunMatch) {
+                const agentName = decodeURIComponent(agentRunMatch[1] ?? '');
+                const agent = map[agentName];
+                if (!agent) {
+                    sendJson(res, 404, { error: `Agent '${agentName}' not found` }, cors, rid);
+                    pushAudit(404, { agent: agentName, id: rid });
+                    return;
+                }
+                let raw: string;
+                try {
+                    raw = await readBody(req, maxBodyBytes);
+                } catch (e) {
+                    const code = (e as NodeJS.ErrnoException).code;
+                    if (code === 'BODY_TOO_LARGE') {
+                        sendJson(res, 413, { error: 'Request body too large' }, cors, rid);
+                        pushAudit(413, { agent: agentName });
+                        return;
+                    }
+                    throw e;
+                }
+                let body: { prompt?: string; sessionId?: string; userId?: string };
+                try {
+                    body = raw ? (JSON.parse(raw) as typeof body) : {};
+                } catch {
+                    sendJson(res, 400, { error: 'Invalid JSON' }, cors, rid);
+                    pushAudit(400, { agent: agentName });
+                    return;
+                }
+                if (!body.prompt || typeof body.prompt !== 'string') {
+                    sendJson(res, 400, { error: 'Missing "prompt" string' }, cors, rid);
+                    pushAudit(400, { agent: agentName });
+                    return;
+                }
+                try {
+                    const result = await agent.run(body.prompt, {
+                        sessionId: body.sessionId,
+                        userId: body.userId,
+                    });
+                    sendJson(res, 200, {
+                        id: rid,
+                        agent: agentName,
+                        text: result.text,
+                        steps: result.steps,
+                        finishReason: result.finishReason,
+                    }, cors, rid);
+                    pushAudit(200, { id: rid, agent: agentName });
+                } catch (e) {
+                    adminStats.totalErrors++;
+                    sendJson(res, 500, { error: 'Agent run failed' }, cors, rid);
+                    pushAudit(500, { agent: agentName });
+                }
+                return;
+            }
+
             if (method === 'GET' && (path === '/v1/openapi.json' || path === '/openapi.json')) {
                 sendJson(res, 200, getRuntimeOpenApiJson(), cors, rid);
                 pushAudit(200, { id: rid });
