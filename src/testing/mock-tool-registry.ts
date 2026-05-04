@@ -21,8 +21,8 @@
  * ```
  */
 
-import type { Tool, ToolResult, ToolContext } from '../tools/core/types.js';
-import { ToolCategory } from '../tools/core/types.js';
+import type { Tool, ToolResult, ToolContext } from '@confused-ai/tools';
+import { ToolCategory } from '@confused-ai/tools';
 import { z } from 'zod';
 
 export interface ToolCallRecord {
@@ -84,7 +84,7 @@ export class MockToolRegistry {
                 id: `mock-tool-${name}`,
                 name,
                 description: `Mock tool: ${name}`,
-                parameters: params,
+                parameters: params as any,
                 permissions: {
                     allowNetwork: false,
                     allowFileSystem: false,

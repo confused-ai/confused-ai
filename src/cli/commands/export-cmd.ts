@@ -10,7 +10,7 @@
 
 import type { Command } from 'commander';
 import fs from 'node:fs/promises';
-import { SqliteEventStore } from '../../graph/index.js';
+import { SqliteEventStore } from '@confused-ai/graph';
 
 export function registerExportCommand(program: Command): void {
   program

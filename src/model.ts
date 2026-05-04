@@ -13,9 +13,9 @@ export {
     AnthropicProvider,
     GoogleProvider,
     BedrockConverseProvider,
-    OpenAIEmbeddingProvider,
     createOpenRouterProvider,
 } from './providers/index.js';
+export { OpenAIEmbeddingProvider } from '@confused-ai/memory';
 
 // ── Provider Types ──────────────────────────────────────────────────────────
 export type {

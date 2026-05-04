@@ -3,6 +3,11 @@
     "version": "1.1.6",
     "description": "TypeScript framework for building production-grade AI agents, teams, and services",
     "type": "module",
+    "packageManager": "bun@1.3.11",
+    "sideEffects": false,
+    "workspaces": [
+        "packages/*"
+    ],
     "files": [
         "dist/**/*.js",
         "dist/**/*.cjs",
@@ -307,19 +312,23 @@
         "example:scheduled": "bun examples/scheduled-agent.ts",
         "example:code-review": "bun examples/code-review-pipeline.ts",
         "example:eval": "bun examples/eval-regression.ts",
-        "build": "tsup",
+        "build": "bun run build:root",
+        "build:root": "NODE_OPTIONS=--max-old-space-size=4096 tsup && tsc -p tsconfig.json --emitDeclarationOnly --declarationDir dist",
+        "build:packages": "turbo run build --filter='./packages/*'",
+        "build:all": "bun run build:packages && bun run build:root",
         "dev": "tsup --watch",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
         "bench": "vitest bench",
-        "lint": "eslint src/contracts src/core --max-warnings 0",
-        "lint:full": "eslint src --max-warnings 0",
+        "lint": "eslint src --max-warnings 0",
+        "lint:packages": "eslint packages/contracts/src packages/core/src packages/observe/src packages/guard/src packages/serve/src packages/models/src packages/session/src packages/tools/src packages/workflow/src packages/knowledge/src packages/router/src packages/test-utils/src packages/adapter-redis/src --max-warnings 10",
+        "lint:fix": "eslint packages/contracts/src packages/core/src packages/tools/src packages/session/src --fix",
         "docs:dev": "vitepress dev docs",
         "docs:build": "vitepress build docs",
         "docs:preview": "vitepress preview docs",
-        "prepack": "npm run typecheck && npm run test && npm run build",
+        "prepack": "npm run typecheck && npm run test && npm run build:all",
         "pack:inspect": "npm pack --dry-run"
     },
     "keywords": [
@@ -387,42 +396,47 @@
         "eslint-plugin-boundaries": "^6.0.2",
         "playwright": "^1.59.1",
         "tsup": "^8.4.0",
+        "turbo": "^2.9.8",
         "typescript": "^5.9.3",
+        "typescript-eslint": "^8.59.1",
         "vitepress": "^1.6.4",
         "vitest": "^4.0.18"
     },
     "dependencies": {
-        "@ffmpeg-installer/ffmpeg": "^1.1.0",
-        "@types/fluent-ffmpeg": "^2.1.28",
         "commander": "^14.0.3",
         "dotenv": "^17.3.1",
-        "duck-duck-scrape": "^2.2.5",
-        "fluent-ffmpeg": "^2.1.3",
-        "openai": "^6.17.0",
-        "pexels": "^1.4.0",
         "uuid": "^13.0.0",
-        "yahoo-finance2": "^2.11.3",
         "zod": "^4.3.6"
     },
     "peerDependencies": {
         "@aws-sdk/client-bedrock-runtime": "^3.0.0",
-        "better-sqlite3": "^11.0.0",
-        "openai": "^6.17.0",
-        "playwright": "^1.0.0"
+        "@anthropic-ai/sdk":              ">=0.30.0",
+        "@google/generative-ai":           ">=0.5.0",
+        "@ffmpeg-installer/ffmpeg":        "^1.1.0",
+        "better-sqlite3":                  "^11.0.0",
+        "duck-duck-scrape":                ">=2.0.0",
+        "fluent-ffmpeg":                   "^2.1.3",
+        "ioredis":                         ">=5.0.0",
+        "ollama":                          ">=0.5.0",
+        "openai":                          "^6.17.0",
+        "pexels":                          "^1.4.0",
+        "playwright":                      "^1.0.0",
+        "yahoo-finance2":                  "^2.11.3"
     },
     "peerDependenciesMeta": {
-        "openai": {
-            "optional": true
-        },
-        "better-sqlite3": {
-            "optional": true
-        },
-        "@aws-sdk/client-bedrock-runtime": {
-            "optional": true
-        },
-        "playwright": {
-            "optional": true
-        }
+        "@aws-sdk/client-bedrock-runtime": { "optional": true },
+        "@anthropic-ai/sdk":               { "optional": true },
+        "@google/generative-ai":            { "optional": true },
+        "@ffmpeg-installer/ffmpeg":         { "optional": true },
+        "better-sqlite3":                  { "optional": true },
+        "duck-duck-scrape":                { "optional": true },
+        "fluent-ffmpeg":                   { "optional": true },
+        "ioredis":                         { "optional": true },
+        "ollama":                          { "optional": true },
+        "openai":                          { "optional": true },
+        "pexels":                          { "optional": true },
+        "playwright":                      { "optional": true },
+        "yahoo-finance2":                  { "optional": true }
     },
     "engines": {
         "node": ">=18.0.0"

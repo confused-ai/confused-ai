@@ -1,0 +1,150 @@
+/**
+ * Tool infrastructure types inlined to avoid cross-domain dependency on src/tools/core
+ */
+import { z } from 'zod';
+import type { EntityId } from '@confused-ai/core';
+
+export type ToolParameters = z.ZodObject<Record<string, z.ZodType>>;
+
+export interface ToolPermissions {
+    readonly allowNetwork: boolean;
+    readonly allowFileSystem: boolean;
+    readonly allowedPaths?: string[];
+    readonly allowedHosts?: string[];
+    readonly maxExecutionTimeMs: number;
+}
+
+export interface ToolError {
+    readonly code: string;
+    readonly message: string;
+    readonly details?: unknown;
+}
+
+export interface ToolExecutionMetadata {
+    readonly startTime: Date;
+    readonly endTime: Date;
+    readonly retries: number;
+    readonly tokensUsed?: number;
+}
+
+export interface ToolResult<T = unknown> {
+    readonly success: boolean;
+    readonly data?: T;
+    readonly error?: ToolError;
+    readonly executionTimeMs: number;
+    readonly metadata: ToolExecutionMetadata;
+}
+
+export interface ToolContext {
+    readonly toolId: EntityId;
+    readonly agentId: EntityId;
+    readonly sessionId: string;
+    readonly timeoutMs?: number;
+    readonly permissions: ToolPermissions;
+}
+
+export enum ToolCategory {
+    WEB = 'web',
+    DATABASE = 'database',
+    FILE_SYSTEM = 'file_system',
+    API = 'api',
+    UTILITY = 'utility',
+    AI = 'ai',
+    CUSTOM = 'custom',
+}
+
+export interface Tool<TParams extends ToolParameters = ToolParameters, TOutput = unknown> {
+    readonly id: EntityId;
+    readonly name: string;
+    readonly description: string;
+    readonly parameters: TParams;
+    readonly permissions: ToolPermissions;
+    readonly category: ToolCategory;
+    readonly version: string;
+    readonly author?: string;
+    readonly tags?: string[];
+
+    execute(params: z.infer<TParams>, context: ToolContext): Promise<ToolResult<TOutput>>;
+    validate(params: unknown): params is z.infer<TParams>;
+}
+
+export interface ToolRegistry {
+    register(tool: Tool): void;
+    unregister(toolId: EntityId): boolean;
+    get(toolId: EntityId): Tool | undefined;
+    getByName(name: string): Tool | undefined;
+    list(): Tool[];
+    listByCategory(category: ToolCategory): Tool[];
+    search(query: string): Tool[];
+    has(toolId: EntityId): boolean;
+    clear(): void;
+}
+
+export interface ToolMiddleware {
+    beforeExecute?: (tool: Tool, params: unknown, context: ToolContext) => Promise<void> | void;
+    afterExecute?: (tool: Tool, result: ToolResult, context: ToolContext) => Promise<void> | void;
+    onError?: (tool: Tool, error: Error, context: ToolContext) => Promise<void> | void;
+}
+
+/** Pass an array or registry when configuring agents. */
+export type ToolProvider = Tool[] | ToolRegistry;
+
+class ToolRegistryImpl implements ToolRegistry {
+    private readonly tools: Map<string, Tool> = new Map();
+    private readonly nameIndex: Map<string, string> = new Map();
+
+    register(tool: Tool): void {
+        this.tools.set(tool.id as string, tool);
+        this.nameIndex.set(tool.name, tool.id as string);
+    }
+
+    unregister(toolId: EntityId): boolean {
+        const tool = this.tools.get(toolId as string);
+        if (!tool) return false;
+        this.nameIndex.delete(tool.name);
+        return this.tools.delete(toolId as string);
+    }
+
+    get(toolId: EntityId): Tool | undefined {
+        return this.tools.get(toolId as string);
+    }
+
+    getByName(name: string): Tool | undefined {
+        const id = this.nameIndex.get(name);
+        return id ? this.tools.get(id) : undefined;
+    }
+
+    list(): Tool[] {
+        return Array.from(this.tools.values());
+    }
+
+    listByCategory(category: ToolCategory): Tool[] {
+        return this.list().filter((t) => t.category === category);
+    }
+
+    search(query: string): Tool[] {
+        const q = query.toLowerCase();
+        return this.list().filter(
+            (t) => t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q),
+        );
+    }
+
+    has(toolId: EntityId): boolean {
+        return this.tools.has(toolId as string);
+    }
+
+    clear(): void {
+        this.tools.clear();
+        this.nameIndex.clear();
+    }
+}
+
+/** Normalize tools to a ToolRegistry (extensible: plug any tools). */
+export function toToolRegistry(tools: ToolProvider): ToolRegistry {
+    if (Array.isArray(tools)) {
+        const reg = new ToolRegistryImpl();
+        for (const t of tools) reg.register(t);
+        return reg;
+    }
+    return tools;
+}

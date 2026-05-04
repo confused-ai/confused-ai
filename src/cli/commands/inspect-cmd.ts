@@ -8,8 +8,8 @@
  */
 
 import type { Command } from 'commander';
-import { SqliteEventStore, GraphEventType } from '../../graph/index.js';
-import type { GraphEvent } from '../../graph/types.js';
+import { SqliteEventStore, GraphEventType } from '@confused-ai/graph';
+import type { GraphEvent } from '@confused-ai/graph';
 
 interface NodeSummary {
   nodeId: string;

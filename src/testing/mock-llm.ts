@@ -85,7 +85,7 @@ export class MockLLMProvider implements LLMProvider {
             throw new Error('Mock LLM error');
         }
 
-        const result = await this.generateText(messages, options);
+        const result = await this.generateText(messages, options as GenerateOptions);
 
         // Simulate streaming via onChunk callback
         if (options?.onChunk) {

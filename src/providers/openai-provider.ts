@@ -12,7 +12,7 @@ import type {
     ToolCall,
     StreamOptions,
 } from './types.js';
-import { DebugLogger, createDebugLogger } from '../shared/debug-logger.js';
+import { DebugLogger, createDebugLogger } from '@confused-ai/shared';
 
 // Minimal types so we don't require openai at compile time (peer dependency at runtime)
 interface OpenAIClient {

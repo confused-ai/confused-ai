@@ -18,7 +18,7 @@ import type {
     StreamOptions,
     AssistantMessage,
 } from './types.js';
-import { DebugLogger, createDebugLogger } from '../shared/debug-logger.js';
+import { DebugLogger, createDebugLogger } from '@confused-ai/shared';
 
 // Minimal types for compile-time (runtime: peer dependency @anthropic-ai/sdk)
 interface AnthropicClient {

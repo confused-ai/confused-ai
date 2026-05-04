@@ -39,6 +39,17 @@ export const PROVIDER = {
     UPSTAGE: 'upstage',
     NOVITA: 'novita',
     WRITER: 'writer',
+    // ── Wave 2 additions ──────────────────────────────────────────────
+    CLOUDFLARE: 'cloudflare',
+    DEEPINFRA: 'deepinfra',
+    REPLICATE: 'replicate',
+    HUGGINGFACE: 'huggingface',
+    LEPTON: 'lepton',
+    VLLM: 'vllm',
+    LMSTUDIO: 'lmstudio',
+    SNOWFLAKE: 'snowflake',
+    WATSONX: 'watsonx',
+    FEATHERLESS: 'featherless',
 } as const;
 
 export type ProviderName = (typeof PROVIDER)[keyof typeof PROVIDER];
@@ -69,6 +80,14 @@ export const YI_BASE_URL = 'https://api.lingyiwanwu.com/v1';
 export const UPSTAGE_BASE_URL = 'https://api.upstage.ai/v1';
 export const NOVITA_BASE_URL = 'https://api.novita.ai/v3/openai';
 export const WRITER_BASE_URL = 'https://api.writer.com/v1';
+export const DEEPINFRA_BASE_URL = 'https://api.deepinfra.com/v1/openai';
+export const REPLICATE_BASE_URL = 'https://api.replicate.com/v1';
+export const LEPTON_BASE_URL = 'https://api.lepton.ai/api/v1';
+export const VLLM_BASE_URL = 'http://localhost:8000/v1';
+export const LMSTUDIO_BASE_URL = 'http://localhost:1234/v1';
+export const SNOWFLAKE_BASE_URL = 'https://cortex.snowflake.com/v1';
+export const WATSONX_BASE_URL = 'https://us-south.ml.cloud.ibm.com/ml/v1/text/generation';
+export const FEATHERLESS_BASE_URL = 'https://api.featherless.ai/v1';
 
 // ── Env var names ──────────────────────────────────────────────────────────
 
@@ -99,6 +118,14 @@ const ENV: Record<string, string> = {
     UPSTAGE: 'UPSTAGE_API_KEY',
     NOVITA: 'NOVITA_API_KEY',
     WRITER: 'WRITER_API_KEY',
+    CLOUDFLARE: 'CLOUDFLARE_API_KEY',
+    DEEPINFRA: 'DEEPINFRA_API_KEY',
+    REPLICATE: 'REPLICATE_API_TOKEN',
+    HUGGINGFACE: 'HUGGINGFACE_API_KEY',
+    LEPTON: 'LEPTON_API_KEY',
+    SNOWFLAKE: 'SNOWFLAKE_API_KEY',
+    WATSONX: 'WATSONX_API_KEY',
+    FEATHERLESS: 'FEATHERLESS_API_KEY',
 };
 
 export interface ResolvedModelConfig {
@@ -225,6 +252,59 @@ export function resolveModelString(
 
         case PROVIDER.WRITER:
             return { baseURL: WRITER_BASE_URL, apiKey: env(ge, ENV.WRITER), model: modelId };
+
+        case PROVIDER.CLOUDFLARE: {
+            // format: cloudflare:account_id/model or just cloudflare:@cf/model
+            const accountId = env(ge, 'CLOUDFLARE_ACCOUNT_ID') ?? modelId.split('/')[0];
+            const cfModel = modelId.includes('/') ? modelId.split('/').slice(1).join('/') : modelId;
+            return {
+                baseURL: `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1`,
+                apiKey: env(ge, ENV.CLOUDFLARE),
+                model: cfModel.startsWith('@') ? cfModel : `@cf/${cfModel}`,
+            };
+        }
+
+        case PROVIDER.DEEPINFRA:
+            return { baseURL: DEEPINFRA_BASE_URL, apiKey: env(ge, ENV.DEEPINFRA), model: modelId };
+
+        case PROVIDER.REPLICATE:
+            // Replicate uses OpenAI-compat endpoint for language models
+            return { baseURL: REPLICATE_BASE_URL, apiKey: env(ge, ENV.REPLICATE), model: modelId };
+
+        case PROVIDER.HUGGINGFACE:
+            // HuggingFace Inference API — OpenAI-compat endpoint
+            return {
+                baseURL: 'https://api-inference.huggingface.co/v1',
+                apiKey: env(ge, ENV.HUGGINGFACE),
+                model: modelId,
+            };
+
+        case PROVIDER.LEPTON:
+            return { baseURL: LEPTON_BASE_URL, apiKey: env(ge, ENV.LEPTON), model: modelId };
+
+        case PROVIDER.VLLM:
+            // vLLM self-hosted — VLLM_BASE_URL env override for custom deployments
+            return {
+                baseURL: env(ge, 'VLLM_BASE_URL') ?? VLLM_BASE_URL,
+                apiKey: env(ge, 'VLLM_API_KEY') ?? 'not-needed',
+                model: modelId,
+            };
+
+        case PROVIDER.LMSTUDIO:
+            return {
+                baseURL: env(ge, 'LMSTUDIO_BASE_URL') ?? LMSTUDIO_BASE_URL,
+                apiKey: 'not-needed',
+                model: modelId,
+            };
+
+        case PROVIDER.SNOWFLAKE:
+            return { baseURL: SNOWFLAKE_BASE_URL, apiKey: env(ge, ENV.SNOWFLAKE), model: modelId };
+
+        case PROVIDER.WATSONX:
+            return { baseURL: WATSONX_BASE_URL, apiKey: env(ge, ENV.WATSONX), model: modelId };
+
+        case PROVIDER.FEATHERLESS:
+            return { baseURL: FEATHERLESS_BASE_URL, apiKey: env(ge, ENV.FEATHERLESS), model: modelId };
 
         case PROVIDER.AZURE: {
             // format: azure:resource/deployment

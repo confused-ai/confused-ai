@@ -15,57 +15,24 @@ export {
 } from './dx/compose.js';
 
 // ── Graph Engine (DAG-based workflows) ──────────────────────────────────────
+export * from '@confused-ai/graph';
+
+// ── Orchestration ───────────────────────────────────────────────────────────
 export {
-    // Builder
-    GraphBuilder,
-    createGraph,
-
-    // Engine
-    DAGEngine,
-    DurableExecutor,
-    replayState,
-
-    // Distributed
-    DefaultScheduler,
-    GraphWorker,
-    DistributedEngine,
-    InMemoryTaskQueue,
-    computeWaves,
-
-    // Event store
-    InMemoryEventStore,
-    SqliteEventStore,
-
-    // Multi-agent
-    AgentRuntime,
-    MultiAgentOrchestrator,
-    agentNode,
-
-    // Memory
-    InMemoryStore,
-    InMemoryVectorMemory,
-    ContextWindowManager,
-    MemoryManager,
-
-    // Plugins
-    TelemetryPlugin,
-    LoggingPlugin,
-    OpenTelemetryPlugin,
-
-    // Bridge
-    wrapCoreLLM,
-
-    // Types
-    type GraphDef,
-    type GraphState,
-    type GraphEvent,
-    type GraphPlugin,
-    type AgentDef,
-    type AgentResult,
-    type OrchestratorResult,
-    type ExecuteOptions,
-    type ExecutionResult,
-} from './graph/index.js';
-
-// ── Legacy Orchestration (re-exports for compat) ────────────────────────────
-export * from './orchestration/index.js';
+    CoordinationType,
+    MessageBusImpl, OrchestratorImpl,
+    Team, SwarmOrchestrator,
+    createSupervisor, createConsensus, createPipeline,
+    createHandoff, createAgentRouter,
+    createRunnableAgent,
+    RoundRobinLoadBalancer, LeastConnectionsLoadBalancer, WeightedResponseTimeLoadBalancer,
+    createHttpA2AClient, A2AServer,
+    createToolkit, toolkitsToRegistry,
+    extractTraceContext, generateTraceparent, injectTraceHeaders,
+} from '@confused-ai/orchestration';
+export type {
+    OrchestrableAgent, AgentRole, AgentRegistration,
+    MCPToolDescriptor, MCPAgentMessage, MCPAgentClient,
+    A2ATask, A2ATaskState, A2AAgentCard, A2AMessage, IA2AClient, A2AStreamEvent,
+    TraceContext, LoadBalancer,
+} from '@confused-ai/orchestration';

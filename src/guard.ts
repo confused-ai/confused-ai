@@ -41,7 +41,7 @@ export {
 } from './production/approval-store.js';
 
 // ── Guardrails (content safety) ─────────────────────────────────────────────
-export * from './guardrails/index.js';
+export * from '@confused-ai/guardrails';
 
 // ── Health Checks ───────────────────────────────────────────────────────────
 export {

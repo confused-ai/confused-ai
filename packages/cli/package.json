@@ -1,0 +1,35 @@
+{
+  "name": "@confused-ai/cli",
+  "version": "0.1.0",
+  "description": "CLI for confused-ai: create, run, eval, serve, inspect, and more",
+  "type": "module",
+  "bin": {
+    "confused-ai": "./dist/index.js"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "dev":   "tsup --watch",
+    "test":  "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "@confused-ai/graph": "workspace:*",
+    "@confused-ai/shared": "workspace:*",
+    "commander": "^14.0.3"
+  },
+  "peerDependencies": {
+    "confused-ai": "^1.1.6"
+  }
+}

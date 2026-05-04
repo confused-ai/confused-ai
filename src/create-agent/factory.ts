@@ -1,19 +1,19 @@
 import type { Message } from '../providers/types.js';
-import type { AgenticStreamHooks, AgenticLifecycleHooks } from '../agentic/types.js';
-import type { ToolProvider } from '../tools/core/registry.js';
-import { createAgenticAgent } from '../agentic/index.js';
-import { HttpClientTool } from '../tools/utils/http.js';
-import { BrowserTool } from '../tools/utils/browser.js';
-import { InMemorySessionStore } from '../session/index.js';
-import { SessionState } from '../session/types.js';
-import { ConfigError } from '../shared/errors.js';
-import { toToolRegistry } from '../tools/core/registry.js';
-import { isLightweightTool } from '../tools/core/tool-helper.js';
+import type { AgenticStreamHooks } from '@confused-ai/agentic';
+import { withSpan } from '@confused-ai/observe';
+import type { ToolProvider } from '@confused-ai/tools';
+import { createAgenticAgent } from '@confused-ai/agentic';
+import { HttpClientTool } from '@confused-ai/tools';
+import { BrowserTool } from '@confused-ai/tools';
+import { InMemorySessionStore } from '@confused-ai/session';
+import { ConfigError } from '@confused-ai/shared';
+import { toToolRegistry } from '@confused-ai/tools';
+import { isLightweightTool } from '@confused-ai/tools';
 import { createDevLogger, createDevToolMiddleware } from '../dx/dev-logger.js';
 import { BudgetEnforcer } from '../production/budget.js';
-import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions } from './types.js';
+import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions, StreamChunk } from './types.js';
 import type { AdapterRegistry, AdapterBindings } from '../adapters/index.js';
-import type { AppConfig } from '../config/types.js';
+import type { AppConfig } from '@confused-ai/config';
 import {
     resolveLlmForCreateAgent,
     ENV_API_KEY,
@@ -84,57 +84,6 @@ function resolveAdapterBindings(options: CreateAgentOptions): AdapterBindings | 
     return isEmpty ? undefined : merged;
 }
 
-/**
- * Merges two lifecycle hook objects. Per-run hooks run AFTER agent-level hooks.
- * For `beforeRun`/`buildSystemPrompt`/`beforeStep`/`beforeToolCall` the per-run
- * hook receives the (potentially modified) output of the agent-level hook.
- */
-function mergeLifecycleHooks(
-    agentLevel?: AgenticLifecycleHooks,
-    perRun?: AgenticLifecycleHooks,
-): AgenticLifecycleHooks | undefined {
-    if (!agentLevel && !perRun) return undefined;
-    if (!agentLevel) return perRun;
-    if (!perRun) return agentLevel;
-
-    return {
-        beforeRun: async (prompt, config) => {
-            let p = agentLevel.beforeRun ? await agentLevel.beforeRun(prompt, config) : prompt;
-            if (perRun.beforeRun) p = await perRun.beforeRun(p, config);
-            return p;
-        },
-        afterRun: async (result) => {
-            let r = agentLevel.afterRun ? await agentLevel.afterRun(result) : result;
-            if (perRun.afterRun) r = await perRun.afterRun(r);
-            return r;
-        },
-        beforeStep: async (step, messages) => {
-            let m = agentLevel.beforeStep ? await agentLevel.beforeStep(step, messages) : messages;
-            if (perRun.beforeStep) m = await perRun.beforeStep(step, m);
-            return m;
-        },
-        afterStep: async (step, messages, text) => {
-            if (agentLevel.afterStep) await agentLevel.afterStep(step, messages, text);
-            if (perRun.afterStep) await perRun.afterStep(step, messages, text);
-        },
-        beforeToolCall: async (name, args, step) => {
-            let a = agentLevel.beforeToolCall ? await agentLevel.beforeToolCall(name, args, step) : args;
-            if (perRun.beforeToolCall) a = await perRun.beforeToolCall(name, a, step);
-            return a;
-        },
-        afterToolCall: async (name, result, args, step) => {
-            let r = agentLevel.afterToolCall ? await agentLevel.afterToolCall(name, result, args, step) : result;
-            if (perRun.afterToolCall) r = await perRun.afterToolCall(name, r, args, step);
-            return r;
-        },
-        buildSystemPrompt: agentLevel.buildSystemPrompt ?? perRun.buildSystemPrompt,
-        onError: async (err, step) => {
-            if (agentLevel.onError) await agentLevel.onError(err, step);
-            if (perRun.onError) await perRun.onError(err, step);
-        },
-    };
-}
-
 // ── Lazy config singleton ──────────────────────────────────────────────────
 // Loaded once on first createAgent call; provides validated fallback defaults.
 // Never throws — returns null if config loading fails (e.g. missing env vars).
@@ -144,7 +93,7 @@ function getFrameworkConfig(): AppConfig | null {
         try {
             // Dynamic import to avoid circular dependency at module load time
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const { loadConfig } = require('../config/loader.js') as typeof import('../config/loader.js');
+            const { loadConfig } = require('@confused-ai/config') as typeof import('@confused-ai/config');
             _cachedConfig = loadConfig();
         } catch {
             _cachedConfig = null;
@@ -214,12 +163,12 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
             ? null
             : options.sessionStore
               ? options.sessionStore
-              : (adapterBindings?.session as unknown as import('../session/types.js').SessionStore | undefined)
+              : (adapterBindings?.session as unknown as import('@confused-ai/session').SessionStore | undefined)
                 ?? (agentDbPath
                     ? (() => {
                           try {
-                              const { createSqliteSessionStoreSync } = require('../session/sqlite-store.js') as typeof import('../session/sqlite-store.js');
-                              return createSqliteSessionStoreSync(agentDbPath);
+                              const { createSqliteStore } = require('@confused-ai/session') as typeof import('@confused-ai/session');
+                              return createSqliteStore({ path: agentDbPath });
                           } catch {
                               return new InMemorySessionStore();
                           }
@@ -231,7 +180,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
     const guardrails =
         !guardrailsOption
             ? undefined
-            : (guardrailsOption as import('../guardrails/types.js').GuardrailEngine);
+            : (guardrailsOption as import('@confused-ai/guardrails').GuardrailEngine);
 
     // Budget enforcer — instantiated once per agent, reset on each run
     const budgetEnforcer = options.budget ? new BudgetEnforcer(options.budget) : undefined;
@@ -246,17 +195,17 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
     const agent = createAgenticAgent({
         name,
         instructions,
-        llm,
-        tools,
-        toolMiddleware: effectiveToolMiddleware.length ? effectiveToolMiddleware : undefined,
+        llm: llm as any,
+        tools: tools as any,
+        toolMiddleware: effectiveToolMiddleware.length ? effectiveToolMiddleware as any : undefined,
         maxSteps,
         timeoutMs,
         retry,
         guardrails,
-        hooks: agentHooks,
+        hooks: agentHooks as any,
         checkpointStore: options.checkpointStore,
-        knowledgebase: options.knowledgebase,
-        budgetEnforcer,
+        knowledgebase: options.knowledgebase as any,
+        budgetEnforcer: budgetEnforcer as any,
         budgetModelId: model,
     });
 
@@ -265,6 +214,14 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
         instructions,
         adapters: adapterBindings,
         async run(prompt: string | import('../providers/vision.js').MultiModalInput, runOptions?: AgentRunOptions) {
+            return withSpan(
+                'agent.run',
+                {
+                    'agent.name': name,
+                    'session.id': runOptions?.sessionId ?? 'unknown',
+                    'prompt.length': typeof prompt === 'string' ? prompt.length : prompt.text.length,
+                },
+                async (runSpan) => {
             // Resolve multi-modal input → text + Message
             const isMMI = isMultiModalInput(prompt);
             const promptText: string = isMMI ? prompt.text : prompt;
@@ -279,9 +236,6 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
                 onToolResult: runOptions?.onToolResult,
                 onStep: runOptions?.onStep,
             };
-
-            // Merge per-run hooks with agent-level hooks (agent-level run first)
-            const mergedHooks = mergeLifecycleHooks(agentHooks, runOptions?.hooks);
 
             let messages: Message[] | undefined;
             if (runOptions?.messages?.length) {
@@ -306,48 +260,44 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
                 ];
             }
 
-            // Temporarily override runner hooks with merged hooks for this run
-            const runnerHooksBefore = (agent as unknown as { config: { hooks?: AgenticLifecycleHooks } }).config?.hooks;
-            const agentInternal = agent as unknown as { config: { hooks?: AgenticLifecycleHooks } };
-            if (mergedHooks !== agentHooks && agentInternal.config) {
-                agentInternal.config.hooks = mergedHooks;
-            }
-
             // Reset per-run budget accumulator
             budgetEnforcer?.resetRun();
 
-            let result;
-            try {
-                const ragContext = (options.knowledgebase && options.knowledgebase.buildContext) ? await options.knowledgebase.buildContext(promptText) : undefined;
-                result = await agent.run(
-                    {
-                        prompt: messages ? '' : promptText,
-                        instructions,
-                        messages,
-                        maxSteps,
-                        timeoutMs,
-                        ragContext,
-                        ...(runOptions?.runId && { runId: runOptions.runId }),
-                        ...(runOptions?.userId && { userId: runOptions.userId }),
-                    },
-                    streamHooks
-                );
-            } finally {
-                // Restore original hooks
-                if (agentInternal.config) {
-                    agentInternal.config.hooks = runnerHooksBefore;
-                }
-            }
+            const ragContext = (options.knowledgebase && options.knowledgebase.buildContext)
+                ? await options.knowledgebase.buildContext(promptText)
+                : undefined;
+
+            // Per-run hooks are passed via runConfig.hooks — the runner merges them with
+            // agent-level hooks locally. No shared config mutation; concurrent runs are isolated.
+            const result = await agent.run(
+                {
+                    prompt: messages ? '' : promptText,
+                    instructions,
+                    messages,
+                    maxSteps,
+                    timeoutMs,
+                    ragContext,
+                    ...(runOptions?.hooks   && { hooks:  runOptions.hooks }),
+                    ...(runOptions?.runId   && { runId:  runOptions.runId }),
+                    ...(runOptions?.userId  && { userId: runOptions.userId }),
+                },
+                streamHooks
+            );
 
             if (sessionId && sessionStore && result.messages?.length) {
                 const persistMessages = result.messages.filter((m: Message) => m.role !== 'system');
                 await sessionStore.update(sessionId, {
-                    messages: persistMessages,
-                    state: SessionState.ACTIVE,
+                    messages: persistMessages as any,
                 });
             }
 
+            if (result.usage?.totalTokens !== undefined) {
+                runSpan.setAttribute('llm.usage.total_tokens', result.usage.totalTokens);
+            }
+            runSpan.setAttribute('agent.finish_reason', result.finishReason ?? 'stop');
             return result;
+                }, // end withSpan callback
+            ); // end withSpan
         },
         async createSession(userId?: string) {
             if (!sessionStore) {
@@ -356,10 +306,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
             const session = await sessionStore.create({
                 agentId: name,
                 userId,
-                state: SessionState.ACTIVE,
                 messages: [],
-                metadata: {},
-                context: {},
             });
             return session.id;
         },
@@ -406,6 +353,74 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
                         return;
                     }
                     // Wait for the next chunk or completion signal
+                    await new Promise<void>((r) => { notify = r; });
+                }
+            }
+
+            const iter = generate();
+            return {
+                [Symbol.asyncIterator]() {
+                    return iter;
+                },
+            };
+        },
+        streamEvents(prompt: string | import('../providers/vision.js').MultiModalInput, runOptions?: Omit<AgentRunOptions, 'onChunk'>) {
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
+            const self = this as import('./types.js').CreateAgentResult;
+
+            async function* generate(): AsyncGenerator<StreamChunk> {
+                const queue: StreamChunk[] = [];
+                let notify: (() => void) | null = null;
+                let finished = false;
+                let runError: unknown;
+                let runResult: import('@confused-ai/agentic').AgenticRunResult | undefined;
+
+                const runPromise = self.run(prompt, {
+                    ...runOptions,
+                    onChunk: (chunk: string) => {
+                        queue.push({ type: 'text-delta', delta: chunk });
+                        notify?.();
+                        notify = null;
+                    },
+                    onToolCall: (toolName: string, input: Record<string, unknown>) => {
+                        queue.push({ type: 'tool-call', tool: { name: toolName, input } });
+                        notify?.();
+                        notify = null;
+                    },
+                    onToolResult: (toolName: string, output: unknown) => {
+                        queue.push({ type: 'tool-result', tool: { name: toolName, input: undefined, output } });
+                        notify?.();
+                        notify = null;
+                    },
+                    onStep: (stepNumber: number) => {
+                        queue.push({ type: 'step-finish', stepNumber });
+                        notify?.();
+                        notify = null;
+                    },
+                }).then((r) => { runResult = r; })
+                  .catch((e: unknown) => { runError = e; })
+                  .finally(() => {
+                    finished = true;
+                    notify?.();
+                    notify = null;
+                });
+
+                while (true) {
+                    while (queue.length > 0) {
+                        yield queue.shift()!;
+                    }
+                    if (finished) {
+                        while (queue.length > 0) yield queue.shift()!;
+                        await runPromise;
+                        if (runError) {
+                            yield { type: 'error', error: runError instanceof Error ? runError : new Error(String(runError)) };
+                            return;
+                        }
+                        if (runResult) {
+                            yield { type: 'run-finish', run: runResult };
+                        }
+                        return;
+                    }
                     await new Promise<void>((r) => { notify = r; });
                 }
             }

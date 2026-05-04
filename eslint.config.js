@@ -14,6 +14,20 @@
 
 import boundaries from 'eslint-plugin-boundaries';
 import tsParser from '@typescript-eslint/parser';
+import tseslint from 'typescript-eslint';
+const packageTypeCheckedConfigs = tseslint.configs.strictTypeChecked.map((cfg) => ({
+  ...cfg,
+  files: ['packages/**/src/**/*.ts', 'packages/**/tests/**/*.ts'],
+  languageOptions: {
+    ...(cfg.languageOptions ?? {}),
+    parser: tsParser,
+    parserOptions: {
+      ...(cfg.languageOptions?.parserOptions ?? {}),
+      project: './tsconfig.eslint.json',
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+}));
 
 export default [
   {
@@ -74,6 +88,36 @@ export default [
           ],
         },
       ],
+    },
+  },
+  // Strict rules for new packages/ workspace (Phase 1+ of production-readiness plan).
+  {
+    files: ['packages/**/src/**/*.ts'],
+    languageOptions: { parser: tsParser },
+    rules: {
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+  // typescript-eslint strict-type-checked for packages only.
+  // Every inherited config is explicitly scoped so typed rules never apply to legacy src/.
+  ...packageTypeCheckedConfigs,
+  {
+    files: ['packages/**/src/**/*.ts', 'packages/**/tests/**/*.ts'],
+    rules: {
+      // Floating promises must be handled explicitly
+      '@typescript-eslint/no-floating-promises': 'error',
+      // Non-null assertions: warn (types are well-constrained in packages/)
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      // No any — packages/ must be fully typed
+      '@typescript-eslint/no-explicit-any': 'error',
+      // Unused vars ok if prefixed with _
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: ['packages/cli/src/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ];

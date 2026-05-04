@@ -19,7 +19,6 @@ export type { GoogleProviderConfig } from './google-provider.js';
 export { BedrockConverseProvider } from './bedrock-provider.js';
 export type { BedrockConverseProviderConfig } from './bedrock-provider.js';
 
-export { OpenAIEmbeddingProvider } from './openai-embedding-provider.js';
 export type { OpenAIEmbeddingProviderConfig } from './openai-embedding-provider.js';
 
 // OpenRouter (multi-model gateway)
@@ -55,6 +54,14 @@ export {
     createNovitaProvider,
     createCloudflareProvider,
     createWriterProvider,
+    // Wave 2 providers
+    createDeepInfraProvider,
+    createHuggingFaceProvider,
+    createLeptonProvider,
+    createFeatherlessProvider,
+    createSnowflakeProvider,
+    createVllmProvider,
+    createLmStudioProvider,
     // Base URLs (existing)
     GROQ_BASE_URL,
     XAI_BASE_URL,
@@ -78,6 +85,11 @@ export {
     UPSTAGE_BASE_URL,
     NOVITA_BASE_URL,
     WRITER_BASE_URL,
+    DEEPINFRA_BASE_URL,
+    HUGGINGFACE_INFERENCE_BASE_URL,
+    LEPTON_BASE_URL,
+    FEATHERLESS_BASE_URL,
+    SNOWFLAKE_BASE_URL,
 } from './compat-providers.js';
 
 export type {
@@ -105,6 +117,13 @@ export type {
     NovitaProviderConfig,
     CloudflareProviderConfig,
     WriterProviderConfig,
+    DeepInfraProviderConfig,
+    HuggingFaceProviderConfig,
+    LeptonProviderConfig,
+    FeatherlessProviderConfig,
+    SnowflakeProviderConfig,
+    VllmProviderConfig,
+    LmStudioProviderConfig,
 } from './compat-providers.js';
 
 // ── Model resolution ───────────────────────────────────────────────────────
@@ -122,7 +141,7 @@ export type { ResolvedModelConfig, ProviderName } from './model-resolver.js';
 
 // ── Schema conversion ──────────────────────────────────────────────────────
 
-export { zodToJsonSchema, toolToLLMDef } from './zod-to-schema.js';
+export { toolToLLMDef } from './zod-to-schema.js';
 
 // ── Structured output ──────────────────────────────────────────────────────
 

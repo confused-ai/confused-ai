@@ -6,11 +6,11 @@ import {
     AgentContext,
     EntityId,
 } from './types.js';
-import type { MemoryStore } from '../memory/types.js';
-import type { ToolRegistry } from '../tools/core/types.js';
-import type { Planner } from '../planner/types.js';
-import { InMemoryStore } from '../memory/in-memory-store.js';
-import { ToolRegistryImpl } from '../tools/core/registry.js';
+import type { MemoryStore } from '@confused-ai/memory';
+import type { ToolRegistry } from '@confused-ai/tools';
+import type { Planner } from '@confused-ai/planner';
+import { InMemoryStore } from '@confused-ai/memory';
+import { ToolRegistryImpl } from '@confused-ai/tools';
 
 /**
  * Builder for creating AgentContext instances

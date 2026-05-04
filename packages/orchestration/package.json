@@ -1,0 +1,33 @@
+{
+  "name": "@confused-ai/orchestration",
+  "version": "0.1.0",
+  "description": "Multi-agent orchestration: team, swarm, supervisor, pipeline, consensus, handoff, A2A, MCP toolkit",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@confused-ai/agentic": "workspace:*",
+    "@confused-ai/core": "workspace:*",
+    "@confused-ai/memory": "workspace:*",
+    "@confused-ai/models": "workspace:*",
+    "@confused-ai/observe": "workspace:*",
+    "@confused-ai/planner": "workspace:*",
+    "@confused-ai/shared": "workspace:*",
+    "@confused-ai/tools": "workspace:*",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "tsup": "*",
+    "typescript": "*"
+  }
+}

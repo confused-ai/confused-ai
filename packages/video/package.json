@@ -1,0 +1,35 @@
+{
+  "name": "@confused-ai/video",
+  "version": "0.1.0",
+  "description": "Video processing module: frame extraction, overlays, synthesis with FFmpeg and Pexels",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "fluent-ffmpeg": ">=2.1.0",
+    "@ffmpeg-installer/ffmpeg": ">=1.1.0",
+    "openai": ">=4.0.0",
+    "pexels": ">=1.4.0"
+  },
+  "peerDependenciesMeta": {
+    "fluent-ffmpeg": { "optional": true },
+    "@ffmpeg-installer/ffmpeg": { "optional": true },
+    "openai": { "optional": true },
+    "pexels": { "optional": true }
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -13,15 +13,15 @@
   [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e.svg)](./LICENSE)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org/)
-  [![Docs](https://img.shields.io/badge/docs-vitepress-8b5cf6?logo=vitepress)](https://rvuyyuru2.github.io/agent-framework/)
+  [![Docs](https://img.shields.io/badge/docs-vitepress-8b5cf6?logo=vitepress)](https://confused-ai.github.io/confused-ai/)
   [![GitHub Stars](https://img.shields.io/github/stars/confused-ai/confused-ai?style=social)](https://github.com/confused-ai/confused-ai)
   [![GitHub Issues](https://img.shields.io/github/issues/confused-ai/confused-ai?color=f97316)](https://github.com/confused-ai/confused-ai/issues)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/confused-ai/confused-ai/blob/main/CONTRIBUTING.md)
 
   <p>
-    <a href="https://rvuyyuru2.github.io/agent-framework/"><strong>Documentation</strong></a> ·
-    <a href="https://rvuyyuru2.github.io/agent-framework/guide/getting-started">Getting Started</a> ·
-    <a href="https://rvuyyuru2.github.io/agent-framework/examples/">18 Examples</a> ·
+    <a href="https://confused-ai.github.io/confused-ai/"><strong>Documentation</strong></a> ·
+    <a href="https://confused-ai.github.io/confused-ai/guide/getting-started">Getting Started</a> ·
+    <a href="https://confused-ai.github.io/confused-ai/examples/">18 Examples</a> ·
     <a href="https://www.npmjs.com/package/confused-ai">npm</a> ·
     <a href="./CHANGELOG.md">Changelog</a>
   </p>
@@ -138,13 +138,15 @@ Most AI agent frameworks stop at the prototype. confused-ai ships production inf
 | **Circuit Breakers & Retries** | ✅ | ❌ | ❌ | ❌ |
 | **USD Budget Enforcement** | ✅ | ❌ | ❌ | ❌ |
 | **Multi-Tenancy Context** | ✅ | ❌ | ❌ | ❌ |
-| **SOC2/HIPAA Audit Logging** | ✅ | ❌ | ❌ | ❌ |
+| **Persistent Audit Logging** | ✅ | ❌ | ❌ | ❌ |
 | **Idempotency Keys** | ✅ | ❌ | ❌ | ❌ |
 | **Human-in-the-Loop (HITL)** | ✅ | ⚠️ | ❌ | ⚠️ |
 | **Intelligent LLM Router** | ✅ | ❌ | ❌ | ❌ |
 | **Automatic REST API** | ✅ | ❌ | ❌ | ⚠️ |
 | **Background Job Queues** | ✅ | ❌ | ❌ | ❌ |
 | **Voice (TTS/STT) & Video** | ✅ | ⚠️ | ❌ | ❌ |
+
+> **Note on audit logging:** Persistent audit logging provides an event trail suitable as one input to a compliance programme. It does not constitute SOC2 or HIPAA certification on its own. Achieving those certifications requires infrastructure controls, access policies, and third-party audits beyond what any logging library provides.
 
 ---
 
@@ -297,10 +299,18 @@ Four built-in strategies: `balanced`, `cost`, `quality`, `speed`. Custom overrid
 ```ts
 import { KnowledgeEngine, TextLoader, URLLoader, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/knowledge';
 
+// ⚠️ InMemoryVectorStore — for development and testing only. Data is lost on restart.
 const knowledge = new KnowledgeEngine({
   embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
-  vectorStore:       new InMemoryVectorStore(),
+  vectorStore:       new InMemoryVectorStore(), // swap for PgVectorStore in production
 });
+
+// Production: persistent vector store (PostgreSQL + pgvector)
+// import { PgVectorStore } from 'confused-ai/knowledge';
+// const knowledge = new KnowledgeEngine({
+//   embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
+//   vectorStore: new PgVectorStore({ connectionString: process.env.DATABASE_URL! }),
+// });
 
 await knowledge.ingest([
   ...await new TextLoader('./docs/policy.md').load(),
@@ -378,12 +388,17 @@ Includes: `computeWaves()` for wave-based scheduling, `BackpressureController` f
 
 ```ts
 import { withResilience } from 'confused-ai/production';
+import { RedisRateLimiter } from '@confused-ai/adapter-redis';
 
 const resilient = withResilience(agent, {
   circuitBreaker: { threshold: 5, timeout: 30_000 },
   rateLimit:      { maxRequests: 100, windowMs: 60_000 },
   retry:          { maxAttempts: 3, backoff: 'exponential' },
 });
+
+// Multi-instance deployments: use RedisRateLimiter to enforce limits across all replicas
+// const redisLimiter = new RedisRateLimiter({ client: redisClient, maxRequests: 100, windowMs: 60_000 });
+// ⚠️  Default RateLimiter is in-process only — two replicas means double the effective limit.
 ```
 
 ### Budget Enforcement
@@ -402,12 +417,14 @@ const agent = createAgent({
 ### Human-in-the-Loop (HITL)
 
 ```ts
-import { requireApprovalTool, InMemoryApprovalStore } from 'confused-ai/tools';
+import { requireApprovalTool, SqliteApprovalStore } from 'confused-ai/production';
 import { createHttpService } from 'confused-ai/runtime';
 
+// SqliteApprovalStore — durable, survives process restarts
+// ⚠️  InMemoryApprovalStore is available for tests only — approvals are lost on restart.
 const service = createHttpService({
-  agents: { admin: adminAgent },
-  approvalStore: new InMemoryApprovalStore(),
+  agents:        { admin: adminAgent },
+  approvalStore: new SqliteApprovalStore('./approvals.db'),
   // GET  /v1/approvals        — list pending
   // POST /v1/approvals/:id    — { approved: true, decidedBy: 'admin' }
 });
@@ -581,7 +598,9 @@ expectEventSequence(result.eventTypes, [
 ]);
 ```
 
-232 passing tests covering circuit breakers, rate limiters, JWT RBAC, LLM caching, guardrails, graph execution, and more. See [`/tests`](./tests/).
+515 passing tests covering circuit breakers, rate limiters, JWT RBAC, LLM caching, guardrails, graph execution, and more. See [`/packages`](./packages/).
+
+> Test count is verified on every CI run across Node 18, 20, and 22.
 
 ---
 
@@ -607,7 +626,12 @@ confused-ai export --run-id <executionId> --out events.json --pretty
 
 # Compare two runs — exits 1 if any nodes diverged (CI-friendly)
 confused-ai diff --run-id-a <baseline> --run-id-b <new>
+
+# Validate env vars, API keys, and config before deploy
+confused-ai doctor
 ```
+
+> `confused-ai doctor` checks Node.js version, all LLM provider API keys, optional packages, and network connectivity. Use it in CI pre-deploy checks.
 
 ---
 
@@ -618,7 +642,7 @@ confused-ai diff --run-id-a <baseline> --run-id-b <new>
 - [x] **Compliance** — Persistent audit log, idempotency keys, per-user USD budget caps, W3C trace-context
 - [x] **Observability** — OTLP tracing, structured logging, eval store, health endpoints, Grafana dashboard template
 - [x] **Deployment** — Docker, Compose, Kubernetes, Fly.io, Render templates with health probes
-- [x] **Testing** — MockLLMProvider, MockToolRegistry, Vitest-compatible fixtures, 99 passing tests
+- [x] **Testing** — MockLLMProvider, MockToolRegistry, Vitest-compatible fixtures, 515 passing tests
 
 ---
 
@@ -627,7 +651,7 @@ confused-ai diff --run-id-a <baseline> --run-id-b <new>
 ```bash
 git clone https://github.com/confused-ai/confused-ai.git
 cd confused-ai && bun install
-bun test          # 99 tests
+bun test          # 515 tests — run with Node 18, 20, and 22 in CI
 bun run build     # tsup
 bun run docs:dev  # VitePress docs site
 ```

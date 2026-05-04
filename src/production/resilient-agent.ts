@@ -21,7 +21,7 @@
  * ```
  */
 
-import type { AgenticRunResult } from '../agentic/types.js';
+import type { AgenticRunResult } from '@confused-ai/agentic';
 import type { AgentRunOptions } from '../create-agent.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { createStorage } from '../src/storage/index.js';
+import { createStorage } from '@confused-ai/storage';
 
 describe('In-memory storage', () => {
     it('stores and retrieves typed values', async () => {

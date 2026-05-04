@@ -36,6 +36,9 @@ lerna-debug.log*
 coverage/
 .nyc_output/
 
+# Build cache
+.turbo/
+
 # Temporary files
 tmp/
 temp/
@@ -43,3 +46,4 @@ temp/
 
 # Bun
 bun.lockb
+package-lock.json

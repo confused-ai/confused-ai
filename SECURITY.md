@@ -4,9 +4,9 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.6.x   | ✅ Current |
-| 0.5.x   | ⚠️ Critical fixes only |
-| < 0.5   | ❌ No support |
+| 1.1.x   | ✅ Current |
+| 1.0.x   | ⚠️ Critical fixes only |
+| < 1.0   | ❌ No support |
 
 ## Reporting a Vulnerability
 
@@ -23,6 +23,27 @@ Include:
 We target a **72-hour acknowledgement** and **14-day patch cycle** for critical issues.
 
 ## Security Considerations
+
+### ShellTool — Sandbox Requirements
+
+`shell` (from `@confused-ai/tools`) executes arbitrary system commands. It is **not
+included** in the default tool barrel to reduce supply-chain risk, but if you use it
+you **must** apply the following isolation:
+
+- Run the agent process inside a container with a **read-only root filesystem**
+- Set a **restricted PATH** — expose only the binaries you intend to allow
+- Apply **seccomp** or **AppArmor** profiles to block syscalls you don't need
+- Run as a **non-root user** (uid 1000+)
+- Set resource limits: CPU, memory, and wall-clock timeout (`timeout` option)
+- **Never** mount secrets, credentials, or cloud metadata endpoints into a container running ShellTool
+
+```ts
+// Explicit import required — NOT in the default barrel
+import { shell } from '@confused-ai/tools/shell';
+```
+
+If you cannot provide container isolation, disable ShellTool entirely and use
+`fileSystem` with explicit path allow-lists instead.
 
 ### JWT / Authentication
 
@@ -42,8 +63,18 @@ We target a **72-hour acknowledgement** and **14-day patch cycle** for critical 
 
 - Wire `rateLimit` into `createHttpService` to prevent abuse:
   ```ts
+  import { RateLimiter } from 'confused-ai/guard';
+
   createHttpService({
     rateLimit: new RateLimiter({ name: 'http', maxRequests: 100, intervalMs: 60_000 }),
+  });
+  ```
+- **Multi-instance deployments**: The default `RateLimiter` is in-process only — two replicas means double the effective limit. Use `RedisRateLimiter` for distributed enforcement:
+  ```ts
+  import { RedisRateLimiter } from '@confused-ai/adapter-redis';
+
+  createHttpService({
+    rateLimit: new RedisRateLimiter({ client: redisClient, maxRequests: 100, windowMs: 60_000 }),
   });
   ```
 - Rate limiting is keyed on authenticated identity when available, falling back to `X-Forwarded-For` and remote address.
@@ -70,9 +101,11 @@ We target a **72-hour acknowledgement** and **14-day patch cycle** for critical 
 ### Production Hardening Checklist
 
 - [ ] Set `JWT_SECRET` or asymmetric key pair in environment
-- [ ] Enable rate limiting on the HTTP service
+- [ ] Enable rate limiting on the HTTP service (use `RedisRateLimiter` for multi-instance)
 - [ ] Add PII detection guardrail for any user-facing agents
 - [ ] Set budget caps (`maxUsdPerRun`, `maxUsdPerUser`) to prevent runaway costs
 - [ ] Use HTTPS termination at the load balancer / reverse proxy
 - [ ] Rotate secrets on a regular schedule
 - [ ] Monitor the `/v1/admin/health` endpoint for circuit breaker state
+- [ ] Run `confused-ai doctor` in CI to validate env vars before deploy
+- [ ] If using ShellTool: run agent in isolated container with restricted PATH and non-root user

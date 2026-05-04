@@ -5,8 +5,8 @@
  * Requires: npm install openai
  */
 
-import type { EmbeddingProvider } from '../memory/types.js';
-import { DebugLogger, createDebugLogger } from '../shared/debug-logger.js';
+import type { EmbeddingProvider } from '@confused-ai/memory';
+import { DebugLogger, createDebugLogger } from '@confused-ai/shared';
 
 interface OpenAIEmbeddingClient {
     embeddings: {

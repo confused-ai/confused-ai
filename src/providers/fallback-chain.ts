@@ -7,7 +7,7 @@
  */
 
 import type { LLMProvider, Message, GenerateResult, GenerateOptions, StreamOptions } from './types.js';
-import { LLMError } from '../shared/errors.js';
+import { LLMError } from '@confused-ai/shared';
 
 /**
  * Fallback strategy when a provider fails

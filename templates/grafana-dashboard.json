@@ -294,30 +294,24 @@
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "mappings": [
-            { "options": { "closed": { "color": "green", "text": "CLOSED" } }, "type": "value" },
-            { "options": { "open": { "color": "red", "text": "OPEN" } }, "type": "value" },
-            { "options": { "half-open": { "color": "yellow", "text": "HALF-OPEN" } }, "type": "value" }
-          ],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          "color": { "mode": "palette-classic" },
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": { "h": 6, "w": 12, "x": 0, "y": 23 },
       "id": 9,
       "options": {
-        "colorMode": "background",
-        "displayMode": "list",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
       },
-      "title": "Circuit Breaker State by Provider",
-      "type": "stat",
+      "title": "Circuit Breaker Opens (rate/5m)",
+      "type": "timeseries",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "confused_ai_circuit_breaker_state{job=~\"$job\"}",
-          "legendFormat": "{{name}}",
+          "expr": "sum by (service) (rate(confused_ai_circuit_breaker_opens_total{job=~\"$job\"}[$__rate_interval]))",
+          "legendFormat": "{{service}}",
           "refId": "A"
         }
       ]

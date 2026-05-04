@@ -4,12 +4,12 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { ToolCache } from '../src/tools/core/tool-cache.js';
-import { ToolCompressor } from '../src/tools/core/tool-compressor.js';
-import { withCache, withCompression } from '../src/tools/core/tool-wrappers.js';
-import { tool } from '../src/tools/core/tool-helper.js';
+import { ToolCache } from '@confused-ai/tools';
+import { ToolCompressor } from '@confused-ai/tools';
+import { withCache, withCompression } from '@confused-ai/tools';
+import { tool } from '@confused-ai/tools';
 import { z } from 'zod';
-import type { ToolResult } from '../src/tools/core/types.js';
+import type { ToolResult } from '@confused-ai/tools';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 

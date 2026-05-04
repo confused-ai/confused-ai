@@ -1,76 +1,57 @@
 /**
- * LLM provider abstraction for production-grade agent frameworks.
- * Implement this interface to plug in OpenAI, Anthropic, Google, or custom backends.
+ * LLM provider type definitions — canonical source moved to @confused-ai/core.
+ *
+ * This file is now a compatibility re-export barrel.
+ * Import from '@confused-ai/core' directly in new code.
+ *
+ * NOTE: LLMProvider and StreamOptions are kept local for backward compatibility —
+ * the src/ legacy providers use StreamDelta-based onChunk. Once Wave 2 (provider
+ * migration to @confused-ai/models) is complete, these will be removed.
  */
 
-/**
- * Role of a message in a conversation
- */
-export type MessageRole = 'system' | 'user' | 'assistant' | 'tool';
+// Re-export all canonical LLM types from the package
+export type {
+    MessageRole,
+    ContentPart,
+    Message,
+    MessageWithToolId,
+    AssistantMessage,
+    ToolResultMessage,
+    ToolCall,
+    ToolCallResult,
+    LLMToolDefinition,
+    GenerateOptions,
+    TextStreamChunk,
+    StreamToolCallChunk,
+    StreamDelta,
+    // ISP sub-interfaces
+    ITextGenerator,
+    IStreamingProvider,
+    IToolCallProvider,
+    IEmbeddingProvider,
+    IFullLLMProvider,
+} from '@confused-ai/core';
 
-/**
- * Multimodal content part: text, image_url, etc. (OpenAI-style)
- */
-export type ContentPart =
-    | { readonly type: 'text'; readonly text: string }
-    | { readonly type: 'image_url'; readonly image_url: { readonly url: string; readonly detail?: 'low' | 'high' | 'auto' } }
-    | { readonly type: 'file'; readonly file: { readonly url: string; readonly filename?: string } }
-    | { readonly type: 'audio'; readonly audio: { readonly url: string } }
-    | { readonly type: 'video'; readonly video: { readonly url: string } };
+// Backward compat alias: StreamChunk was the text-delta type (now TextStreamChunk)
+export type { TextStreamChunk as StreamChunk } from '@confused-ai/core';
 
-/**
- * A single message in a conversation.
- * content can be string (text-only) or ContentPart[] for multimodal (text, images, audio, video, files).
- */
-export interface Message {
-    readonly role: MessageRole;
-    readonly content: string | ContentPart[];
+// ── Legacy-compatible types kept local until Wave 2 completes ─────────────────
+
+import type { GenerateOptions, Message, LLMToolDefinition, StreamDelta, ToolCall } from '@confused-ai/core';
+
+/** Streaming options — legacy variant where onChunk receives typed StreamDelta objects. */
+export interface StreamOptions {
+    readonly temperature?: number;
+    readonly maxTokens?: number;
+    readonly tools?: LLMToolDefinition[];
+    readonly toolChoice?: 'auto' | 'none' | { type: 'tool'; name: string };
+    readonly stop?: string[];
+    readonly onChunk?: (delta: StreamDelta) => void;
 }
 
 /**
- * Message with optional toolCallId (for role 'tool')
- */
-export interface MessageWithToolId extends Message {
-    readonly toolCallId?: string;
-}
-
-/**
- * Tool call requested by the model (name + arguments)
- */
-export interface ToolCall {
-    readonly id: string;
-    readonly name: string;
-    readonly arguments: Record<string, unknown>;
-}
-
-/**
- * Tool result to send back to the model
- */
-export interface ToolResultMessage {
-    readonly toolCallId: string;
-    readonly content: string;
-}
-
-/**
- * Assistant message that may include tool calls
- */
-export interface AssistantMessage extends Message {
-    role: 'assistant';
-    content: string;
-    toolCalls?: ToolCall[];
-}
-
-/**
- * Tool definition for the LLM (name, description, parameters schema as JSON Schema)
- */
-export interface LLMToolDefinition {
-    readonly name: string;
-    readonly description: string;
-    readonly parameters: Record<string, unknown>; // JSON Schema
-}
-
-/**
- * Result of a single generation (no streaming)
+ * Legacy GenerateResult — allows any string for finishReason for backward compat
+ * with src/ providers. Packages use the stricter literal union from @confused-ai/core.
  */
 export interface GenerateResult {
     readonly text: string;
@@ -80,52 +61,12 @@ export interface GenerateResult {
 }
 
 /**
- * Options for generateText
- */
-export interface GenerateOptions {
-    readonly temperature?: number;
-    readonly maxTokens?: number;
-    readonly tools?: LLMToolDefinition[];
-    readonly toolChoice?: 'auto' | 'none' | { type: 'tool'; name: string };
-    readonly stop?: string[];
-}
-
-/**
- * Chunk from streaming (text delta or tool call delta)
- */
-export interface StreamChunk {
-    readonly type: 'text';
-    readonly text: string;
-}
-
-export interface StreamToolCallChunk {
-    readonly type: 'tool_call';
-    readonly id: string;
-    readonly name: string;
-    readonly argsDelta: string;
-}
-
-export type StreamDelta = StreamChunk | StreamToolCallChunk;
-
-/**
- * Options for streamText
- */
-export interface StreamOptions extends GenerateOptions {
-    readonly onChunk?: (delta: StreamDelta) => void;
-}
-
-/**
- * LLM provider interface.
- * Implement for OpenAI, Anthropic, Google, local models, etc.
+ * LLM provider interface (legacy src/ variant).
+ * streamText uses StreamOptions (StreamDelta-based onChunk) for backward compat.
+ * The packages/core LLMProvider uses string-based onChunk in GenerateOptions.
  */
 export interface LLMProvider {
-    /**
-     * Generate a single response (and optional tool calls) from messages.
-     */
     generateText(messages: Message[], options?: GenerateOptions): Promise<GenerateResult>;
-
-    /**
-     * Stream response tokens and optional tool calls. Call onChunk for each delta.
-     */
     streamText?(messages: Message[], options?: StreamOptions): Promise<GenerateResult>;
 }
+

@@ -1,0 +1,26 @@
+{
+  "name": "@confused-ai/execution",
+  "version": "0.1.0",
+  "description": "Event-driven workflow and graph execution engine for AI agent pipelines",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@confused-ai/core": "workspace:*",
+    "@confused-ai/planner": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "*",
+    "typescript": "*"
+  }
+}

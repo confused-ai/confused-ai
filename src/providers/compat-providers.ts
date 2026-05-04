@@ -682,3 +682,162 @@ export function createWriterProvider(config: WriterProviderConfig = {}): LLMProv
         debug: config.debug,
     });
 }
+
+// ── Wave 2: DeepInfra, HuggingFace, Lepton, Featherless, Snowflake ─────────
+
+export const DEEPINFRA_BASE_URL = 'https://api.deepinfra.com/v1/openai';
+export const HUGGINGFACE_INFERENCE_BASE_URL = 'https://api-inference.huggingface.co/v1';
+export const LEPTON_BASE_URL = 'https://api.lepton.ai/api/v1';
+export const FEATHERLESS_BASE_URL = 'https://api.featherless.ai/v1';
+export const SNOWFLAKE_BASE_URL = 'https://cortex.snowflake.com/v1';
+
+export interface DeepInfraProviderConfig {
+    apiKey?: string;
+    /** Model id, e.g. meta-llama/Meta-Llama-3.1-70B-Instruct */
+    model?: string;
+    debug?: boolean;
+}
+
+/**
+ * DeepInfra — serverless inference for 100+ open models.
+ * Popular choices: meta-llama/Meta-Llama-3.1-70B-Instruct, mistralai/Mixtral-8x7B-Instruct-v0.1
+ */
+export function createDeepInfraProvider(config: DeepInfraProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.DEEPINFRA_API_KEY : undefined);
+    if (!apiKey) throw new Error('DeepInfraProvider requires apiKey or DEEPINFRA_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: DEEPINFRA_BASE_URL,
+        model: config.model ?? 'meta-llama/Meta-Llama-3.1-70B-Instruct',
+        debug: config.debug,
+    });
+}
+
+export interface HuggingFaceProviderConfig {
+    apiKey?: string;
+    /** Model repo id, e.g. mistralai/Mistral-7B-Instruct-v0.3 */
+    model?: string;
+    debug?: boolean;
+}
+
+/**
+ * HuggingFace Inference API — OpenAI-compatible /v1 endpoint.
+ * Works with all HF-hosted models that support the messages API.
+ */
+export function createHuggingFaceProvider(config: HuggingFaceProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.HUGGINGFACE_API_KEY : undefined);
+    if (!apiKey) throw new Error('HuggingFaceProvider requires apiKey or HUGGINGFACE_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: HUGGINGFACE_INFERENCE_BASE_URL,
+        model: config.model ?? 'mistralai/Mistral-7B-Instruct-v0.3',
+        debug: config.debug,
+    });
+}
+
+export interface LeptonProviderConfig {
+    apiKey?: string;
+    /** Model id, e.g. llama3-1-405b */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Lepton AI — high-throughput managed inference. */
+export function createLeptonProvider(config: LeptonProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.LEPTON_API_KEY : undefined);
+    if (!apiKey) throw new Error('LeptonProvider requires apiKey or LEPTON_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: LEPTON_BASE_URL,
+        model: config.model ?? 'llama3-1-405b',
+        debug: config.debug,
+    });
+}
+
+export interface FeatherlessProviderConfig {
+    apiKey?: string;
+    /** Model id, e.g. mistralai/Mistral-7B-Instruct-v0.3 */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Featherless AI — serverless inference with no minimum commitments. */
+export function createFeatherlessProvider(config: FeatherlessProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.FEATHERLESS_API_KEY : undefined);
+    if (!apiKey) throw new Error('FeatherlessProvider requires apiKey or FEATHERLESS_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: FEATHERLESS_BASE_URL,
+        model: config.model ?? 'mistralai/Mistral-7B-Instruct-v0.3',
+        debug: config.debug,
+    });
+}
+
+export interface SnowflakeProviderConfig {
+    apiKey?: string;
+    /** Snowflake Cortex model, e.g. snowflake-arctic, llama3-70b */
+    model?: string;
+    debug?: boolean;
+}
+
+/** Snowflake Cortex — LLM inference built into Snowflake Data Cloud. */
+export function createSnowflakeProvider(config: SnowflakeProviderConfig = {}): LLMProvider {
+    const apiKey = config.apiKey ?? (typeof process !== 'undefined' ? process.env.SNOWFLAKE_API_KEY : undefined);
+    if (!apiKey) throw new Error('SnowflakeProvider requires apiKey or SNOWFLAKE_API_KEY env var');
+    return new OpenAIProvider({
+        apiKey,
+        baseURL: SNOWFLAKE_BASE_URL,
+        model: config.model ?? 'snowflake-arctic',
+        debug: config.debug,
+    });
+}
+
+// ── Self-hosted / local ─────────────────────────────────────────────────────
+
+export interface VllmProviderConfig {
+    /** vLLM server base URL. Default: http://localhost:8000/v1 */
+    baseURL?: string;
+    apiKey?: string;
+    model?: string;
+    debug?: boolean;
+}
+
+/**
+ * vLLM — self-hosted high-throughput LLM server.
+ * Run with: vllm serve <model> --port 8000
+ */
+export function createVllmProvider(config: VllmProviderConfig = {}): LLMProvider {
+    const baseURL = config.baseURL ??
+        (typeof process !== 'undefined' ? process.env.VLLM_BASE_URL : undefined) ??
+        'http://localhost:8000/v1';
+    return new OpenAIProvider({
+        apiKey: config.apiKey ?? (typeof process !== 'undefined' ? process.env.VLLM_API_KEY : undefined) ?? 'not-needed',
+        baseURL,
+        model: config.model ?? 'default',
+        debug: config.debug,
+    });
+}
+
+export interface LmStudioProviderConfig {
+    /** LM Studio server URL. Default: http://localhost:1234/v1 */
+    baseURL?: string;
+    model?: string;
+    debug?: boolean;
+}
+
+/**
+ * LM Studio — run any GGUF model locally with a GUI.
+ * Start the local server in LM Studio and point here.
+ */
+export function createLmStudioProvider(config: LmStudioProviderConfig = {}): LLMProvider {
+    const baseURL = config.baseURL ??
+        (typeof process !== 'undefined' ? process.env.LMSTUDIO_BASE_URL : undefined) ??
+        'http://localhost:1234/v1';
+    return new OpenAIProvider({
+        apiKey: 'not-needed',
+        baseURL,
+        model: config.model ?? 'local-model',
+        debug: config.debug,
+    });
+}
+

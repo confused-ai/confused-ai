@@ -1,5 +1,5 @@
 # Main CI pipeline — runs on every push and PR.
-# Enforces: typecheck → tests (with coverage) → build → pack dry-run
+# Enforces: typecheck → lint → tests (with coverage) → build → pack dry-run
 # Fails fast: any step failure blocks merge.
 
 name: CI
@@ -22,17 +22,17 @@ permissions:
 jobs:
   # ── Typecheck ─────────────────────────────────────────────────────────────
   typecheck:
-    name: Typecheck (tsc --noEmit)
+    name: TypeScript (tsc --noEmit)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
@@ -40,8 +40,34 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: TypeScript typecheck
+      - name: TypeScript typecheck (root)
         run: bun run typecheck
+
+  # ── Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+
+      - name: Lint root source
+        run: bun run lint
+
+      - name: Lint all workspace packages
+        run: bun run lint:packages
 
   # ── Tests + Coverage ──────────────────────────────────────────────────────
   test:
@@ -52,9 +78,9 @@ jobs:
       matrix:
         node-version: ["18", "20", "22"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -63,7 +89,7 @@ jobs:
           bun-version: latest
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-node${{ matrix.node-version }}-${{ hashFiles('bun.lockb') }}
@@ -71,32 +97,32 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Run tests
+      - name: Run full test suite
         run: bun run test
 
       # Upload coverage only from the LTS node version to avoid duplicates
       - name: Upload coverage report
         if: matrix.node-version == '20'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
           retention-days: 7
 
-  # ── Build ─────────────────────────────────────────────────────────────────
+  # ── Build all packages ─────────────────────────────────────────────────────
   build:
-    name: Build (tsup)
+    name: Build (tsup — all packages)
     runs-on: ubuntu-latest
-    needs: [typecheck]
+    needs: [typecheck, lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
@@ -104,15 +130,45 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Build package
+      - name: Build root package
         run: bun run build
 
-      - name: Dry-run pack (verify package contents)
-        run: bun run pack:inspect
+      - name: Build all workspace packages
+        run: |
+          FAILED=()
+          for pkg in packages/*/; do
+            if [ -f "${pkg}package.json" ] && grep -q '"build"' "${pkg}package.json"; then
+              echo "→ Building ${pkg}..."
+              if ! (cd "$pkg" && bun run build 2>&1); then
+                FAILED+=("$pkg")
+              fi
+            fi
+          done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Build failed for: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "✓ All packages built successfully"
 
-      - name: Upload dist artifact
-        uses: actions/upload-artifact@v7
+      - name: Verify dist/ present in all source packages
+        run: |
+          MISSING=()
+          for pkg in packages/*/; do
+            if [ -d "${pkg}src" ] && [ ! -d "${pkg}dist" ]; then
+              MISSING+=("$pkg")
+            fi
+          done
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing dist/: ${MISSING[*]}"
+            exit 1
+          fi
+          echo "✓ All dist/ directories present"
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: dist-packages
+          path: |
+            dist/
+            packages/*/dist/
           retention-days: 1

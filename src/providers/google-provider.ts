@@ -14,7 +14,7 @@ import type {
     ToolCall,
     StreamOptions,
 } from './types.js';
-import { createDebugLogger, type DebugLogger } from '../shared/debug-logger.js';
+import { createDebugLogger, type DebugLogger } from '@confused-ai/shared';
 
 // ── Minimal SDK types (compile-time only; runtime: @google/generative-ai) ──
 

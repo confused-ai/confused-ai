@@ -1,0 +1,51 @@
+{
+  "name": "@confused-ai/session",
+  "version": "0.1.0",
+  "description": "Session stores for confused-ai agents. In-memory default; SQLite and Redis as optional peer deps.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".":         { "types": "./src/index.ts",         "default": "./src/index.ts" },
+    "./memory":  { "types": "./src/in-memory.ts",     "default": "./src/in-memory.ts" },
+    "./sqlite":  { "types": "./src/sqlite.ts",        "default": "./src/sqlite.ts" },
+    "./redis":   { "types": "./src/redis-store.ts",   "default": "./src/redis-store.ts" }
+  },
+  "publishConfig": {
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".":        { "types": "./dist/index.d.ts",        "import": "./dist/index.js",       "require": "./dist/index.cjs" },
+      "./memory": { "types": "./dist/in-memory.d.ts",    "import": "./dist/in-memory.js",   "require": "./dist/in-memory.cjs" },
+      "./sqlite": { "types": "./dist/sqlite.d.ts",       "import": "./dist/sqlite.js",      "require": "./dist/sqlite.cjs" },
+      "./redis":  { "types": "./dist/redis-store.d.ts",  "import": "./dist/redis-store.js", "require": "./dist/redis-store.cjs" }
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src --max-warnings 0"
+  },
+  "dependencies": {
+    "@confused-ai/contracts": "workspace:*",
+    "@confused-ai/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "better-sqlite3": ">=11.0.0",
+    "ioredis":        ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "better-sqlite3": { "optional": true },
+    "ioredis":        { "optional": true }
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "license": "MIT"
+}

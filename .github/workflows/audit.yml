@@ -1,0 +1,49 @@
+# Weekly dependency security audit.
+# Runs every Monday at 07:00 UTC and on demand.
+# Fails the workflow if any HIGH or CRITICAL vulnerabilities are found.
+
+name: Security Audit
+
+on:
+  schedule:
+    # Every Monday at 07:00 UTC (after Dependabot PRs open at 06:00)
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: npm audit (high+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-audit-${{ hashFiles('bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-audit-
+
+      - run: bun install --frozen-lockfile
+
+      # bun audit is not yet stable; use npm's audit against the lockfile.
+      # --omit=dev skips dev dependencies (noisy, lower risk in production).
+      - name: Audit production dependencies
+        run: npm audit --audit-level=high --omit=dev
+
+      # Separate step to audit ALL deps at moderate level for awareness.
+      # This step is allowed to fail — it is informational only.
+      - name: Audit all dependencies (informational)
+        run: npm audit --audit-level=moderate
+        continue-on-error: true

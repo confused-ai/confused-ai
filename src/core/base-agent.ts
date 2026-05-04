@@ -11,7 +11,7 @@ import {
     AgentState,
     ExecutionMetadata,
 } from './types.js';
-import { DebugLogger, createDebugLogger } from '../shared/debug-logger.js';
+import { DebugLogger, createDebugLogger } from '@confused-ai/shared';
 
 /**
  * Abstract base class providing common agent functionality

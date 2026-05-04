@@ -37,7 +37,7 @@
  */
 
 import type { CreateAgentResult } from '../create-agent/types.js';
-import type { AgenticRunResult } from '../agentic/types.js';
+import type { AgenticRunResult } from '@confused-ai/agentic';
 
 export interface ComposeOptions {
     /**

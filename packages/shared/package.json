@@ -1,0 +1,27 @@
+{
+  "name": "@confused-ai/shared",
+  "version": "0.1.0",
+  "description": "Shared utilities: telemetry, version, debug logger",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "sideEffects": false,
+  "peerDependencies": {
+    "@confused-ai/core": "workspace:*"
+  }
+}

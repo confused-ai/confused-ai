@@ -1,9 +1,9 @@
 import type { LLMProvider } from '../providers/types.js';
 import type { Message } from '../providers/types.js';
 import type { MultiModalInput } from '../providers/vision.js';
-import type { Tool, ToolRegistry, ToolMiddleware } from '../tools/core/types.js';
-import type { LightweightTool } from '../tools/core/tool-helper.js';
-import type { SessionStore } from '../session/types.js';
+import type { Tool, ToolRegistry, ToolMiddleware } from '@confused-ai/tools';
+import type { LightweightTool } from '@confused-ai/tools';
+import type { SessionStore } from '@confused-ai/session';
 import type {
     AdapterBindings,
     AdapterRegistry,
@@ -16,13 +16,13 @@ import type {
     RateLimitAdapter,
     AuditLogAdapter,
 } from '../adapters/index.js';
-import type { GuardrailEngine } from '../guardrails/types.js';
-import type { UserProfileStore } from '../learning/types.js';
-import type { LearningMode } from '../learning/types.js';
-import type { MemoryStore } from '../memory/types.js';
-import type { RAGEngine } from '../knowledge/types.js';
+import type { GuardrailEngine } from '@confused-ai/guardrails';
+import type { UserProfileStore } from '@confused-ai/learning';
+import type { LearningMode } from '@confused-ai/learning';
+import type { MemoryStore } from '@confused-ai/memory';
+import type { RAGEngine } from '@confused-ai/knowledge';
 import type { z } from 'zod';
-import type { AgenticRunResult, AgenticLifecycleHooks } from '../agentic/types.js';
+import type { AgenticRunResult, AgenticLifecycleHooks } from '@confused-ai/agentic';
 import type { Logger } from '../observability/types.js';
 
 export interface CreateAgentOptions {
@@ -188,6 +188,26 @@ export interface AgentRunOptions {
     runId?: string;
 }
 
+/**
+ * Typed event emitted by `agent.streamEvents()`.
+ *
+ * Richer than the `string` chunks of `agent.stream()` — callers can differentiate
+ * text deltas, tool calls, tool results, step completions, and the final run result.
+ */
+export interface StreamChunk {
+    type: 'text-delta' | 'tool-call' | 'tool-result' | 'step-finish' | 'run-finish' | 'error';
+    /** Present when type is 'text-delta'. */
+    delta?: string;
+    /** Present when type is 'tool-call' or 'tool-result'. */
+    tool?: { name: string; input: unknown; output?: unknown };
+    /** Present when type is 'step-finish'. */
+    stepNumber?: number;
+    /** Present when type is 'run-finish'. */
+    run?: AgenticRunResult;
+    /** Present when type is 'error'. */
+    error?: Error;
+}
+
 export interface CreateAgentResult {
     name: string;
     instructions: string;
@@ -219,6 +239,21 @@ export interface CreateAgentResult {
      * Errors thrown by the agent are re-thrown when the iterator exhausts.
      */
     stream(prompt: string | MultiModalInput, options?: Omit<AgentRunOptions, 'onChunk'>): AsyncIterable<string>;
+    /**
+     * Stream the agent's response as typed `StreamChunk` events.
+     *
+     * Yields text deltas, tool-call/result notifications, step completions,
+     * and finally a `run-finish` event carrying the full `AgenticRunResult`.
+     *
+     * @example
+     * ```ts
+     * for await (const event of agent.streamEvents('Summarise this document')) {
+     *   if (event.type === 'text-delta') process.stdout.write(event.delta ?? '');
+     *   if (event.type === 'run-finish') console.log('done', event.run?.steps, 'steps');
+     * }
+     * ```
+     */
+    streamEvents(prompt: string | MultiModalInput, options?: Omit<AgentRunOptions, 'onChunk'>): AsyncIterable<StreamChunk>;
     createSession(userId?: string): Promise<string>;
     getSessionMessages(sessionId: string): Promise<Message[]>;
     /** All resolved adapter bindings (merged from `adapters` + convenience fields). */

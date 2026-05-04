@@ -2,11 +2,11 @@
  * Tests: Guardrails — PII detection, prompt injection, content rules
  */
 import { describe, it, expect } from 'vitest';
-import { detectPii, createPiiDetectionRule } from '../src/guardrails/moderation.js';
-import { detectPromptInjection, createPromptInjectionRule } from '../src/guardrails/injection.js';
-import { GuardrailValidator, createContentRule, createMaxLengthRule } from '../src/guardrails/validator.js';
-import { createUrlValidationRule } from '../src/guardrails/allowlist.js';
-import type { GuardrailContext } from '../src/guardrails/types.js';
+import { detectPii, createPiiDetectionRule } from '@confused-ai/guardrails';
+import { detectPromptInjection, createPromptInjectionRule } from '@confused-ai/guardrails';
+import { GuardrailValidator, createContentRule, createMaxLengthRule } from '@confused-ai/guardrails';
+import { createUrlValidationRule } from '@confused-ai/guardrails';
+import type { GuardrailContext } from '@confused-ai/guardrails';
 
 // Minimal context for all rule.check() calls
 const ctx = (output: string): GuardrailContext => ({

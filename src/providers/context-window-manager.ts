@@ -178,6 +178,18 @@ export const MODEL_CONTEXT_LIMITS: Record<string, number> = {
     'palmyra-x5': 128_000,
     'palmyra-x4': 32_768,
 
+    // DeepInfra (key = full HF repo path)
+    'meta-llama/Meta-Llama-3.1-70B-Instruct': 128_000,
+    'meta-llama/Meta-Llama-3.3-70B-Instruct': 128_000,
+    'mistralai/Mixtral-8x7B-Instruct-v0.1': 32_768,
+    'mistralai/Mistral-7B-Instruct-v0.3': 32_768,
+    'Qwen/Qwen2.5-72B-Instruct': 131_072,
+    'microsoft/WizardLM-2-8x22B': 65_536,
+
+    // vLLM / LM Studio (model-specific, use default for unknowns)
+    'default': 4_096,
+    'local-model': 4_096,
+
     // Default for unknown models
     '__default__': 4_096,
 };

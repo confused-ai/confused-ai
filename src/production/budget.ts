@@ -20,7 +20,7 @@
  */
 
 import { MODEL_PRICING } from '../providers/cost-tracker.js';
-import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/errors.js';
+import { AgentError, ErrorCode, type ErrorCodeType } from '@confused-ai/shared';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

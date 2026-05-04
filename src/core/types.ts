@@ -2,9 +2,9 @@
  * Core types and interfaces for the Agent Framework
  */
 
-import type { MemoryStore } from '../memory/types.js';
-import type { ToolRegistry } from '../tools/core/types.js';
-import type { Planner } from '../planner/types.js';
+import type { MemoryStore } from '@confused-ai/memory';
+import type { ToolRegistry } from '@confused-ai/tools';
+import type { Planner } from '@confused-ai/planner';
 
 /**
  * Unique identifier for agents, tasks, and other entities

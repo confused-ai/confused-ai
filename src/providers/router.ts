@@ -36,7 +36,7 @@
  */
 
 import type { LLMProvider, Message, GenerateResult, GenerateOptions, StreamOptions } from './types.js';
-import { LLMError } from '../shared/errors.js';
+import { LLMError } from '@confused-ai/shared';
 
 // ── Task classification ────────────────────────────────────────────────────
 
@@ -593,11 +593,13 @@ export class LLMRouter implements LLMProvider {
     }
 
     async streamText(messages: Message[], options?: StreamOptions): Promise<GenerateResult> {
-        const { entry, decision } = this.route(messages, options);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { entry, decision } = this.route(messages, options as any);
         this.recordDecision(decision);
 
         const provider = entry.provider;
-        const streamFn = provider.streamText?.bind(provider) ?? provider.generateText.bind(provider);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const streamFn: (msgs: Message[], opts?: any) => Promise<GenerateResult> = provider.streamText?.bind(provider) ?? provider.generateText.bind(provider);
 
         try {
             return await streamFn(messages, options);
@@ -770,10 +772,11 @@ export class LLMRouter implements LLMProvider {
                 true,
             );
             if (method === 'streamText') {
-                const fn = fallback.provider.streamText?.bind(fallback.provider) ?? fallback.provider.generateText.bind(fallback.provider);
-                return fn(messages, options as StreamOptions);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const fn: (msgs: Message[], opts?: any) => Promise<GenerateResult> = fallback.provider.streamText?.bind(fallback.provider) ?? fallback.provider.generateText.bind(fallback.provider);
+                return fn(messages, options as unknown as GenerateOptions);
             }
-            return fallback.provider.generateText(messages, options as GenerateOptions);
+            return fallback.provider.generateText(messages, options as unknown as GenerateOptions);
         }
 
         throw err instanceof Error

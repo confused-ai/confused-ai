@@ -9,8 +9,8 @@
  */
 
 import type { Command } from 'commander';
-import { SqliteEventStore } from '../../graph/index.js';
-import type { GraphEvent } from '../../graph/types.js';
+import { SqliteEventStore } from '@confused-ai/graph';
+import type { GraphEvent } from '@confused-ai/graph';
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;

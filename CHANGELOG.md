@@ -7,6 +7,32 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.1.6] — 2026-05-04
+
+### Changed
+
+- **Monorepo structure** — all source code now lives in independently-built workspace packages under `packages/`. `src/` retained as backward-compatible re-export barrel.
+- **`packages/tools`** — rewrote `shell`, `browser`, and `types` as clean functional `defineTool` implementations; removed all class-based files with broken `../core/` relative imports.
+- **`packages/test-utils`** — complete standalone implementation of `createMockLLM`, `createMockAgent`, `runScenario`; zero cross-package dependencies.
+- **CI** — updated to 4 jobs: `typecheck → lint → test (Node 18/20/22) → build all packages`.
+
+### Fixed
+
+- `router/selectForBudget`: removed incorrect `* 1_000_000` scaling; budget comparison is now direct dollar-per-million.
+- `adapter-redis/session-store`: removed unnecessary optional chain on non-null `hGetAll` result; fixed template literal number type.
+- `tools/types.ts`: migrated from deprecated `ZodTypeAny` → `z.ZodType`, `_def` → `.def`.
+- Removed 33 broken package copies that had relative `src/`-path imports.
+- Docs URL: replaced all `rvuyyuru2.github.io/agent-framework` references with `confused-ai.github.io/confused-ai`.
+- Version consistency: `ARCHITECTURE.md` and `SECURITY.md` now match `package.json` version `1.1.6`.
+
+### Security
+
+- `SECURITY.md`: added ShellTool sandbox requirements section.
+- `SECURITY.md`: documented `RedisRateLimiter` for multi-instance rate limiting.
+- `README.md`: qualified audit logging claim — removed SOC2/HIPAA label; added compliance footnote.
+
+---
+
 ## [1.1.0] — 2026-04-27
 
 ### Added

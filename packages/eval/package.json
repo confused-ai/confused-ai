@@ -1,0 +1,25 @@
+{
+  "name": "@confused-ai/eval",
+  "version": "0.1.0",
+  "description": "Evaluation framework for AI agents: LLM-as-judge, text metrics, regression CI, dataset loading",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@confused-ai/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}

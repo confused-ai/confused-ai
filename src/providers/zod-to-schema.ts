@@ -7,7 +7,7 @@
 
 import type { ZodType } from 'zod';
 import type { LLMToolDefinition } from '../providers/types.js';
-import type { Tool, ToolParameters } from '../tools/core/types.js';
+import type { Tool, ToolParameters } from '@confused-ai/tools';
 
 type ZodWithJsonSchema = ZodType & {
     toJSONSchema?: () => Record<string, unknown>;
@@ -173,7 +173,7 @@ export function zodToJsonSchema(zodSchema: ZodType): Record<string, unknown> {
  * Uses proper Zod-to-JSON-Schema conversion
  */
 export function toolToLLMDef(tool: Tool<ToolParameters, unknown>): LLMToolDefinition {
-    const jsonSchema = zodToJsonSchema(tool.parameters as ZodType);
+    const jsonSchema = zodToJsonSchema(tool.parameters as unknown as ZodType);
 
     return {
         name: tool.name,

@@ -4,7 +4,7 @@
 
 import type { EntityId } from '../core/types.js';
 import type { AgentState } from '../core/types.js';
-import type { TaskStatus } from '../planner/types.js';
+import type { TaskStatus } from '@confused-ai/planner';
 
 /**
  * Log levels

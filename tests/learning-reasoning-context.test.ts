@@ -6,31 +6,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Learning ─────────────────────────────────────────────────────────────────
-import { LearningMachine } from '../src/learning/machine.js';
+import { LearningMachine } from '@confused-ai/learning';
 import {
     InMemoryUserMemoryStore,
     InMemorySessionContextStore,
     InMemoryLearnedKnowledgeStore,
     InMemoryEntityMemoryStore,
-} from '../src/learning/extended-stores.js';
-import { LearningMode } from '../src/learning/types.js';
+} from '@confused-ai/learning';
+import { LearningMode } from '@confused-ai/learning';
 
 // ── Reasoning ─────────────────────────────────────────────────────────────────
-import { ReasoningManager } from '../src/reasoning/manager.js';
-import { NextAction, ReasoningEventType } from '../src/reasoning/types.js';
+import { ReasoningManager } from '@confused-ai/reasoning';
+import { NextAction, ReasoningEventType } from '@confused-ai/reasoning';
 
 // ── Compression ───────────────────────────────────────────────────────────────
-import { CompressionManager } from '../src/compression/manager.js';
+import { CompressionManager } from '@confused-ai/compression';
 
 // ── Context ───────────────────────────────────────────────────────────────────
-import { ContextMode } from '../src/context/types.js';
-import { ContextProvider } from '../src/context/provider.js';
-import { ContextBackend } from '../src/context/backend.js';
-import type { Answer, QueryOptions } from '../src/context/types.js';
+import { ContextMode } from '@confused-ai/context';
+import { ContextProvider } from '@confused-ai/context';
+import { ContextBackend } from '@confused-ai/context';
+import type { Answer, QueryOptions } from '@confused-ai/context';
 
 // ── Scheduler ─────────────────────────────────────────────────────────────────
-import { ScheduleManager } from '../src/scheduler/manager.js';
-import { computeNextRun, validateCronExpr } from '../src/scheduler/cron.js';
+import { ScheduleManager } from '@confused-ai/scheduler';
+import { computeNextRun, validateCronExpr } from '@confused-ai/scheduler';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Learning

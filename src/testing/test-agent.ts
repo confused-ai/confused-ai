@@ -28,7 +28,7 @@
  */
 
 import type { CreateAgentOptions } from '../create-agent/types.js';
-import type { Tool } from '../tools/core/types.js';
+import type { Tool } from '@confused-ai/tools';
 import { MockLLMProvider, type MockLLMOptions } from './mock-llm.js';
 import { MockSessionStore } from './mock-session-store.js';
 
@@ -68,7 +68,7 @@ export async function createTestAgent(opts: TestAgentOptions = {}): Promise<Test
         delay: opts.delay,
     });
 
-    const sessionStore = new MockSessionStore();
+    const sessionStore = new MockSessionStore() as any;
 
     const agent = createAgent({
         name: opts.name ?? 'test-agent',

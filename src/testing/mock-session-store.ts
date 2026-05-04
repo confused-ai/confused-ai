@@ -4,8 +4,8 @@
  * In-memory session store that tracks interactions
  */
 
-import type { SessionStore, SessionQuery, SessionRun } from '../session/types.js';
-import type { Session } from '../session/types.js';
+import type { SessionQuery, SessionRun } from '@confused-ai/session';
+import type { Session } from '@confused-ai/session';
 import type { Message } from '../providers/types.js';
 
 /**
@@ -25,7 +25,7 @@ import type { Message } from '../providers/types.js';
  * expect(mockStore.getCreatedSessionIds()).toContain('session-id');
  * ```
  */
-export class MockSessionStore implements SessionStore {
+export class MockSessionStore {
     private sessions = new Map<string, Session>();
     private runs = new Map<string, SessionRun[]>();
     private createdSessionIds: string[] = [];
@@ -80,7 +80,7 @@ export class MockSessionStore implements SessionStore {
         if (!session) throw new Error(`Session ${sessionId} not found`);
         const updated: Session = {
             ...session,
-            messages: [...session.messages, message],
+            messages: [...session.messages, message as any],
             updatedAt: new Date(),
         };
         this.sessions.set(sessionId, updated);

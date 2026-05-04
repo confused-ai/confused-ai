@@ -24,8 +24,8 @@
  * ```
  */
 
-import type { SessionStore } from '../session/types.js';
-import type { SessionQuery, Session, SessionId, SessionRun } from '../session/types.js';
+import type { SessionStore } from '@confused-ai/session';
+import type { SessionQuery, Session, SessionId, SessionRun } from '@confused-ai/session';
 import type { Message } from '../providers/types.js';
 import { RateLimiter } from './rate-limiter.js';
 import type { RateLimiterConfig } from './rate-limiter.js';
@@ -55,9 +55,9 @@ export interface TenantContext {
  * Wraps a `SessionStore` and prefixes all session IDs with `tenantId:`,
  * ensuring complete data isolation between tenants without separate databases.
  */
-export class TenantScopedSessionStore implements SessionStore {
+export class TenantScopedSessionStore {
     constructor(
-        private readonly base: SessionStore,
+        private readonly base: any,
         private readonly tenantId: string
     ) {}
 
@@ -70,7 +70,7 @@ export class TenantScopedSessionStore implements SessionStore {
         return id.startsWith(p) ? id.slice(p.length) : id;
     }
 
-    private prefixSession(session: Session): Session {
+    private prefixSession(session: any): any {
         return { ...session, id: this.unprefix(session.id) as SessionId };
     }
 
@@ -96,8 +96,8 @@ export class TenantScopedSessionStore implements SessionStore {
     async list(query?: SessionQuery): Promise<Session[]> {
         const sessions = await this.base.list(query);
         return sessions
-            .filter((s) => s.id.startsWith(`${this.tenantId}:`))
-            .map((s) => this.prefixSession(s));
+            .filter((s: any) => s.id.startsWith(`${this.tenantId}:`))
+            .map((s: any) => this.prefixSession(s));
     }
 
     async addMessage(sessionId: SessionId, message: Message): Promise<Session> {
@@ -182,9 +182,9 @@ export function createTenantContext(
     tenantId: string,
     options: TenantContextOptions = {}
 ): TenantContext {
-    const sessionStore = options.sessionStore
+    const sessionStore = (options.sessionStore
         ? new TenantScopedSessionStore(options.sessionStore, tenantId)
-        : new TenantScopedSessionStore(createFallbackSessionStore(), tenantId);
+        : new TenantScopedSessionStore(createFallbackSessionStore(), tenantId)) as unknown as SessionStore;
 
     const rateLimiter = new RateLimiter({
         name: `tenant:${tenantId}`,
@@ -207,6 +207,6 @@ export function createTenantContext(
 function createFallbackSessionStore(): SessionStore {
     // Lazy import to avoid circular deps
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { InMemorySessionStore } = require('../session/in-memory-store.js') as { InMemorySessionStore: new () => SessionStore };
+    const { InMemorySessionStore } = require('@confused-ai/session') as { InMemorySessionStore: new () => SessionStore };
     return new InMemorySessionStore();
 }

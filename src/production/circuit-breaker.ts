@@ -10,7 +10,7 @@
  */
 
 import type { MetricsCollector } from '../observability/types.js';
-import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/errors.js';
+import { AgentError, ErrorCode, type ErrorCodeType } from '@confused-ai/shared';
 
 /** Circuit breaker states */
 export enum CircuitState {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { handleMcpStdioLine } from '../src/tools/mcp/stdio-server.js';
-import { CalculatorAddTool } from '../src/tools/utils/calculator.js';
+import { handleMcpStdioLine } from '@confused-ai/tools';
+import { CalculatorAddTool } from '@confused-ai/tools';
 
 const serverInfo = { name: 'test-mcp', version: '0.0.1' };
 

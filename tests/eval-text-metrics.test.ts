@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { wordOverlapF1, rougeLWords } from '../src/observability/eval.js';
+import { wordOverlapF1, rougeLWords } from '@confused-ai/eval';
 
 describe('lexical eval metrics', () => {
     it('wordOverlapF1 is 1 for identical', () => {

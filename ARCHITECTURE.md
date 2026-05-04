@@ -337,5 +337,5 @@
  * `LLMProvider`, `Tool`, `RAGEngine`, `Tracer`, `MetricsCollector`, etc.
  */
 
-export const VERSION = '1.1.2';
+export const VERSION = '1.1.6';
 export const FRAMEWORK_NAME = 'Confused-AI';

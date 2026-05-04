@@ -23,7 +23,7 @@
  * ```
  */
 
-import type { AgenticRunResult } from '../agentic/types.js';
+import type { AgenticRunResult } from '@confused-ai/agentic';
 import type { CreateAgentResult } from '../create-agent/types.js';
 
 /** Options for creating a mock agent. */
@@ -126,6 +126,12 @@ export function createMockAgent(options: MockAgentOptions): MockAgentHandle {
         async *stream(prompt: string, opts?: Record<string, unknown>): AsyncIterable<string> {
             const result = await agent.run(prompt, opts);
             yield result.text;
+        },
+
+        async *streamEvents(prompt: string, opts?: Record<string, unknown>) {
+            const result = await agent.run(prompt, opts);
+            yield { type: 'text-delta' as const, delta: result.text };
+            yield { type: 'run-finish' as const, run: result };
         },
 
         getSessionMessages(_sessionId: string) {

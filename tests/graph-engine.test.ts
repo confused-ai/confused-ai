@@ -63,7 +63,7 @@ import {
   type LLMResponse,
   type AgentDef,
   type GraphPlugin,
-} from '../src/graph/index.js';
+} from '@confused-ai/graph';
 
 import {
   createTestRunner,

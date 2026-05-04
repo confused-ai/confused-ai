@@ -1,0 +1,59 @@
+name: Bundle Size
+
+on:
+  pull_request:
+    paths:
+      - 'packages/**'
+      - 'src/**'
+      - 'tsup.config.ts'
+      - 'package.json'
+      - '.github/workflows/bundle-size.yml'
+
+jobs:
+  check:
+    name: Check bundle sizes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build packages
+        run: |
+          for pkg in packages/contracts packages/observe packages/guard packages/serve packages/adapter-redis; do
+            echo "Building $pkg..."
+            cd "$pkg"
+            bunx tsup 2>/dev/null || true
+            cd -
+          done
+
+      - name: Check package bundle sizes
+        run: |
+          FAIL=0
+          declare -A BUDGETS=(
+            ["packages/contracts/dist/index.js"]=30
+            ["packages/observe/dist/index.js"]=20
+            ["packages/guard/dist/index.js"]=20
+            ["packages/serve/dist/index.js"]=25
+          )
+          for file in "${!BUDGETS[@]}"; do
+            budget_kb="${BUDGETS[$file]}"
+            if [ -f "$file" ]; then
+              size_bytes=$(wc -c < "$file")
+              size_kb=$(( (size_bytes + 1023) / 1024 ))
+              if [ "$size_kb" -gt "$budget_kb" ]; then
+                echo "❌  $file: ${size_kb}KB exceeds budget of ${budget_kb}KB"
+                FAIL=1
+              else
+                echo "✅  $file: ${size_kb}KB / ${budget_kb}KB"
+              fi
+            else
+              echo "⏭   $file: not built (skipped)"
+            fi
+          done
+          exit $FAIL

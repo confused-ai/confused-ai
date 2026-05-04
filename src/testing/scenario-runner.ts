@@ -22,7 +22,7 @@
  * ```
  */
 
-import type { AgenticRunResult } from '../agentic/types.js';
+import type { AgenticRunResult } from '@confused-ai/agentic';
 import type { CreateAgentResult } from '../create-agent/types.js';
 
 /** A single assertion function applied to a run result. */

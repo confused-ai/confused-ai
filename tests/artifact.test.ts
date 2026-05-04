@@ -10,8 +10,8 @@ import {
     createDataArtifact,
     createReasoningArtifact,
     createPlanArtifact,
-} from '../src/artifacts/artifact.js';
-import type { ArtifactStorage } from '../src/artifacts/artifact.js';
+} from '@confused-ai/artifacts';
+import type { ArtifactStorage } from '@confused-ai/artifacts';
 
 describe('InMemoryArtifactStorage', () => {
     let storage: ArtifactStorage;

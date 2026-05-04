@@ -1,0 +1,40 @@
+{
+  "name": "@confused-ai/agentic",
+  "version": "0.1.0",
+  "description": "ReAct-style agentic loop with tool dispatch, guardrails, and human-in-the-loop",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@confused-ai/core": "workspace:*",
+    "@confused-ai/guard": "workspace:*",
+    "@confused-ai/guardrails": "workspace:*",
+    "@confused-ai/observe": "workspace:*",
+    "@confused-ai/shared": "workspace:*",
+    "zod": "^3.0.0"
+  },
+  "peerDependencies": {
+    "@confused-ai/knowledge": "workspace:*",
+    "@confused-ai/production": "workspace:*",
+    "@opentelemetry/api": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@confused-ai/knowledge": { "optional": true },
+    "@confused-ai/production": { "optional": true },
+    "@opentelemetry/api": { "optional": true }
+  },
+  "devDependencies": {
+    "tsup": "*",
+    "typescript": "*"
+  }
+}

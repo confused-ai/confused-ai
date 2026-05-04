@@ -9,7 +9,7 @@
  */
 
 import type { LLMProvider } from '../providers/types.js';
-import type { SessionStore } from '../session/types.js';
+import type { SessionStore } from '@confused-ai/session';
 
 /** Health check status */
 export enum HealthStatus {

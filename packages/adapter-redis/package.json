@@ -1,0 +1,49 @@
+{
+  "name": "@confused-ai/adapter-redis",
+  "version": "0.1.0",
+  "description": "Redis adapters for confused-ai: distributed session store and sliding-window rate limiter.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "require": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@confused-ai/contracts": "workspace:*"
+  },
+  "peerDependencies": {
+    "redis": ">=4"
+  },
+  "peerDependenciesMeta": {
+    "redis": { "optional": false }
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "keywords": ["redis", "session-store", "rate-limiter", "confused-ai"],
+  "license": "MIT"
+}

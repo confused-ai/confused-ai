@@ -14,13 +14,13 @@
  */
 
 import type { CreateAgentOptions, CreateAgentResult } from '../create-agent.js';
-import type { SessionStore } from '../session/types.js';
-import type { GuardrailEngine } from '../guardrails/types.js';
-import type { ToolMiddleware } from '../tools/core/types.js';
-import type { AgenticLifecycleHooks } from '../agentic/types.js';
+import type { SessionStore } from '@confused-ai/session';
+import type { GuardrailEngine } from '@confused-ai/guardrails';
+import type { ToolMiddleware } from '@confused-ai/tools';
+import type { AgenticLifecycleHooks } from '@confused-ai/agentic';
 import type { z } from 'zod';
 import { createAgent } from '../create-agent.js';
-import { InMemorySessionStore } from '../session/index.js';
+import { InMemorySessionStore } from '@confused-ai/session';
 import { createDevLogger } from './dev-logger.js';
 import { createDevToolMiddleware } from './dev-logger.js';
 
@@ -115,7 +115,7 @@ class AgentBuilder {
 
     /** Set session store. Call with no args for in-memory; pass store for DB; pass false for stateless. */
     withSession(store?: SessionStore | false): AgentBuilder {
-        const sessionStore = store === false ? false : (store ?? new InMemorySessionStore());
+        const sessionStore = store === false ? false : (store ?? new InMemorySessionStore()) as any;
         return new AgentBuilder({ ...this.options, sessionStore });
     }
 
