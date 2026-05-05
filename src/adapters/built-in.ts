@@ -167,7 +167,7 @@ abstract class BaseAdapter {
 export class InMemorySqlAdapter extends BaseAdapter implements SqlAdapter {
     readonly name = 'memory';
     readonly category = 'sql' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory SQL adapter for development and testing';
 
     // table → rows (Map so insertion order is preserved)
@@ -250,7 +250,7 @@ export class InMemorySqlAdapter extends BaseAdapter implements SqlAdapter {
 export class InMemoryNoSqlAdapter extends BaseAdapter implements NoSqlAdapter {
     readonly name = 'memory';
     readonly category = 'nosql' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory NoSQL document adapter';
 
     private collections = new Map<string, Map<string, unknown>>();
@@ -340,7 +340,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
 export class InMemoryVectorAdapter extends BaseAdapter implements VectorAdapter {
     readonly name = 'memory';
     readonly category = 'vector' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory vector adapter with cosine similarity';
 
     private collections = new Map<string, Map<string, VectorRecord>>();
@@ -403,7 +403,7 @@ export class InMemoryVectorAdapter extends BaseAdapter implements VectorAdapter 
 export class InMemoryAnalyticsAdapter extends BaseAdapter implements AnalyticsAdapter {
     readonly name = 'memory';
     readonly category = 'analytics' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory analytics adapter (stub) — swap with DuckDB for production';
 
     private tables = new Map<string, Record<string, unknown>[]>();
@@ -445,7 +445,7 @@ export class InMemoryAnalyticsAdapter extends BaseAdapter implements AnalyticsAd
 export class InMemorySearchAdapter extends BaseAdapter implements SearchAdapter {
     readonly name = 'memory';
     readonly category = 'search' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory full-text search adapter (substring matching)';
 
     private indices = new Map<string, Map<string, SearchDocument>>();
@@ -496,7 +496,7 @@ export class InMemorySearchAdapter extends BaseAdapter implements SearchAdapter 
 export class InMemoryCacheAdapter extends BaseAdapter implements CacheAdapter {
     readonly name = 'memory';
     readonly category = 'cache' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory cache adapter with TTL support';
 
     private store = new Map<string, { value: unknown; expiresAt?: number }>();
@@ -572,7 +572,7 @@ export class InMemoryCacheAdapter extends BaseAdapter implements CacheAdapter {
 export class InMemoryObjectStorageAdapter extends BaseAdapter implements ObjectStorageAdapter {
     readonly name = 'memory';
     readonly category = 'object-storage' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory object storage adapter';
 
     private buckets = new Map<string, Map<string, { data: Buffer; info: ObjectInfo }>>();
@@ -631,7 +631,7 @@ export class InMemoryObjectStorageAdapter extends BaseAdapter implements ObjectS
 export class InMemoryTimeSeriesAdapter extends BaseAdapter implements TimeSeriesAdapter {
     readonly name = 'memory';
     readonly category = 'time-series' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory time-series adapter';
 
     private points: TimeSeriesPoint[] = [];
@@ -666,7 +666,7 @@ export class InMemoryTimeSeriesAdapter extends BaseAdapter implements TimeSeries
 export class InMemoryGraphAdapter extends BaseAdapter implements GraphAdapter {
     readonly name = 'memory';
     readonly category = 'graph' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory graph adapter';
 
     private nodes = new Map<string, GraphNode>();
@@ -724,7 +724,7 @@ export class InMemoryGraphAdapter extends BaseAdapter implements GraphAdapter {
 export class InMemoryMessageQueueAdapter extends BaseAdapter implements MessageQueueAdapter {
     readonly name = 'memory';
     readonly category = 'message-queue' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory message queue adapter';
 
     private queues = new Map<string, QueueMessage[]>();
@@ -790,7 +790,7 @@ export class InMemoryMessageQueueAdapter extends BaseAdapter implements MessageQ
 export class ConsoleObservabilityAdapter extends BaseAdapter implements ObservabilityAdapter {
     readonly name = 'console';
     readonly category = 'observability' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'Console observability adapter (stdout logging)';
 
     async log(entry: ObservabilityLogEntry): Promise<void> {
@@ -827,7 +827,7 @@ export class ConsoleObservabilityAdapter extends BaseAdapter implements Observab
 export class NullObservabilityAdapter extends BaseAdapter implements ObservabilityAdapter {
     readonly name = 'null';
     readonly category = 'observability' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'No-op observability adapter';
 
     async log(): Promise<void> {}
@@ -845,7 +845,7 @@ export class NullObservabilityAdapter extends BaseAdapter implements Observabili
 export class InMemoryEmbeddingAdapter extends BaseAdapter implements EmbeddingAdapter {
     readonly name = 'memory';
     readonly category = 'embedding' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'Deterministic in-memory embedding adapter (for testing)';
     readonly dimensions: number;
 
@@ -880,7 +880,7 @@ export class InMemoryEmbeddingAdapter extends BaseAdapter implements EmbeddingAd
 export class InMemorySessionStoreAdapter extends BaseAdapter implements SessionStoreAdapter {
     readonly name = 'memory';
     readonly category = 'session-store' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory session store (for dev / testing)';
 
     private sessions = new Map<string, StoredSession>();
@@ -965,7 +965,7 @@ export class InMemorySessionStoreAdapter extends BaseAdapter implements SessionS
 export class InMemoryMemoryStoreAdapter extends BaseAdapter implements MemoryStoreAdapter {
     readonly name = 'memory';
     readonly category = 'memory-store' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory memory store (for dev / testing)';
 
     private entries = new Map<string, MemoryEntry>();
@@ -1062,7 +1062,7 @@ export class InMemoryMemoryStoreAdapter extends BaseAdapter implements MemorySto
 export class PassThroughGuardrailAdapter extends BaseAdapter implements GuardrailAdapter {
     readonly name = 'passthrough';
     readonly category = 'guardrail' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'No-op guardrail adapter — all checks pass (dev only)';
 
     private rules: Array<{ name: string; check(ctx: GuardrailAdapterContext): Promise<GuardrailCheckResult> }> = [];
@@ -1094,7 +1094,7 @@ export class PassThroughGuardrailAdapter extends BaseAdapter implements Guardrai
 export class InMemoryRagAdapter extends BaseAdapter implements RagAdapter {
     readonly name = 'memory';
     readonly category = 'rag' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory RAG adapter with keyword retrieval (for dev / testing)';
 
     private docs = new Map<string, { content: string; source?: string; metadata?: Record<string, unknown> }>();
@@ -1162,7 +1162,7 @@ export class InMemoryRagAdapter extends BaseAdapter implements RagAdapter {
 export class InMemoryToolRegistryAdapter extends BaseAdapter implements ToolRegistryAdapter {
     readonly name = 'memory';
     readonly category = 'tool-registry' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory tool registry (for dev / testing)';
 
     private tools = new Map<string, RemoteToolDescriptor>();
@@ -1201,7 +1201,7 @@ export class InMemoryToolRegistryAdapter extends BaseAdapter implements ToolRegi
 export class NoOpAuthAdapter extends BaseAdapter implements AuthAdapter {
     readonly name = 'noop';
     readonly category = 'auth' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'No-op auth adapter — all credentials accepted (dev only)';
 
     async validate(_credential: string, _context?: Record<string, unknown>): Promise<AuthResult> {
@@ -1241,7 +1241,7 @@ interface RateLimitBucket {
 export class InMemoryRateLimitAdapter extends BaseAdapter implements RateLimitAdapter {
     readonly name = 'memory';
     readonly category = 'rate-limit' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory token-bucket rate limiter (for dev / testing)';
 
     private buckets = new Map<string, RateLimitBucket>();
@@ -1318,7 +1318,7 @@ export class InMemoryRateLimitAdapter extends BaseAdapter implements RateLimitAd
 export class InMemoryAuditLogAdapter extends BaseAdapter implements AuditLogAdapter {
     readonly name = 'memory';
     readonly category = 'audit-log' as const;
-    readonly version = '1.0.0';
+    readonly version = '1.2.0';
     readonly description = 'In-memory audit log adapter (for dev / testing)';
 
     private static readonly MAX_EVENTS = 10_000;

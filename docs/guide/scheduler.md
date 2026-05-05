@@ -1,6 +1,136 @@
+---
+title: Scheduler
+description: Cron-based agent scheduling — define recurring tasks with standard cron expressions, register handlers, and run agents on a schedule.
+outline: [2, 3]
+---
+
 # Scheduler
 
-`ScheduleManager` provides cron-based job scheduling with an in-process handler registry. Define recurring jobs with standard 5-field cron expressions, register handler functions by key, and call `start()` to begin the polling loop. Run history is persisted via a pluggable `ScheduleRunStore`.
+`ScheduleManager` provides cron-based job scheduling with an in-process handler registry. Register agent handlers by key, define jobs with standard 5-field cron expressions, and call `start()` to begin the tick loop.
+
+---
+
+## Quick start
+
+```ts
+import { ScheduleManager } from 'confused-ai';
+import { agent }           from 'confused-ai';
+
+// Create an agent to run on a schedule
+const reportAgent = agent({
+  model:        'gpt-4o',
+  instructions: 'Generate a concise daily metrics report from the provided data.',
+});
+
+// Create a scheduler
+const scheduler = new ScheduleManager();
+
+// Register a handler
+scheduler.register('daily-report', async () => {
+  const data   = await metricsService.getDailyStats();
+  const result = await reportAgent.run(`Generate a report for this data: ${JSON.stringify(data)}`);
+  await slackService.post('#reports', result.text);
+});
+
+// Schedule it (every day at 8am UTC)
+scheduler.create({
+  id:       'daily-report-job',
+  handler:  'daily-report',
+  cron:     '0 8 * * *',
+  enabled:  true,
+  timezone: 'UTC',
+});
+
+scheduler.start();
+```
+
+---
+
+## Cron format
+
+5-field standard cron (minute, hour, day-of-month, month, day-of-week):
+
+| Field | Range | Special chars |
+|-------|-------|---------------|
+| Minute | 0–59 | `*`, `,`, `-`, `/` |
+| Hour | 0–23 | `*`, `,`, `-`, `/` |
+| Day of month | 1–31 | `*`, `,`, `-`, `/`, `?` |
+| Month | 1–12 | `*`, `,`, `-`, `/` |
+| Day of week | 0–7 (0 & 7 = Sun) | `*`, `,`, `-`, `/`, `?` |
+
+### Common expressions
+
+| Cron | Meaning |
+|------|---------|
+| `* * * * *` | Every minute |
+| `0 * * * *` | Every hour |
+| `0 9 * * 1-5` | 9am Monday–Friday |
+| `0 8 * * *` | 8am every day |
+| `0 0 * * 0` | Midnight every Sunday |
+| `*/15 * * * *` | Every 15 minutes |
+| `0 0 1 * *` | First of every month |
+
+---
+
+## CRUD operations
+
+```ts
+// Create
+const job = scheduler.create({
+  id:       'my-job',
+  handler:  'handlerKey',
+  cron:     '0 9 * * 1-5',
+  enabled:  true,
+  timezone: 'America/New_York',
+  metadata: { team: 'platform' },
+});
+
+// Read
+const all      = scheduler.list();
+const specific = scheduler.get('my-job');
+
+// Update
+scheduler.update('my-job', { cron: '0 10 * * 1-5' });
+scheduler.enable('my-job');
+scheduler.disable('my-job');
+
+// Delete
+scheduler.delete('my-job');
+```
+
+---
+
+## Utility functions
+
+```ts
+import { validateCronExpr, computeNextRun } from 'confused-ai';
+
+// Validate before saving
+const valid = validateCronExpr('0 9 * * 1-5');
+console.log(valid.ok);     // true
+console.log(valid.error);  // undefined | 'Invalid field ...'
+
+// Preview next 3 run times
+const nextRuns = computeNextRun('0 9 * * 1-5', { count: 3 });
+nextRuns.forEach(d => console.log(d.toISOString()));
+```
+
+---
+
+## Run history
+
+```ts
+// Get last 10 runs for a job
+const history = await scheduler.getRunHistory('my-job', { limit: 10 });
+
+for (const run of history) {
+  console.log(run.jobId);         // 'my-job'
+  console.log(run.startedAt);     // Date
+  console.log(run.completedAt);   // Date | null
+  console.log(run.status);        // 'success' | 'error' | 'running'
+  console.log(run.error);         // error message if status === 'error'
+}
+```
 
 ---
 

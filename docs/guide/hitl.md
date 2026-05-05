@@ -1,6 +1,160 @@
+---
+title: Human-in-the-Loop
+description: Pause agent execution, require human approval, then resume — with SQLite, Redis, and custom approval stores.
+outline: [2, 3]
+---
+
 # Human-in-the-Loop (HITL)
 
 When an agent is about to take a high-risk action — sending an email, charging a card, deleting records — you can pause execution and require a human to approve before proceeding.
+
+The HITL system has three parts:
+
+| Component | Purpose |
+|-----------|---------|
+| `ApprovalStore` | Durable pending-approval queue |
+| `waitForApproval()` | Tool helper that pauses the agent run |
+| HTTP endpoint `POST /v1/approvals/:id` | Auto-exposed by `createHttpService` |
+
+---
+
+## How it works
+
+```
+agent.run()
+  └─ tool executes
+       └─ waitForApproval() ← stores approval request, throws PendingApprovalError
+            └─ HTTP handler receives approve / reject decision
+                 └─ agent.resume(runId) ← continues from where it paused
+```
+
+---
+
+## Quick start
+
+```ts
+import { agent, defineTool }          from 'confused-ai';
+import { createSqliteApprovalStore,
+         waitForApproval }            from 'confused-ai/guard';
+import { createHttpService }          from 'confused-ai/serve';
+import { z }                          from 'zod';
+
+// 1. Create a durable approval store
+const approvalStore = createSqliteApprovalStore('./approvals.db');
+
+// 2. Define a tool that requires approval
+const sendEmail = defineTool()
+  .name('sendEmail')
+  .description('Send an email — requires human approval before sending')
+  .parameters(z.object({
+    to:      z.string().email(),
+    subject: z.string(),
+    body:    z.string(),
+  }))
+  .execute(async (params, ctx) => {
+    // This pauses the run until a human approves
+    await waitForApproval({
+      runId:         ctx.runId,
+      store:         approvalStore,
+      actionSummary: `Send email to ${params.to}: "${params.subject}"`,
+      payload:       params,
+    });
+
+    // After approval, execution resumes here
+    await emailService.send(params);
+    return { sent: true };
+  })
+  .build();
+
+// 3. Attach to an agent and expose HTTP service
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You are an email assistant.',
+  tools:        [sendEmail],
+});
+
+const server = createHttpService({ agents: { email: ai }, approvalStore });
+server.listen(3000);
+```
+
+---
+
+## HTTP approval endpoints
+
+`createHttpService` exposes these automatically:
+
+```http
+# List pending approvals
+GET /v1/approvals
+
+# Approve a pending action
+POST /v1/approvals/:id/approve
+Content-Type: application/json
+{ "comment": "Looks good, send it" }
+
+# Reject a pending action
+POST /v1/approvals/:id/reject
+Content-Type: application/json
+{ "reason": "Wrong recipient" }
+```
+
+---
+
+## Resume a paused run
+
+```ts
+// After a human submits their decision via POST /v1/approvals/:id/approve
+// the server calls:
+await ai.resume(runId);
+
+// The agent run continues from after the waitForApproval() call
+```
+
+---
+
+## Approval stores
+
+| Store | Function | Notes |
+|-------|----------|-------|
+| SQLite | `createSqliteApprovalStore(path)` | Single-server persistence |
+| In-memory | `new InMemoryApprovalStore()` | Dev / testing |
+| Custom | Implement `ApprovalStore` interface | Redis, Postgres, etc. |
+
+### Custom approval store
+
+```ts
+import type { ApprovalStore, ApprovalRequest } from 'confused-ai/guard';
+
+const myApprovalStore: ApprovalStore = {
+  async create(request: ApprovalRequest): Promise<string> {
+    const id = crypto.randomUUID();
+    await db.approvals.insert({ id, ...request });
+    await notifySlack(`New approval needed: ${request.actionSummary}`);
+    return id;
+  },
+  async getById(id: string) {
+    return db.approvals.findOne({ id });
+  },
+  async resolve(id: string, decision: 'approved' | 'rejected', comment?: string) {
+    await db.approvals.update({ id }, { decision, comment, resolvedAt: new Date() });
+  },
+  async listPending() {
+    return db.approvals.find({ decision: null });
+  },
+};
+```
+
+---
+
+## `waitForApproval()` options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `runId` | `string` | From tool context `ctx.runId` |
+| `store` | `ApprovalStore` | Where to persist the approval |
+| `actionSummary` | `string` | Human-readable description shown in the UI |
+| `payload` | `object` | Full action parameters for reviewer context |
+| `timeoutMs` | `number` | Reject after N ms if unanswered (optional) |
 
 confused-ai provides a complete HITL system:
 - **`ApprovalStore`** — durable pending-approval queue

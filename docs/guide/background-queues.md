@@ -1,8 +1,147 @@
+---
+title: Background Queues
+description: Dispatch long-running post-processing work to an external queue — keep agent latency low with BullMQ, Kafka, RabbitMQ, or in-memory backends.
+outline: [2, 3]
+---
+
 # Background Queues
 
-The Background Queue system lets you dispatch long-running hook work to an external queue backend instead of running it inside the agentic loop. This keeps agent latency low even when post-processing (analytics, billing, notifications) takes seconds.
+The background queue system dispatches long-running hook work — analytics, billing, notifications — to an external queue backend instead of blocking the agent's run loop. Keep agent latency low while still processing everything reliably.
 
-> **Import path:** `confused-ai/background`
+| Backend | Class | Notes |
+|---------|-------|-------|
+| In-memory | `InMemoryBackgroundQueue` | Dev / testing — not persistent |
+| BullMQ | `BullMQBackgroundQueue` | Redis-backed, durable, retries |
+| Kafka | `KafkaBackgroundQueue` | High-throughput event streaming |
+| RabbitMQ | `RabbitMQBackgroundQueue` | Enterprise message broker |
+| SQS | `SQSBackgroundQueue` | AWS SQS |
+
+---
+
+## How it works
+
+```
+agent.run()
+  └─ onAfterRun hook fires
+       └─ queueHook enqueues the job (non-blocking)
+            └─ background worker processes it asynchronously
+```
+
+---
+
+## Quick start — in-memory
+
+```ts
+import { agent }                   from 'confused-ai';
+import { queueHook,
+         InMemoryBackgroundQueue } from 'confused-ai/background';
+
+const queue = new InMemoryBackgroundQueue();
+
+// Start a worker that processes jobs
+queue.process('after-run', async (job) => {
+  await analytics.track({
+    event:    'agent_run_completed',
+    runId:    job.data.runId,
+    tokens:   job.data.usage?.totalTokens,
+    latencyMs: job.data.latencyMs,
+  });
+});
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: '...',
+  hooks: {
+    onAfterRun: queueHook(queue, 'after-run', (result) => ({
+      runId:     result.runId,
+      usage:     result.usage,
+      latencyMs: result.metadata?.latencyMs,
+    })),
+  },
+});
+```
+
+---
+
+## BullMQ — production (Redis-backed)
+
+```ts
+import { BullMQBackgroundQueue } from 'confused-ai/background';
+import { queueHook }             from 'confused-ai/background';
+
+const queue = new BullMQBackgroundQueue({
+  queueName:  'agent-events',
+  connection: { host: process.env.REDIS_HOST, port: 6379 },
+  defaultJobOptions: {
+    attempts: 3,
+    backoff:  { type: 'exponential', delay: 1_000 },
+    removeOnComplete: 100,
+    removeOnFail:     50,
+  },
+});
+
+// Worker (can run in a separate process)
+queue.process('after-run', async (job) => {
+  const { text, runId, sessionId } = job.data;
+  await posthog.capture({ distinctId: sessionId, event: 'agent.complete', properties: { runId } });
+});
+
+const ai = agent({
+  model:   'gpt-4o',
+  hooks: {
+    onAfterRun: queueHook(queue, 'after-run', (result) => ({
+      text:      result.text,
+      runId:     result.runId,
+      sessionId: result.sessionId,
+    })),
+  },
+});
+```
+
+---
+
+## Kafka
+
+```ts
+import { KafkaBackgroundQueue } from 'confused-ai/background';
+
+const queue = new KafkaBackgroundQueue({
+  brokers: [process.env.KAFKA_BROKER!],
+  topic:   'agent-events',
+  groupId: 'agent-worker-group',
+  ssl:     true,
+  sasl: {
+    mechanism: 'scram-sha-256',
+    username:  process.env.KAFKA_USERNAME!,
+    password:  process.env.KAFKA_PASSWORD!,
+  },
+});
+```
+
+---
+
+## Available hooks
+
+| Hook | When |
+|------|------|
+| `onAfterRun` | After every agent run completes |
+| `onBeforeRun` | Before each run starts |
+| `onToolCall` | After each tool invocation |
+| `onError` | After any run failure |
+
+---
+
+## Graceful shutdown
+
+Drain the queue before process exit:
+
+```ts
+process.on('SIGTERM', async () => {
+  await queue.drain();   // wait for in-flight jobs to finish
+  await queue.close();
+  process.exit(0);
+});
+```
 
 ---
 

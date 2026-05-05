@@ -1,6 +1,173 @@
-# Execution Workflows
+---
+title: Workflows
+description: Build typed multi-step workflows with parallel execution, conditional branching, and suspend/resume — using createWorkflow and createStep.
+outline: [2, 3]
+---
 
-Build complex multi-step workflows with typed steps, branching, parallel execution, and suspend/resume.
+# Workflows
+
+Workflows compose reusable, typed steps with Zod-validated inputs and outputs. They support parallel fan-out, conditional branching, and suspend/resume for long-running processes.
+
+---
+
+## Quick start
+
+```ts
+import { createWorkflow, createStep } from 'confused-ai/execution';
+import { z } from 'zod';
+
+// 1. Define steps
+const fetchUser = createStep({
+  name:  'fetchUser',
+  input:  z.object({ userId: z.string() }),
+  output: z.object({ name: z.string(), email: z.string() }),
+  run: async ({ userId }) => {
+    const user = await db.users.findById(userId);
+    return { name: user.name, email: user.email };
+  },
+});
+
+const sendWelcomeEmail = createStep({
+  name:  'sendWelcomeEmail',
+  input:  z.object({ name: z.string(), email: z.string() }),
+  output: z.object({ sent: z.boolean() }),
+  run: async ({ name, email }) => {
+    await mailer.send({ to: email, subject: `Welcome, ${name}!` });
+    return { sent: true };
+  },
+});
+
+// 2. Compose into a workflow
+const onboardUser = createWorkflow({
+  name:  'onboardUser',
+  input:  z.object({ userId: z.string() }),
+  steps: [fetchUser, sendWelcomeEmail],
+});
+
+// 3. Run it
+const result = await onboardUser.run({ userId: 'user-001' });
+console.log(result.sent); // true
+```
+
+---
+
+## `createStep` reference
+
+```ts
+createStep({
+  name:     'stepName',   // required — unique identifier
+  input:    z.object({}), // required — Zod input schema
+  output:   z.object({}), // required — Zod output schema
+  run:      async (input, ctx) => output,  // required — step logic
+  timeout:  30_000,       // optional — abort after N ms
+  retries:  2,            // optional — retry on failure
+  tags:     ['data'],     // optional — categorisation
+})
+```
+
+### Step context (`ctx`)
+
+```ts
+run: async (input, ctx) => {
+  ctx.runId;      // unique workflow run ID
+  ctx.stepName;   // 'stepName'
+  ctx.logger;     // structured logger
+  ctx.store;      // key-value store scoped to this run
+  await ctx.store.set('key', 'value');
+  const val = await ctx.store.get('key');
+}
+```
+
+---
+
+## `createWorkflow` reference
+
+```ts
+createWorkflow({
+  name:         'workflowName',
+  input:        z.object({}),
+  steps:        [step1, step2],        // serial execution
+  timeout:      300_000,               // overall timeout (ms)
+  retryPolicy:  { maxRetries: 1 },
+  onError:      async (err, ctx) => { }, // error handler
+})
+```
+
+---
+
+## Parallel steps
+
+Fan out to multiple steps simultaneously:
+
+```ts
+import { createWorkflow, createStep, parallel } from 'confused-ai/execution';
+
+const fetchProfile = createStep({ name: 'fetchProfile', /* ... */ });
+const fetchOrders  = createStep({ name: 'fetchOrders',  /* ... */ });
+const fetchBilling = createStep({ name: 'fetchBilling', /* ... */ });
+
+const getDashboard = createWorkflow({
+  name:  'getDashboard',
+  input:  z.object({ userId: z.string() }),
+  steps: [
+    parallel([fetchProfile, fetchOrders, fetchBilling]),  // all three run simultaneously
+    mergeDashboard,                                        // receives all three outputs
+  ],
+});
+```
+
+---
+
+## Conditional branching
+
+```ts
+import { branch } from 'confused-ai/execution';
+
+const processOrder = createWorkflow({
+  name:  'processOrder',
+  input:  z.object({ orderId: z.string() }),
+  steps: [
+    validateOrder,
+    branch({
+      when:  (ctx) => ctx.lastOutput.total > 1000,
+      then:  [requireManagerApproval, processPayment],   // high-value path
+      else:  [processPayment],                            // standard path
+    }),
+    sendConfirmation,
+  ],
+});
+```
+
+---
+
+## Suspend and resume
+
+Pause a workflow indefinitely — resume when external data arrives (webhooks, approvals, user input):
+
+```ts
+import { createStep, suspend } from 'confused-ai/execution';
+
+const waitForPayment = createStep({
+  name:  'waitForPayment',
+  input:  z.object({ invoiceId: z.string() }),
+  output: z.object({ paid: z.boolean() }),
+  run: async ({ invoiceId }, ctx) => {
+    // Pause the workflow — it will be resumed when the webhook arrives
+    const paymentData = await suspend(ctx, {
+      reason:  'Waiting for payment webhook',
+      timeout: 7 * 24 * 60 * 60 * 1000,  // 7 days
+    });
+
+    return { paid: paymentData.status === 'paid' };
+  },
+});
+
+// Resume from a webhook handler
+app.post('/webhooks/payment', async (req, res) => {
+  await workflow.resume(req.body.workflowRunId, req.body);
+  res.sendStatus(200);
+});
+```
 
 ## Basic workflow
 

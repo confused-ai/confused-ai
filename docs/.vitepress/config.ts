@@ -53,23 +53,25 @@ export default defineConfig({
         nav: [
             { text: 'Guide', link: '/guide/getting-started', activeMatch: '/guide/' },
             { text: 'Examples', link: '/examples/', activeMatch: '/examples/' },
-            { text: 'API', link: '/api/', activeMatch: '/api/' },
+            { text: 'API Reference', link: '/api/', activeMatch: '/api/' },
             {
                 text: 'Ecosystem',
                 items: [
-                    { text: 'All Modules', link: '/guide/all-modules' },
-                    { text: 'Adapters', link: '/guide/adapters' },
-                    { text: 'Plugins', link: '/guide/plugins' },
-                    { text: 'MCP Client', link: '/guide/mcp' },
+                    { text: '📦 All Modules', link: '/guide/all-modules' },
+                    { text: '🔌 Adapters System', link: '/guide/adapters' },
+                    { text: '🧩 Plugins', link: '/guide/plugins' },
+                    { text: '🤝 MCP Client', link: '/guide/mcp' },
+                    { text: '🔁 LLM Router', link: '/guide/llm-router' },
                 ],
             },
             {
-                text: 'v1.1.2',
+                text: 'v1.2.0',
                 items: [
-                    { text: 'Changelog', link: '/changelog' },
-                    { text: 'npm', link: 'https://www.npmjs.com/package/confused-ai' },
-                    { text: 'Releases', link: 'https://github.com/confused-ai/confused-ai/releases' },
-                    { text: 'Contributing', link: 'https://github.com/confused-ai/confused-ai/blob/main/CONTRIBUTING.md' },
+                    { text: '📋 Changelog', link: '/changelog' },
+                    { text: '📦 npm package', link: 'https://www.npmjs.com/package/confused-ai' },
+                    { text: '🏷️ Releases', link: 'https://github.com/confused-ai/confused-ai/releases' },
+                    { text: '🤝 Contributing', link: 'https://github.com/confused-ai/confused-ai/blob/main/CONTRIBUTING.md' },
+                    { text: '🔒 Security', link: 'https://github.com/confused-ai/confused-ai/blob/main/SECURITY.md' },
                 ],
             },
         ],
@@ -77,17 +79,17 @@ export default defineConfig({
         sidebar: {
             '/guide/': [
                 {
-                    text: 'Introduction',
+                    text: '🚀 Introduction',
                     collapsed: false,
                     items: [
                         { text: 'Getting Started', link: '/guide/getting-started' },
                         { text: 'Core Concepts', link: '/guide/concepts' },
-                        { text: 'All Modules', link: '/guide/all-modules' },
+                        { text: 'All Modules Reference', link: '/guide/all-modules' },
                         { text: 'Adapters System', link: '/guide/adapters' },
                     ],
                 },
                 {
-                    text: 'Building Agents',
+                    text: '🤖 Building Agents',
                     collapsed: false,
                     items: [
                         { text: 'Creating Agents', link: '/guide/agents' },
@@ -100,7 +102,7 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: 'Data & Storage',
+                    text: '💾 Data & Storage',
                     collapsed: false,
                     items: [
                         { text: 'RAG / Knowledge', link: '/guide/rag' },
@@ -111,7 +113,7 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: 'Intelligence',
+                    text: '🧠 Intelligence',
                     collapsed: false,
                     items: [
                         { text: 'Learning Machine', link: '/guide/learning-machine' },
@@ -122,39 +124,39 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: 'Multi-Agent',
+                    text: '🔀 Multi-Agent',
                     collapsed: false,
                     items: [
                         { text: 'Orchestration', link: '/guide/orchestration' },
                         { text: 'Execution Workflows', link: '/guide/workflows' },
                         { text: 'Graph Engine', link: '/guide/graph' },
                         { text: 'LLM Router', link: '/guide/llm-router' },
+                        { text: 'MCP Client & Server', link: '/guide/mcp' },
                     ],
                 },
                 {
-                    text: 'Output & Media',
-                    collapsed: false,
+                    text: '📤 Output & Media',
+                    collapsed: true,
                     items: [
                         { text: 'Artifacts', link: '/guide/artifacts' },
+                        { text: 'Voice (TTS/STT)', link: '/guide/voice' },
                         { text: 'Video Generation', link: '/guide/video' },
                     ],
                 },
                 {
-                    text: 'Enterprise Production',
+                    text: '🏭 Enterprise Production',
                     collapsed: false,
                     items: [
-                        { text: 'Observability & OTLP', link: '/guide/observability' },
-                        { text: 'Guardrails', link: '/guide/guardrails' },
+                        { text: 'Guardrails & Safety', link: '/guide/guardrails' },
                         { text: 'Resilience & Circuit Breakers', link: '/guide/production' },
+                        { text: 'Human-in-the-Loop (HITL)', link: '/guide/hitl' },
+                        { text: 'Observability & OTLP', link: '/guide/observability' },
                         { text: 'Budget Enforcement', link: '/guide/production#budget-enforcement' },
-                        { text: 'Human-in-the-Loop', link: '/guide/hitl' },
                         { text: 'Multi-Tenancy', link: '/guide/multi-tenancy' },
                         { text: 'Background Queues', link: '/guide/background-queues' },
                         { text: 'WebSocket Transport', link: '/guide/websocket' },
                         { text: 'Admin API', link: '/guide/admin-api' },
                         { text: 'Secret Manager', link: '/guide/secret-manager' },
-                        { text: 'Voice (TTS/STT)', link: '/guide/voice' },
-                        { text: 'MCP Client & Server', link: '/guide/mcp' },
                         { text: 'Plugins', link: '/guide/plugins' },
                     ],
                 },

@@ -1,6 +1,194 @@
+---
+title: Graph Engine
+description: Execute complex multi-agent workflows as a DAG — topological ordering, parallel fans, conditional routing, suspend/resume, and event sourcing.
+outline: [2, 3]
+---
+
 # Graph Engine
 
-The graph engine executes complex, stateful multi-agent workflows as a **directed acyclic graph (DAG)**. It provides topological execution ordering, parallel node execution, event sourcing with deterministic replay, suspend/resume, and a distributed worker model.
+The graph engine executes complex, stateful multi-agent workflows as a **directed acyclic graph (DAG)**. It provides topological execution ordering, parallel node execution, event sourcing with deterministic replay, and suspend/resume.
+
+---
+
+## Quick start
+
+```ts
+import { createGraph, DAGEngine, NodeKind } from 'confused-ai/graph';
+import { z } from 'zod';
+
+// 1. Define the graph
+const graph = createGraph({
+  id: 'content-pipeline',
+  nodes: {
+    research: {
+      kind:    NodeKind.AGENT,
+      agent:   researchAgent,
+      input:   z.object({ topic: z.string() }),
+      output:  z.object({ notes: z.string() }),
+    },
+    write: {
+      kind:    NodeKind.AGENT,
+      agent:   writerAgent,
+      input:   z.object({ notes: z.string() }),
+      output:  z.object({ draft: z.string() }),
+      deps:    ['research'],   // waits for research to complete
+    },
+    proofread: {
+      kind:    NodeKind.AGENT,
+      agent:   editorAgent,
+      input:   z.object({ draft: z.string() }),
+      output:  z.object({ final: z.string() }),
+      deps:    ['write'],
+    },
+  },
+});
+
+// 2. Execute it
+const engine = new DAGEngine();
+const result = await engine.run(graph, { topic: 'AI trends in 2026' });
+console.log(result.proofread.final);
+```
+
+---
+
+## `NodeKind` — node types
+
+| Kind | Usage |
+|------|-------|
+| `NodeKind.AGENT` | Runs a full agent (model + tools + memory) |
+| `NodeKind.TOOL` | Runs a single tool function |
+| `NodeKind.TRANSFORM` | Pure TypeScript function (no LLM) |
+| `NodeKind.CONDITION` | Routes to different branches |
+| `NodeKind.PARALLEL` | Fans out to multiple children |
+| `NodeKind.JOIN` | Collects results from parallel branches |
+
+---
+
+## Parallel fan-out / join
+
+Execute multiple nodes simultaneously and merge the results:
+
+```ts
+const graph = createGraph({
+  id: 'parallel-research',
+  nodes: {
+    fan: {
+      kind:  NodeKind.PARALLEL,
+      deps:  [],
+      input: z.object({ company: z.string() }),
+      branches: ['financials', 'news', 'sentiment'],
+    },
+    financials: {
+      kind:  NodeKind.AGENT,
+      agent: financialsAgent,
+      deps:  ['fan'],
+    },
+    news: {
+      kind:  NodeKind.AGENT,
+      agent: newsAgent,
+      deps:  ['fan'],
+    },
+    sentiment: {
+      kind:  NodeKind.AGENT,
+      agent: sentimentAgent,
+      deps:  ['fan'],
+    },
+    join: {
+      kind: NodeKind.JOIN,
+      deps: ['financials', 'news', 'sentiment'],
+      merge: (results) => ({
+        report: `Financials: ${results.financials.summary}\nNews: ${results.news.headlines}\nSentiment: ${results.sentiment.score}`,
+      }),
+    },
+    summarise: {
+      kind:  NodeKind.AGENT,
+      agent: summaryAgent,
+      deps:  ['join'],
+    },
+  },
+});
+```
+
+---
+
+## Conditional routing
+
+Route execution based on node output:
+
+```ts
+const graph = createGraph({
+  id: 'conditional-flow',
+  nodes: {
+    classify: {
+      kind:    NodeKind.AGENT,
+      agent:   classifierAgent,
+      output:  z.object({ category: z.enum(['billing', 'technical', 'general']) }),
+    },
+    route: {
+      kind:  NodeKind.CONDITION,
+      deps:  ['classify'],
+      cases: {
+        billing:   'billingHandler',
+        technical: 'techHandler',
+        general:   'generalHandler',
+      },
+      selector: (ctx) => ctx.classify.category,
+    },
+    billingHandler:  { kind: NodeKind.AGENT, agent: billingAgent,  deps: ['route'] },
+    techHandler:     { kind: NodeKind.AGENT, agent: techAgent,     deps: ['route'] },
+    generalHandler:  { kind: NodeKind.AGENT, agent: generalAgent,  deps: ['route'] },
+  },
+});
+```
+
+---
+
+## Suspend and resume
+
+Pause the graph at any AGENT node waiting for external input:
+
+```ts
+const engine = new DAGEngine({ checkpointStore });
+
+// Run until a node suspends
+const runId = await engine.start(graph, input);
+
+// Resume when data arrives (e.g. from a webhook)
+app.post('/webhooks/approval', async (req, res) => {
+  await engine.resume(runId, req.body);
+  res.sendStatus(200);
+});
+```
+
+---
+
+## Event sourcing and replay
+
+The `DAGEngine` records every node execution as an event. Replay any run deterministically:
+
+```ts
+const engine = new DAGEngine({
+  eventStore:       new SqliteEventStore('./events.db'),
+  checkpointStore:  new SqliteCheckpointStore('./checkpoints.db'),
+});
+
+// Get full execution history
+const events = await engine.getRunEvents(runId);
+
+// Replay (re-executes the graph, tools produce same outputs if mocked)
+const replayed = await engine.replay(runId);
+```
+
+---
+
+## `DAGEngine` options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `eventStore` | `EventStore` | Persist execution events |
+| `checkpointStore` | `CheckpointStore` | Persist suspension state |
+| `maxConcurrency` | `number` | Max parallel node executions (default: unlimited) |
+| `timeout` | `number` | Overall graph timeout in ms |
 
 ## Quick start
 

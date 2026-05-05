@@ -1,6 +1,156 @@
+---
+title: Learning Machine
+description: LearningMachine coordinates five memory stores — user profiles, memories, session context, entity memory, and learned knowledge — into a single adaptive agent context.
+outline: [2, 3]
+---
+
 # Learning Machine
 
-`LearningMachine` is a unified learning coordinator that pulls together five independent stores — user profiles, user memories, session context, entity memory, and learned knowledge — under a single API. Before each LLM call, call `buildContext()` to inject everything the agent knows about the current user and session. After each turn, call `process()` to extract and persist new learnings automatically.
+`LearningMachine` is a unified learning coordinator that pulls together **five independent stores** under a single API. Before each LLM call, call `buildContext()` to inject everything the agent knows. After each turn, call `process()` to automatically extract and persist new learnings.
+
+| Store | Purpose |
+|-------|---------|
+| `UserProfileStore` | Static user preferences and attributes |
+| `UserMemoryStore` | Episodic memories from past conversations |
+| `SessionContextStore` | Short-term context for the current session |
+| `EntityMemoryStore` | Knowledge about people, places, companies mentioned |
+| `LearnedKnowledgeStore` | Domain insights extracted across many sessions |
+
+---
+
+## Quick start
+
+```ts
+import { LearningMachine,
+         InMemoryUserMemoryStore,
+         InMemorySessionContextStore,
+         InMemoryEntityMemoryStore,
+         InMemoryLearnedKnowledgeStore,
+         InMemoryUserProfileStore } from 'confused-ai';
+import { agent }                    from 'confused-ai';
+
+// 1. Create the machine with all five stores
+const learner = new LearningMachine({
+  userProfileStore:      new InMemoryUserProfileStore(),
+  userMemoryStore:       new InMemoryUserMemoryStore(),
+  sessionContextStore:   new InMemorySessionContextStore(),
+  entityMemoryStore:     new InMemoryEntityMemoryStore(),
+  learnedKnowledgeStore: new InMemoryLearnedKnowledgeStore(),
+});
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a personal assistant.',
+});
+
+const userId    = 'alice-001';
+const sessionId = 'session-abc';
+
+// 2. Before each run: inject all context
+const context  = await learner.buildContext(userId, sessionId);
+const input    = `${context}\n\nUser: Remind me of my project deadline`;
+
+// 3. Run the agent
+const result   = await ai.run(input);
+
+// 4. After each run: extract and persist new learnings
+await learner.process({
+  userId,
+  sessionId,
+  input:  'Remind me of my project deadline',
+  output: result.text,
+  model:  'gpt-4o',
+});
+```
+
+---
+
+## `buildContext()` — what gets injected
+
+```ts
+const context = await learner.buildContext('alice-001', 'session-abc');
+
+// Returns a formatted string combining:
+// - User profile: "Alice, age 29, prefers dark mode, timezone: America/New_York"
+// - Relevant memories: "Alice mentioned she is working on Project Orion (deadline: March 1)"
+// - Session context: "Earlier in this session: discussed sprint 42 planning"
+// - Entity memory: "Orion is Alice's main project at TechCorp"
+// - Learned knowledge: "Alice usually asks about deadlines on Fridays"
+```
+
+---
+
+## `process()` — automatic extraction
+
+After each turn, `process()` uses an LLM to extract:
+- New facts about the user → `UserMemoryStore`
+- Entity mentions (people, companies) → `EntityMemoryStore`
+- Session-relevant context → `SessionContextStore`
+- Recurring patterns → `LearnedKnowledgeStore`
+
+```ts
+await learner.process({
+  userId:    'alice-001',
+  sessionId: 'session-abc',
+  input:     'Move the Orion deadline to March 15',
+  output:    'Got it! I\'ve noted that the Orion project deadline is now March 15.',
+  model:     'gpt-4o-mini',  // cheaper model is fine for extraction
+});
+```
+
+---
+
+## User profiles
+
+```ts
+// Set initial profile
+await learner.userProfileStore.set('alice-001', {
+  name:     'Alice',
+  timezone: 'America/New_York',
+  role:     'Product Manager',
+  prefs:    { theme: 'dark', language: 'en' },
+});
+
+// Read profile
+const profile = await learner.userProfileStore.get('alice-001');
+```
+
+---
+
+## Direct store access
+
+All five stores are exposed directly for custom logic:
+
+```ts
+// Retrieve Alice's stored memories
+const memories = await learner.userMemoryStore.get('alice-001');
+
+// Find entities related to a project
+const entities = await learner.entityMemoryStore.search('Orion', { userId: 'alice-001' });
+
+// Inspect learned patterns
+const insights = await learner.learnedKnowledgeStore.getAll('alice-001');
+```
+
+---
+
+## Persistent stores (production)
+
+Replace the in-memory stores with persistent backends:
+
+```ts
+import { SqliteUserMemoryStore,
+         SqliteEntityMemoryStore,
+         SqliteLearnedKnowledgeStore } from 'confused-ai';
+
+const learner = new LearningMachine({
+  userProfileStore:      new SqliteUserProfileStore('./profiles.db'),
+  userMemoryStore:       new SqliteUserMemoryStore('./memories.db'),
+  sessionContextStore:   new InMemorySessionContextStore(),   // OK in-memory (per session)
+  entityMemoryStore:     new SqliteEntityMemoryStore('./entities.db'),
+  learnedKnowledgeStore: new SqliteLearnedKnowledgeStore('./knowledge.db'),
+});
+```
 
 This goes well beyond the basic `InMemoryUserProfileStore`. It gives agents the ability to remember *what* the user said, *who* they talked about, and *what insights* have been discovered across many sessions.
 

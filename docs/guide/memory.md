@@ -1,6 +1,153 @@
+---
+title: Memory
+description: InMemoryStore, VectorMemoryStore, Pinecone, Qdrant, and pgvector backends — agents that remember across turns.
+outline: [2, 3]
+---
+
 # Memory
 
 Memory lets agents remember context across turns and recall semantically related information from past interactions.
+
+| Type | Class | Best for |
+|------|-------|---------|
+| In-memory key-value | `InMemoryStore` | Dev / testing |
+| Vector (semantic) | `VectorMemoryStore` | Semantic recall across long histories |
+| Pinecone backend | `PineconeVectorStore` | Cloud-hosted production |
+| Qdrant backend | `QdrantVectorStore` | Self-hosted production |
+| pgvector backend | `PgVectorStore` | PostgreSQL-native |
+
+---
+
+## `InMemoryStore` — simple key-value
+
+```ts
+import { agent } from 'confused-ai';
+import { InMemoryStore } from 'confused-ai/memory';
+
+const memory = new InMemoryStore();
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a personal assistant with memory.',
+  memory,
+});
+
+// Each run automatically saves to and reads from memory
+await ai.run('My name is Alice and I prefer dark mode.', { sessionId: 'alice-001' });
+const result = await ai.run('What do you know about me?',   { sessionId: 'alice-001' });
+console.log(result.text); // "You told me your name is Alice and you prefer dark mode."
+```
+
+---
+
+## `VectorMemoryStore` — semantic recall
+
+Retrieve the most semantically relevant past memories, not just the most recent ones.
+
+```ts
+import { VectorMemoryStore, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/memory';
+
+const memory = new VectorMemoryStore({
+  vectorStore:       new InMemoryVectorStore(),
+  embeddingProvider: new OpenAIEmbeddingProvider({
+    apiKey: process.env.OPENAI_API_KEY!,
+    model:  'text-embedding-3-small',
+  }),
+  topK:     10,    // how many memories to retrieve per turn
+  minScore: 0.75,  // minimum similarity threshold
+});
+
+const ai = agent({ model: 'gpt-4o', memory, instructions: '...' });
+```
+
+---
+
+## Pinecone memory backend
+
+```ts
+import { VectorMemoryStore, OpenAIEmbeddingProvider } from 'confused-ai/memory';
+import { PineconeVectorStore } from 'confused-ai/memory';
+
+const memory = new VectorMemoryStore({
+  vectorStore: new PineconeVectorStore({
+    apiKey:    process.env.PINECONE_API_KEY!,
+    indexName: 'agent-memory',
+  }),
+  embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
+});
+```
+
+---
+
+## Qdrant memory backend
+
+```ts
+import { VectorMemoryStore } from 'confused-ai/memory';
+import { QdrantVectorStore } from 'confused-ai/memory';
+
+const memory = new VectorMemoryStore({
+  vectorStore: new QdrantVectorStore({
+    url:            process.env.QDRANT_URL!,
+    collectionName: 'agent-memory',
+    apiKey:         process.env.QDRANT_API_KEY,
+  }),
+  embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
+});
+```
+
+---
+
+## pgvector memory backend
+
+```ts
+import { VectorMemoryStore } from 'confused-ai/memory';
+import { PgVectorStore } from 'confused-ai/memory';
+
+const memory = new VectorMemoryStore({
+  vectorStore: new PgVectorStore({
+    connectionString: process.env.DATABASE_URL!,
+    tableName:        'agent_memory',
+  }),
+  embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
+});
+```
+
+---
+
+## Direct memory operations
+
+Read and write memories directly (without an agent run):
+
+```ts
+// Store a memory
+await memory.store({
+  sessionId: 'alice-001',
+  content:   'Alice prefers dark mode and works in product design.',
+  metadata:  { source: 'onboarding', timestamp: Date.now() },
+});
+
+// Retrieve semantically related memories
+const memories = await memory.recall('What are Alice\'s design preferences?', {
+  sessionId: 'alice-001',
+  topK:      5,
+});
+
+for (const m of memories) {
+  console.log(m.content);  // the memory text
+  console.log(m.score);    // similarity score 0–1
+}
+```
+
+---
+
+## Memory options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `topK` | `number` | `10` | Memories to retrieve per turn |
+| `minScore` | `number` | `0` | Minimum similarity to include |
+| `ttlMs` | `number` | `undefined` | Auto-expire memories after N ms |
+| `maxEntries` | `number` | `undefined` | Cap total stored memories per session |
 
 > **New:** Use a `MemoryStoreAdapter` (via `memoryStoreAdapter`) to plug any vector backend into the memory layer. See the [Adapters guide](./adapters.md).
 

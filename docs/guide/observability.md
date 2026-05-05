@@ -1,6 +1,248 @@
+---
+title: Observability
+description: OTLP tracing, structured logging, metrics, LLM-as-judge evaluation, and Langfuse/LangSmith integration for production agents.
+outline: [2, 3]
+---
+
 # Observability
 
-confused-ai has built-in logging, metrics, and distributed tracing via OpenTelemetry.
+All observability features plug into the `observe:` option on `agent()` / `defineAgent()`. Multiple exporters can run simultaneously.
+
+| Feature | Class | Where data goes |
+|---------|-------|-----------------|
+| Console logging | `ConsoleLogger` | stdout |
+| OTLP tracing | `OtlpExporter` | Jaeger, Tempo, Datadog, Honeycomb |
+| Metrics | `Metrics` | Prometheus, Grafana |
+| LLM-as-judge eval | `runLlmAsJudge` | Custom / EvalAggregator |
+| Langfuse | `LangfuseExporter` | langfuse.com |
+| LangSmith | `LangSmithExporter` | smith.langchain.com |
+
+---
+
+## ConsoleLogger — development
+
+```ts
+import { ConsoleLogger } from 'confused-ai/observe';
+import { agent } from 'confused-ai';
+
+const ai = agent({
+  model:    'gpt-4o',
+  observe:  new ConsoleLogger({ logLevel: 'debug' }),
+  instructions: 'You are a helpful assistant.',
+});
+
+await ai.run('What is 2 + 2?');
+// stdout:
+//   [confused-ai] run:start  { runId: "abc123", input: "What is 2+2?" }
+//   [confused-ai] llm:call   { model: "gpt-4o", tokens: { input: 14, output: 7 } }
+//   [confused-ai] run:end    { latencyMs: 843, text: "4" }
+```
+
+---
+
+## OTLP Tracing {#otlp}
+
+Every run, LLM call, tool invocation, and guardrail check is exported as an OpenTelemetry span.
+
+```ts
+import { OtlpExporter } from 'confused-ai/observe';
+
+const ai = agent({
+  model:    'gpt-4o',
+  observe:  new OtlpExporter({
+    endpoint:    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318/v1/traces',
+    serviceName: 'my-ai-service',
+    headers:     { 'x-api-key': process.env.OTEL_API_KEY ?? '' },  // Honeycomb, Datadog
+  }),
+  instructions: '...',
+});
+```
+
+### Span structure
+
+```
+run (root span)
+├── guardrail:validateInput
+├── llm:call
+│   └── tool:searchDocs
+│   └── tool:getWeather
+├── llm:call (second turn)
+└── guardrail:validateOutput
+```
+
+All spans include:
+- `confused_ai.run_id`
+- `confused_ai.session_id`
+- `confused_ai.model`
+- `confused_ai.input_tokens` / `confused_ai.output_tokens`
+- `confused_ai.latency_ms`
+- `confused_ai.tool_name` (for tool spans)
+
+---
+
+## Metrics {#metrics}
+
+Expose Prometheus-compatible metrics:
+
+```ts
+import { Metrics } from 'confused-ai/observe';
+
+const metrics = new Metrics({ prefix: 'confused_ai' });
+
+const ai = agent({
+  model:    'gpt-4o',
+  observe:  metrics,
+  instructions: '...',
+});
+
+// Prometheus scrape endpoint
+import express from 'express';
+const app = express();
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.end(await metrics.toPrometheusText());
+});
+```
+
+### Available metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `confused_ai_runs_total` | Counter | Total agent runs |
+| `confused_ai_run_errors_total` | Counter | Failed runs |
+| `confused_ai_run_latency_ms` | Histogram | Run duration |
+| `confused_ai_tokens_total` | Counter | Input + output tokens |
+| `confused_ai_tool_calls_total` | Counter | Tool invocations |
+| `confused_ai_guardrail_blocks_total` | Counter | Requests blocked |
+
+---
+
+## Stacked exporters
+
+Run multiple exporters at once:
+
+```ts
+import { stackExporters, ConsoleLogger, OtlpExporter, Metrics } from 'confused-ai/observe';
+
+const observe = stackExporters(
+  new ConsoleLogger({ logLevel: 'info' }),
+  new OtlpExporter({ endpoint: process.env.OTEL_ENDPOINT }),
+  new Metrics({ prefix: 'my_agent' }),
+);
+
+const ai = agent({ model: 'gpt-4o', observe, instructions: '...' });
+```
+
+---
+
+## LLM-as-judge evaluation {#eval}
+
+Evaluate agent quality with a scoring LLM:
+
+```ts
+import { runLlmAsJudge } from 'confused-ai/observe';
+
+const score = await runLlmAsJudge({
+  input:    'What is the capital of France?',
+  output:   'The capital of France is Paris.',
+  criteria: 'Is the answer factually correct and concise?',
+  model:    'gpt-4o-mini',  // judge model (can differ from agent model)
+});
+
+console.log(score.score);      // 1 (0–1)
+console.log(score.reasoning);  // 'The answer is factually correct...'
+```
+
+### Batch evaluation with `EvalAggregator`
+
+```ts
+import { EvalAggregator, runLlmAsJudge } from 'confused-ai/observe';
+
+const agg = new EvalAggregator();
+
+const cases = [
+  { input: 'What is 2+2?', expected: '4', output: await ai.run('What is 2+2?') },
+  { input: 'Capital of Germany?', expected: 'Berlin', output: await ai.run('Capital of Germany?') },
+];
+
+for (const c of cases) {
+  const result = await runLlmAsJudge({
+    input:    c.input,
+    output:   c.output.text,
+    criteria: `The answer should be: ${c.expected}`,
+    model:    'gpt-4o-mini',
+  });
+  agg.record(result);
+}
+
+const summary = agg.summary();
+console.log(`Average score: ${summary.averageScore.toFixed(2)}`);
+console.log(`Pass rate: ${(summary.passRate * 100).toFixed(0)}%`);
+```
+
+---
+
+## Langfuse integration {#langfuse}
+
+```ts
+import { LangfuseExporter } from 'confused-ai/observe';
+
+const ai = agent({
+  model:    'gpt-4o',
+  observe:  new LangfuseExporter({
+    publicKey:  process.env.LANGFUSE_PUBLIC_KEY!,
+    secretKey:  process.env.LANGFUSE_SECRET_KEY!,
+    baseUrl:    'https://cloud.langfuse.com',
+  }),
+  instructions: '...',
+});
+```
+
+---
+
+## LangSmith integration {#langsmith}
+
+```ts
+import { LangSmithExporter } from 'confused-ai/observe';
+
+const ai = agent({
+  model:    'gpt-4o',
+  observe:  new LangSmithExporter({
+    apiKey:   process.env.LANGSMITH_API_KEY!,
+    project:  'my-confused-ai-project',
+    endpoint: 'https://api.smith.langchain.com',
+  }),
+  instructions: '...',
+});
+```
+
+---
+
+## Eval regression tests
+
+Run a suite of golden examples and fail CI if quality drops:
+
+```ts
+// eval-regression.ts
+import { EvalAggregator, runLlmAsJudge } from 'confused-ai/observe';
+import goldenCases from './data/golden-cases.json';
+
+const ai = agent({ model: 'gpt-4o', instructions: '...' });
+const agg = new EvalAggregator();
+
+for (const { input, criteria } of goldenCases) {
+  const output = await ai.run(input);
+  const result = await runLlmAsJudge({ input, output: output.text, criteria, model: 'gpt-4o-mini' });
+  agg.record(result);
+}
+
+const { averageScore } = agg.summary();
+if (averageScore < 0.8) {
+  console.error(`Eval failed: average score ${averageScore} < 0.8`);
+  process.exit(1);
+}
+console.log(`Eval passed: ${averageScore}`);
+```
 
 ## Console logging
 

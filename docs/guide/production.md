@@ -1,6 +1,258 @@
-# Production
+---
+title: Production Resilience
+description: Circuit breakers, rate limiting, retries, budget caps, health checks, and graceful shutdown for production AI agents.
+outline: [2, 3]
+---
 
-Production-grade resilience: circuit breakers, rate limiting, retries, and graceful degradation.
+# Production Resilience
+
+Everything you need to run agents safely in production: circuit breakers, rate limiting, retries, budget enforcement, health checks, and graceful shutdown — all composable, all opt-in.
+
+---
+
+## `withResilience()` — one-line hardening
+
+Wraps any agent with automatic retries, circuit breaking, rate limiting, and health monitoring:
+
+```ts
+import { withResilience } from 'confused-ai/guard';
+import { agent } from 'confused-ai';
+
+const base = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a production assistant.',
+});
+
+const resilient = withResilience(base, {
+  circuitBreaker: {
+    failureThreshold: 5,      // open after 5 consecutive failures
+    resetTimeoutMs:   30_000, // try again after 30 s (half-open)
+    callTimeoutMs:    60_000, // abort individual calls after 60 s
+  },
+  rateLimit: {
+    maxRpm: 60,               // max runs per minute globally
+  },
+  retry: {
+    maxRetries:   2,
+    backoffMs:    500,
+    maxBackoffMs: 5_000,
+  },
+  healthCheck:      true,     // enable .health() reporting
+  gracefulShutdown: true,     // flush in-flight runs on SIGTERM
+});
+
+// Drop-in replacement — identical run() / stream() interface
+const result = await resilient.run('Process this request');
+```
+
+### Default values
+
+| Option | Default |
+|--------|---------|
+| `circuitBreaker.failureThreshold` | `5` |
+| `circuitBreaker.resetTimeoutMs` | `30_000` |
+| `circuitBreaker.callTimeoutMs` | `60_000` |
+| `rateLimit.maxRpm` | `60` |
+| `retry.maxRetries` | `2` |
+| `retry.backoffMs` | `500` |
+| `retry.maxBackoffMs` | `5_000` |
+
+Pass `circuitBreaker: false` or `rateLimit: false` to disable those subsystems.
+
+### Health report
+
+```ts
+const report = resilient.health();
+// {
+//   status:         'healthy' | 'degraded' | 'unhealthy',
+//   circuitState:   'closed' | 'open' | 'half-open' | 'disabled',
+//   totalRuns:      142,
+//   totalFailures:  3,
+//   averageLatencyMs: 823,
+//   uptime:         3600,
+//   lastError?:     'Rate limit exceeded',
+//   lastRunAt?:     Date,
+// }
+
+// Expose as HTTP endpoint
+app.get('/health', (_req, res) => {
+  const h = resilient.health();
+  res.status(h.status === 'unhealthy' ? 503 : 200).json(h);
+});
+```
+
+---
+
+## Budget Enforcement {#budget-enforcement}
+
+Cap USD spend per run, per user, and per month:
+
+```ts
+import { defineAgent } from 'confused-ai';
+
+const ai = defineAgent()
+  .model('gpt-4o')
+  .instructions('...')
+  .budget({
+    maxUsdPerRun:   0.50,   // hard cap per single run
+    maxUsdPerUser:  10.00,  // cumulative per sessionId
+    maxUsdPerMonth: 500.00, // global monthly cap
+    onExceeded:     'throw', // 'throw' | 'warn' | 'stop'
+  })
+  .build();
+```
+
+::: tip Token cost tracking
+Budget enforcement uses the `usage` field returned by LLM providers. Make sure your provider returns token counts (all major providers do).
+:::
+
+---
+
+## Redis Rate Limiter (distributed)
+
+For multi-instance deployments where you need cross-process rate limiting:
+
+```ts
+import Redis from 'ioredis';
+import { RedisRateLimiter } from 'confused-ai/guard';
+
+const redis   = new Redis(process.env.REDIS_URL!);
+const limiter = new RedisRateLimiter({
+  client:      redis,
+  windowMs:    60_000, // 1-minute window
+  maxRequests: 100,    // per key per window
+});
+
+// In your request handler
+const key    = `user:${userId}`;
+const result = await limiter.check(key);
+
+if (!result.allowed) {
+  return res.status(429).json({
+    error:      'Rate limit exceeded',
+    retryAfter: result.retryAfterMs,
+  });
+}
+```
+
+---
+
+## Fallback chain
+
+Automatically fail over to backup models if the primary is unavailable:
+
+```ts
+import { createFallbackChain } from 'confused-ai/model';
+
+const llm = createFallbackChain([
+  { model: 'gpt-4o' },
+  { model: 'claude-opus-4-5' },
+  { model: 'gemini-2.0-flash' },
+]);
+
+const ai = agent({ llmProvider: llm, instructions: '...' });
+// If gpt-4o fails → claude-opus-4-5 → gemini-2.0-flash
+```
+
+---
+
+## Guardrails (quick reference)
+
+→ See the full [Guardrails guide](/guide/guardrails)
+
+```ts
+import { createGuardrails } from 'confused-ai/guardrails';
+
+const guardrails = createGuardrails({
+  allowlist:  ['billing', 'account', 'subscription'], // permitted topics
+  blocklist:  ['competitor pricing'],
+  validateInput:  async (input) => ({ blocked: /DROP TABLE/i.test(input), reason: 'SQL injection' }),
+  validateOutput: async (out)   => ({ blocked: out.includes('SECRET'), reason: 'Leaked credential' }),
+});
+
+const ai = agent({ model: 'gpt-4o', instructions: '...', guardrails });
+```
+
+---
+
+## Context window management
+
+Automatic truncation when approaching token limits:
+
+```ts
+import { ContextWindowManager } from 'confused-ai/model';
+
+const ai = agent({
+  model:                 'gpt-4o',
+  instructions:          '...',
+  contextWindowManager:  new ContextWindowManager({
+    maxTokens:       128_000,
+    reserveForOutput: 2_000,
+    strategy:        'sliding',   // 'sliding' | 'truncate' | 'summarise'
+  }),
+});
+```
+
+---
+
+## Graceful shutdown
+
+Handle `SIGTERM` cleanly — finish in-flight runs before exiting:
+
+```ts
+import { withResilience } from 'confused-ai/guard';
+
+const resilient = withResilience(base, { gracefulShutdown: true });
+
+process.on('SIGTERM', async () => {
+  console.log('Draining in-flight agent runs...');
+  await resilient.shutdown();  // waits for active runs to complete
+  process.exit(0);
+});
+```
+
+---
+
+## HealthMonitor — fleet-level health
+
+Monitor multiple agents at once:
+
+```ts
+import { HealthMonitor } from 'confused-ai/guard';
+
+const monitor = new HealthMonitor({
+  agents: { support: supportAgent, billing: billingAgent },
+  checkIntervalMs: 30_000,
+  onUnhealthy: (name, err) => alerting.page(`Agent ${name} is down: ${err.message}`),
+});
+
+monitor.start();
+
+// Health endpoint
+app.get('/healthz', (_req, res) => {
+  const status = monitor.getStatus();
+  res.status(status.allHealthy ? 200 : 503).json(status);
+});
+```
+
+---
+
+## Checkpoint store (crash recovery)
+
+Persist agent state between steps — resume from the last checkpoint if a run crashes:
+
+```ts
+import { createSqliteCheckpointStore } from 'confused-ai/guard';
+
+const ai = defineAgent()
+  .model('gpt-4o')
+  .instructions('...')
+  .checkpoint(createSqliteCheckpointStore('./checkpoints.db'))
+  .build();
+
+// Run with a stable runId — if it crashes mid-way, rerun with the same runId to resume
+const result = await ai.run('Long multi-step analysis task', { runId: 'analysis-run-001' });
+```
 
 ## `withResilience()`
 

@@ -1,8 +1,153 @@
+---
+title: Voice (TTS & STT)
+description: Text-to-speech and speech-to-text with OpenAI and ElevenLabs — build voice assistants, podcast generators, and audio pipelines.
+outline: [2, 3]
+---
+
 # Voice (TTS & STT)
 
-The voice module provides text-to-speech and speech-to-text via OpenAI and ElevenLabs. Wire it into agents to build voice-enabled assistants, podcast generators, or any audio pipeline.
+The voice module provides text-to-speech (TTS) and speech-to-text (STT) via OpenAI and ElevenLabs. Wire it into agents to build voice assistants, podcast generators, transcription pipelines, and phone bots.
 
-> **Import path:** `confused-ai/voice`
+| Provider | TTS | STT | Notes |
+|----------|-----|-----|-------|
+| OpenAI | ✅ | ✅ | tts-1, tts-1-hd; whisper-1 |
+| ElevenLabs | ✅ | ❌ | 30+ voices, custom cloning |
+
+---
+
+## Quick start
+
+```ts
+import { createVoiceProvider, OpenAIVoiceProvider } from 'confused-ai/voice';
+import { agent }                                     from 'confused-ai';
+
+const voice = createVoiceProvider(new OpenAIVoiceProvider({
+  apiKey:    process.env.OPENAI_API_KEY!,
+  ttsModel:  'tts-1-hd',
+  ttsVoice:  'nova',
+  sttModel:  'whisper-1',
+}));
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a voice assistant.',
+  voice,
+});
+
+// Run with text input — get text + audio response
+const result = await ai.run('Tell me a short joke');
+console.log(result.text);              // text response
+await writeFile('response.mp3', result.audio!);  // audio buffer
+```
+
+---
+
+## OpenAI voice provider
+
+```ts
+import { OpenAIVoiceProvider } from 'confused-ai/voice';
+
+const provider = new OpenAIVoiceProvider({
+  apiKey:    process.env.OPENAI_API_KEY!,
+  ttsModel:  'tts-1-hd',  // 'tts-1' (faster) | 'tts-1-hd' (higher quality)
+  ttsVoice:  'nova',
+  sttModel:  'whisper-1',
+});
+
+// Text-to-speech directly
+const audioBuffer = await provider.tts('Hello! Welcome to the voice assistant.');
+await writeFile('hello.mp3', audioBuffer);
+
+// Speech-to-text from a file
+const audioData = await readFile('./user-recording.mp3');
+const transcript = await provider.stt(audioData);
+console.log(transcript.text);  // transcribed text
+```
+
+### Available OpenAI voices
+
+| Voice | Description |
+|-------|-------------|
+| `alloy` | Neutral, versatile |
+| `echo` | Clear male |
+| `fable` | Expressive, British |
+| `onyx` | Deep, authoritative |
+| `nova` | Friendly female |
+| `shimmer` | Soft, warm female |
+
+---
+
+## ElevenLabs voice provider
+
+```ts
+import { ElevenLabsVoiceProvider } from 'confused-ai/voice';
+
+const provider = new ElevenLabsVoiceProvider({
+  apiKey:  process.env.ELEVENLABS_API_KEY!,
+  voiceId: 'EXAVITQu4vr4xnSDxMaL',  // Rachel (ElevenLabs ID)
+  model:   'eleven_turbo_v2',        // 'eleven_multilingual_v2' | 'eleven_turbo_v2'
+});
+
+const audioBuffer = await provider.tts('Your report is ready. Here is the summary...');
+await writeFile('report.mp3', audioBuffer);
+```
+
+### Listing available voices
+
+```ts
+const voices = await provider.listVoices();
+for (const v of voices) {
+  console.log(`${v.name} — ${v.voiceId}`);
+}
+```
+
+---
+
+## Audio agent (speech → agent → speech)
+
+Build a full round-trip voice agent:
+
+```ts
+import { OpenAIVoiceProvider } from 'confused-ai/voice';
+import { agent }               from 'confused-ai';
+import { readFile, writeFile } from 'fs/promises';
+
+const voiceProvider = new OpenAIVoiceProvider({
+  apiKey:    process.env.OPENAI_API_KEY!,
+  ttsVoice:  'nova',
+  sttModel:  'whisper-1',
+});
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a helpful voice assistant. Keep answers under 3 sentences.',
+});
+
+// 1. Transcribe user audio
+const userAudio  = await readFile('./user-question.mp3');
+const transcript = await voiceProvider.stt(userAudio);
+
+// 2. Run agent
+const result     = await ai.run(transcript.text);
+
+// 3. Convert response to speech
+const audioOut   = await voiceProvider.tts(result.text);
+await writeFile('./assistant-response.mp3', audioOut);
+```
+
+---
+
+## Streaming TTS
+
+For low-latency playback, stream audio chunks as they are generated:
+
+```ts
+const stream = await provider.ttsStream('Long text that should be read aloud...');
+
+for await (const chunk of stream) {
+  audioPlayer.push(chunk);  // push to audio player in real time
+}
+```
 
 ---
 

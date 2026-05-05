@@ -1,6 +1,272 @@
+---
+title: Creating Agents
+description: Five APIs for creating agents — from zero-config agent() to full-control bare(). Every option documented with real examples.
+outline: [2, 3]
+---
+
 # Creating Agents
 
-confused-ai provides **five ways** to create an agent — from zero-config to full control.
+confused-ai provides **five APIs** for creating agents — from zero-config convenience to bare-metal control. All five implement the same `run()` / `stream()` interface so they're interchangeable.
+
+| API | Best for |
+|-----|---------|
+| `agent()` | Default — auto-resolves LLM from env, safe defaults |
+| `defineAgent()` | Composable fluent builder — reusable, chainable |
+| `createAgent()` | Explicit factory — same as `agent()`, no magic |
+| `bare()` | Zero defaults — you supply everything |
+| `class Agent` | Advanced subclassing |
+
+---
+
+## 1. `agent()` — recommended
+
+The highest-level API. Reads LLM from env, wires defaults (session, tools, guardrails), returns a fully configured agent.
+
+```ts
+import { agent } from 'confused-ai';
+
+const ai = agent({
+  name:         'SupportBot',
+  model:        'gpt-4o-mini',   // OPENAI_API_KEY read from env
+  instructions: 'You are a helpful support agent.',
+
+  // Tools (optional — defaults to [HttpClientTool, BrowserTool])
+  tools: [myTool, anotherTool],  // or: tools: false for no tools
+
+  // Data
+  sessionStore:  createSqliteSessionStore('./sessions.db'),
+  knowledgebase: myKnowledgeEngine,
+  memoryStore:   new VectorMemoryStore({ ... }),
+
+  // Safety
+  guardrails: myGuardrailEngine,   // or: guardrails: false
+
+  // Limits
+  maxSteps:  15,
+  timeoutMs: 90_000,
+});
+
+// Basic run
+const result = await ai.run('How do I reset my password?');
+console.log(result.text);
+
+// Streaming
+for await (const chunk of ai.stream('Walk me through the setup steps')) {
+  process.stdout.write(chunk);
+}
+
+// With session continuity
+await ai.run('My account email is alice@example.com', { sessionId: 'alice-42' });
+const r2 = await ai.run('What is my email?', { sessionId: 'alice-42' });
+// r2.text → "Your email is alice@example.com."
+```
+
+### `run()` options
+
+```ts
+await ai.run('prompt', {
+  sessionId:  'user-42',          // session persistence key
+  runId:      'run-abc123',       // idempotency / tracing
+  onChunk:    (chunk) => { ... }, // streaming callback
+  signal:     abortController.signal, // cancellation
+});
+```
+
+---
+
+## 2. `defineAgent()` — fluent builder
+
+Composable, chainable. Ideal for reusable agent definitions shared across a codebase.
+
+```ts
+import { defineAgent } from 'confused-ai';
+import { createSqliteCheckpointStore } from 'confused-ai/guard';
+import { createAdapterRegistry } from 'confused-ai/adapters';
+
+const reviewBot = defineAgent()
+  .name('ReviewBot')
+  .instructions('You are a senior TypeScript engineer. Review code for correctness, performance, and security.')
+  .model('gpt-4o')
+  .tools([fetchFileTool, postCommentTool])
+  .withSession()                        // in-memory; pass store for SQLite/Redis
+  .withGuardrails(contentGuardrails)
+  .hooks({
+    beforeRun: async (prompt) => {
+      console.log('[ReviewBot] Starting review:', prompt.slice(0, 80));
+      return prompt;
+    },
+    afterRun: async (result) => {
+      await metrics.record('review.completed', { steps: result.steps });
+      return result;
+    },
+  })
+  .budget({
+    maxUsdPerRun:   0.50,   // hard limit per single run
+    maxUsdPerUser:  10.00,  // cumulative per user
+    onExceeded:     'throw',
+  })
+  .checkpoint(createSqliteCheckpointStore('./checkpoints.db'))
+  .adapters(createAdapterRegistry())
+  .use(loggingPlugin)                   // tool middleware, stackable
+  .dev()                                // console logging in development
+  .build();
+
+const result = await reviewBot.run('Review PR #456', { runId: 'pr-456' });
+```
+
+### Full builder reference
+
+| Method | Type | Description |
+|--------|------|-------------|
+| `.name(s)` | `string` | Agent name |
+| `.instructions(s)` | `string` | System prompt (required) |
+| `.model(s)` | `string \| string[]` | Model ID, shorthand, or fallback chain |
+| `.apiKey(s)` | `string` | Override provider API key |
+| `.baseURL(s)` | `string` | Override base URL (e.g. Ollama, Azure) |
+| `.tools(arr)` | `Tool[] \| false` | Tools list or `false` to disable |
+| `.withSession(store?)` | `SessionStore?` | Enable session; omit for in-memory |
+| `.withGuardrails(g)` | `GuardrailEngine` | Attach guardrail engine |
+| `.hooks(hooks)` | `AgentHooks` | Lifecycle hooks |
+| `.budget(cfg)` | `BudgetConfig` | USD spend caps |
+| `.checkpoint(store)` | `CheckpointStore` | Crash-recovery checkpoints |
+| `.adapters(registry)` | `AdapterRegistry` | Infrastructure adapters |
+| `.use(middleware)` | `ToolMiddleware` | Add tool middleware (stackable) |
+| `.noDefaults()` | — | Skip all framework defaults |
+| `.dev()` | — | Verbose console logging |
+| `.build()` | — | Returns `Agent` instance |
+
+---
+
+## 3. `createAgent()` — explicit factory
+
+Same as `agent()` but with a more explicit name — useful when `agent` conflicts with a local variable.
+
+```ts
+import { createAgent } from 'confused-ai';
+
+const myAgent = createAgent({
+  name:         'Analyst',
+  model:        'gpt-4o',
+  instructions: 'Analyse financial data and produce structured reports.',
+  tools:        [fetchDataTool, chartTool],
+});
+
+const result = await myAgent.run('Analyse Q1 2026 revenue trends');
+```
+
+---
+
+## 4. `bare()` — zero defaults
+
+No env auto-detection, no default tools, no session, no memory. You wire everything explicitly. Use when you need complete control — or when embedding the agent in a framework with its own lifecycle.
+
+```ts
+import { bare } from 'confused-ai';
+import { OpenAIProvider } from 'confused-ai/model';
+
+const llm = new OpenAIProvider({
+  apiKey: process.env.OPENAI_API_KEY!,
+  model:  'gpt-4o',
+});
+
+const rawAgent = bare({
+  llm,
+  instructions: 'You are a raw agent.',
+  // tools, session, memory — all opt-in from here
+});
+```
+
+---
+
+## 5. Extend `Agent`
+
+For advanced use cases — custom pre/post-processing, domain-specific `run()` overrides:
+
+```ts
+import { Agent } from 'confused-ai';
+
+class AuditedAgent extends Agent {
+  async run(input: string, opts = {}) {
+    await auditLog.record({ agentName: this.name, input });
+    const result = await super.run(input, opts);
+    await auditLog.record({ agentName: this.name, output: result.text });
+    return result;
+  }
+}
+```
+
+---
+
+## Disable subsystems
+
+Escape hatch any default with `false`:
+
+```ts
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: '...',
+  tools:        false,         // pure LLM, no tool loop
+  sessionStore: false,         // stateless
+  guardrails:   false,         // no guardrails
+  memory:       false,         // no memory injection
+});
+```
+
+---
+
+## Model shorthand reference
+
+```ts
+// OpenAI
+model: 'gpt-4o'                         // reads OPENAI_API_KEY
+model: 'gpt-4o-mini'
+model: 'o1-mini'
+model: 'o3-mini'
+
+// Anthropic
+model: 'claude-opus-4-5'                // reads ANTHROPIC_API_KEY
+model: 'claude-3-5-haiku'
+
+// Google
+model: 'gemini-2.0-flash'               // reads GOOGLE_API_KEY
+model: 'gemini-1.5-pro'
+
+// OpenRouter (gateway to 100+ models)
+model: 'openrouter/meta-llama/llama-3.3-70b-instruct'
+
+// Fallback chain — tries left to right on failure
+model: ['gpt-4o', 'claude-opus-4-5', 'gemini-2.0-flash']
+```
+
+---
+
+## `AgenticRunResult` shape
+
+Every `run()` returns the same interface regardless of which API you used:
+
+```ts
+interface AgenticRunResult {
+  text:    string;              // final assistant response
+  markdown: {
+    name:     string;           // "response-<runId>.md"
+    content:  string;
+    mimeType: 'text/markdown';
+    type:     'markdown';
+  };
+  structuredOutput?: unknown;   // set when responseModel is used
+  messages:     Message[];      // full conversation
+  steps:        number;         // LLM steps taken
+  finishReason: 'stop' | 'max_steps' | 'timeout' | 'error'
+                | 'human_rejected' | 'aborted';
+  usage?: {
+    promptTokens?:     number;
+    completionTokens?: number;
+    totalTokens?:      number;
+  };
+  runId?:   string;
+  traceId?: string;
+}
+```
 
 ---
 

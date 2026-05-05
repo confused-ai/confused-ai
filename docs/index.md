@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: "Confused-AI"
-  text: "Production Ready AI Agents,\nShipped in TypeScript"
-  tagline: "The only TypeScript AI agent framework with smart defaults AND full control. 100+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, OTLP — from prototype to enterprise in one package."
+  text: "Production-Grade AI Agents\nin TypeScript"
+  tagline: "Smart defaults AND full control — 100+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, OTLP tracing. Ship prototypes in minutes, run enterprises for years."
   image:
     src: /logo.svg
     alt: Confused-AI
@@ -13,7 +13,7 @@ hero:
       text: Get Started →
       link: /guide/getting-started
     - theme: alt
-      text: View Examples
+      text: Browse Examples
       link: /examples/
     - theme: alt
       text: GitHub
@@ -22,62 +22,111 @@ hero:
 features:
   - icon: ⚡
     title: Zero to agent in 3 lines
-    details: "<code>agent('You are helpful.')</code> → <code>.run(prompt)</code> → <code>result.text</code>. Smart defaults for LLM, session, tools, and guardrails. Override anything, keep everything else."
+    details: "<code>agent('You are helpful.')</code> → <code>.run(prompt)</code> → <code>result.text</code>. Smart defaults for LLM, session, tools, and guardrails. Override anything."
     link: /guide/getting-started
     linkText: Quick start
   - icon: 🔧
     title: 100+ built-in tools
-    details: "HTTP, browser, email, Slack, Discord, GitHub, PostgreSQL, MySQL, SQLite, Redis, Stripe, CSV, DuckDuckGo, Wikipedia, file system, and more — every tool Zod-validated and tree-shakeable."
+    details: "HTTP, browser, email, Slack, GitHub, PostgreSQL, Redis, Stripe, DuckDuckGo, Wikipedia and more — every tool Zod-validated and tree-shakeable."
     link: /guide/tools
     linkText: Browse tools
   - icon: 🔀
     title: Multi-agent orchestration
-    details: "<code>compose()</code>, <code>pipe()</code>, AgentRouter, HandoffProtocol, ConsensusProtocol, <code>createSupervisor()</code>, <code>createSwarm()</code>. Any topology, any strategy — no framework lock-in."
+    details: "<code>compose()</code>, <code>pipe()</code>, AgentRouter, HandoffProtocol, ConsensusProtocol, createSupervisor(), createSwarm(). Any topology, any strategy."
     link: /guide/orchestration
-    linkText: Explore orchestration
+    linkText: Orchestration guide
   - icon: 🧠
     title: RAG in one call
-    details: "KnowledgeEngine + TextLoader / JSONLoader / CSVLoader / URLLoader + OpenAI embeddings + InMemoryVectorStore. Full semantic retrieval baked into every agent run."
+    details: "KnowledgeEngine + TextLoader / JSONLoader / CSVLoader / URLLoader + OpenAI embeddings + InMemoryVectorStore. Full semantic retrieval baked in."
     link: /guide/rag
     linkText: RAG guide
   - icon: 🚀
     title: Enterprise production-hardened
-    details: "Circuit breakers, rate limiting, Redis distributed rate limits, USD budget caps, OTLP distributed tracing, W3C trace-context, health checks, graceful shutdown — all opt-in, all composable."
+    details: "Circuit breakers, rate limiting, USD budget caps, OTLP tracing, W3C trace-context, health checks, graceful shutdown — all opt-in, all composable."
     link: /guide/production
     linkText: Production guide
   - icon: 🤖
     title: Intelligent LLM router
-    details: "Auto-route by task type and complexity. coding → GPT-4o, simple Q&A → GPT-4o-mini. Four built-in strategies (balanced, cost, quality, speed), custom override rules, full decision history."
-    link: /examples/16-llm-router
-    linkText: See LLM routing
+    details: "Auto-route by task type and complexity. coding → GPT-4o, simple Q&A → GPT-4o-mini. Four built-in strategies: balanced, cost, quality, speed."
+    link: /guide/llm-router
+    linkText: LLM routing
   - icon: 🔒
     title: Human-in-the-Loop (HITL)
-    details: "Pause execution at high-risk tool calls. <code>requireApprovalTool()</code> + ApprovalStore + built-in HTTP endpoints. Approve or reject from any UI — no custom wiring needed."
+    details: "Pause execution at high-risk tool calls. requireApprovalTool() + ApprovalStore + built-in HTTP endpoints. Approve or reject from any UI."
     link: /guide/hitl
     linkText: HITL guide
   - icon: 🔌
     title: MCP client + server
-    details: "Connect to any Model Context Protocol server. MCP tools become first-class citizens of the agent loop. Or expose your own tools as an MCP server with one function call."
-
----
-
-## Engineering Reference
-
-| Document | Audience | Description |
-|----------|----------|-------------|
-| [Architecture Specification](./ARCHITECTURE-SPECIFICATION.md) | Core contributors, enterprise architects | Deep technical spec: layer model, interfaces, ADRs, data flow |
-| [Competitive Analysis](./COMPETITIVE-ANALYSIS.md) | Engineering leadership | Gap analysis vs. Agno, LangChain, CrewAI with remediation plan |
-| [Production-Readiness Audit](./PRODUCTION-READINESS-AUDIT.md) | SRE, security, compliance teams | Enterprise readiness scorecard: security, resilience, telemetry |
-| [Integration Blueprints](./INTEGRATION-BLUEPRINTS.md) | Integration engineers | 9 production-ready patterns: multi-tenant SaaS, RAG, HITL, distributed graph, MCP |
-| [Glossary](./GLOSSARY.md) | All audiences | Canonical definitions for all technical terms |
-| [Strategic Transformation Roadmap](./STRATEGIC-TRANSFORMATION-ROADMAP.md) | Engineering leadership | v1.2 → v1.3 → v2.0 delivery plan with KPIs |
+    details: "Connect to any Model Context Protocol server. MCP tools become first-class citizens of the agent loop. Or expose your own tools as an MCP server."
     link: /guide/mcp
     linkText: MCP guide
   - icon: 🏛️
     title: Multi-tenancy out of the box
-    details: "<code>createTenantContext()</code> scopes sessions, rate limits, and cost tracking per tenant without separate databases or extra config. Zero boilerplate isolation."
+    details: "createTenantContext() scopes sessions, rate limits, and cost tracking per tenant — zero boilerplate isolation."
     link: /guide/multi-tenancy
     linkText: Multi-tenancy guide
+  - icon: 🎙️
+    title: Voice-enabled agents
+    details: "Text-to-speech and speech-to-text via OpenAI (tts-1, whisper-1) and ElevenLabs. Wire into agents for voice assistants and audio pipelines."
+    link: /guide/voice
+    linkText: Voice guide
+  - icon: 🔄
+    title: Background queues
+    details: "Dispatch post-run work to BullMQ, Kafka, RabbitMQ, or SQS. Keep agent latency low while analytics, billing, and notifications run asynchronously."
+    link: /guide/background-queues
+    linkText: Queue guide
+  - icon: 🧩
+    title: Plugin system
+    details: "Reusable middleware — logging, rate-limit, telemetry plugins — attach to any agent with .use(). Build once, share across your entire fleet."
+    link: /guide/plugins
+    linkText: Plugins guide
+
+---
+
+## Package Ecosystem
+
+confused-ai ships as a **monorepo of focused packages**. Import the main `confused-ai` entry point (which re-exports everything) or use subpath imports for tree-shaking.
+
+| Package | Import | Description |
+|---------|--------|-------------|
+| `confused-ai` | `from 'confused-ai'` | Main entry — re-exports all public APIs |
+| `@confused-ai/core` | `from 'confused-ai/core'` | BaseAgent, AgentContextBuilder, run loop |
+| `@confused-ai/models` | `from 'confused-ai/model'` | LLM providers, LLM Router, streaming utils |
+| `@confused-ai/tools` | `from 'confused-ai/tools/*'` | 100+ categorised built-in tools |
+| `@confused-ai/knowledge` | `from 'confused-ai/knowledge'` | KnowledgeEngine, loaders, vector stores |
+| `@confused-ai/memory` | `from 'confused-ai/memory'` | InMemoryStore, VectorMemoryStore, embeddings |
+| `@confused-ai/session` | `from 'confused-ai/session'` | Session stores (SQLite, Redis, SQL) |
+| `@confused-ai/orchestration` | `from 'confused-ai/workflow'` | Router, Handoff, Consensus, Supervisor, Swarm |
+| `@confused-ai/execution` | `from 'confused-ai/execution'` | createWorkflow, createStep, suspend/resume |
+| `@confused-ai/graph` | `from 'confused-ai/graph'` | DAG engine, event sourcing, parallel nodes |
+| `@confused-ai/guardrails` | `from 'confused-ai/guardrails'` | PII detection, prompt injection, moderation |
+| `@confused-ai/reasoning` | `from 'confused-ai'` | Chain-of-Thought ReasoningManager |
+| `@confused-ai/learning` | `from 'confused-ai'` | LearningMachine, 5 stores |
+| `@confused-ai/scheduler` | `from 'confused-ai'` | Cron scheduler, ScheduleManager |
+| `@confused-ai/background` | `from 'confused-ai/background'` | BullMQ, Kafka, RabbitMQ, SQS adapters |
+| `@confused-ai/eval` | `from 'confused-ai/observe'` | LLM-as-judge, ROUGE-L, benchmarks |
+| `@confused-ai/voice` | `from 'confused-ai/voice'` | TTS/STT — OpenAI Whisper, ElevenLabs |
+| `@confused-ai/video` | `from 'confused-ai/video'` | FFmpeg pipeline, Pexels integration |
+| `@confused-ai/artifacts` | `from 'confused-ai'` | Structured output artifacts |
+| `@confused-ai/plugins` | `from 'confused-ai/plugins'` | Plugin registry, built-in plugins |
+| `@confused-ai/sdk` | `from 'confused-ai/sdk'` | defineAgent, WorkflowBuilder |
+| `@confused-ai/db` | `from 'confused-ai/db'` | 7 database backends (SQLite, Postgres, Redis…) |
+| `@confused-ai/production` | `from 'confused-ai/guard'` | withResilience, ApprovalStore, HITL |
+| `@confused-ai/observe` | `from 'confused-ai/observe'` | OTLP tracing, metrics, Langfuse/LangSmith |
+| `@confused-ai/serve` | `from 'confused-ai/serve'` | HTTP runtime, WebSocket, Admin API |
+| `@confused-ai/config` | `from 'confused-ai/config'` | Secret manager (Vault, AWS, Azure, GCP) |
+| `@confused-ai/adapters` | `from 'confused-ai/adapters'` | 20 adapter categories, production wiring |
+
+## Engineering Reference
+
+| Document | Audience | Purpose |
+|----------|----------|---------|
+| [Architecture Specification](./ARCHITECTURE-SPECIFICATION.md) | Core contributors, architects | Layer model, interfaces, ADRs, data flow |
+| [Competitive Analysis](./COMPETITIVE-ANALYSIS.md) | Engineering leadership | Gap analysis vs. Agno, LangChain, CrewAI |
+| [Production-Readiness Audit](./PRODUCTION-READINESS-AUDIT.md) | SRE, security, compliance | Enterprise readiness scorecard |
+| [Integration Blueprints](./INTEGRATION-BLUEPRINTS.md) | Integration engineers | 9 production-ready patterns |
+| [Glossary](./GLOSSARY.md) | All audiences | Canonical definitions |
+| [Changelog](./changelog.md) | All audiences | Release history |
   - icon: 🪝
     title: 8 lifecycle hook points
     details: "beforeRun, afterRun, beforeStep, afterStep, beforeToolCall, afterToolCall, buildSystemPrompt, onError. Inject logging, analytics, transformations at any point without modifying agent internals."

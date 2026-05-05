@@ -1,6 +1,135 @@
+---
+title: Chain-of-Thought Reasoning
+description: ReasoningManager drives structured CoT loops — the LLM produces one step at a time, checks its work, and emits a final answer only when confident.
+outline: [2, 3]
+---
+
 # Chain-of-Thought Reasoning
 
-`ReasoningManager` drives structured Chain-of-Thought (CoT) reasoning over a conversation. Instead of asking an LLM for a direct answer, it runs a *reasoning loop*: the LLM produces one `ReasoningStep` at a time — each step containing an action, result, confidence score, and a `nextAction` directive — until it emits `final_answer`.
+`ReasoningManager` drives structured Chain-of-Thought (CoT) reasoning. Instead of asking for a direct answer, it runs a *reasoning loop*: the LLM produces one `ReasoningStep` at a time — with an action, result, confidence score, and a `nextAction` directive — until it emits `final_answer`.
+
+This makes complex tasks (math, planning, multi-step debugging) dramatically more reliable than single-shot prompts.
+
+---
+
+## How it works
+
+```
+ReasoningManager.reason(prompt)
+  │
+  ├─ Step 1: thought + action → tool call or sub-query
+  │    └─ nextAction: CONTINUE
+  ├─ Step 2: thought + action → verify result
+  │    └─ nextAction: CONTINUE
+  ├─ Step N: confidence ≥ threshold
+  │    └─ nextAction: FINAL_ANSWER
+  │
+  └─ returns ReasoningResult { steps, finalAnswer, totalTokens }
+```
+
+---
+
+## Quick start
+
+```ts
+import { ReasoningManager } from 'confused-ai';
+import { agent }            from 'confused-ai';
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a careful analyst.',
+});
+
+const reasoner = new ReasoningManager(ai, {
+  maxSteps:            12,    // hard cap on loop iterations
+  confidenceThreshold: 0.85,  // emit final answer when confidence ≥ this
+  temperature:         0.2,   // low temp for reasoning loops
+});
+
+const result = await reasoner.reason(
+  'If a train travels 120 km in 1.5 hours, and then 180 km in 2 hours, what is its average speed for the whole journey?'
+);
+
+console.log(result.finalAnswer);
+// "The average speed is 100 km/h. Total distance = 300 km, total time = 3.5 h, ..."
+
+for (const step of result.steps) {
+  console.log(`[${step.stepNumber}] ${step.action} — confidence: ${step.confidence}`);
+}
+```
+
+---
+
+## `NextAction` enum
+
+| Value | Meaning |
+|-------|---------|
+| `CONTINUE` | More reasoning needed — proceed to next step |
+| `TOOL_CALL` | Use a tool, incorporate result into next step |
+| `BACKTRACK` | Previous step was wrong — reconsider |
+| `FINAL_ANSWER` | Confident — emit this as the final response |
+
+---
+
+## Reasoning events (streaming)
+
+Subscribe to step-by-step progress:
+
+```ts
+import { ReasoningEventType } from 'confused-ai';
+
+reasoner.on(ReasoningEventType.STEP_COMPLETE, (step) => {
+  console.log(`Step ${step.stepNumber}: ${step.thought}`);
+});
+
+reasoner.on(ReasoningEventType.TOOL_CALLED, (name, input) => {
+  console.log(`Calling tool: ${name}`, input);
+});
+
+reasoner.on(ReasoningEventType.FINAL_ANSWER, (answer) => {
+  console.log('Final:', answer);
+});
+```
+
+| Event | Payload |
+|-------|---------|
+| `STEP_COMPLETE` | `ReasoningStep` |
+| `TOOL_CALLED` | `name: string, input: unknown` |
+| `TOOL_RESULT` | `name: string, result: unknown` |
+| `BACKTRACK` | `step: number, reason: string` |
+| `FINAL_ANSWER` | `answer: string` |
+
+---
+
+## Tools in the reasoning loop
+
+Equip the underlying agent with tools — the reasoner will call them mid-loop:
+
+```ts
+import { TavilySearchTool, CalculatorToolkit } from 'confused-ai';
+
+const ai = agent({
+  model:  'gpt-4o',
+  tools:  [new TavilySearchTool({ apiKey: process.env.TAVILY_KEY }), ...CalculatorToolkit.create()],
+});
+
+const reasoner = new ReasoningManager(ai, { maxSteps: 15 });
+
+const result = await reasoner.reason(
+  'What is the market cap of Nvidia today divided by Apple\'s revenue last year?'
+);
+```
+
+---
+
+## `ReasoningManager` options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `maxSteps` | `number` | `10` | Maximum loop iterations |
+| `confidenceThreshold` | `number` | `0.8` | Emit final answer when confidence ≥ threshold |
+| `temperature` | `number` | `0.2` | Temperature for reasoning steps |
+| `systemPrompt` | `string` | built-in | Override the CoT system prompt |
 
 This gives complex tasks (math, planning, multi-step debugging) dramatically more reliable outputs than a single-shot prompt, because the model checks its own work at each step before committing.
 

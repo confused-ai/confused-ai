@@ -1,6 +1,158 @@
+---
+title: MCP Client
+description: Connect any MCP server (stdio or HTTP) to your agents. All MCP tools become first-class tool-loop participants.
+outline: [2, 3]
+---
+
 # MCP Client
 
-Connect any Model Context Protocol (MCP) server to your agents. All MCP tools become first-class participants in the agent's tool loop.
+The `McpClient` connects any [Model Context Protocol](https://modelcontextprotocol.io) server to your agents. All MCP tools become first-class participants in the agent's tool loop — Zod-validated, approval-gateable, observable.
+
+| Transport | When to use |
+|-----------|-------------|
+| `stdio` | Local CLI tools, development |
+| `http` / `sse` | Remote servers, production services |
+
+---
+
+## Quick start — stdio
+
+```ts
+import { McpClient } from 'confused-ai/workflow';
+import { agent }     from 'confused-ai';
+
+const mcp = new McpClient({
+  transport: 'stdio',
+  command:   'npx',
+  args:      ['-y', '@modelcontextprotocol/server-filesystem', '/tmp/sandbox'],
+});
+
+await mcp.connect();
+const tools = await mcp.getFrameworkTools();
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You have access to a sandboxed filesystem.',
+  tools,
+});
+
+await ai.run('Create a file /tmp/sandbox/hello.txt with content "Hello, world!"');
+await mcp.disconnect();
+```
+
+---
+
+## HTTP / SSE transport
+
+```ts
+const mcp = new McpClient({
+  transport: 'http',
+  url:       'https://mcp.example.com/sse',
+  headers:   { Authorization: `Bearer ${process.env.MCP_API_KEY}` },
+});
+
+await mcp.connect();
+const tools = await mcp.getFrameworkTools();
+```
+
+---
+
+## Tool discovery and filtering
+
+```ts
+// List all tools on the server
+const allTools = await mcp.listTools();
+console.log(allTools.map(t => t.name));
+
+// Filter to only the tools you need
+const filtered = await mcp.getFrameworkTools({
+  include: ['read_file', 'write_file', 'list_directory'],
+});
+
+// Exclude dangerous tools
+const safe = await mcp.getFrameworkTools({
+  exclude: ['delete_file', 'execute_command'],
+});
+```
+
+---
+
+## Multiple MCP servers
+
+Aggregate tools from several MCP servers:
+
+```ts
+import { McpClient } from 'confused-ai/workflow';
+
+const mcpFS = new McpClient({
+  transport: 'stdio',
+  command:   'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', '/workspace'],
+});
+
+const mcpGit = new McpClient({
+  transport: 'stdio',
+  command:   'npx', args: ['-y', '@modelcontextprotocol/server-github'],
+  env:       { GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_TOKEN! },
+});
+
+await Promise.all([mcpFS.connect(), mcpGit.connect()]);
+
+const ai = agent({
+  model: 'gpt-4o',
+  tools: [
+    ...(await mcpFS.getFrameworkTools()),
+    ...(await mcpGit.getFrameworkTools()),
+  ],
+});
+
+await ai.run('List open issues in my repo and save a summary to /workspace/issues.md');
+
+await Promise.all([mcpFS.disconnect(), mcpGit.disconnect()]);
+```
+
+---
+
+## Popular MCP servers
+
+| Server | npm package | Tools |
+|--------|-------------|-------|
+| Filesystem | `@modelcontextprotocol/server-filesystem` | read_file, write_file, list_dir |
+| GitHub | `@modelcontextprotocol/server-github` | Issues, PRs, code search |
+| PostgreSQL | `@modelcontextprotocol/server-postgres` | SQL queries |
+| Brave Search | `@modelcontextprotocol/server-brave-search` | Web search |
+| Google Drive | `@modelcontextprotocol/server-gdrive` | Files, docs, sheets |
+| Slack | `@modelcontextprotocol/server-slack` | Messages, channels |
+| Puppeteer | `@modelcontextprotocol/server-puppeteer` | Browser automation |
+| Memory | `@modelcontextprotocol/server-memory` | Knowledge graph |
+
+---
+
+## A2A — Agent-to-Agent protocol
+
+Call agents hosted on external services via the [Google A2A spec](https://google.github.io/A2A/):
+
+```ts
+import { createHttpA2AClient } from 'confused-ai/workflow';
+
+const a2a = createHttpA2AClient({
+  baseUrl: 'https://agents.example.com/a2a',
+  headers: { Authorization: `Bearer ${process.env.A2A_TOKEN}` },
+});
+
+// Discover remote agent capabilities
+const card = await a2a.getAgentCard('summariser');
+console.log(card.capabilities);
+
+// Send a task
+const reply = await a2a.send({
+  from:    'my-agent',
+  to:      'summariser',
+  type:    'request',
+  payload: { task: 'Summarise this document', text: longDoc },
+});
+
+console.log(reply.payload.summary);
+```
 
 ## Quick start
 

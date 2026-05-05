@@ -1,6 +1,135 @@
+---
+title: Session Management
+description: SQLite, in-memory, SQL, and Redis session stores — persist agent conversation history across restarts and deployments.
+outline: [2, 3]
+---
+
 # Session Management
 
-Sessions let agents maintain conversation history across multiple calls and process restarts.
+Sessions maintain conversation history across multiple `agent.run()` calls, server restarts, and deployments. Pass a `sessionId` to any run to resume an existing conversation.
+
+| Store | Class | Use case |
+|-------|-------|---------|
+| SQLite | `createSqliteSessionStore` | Single-server, local persistence |
+| In-memory | `InMemorySessionStore` | Dev / testing — not persistent |
+| SQL (generic) | `SqlSessionStore` | PostgreSQL, MySQL, any Knex-compatible DB |
+| Redis | `RedisSessionStore` | Multi-instance, distributed |
+
+---
+
+## SQLite — single server
+
+```ts
+import { agent } from 'confused-ai';
+import { createSqliteSessionStore } from 'confused-ai/session';
+
+const sessions = createSqliteSessionStore('./sessions.db');
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a helpful assistant.',
+  sessionStore: sessions,
+});
+
+// First call — starts conversation
+await ai.run('My project is called Orion.', { sessionId: 'user-alice' });
+
+// Later call — continues the same conversation
+const result = await ai.run('What is my project called?', { sessionId: 'user-alice' });
+console.log(result.text); // "Your project is called Orion."
+```
+
+---
+
+## In-memory — development
+
+```ts
+import { InMemorySessionStore } from 'confused-ai/session';
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: '...',
+  sessionStore: new InMemorySessionStore(),
+});
+```
+
+::: warning Not persistent
+`InMemorySessionStore` is cleared on process restart. Use SQLite or Redis for production.
+:::
+
+---
+
+## SQL (generic) — PostgreSQL / MySQL
+
+```ts
+import { SqlSessionStore } from 'confused-ai/session';
+import knex from 'knex';
+
+const db = knex({
+  client:     'pg',
+  connection: process.env.DATABASE_URL,
+});
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: '...',
+  sessionStore: new SqlSessionStore({
+    db,
+    tableName: 'agent_sessions',  // auto-created if missing
+  }),
+});
+```
+
+---
+
+## Redis — multi-instance
+
+```ts
+import { RedisSessionStore } from 'confused-ai/session';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL!);
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: '...',
+  sessionStore: new RedisSessionStore({
+    client: redis,
+    ttlMs:  7 * 24 * 60 * 60 * 1000,  // 7-day expiry (optional)
+    prefix: 'session:',
+  }),
+});
+```
+
+---
+
+## Direct session operations
+
+Read and manage sessions programmatically:
+
+```ts
+// Get all messages in a session
+const messages = await sessions.getMessages('user-alice');
+
+// Clear a session (e.g. when a user requests history deletion)
+await sessions.clearSession('user-alice');
+
+// Delete a session entirely
+await sessions.deleteSession('user-alice');
+
+// List active sessions
+const allSessions = await sessions.listSessions();
+```
+
+---
+
+## Session options on `run()`
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `sessionId` | `string` | Resumes or creates a session with this ID |
+| `maxHistoryMessages` | `number` | Truncate history to N messages (default: unlimited) |
+| `systemMessage` | `string` | Override instructions for this run only |
 
 ## Quick start
 

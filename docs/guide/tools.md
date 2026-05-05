@@ -1,6 +1,584 @@
+---
+title: Built-in Tools
+description: 100+ production-ready tools in 12 categories. Every tool is Zod-validated and tree-shakeable.
+outline: [2, 3]
+---
+
 # Built-in Tools
 
-confused-ai ships **70+ production-ready tools** organized into categories. Every tool uses the same interface — plug any of them into `agent()` via the `tools:` option.
+confused-ai ships **100+ production-ready tools** organised into 12 categories. Every tool is Zod-validated, security-hardened, and tree-shakeable.
+
+## Import strategy
+
+```ts
+// Option A — import everything (simple, works for prototypes)
+import { TavilySearchTool, GitHubToolkit } from 'confused-ai';
+
+// Option B — category subpaths (tree-shake to only what you use)
+import { TavilySearchTool, ExaToolkit }    from 'confused-ai/tools/search';
+import { SlackToolkit, GmailToolkit }       from 'confused-ai/tools/communication';
+import { GitHubToolkit, DockerToolkit }     from 'confused-ai/tools/devtools';
+import { ClickUpToolkit, NotionToolkit }    from 'confused-ai/tools/productivity';
+import { DatabaseToolkit, Neo4jToolkit }    from 'confused-ai/tools/data';
+import { StripeToolkit }                    from 'confused-ai/tools/finance';
+import { ShellTool }                        from 'confused-ai/tools/shell'; // ⚠️ security review required
+```
+
+## Quick example
+
+```ts
+import { agent } from 'confused-ai';
+import { TavilySearchTool, GitHubToolkit, CalculatorToolkit } from 'confused-ai';
+
+const researchBot = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a research assistant.',
+  tools: [
+    new TavilySearchTool({ apiKey: process.env.TAVILY_API_KEY }),
+    ...GitHubToolkit.create({ token: process.env.GITHUB_TOKEN }),
+    ...CalculatorToolkit.create(),
+  ],
+});
+
+const result = await researchBot.run('How many stars does the TypeScript repo have?');
+```
+
+---
+
+## Tool categories
+
+| # | Category | Tools |
+|---|---------|-------|
+| 1 | [Web & Browser](#web-browser) | HTTP, Playwright, file R/W |
+| 2 | [Web Search](#web-search) | DuckDuckGo, Tavily, Wikipedia, Exa, SerpApi, arXiv |
+| 3 | [Communication](#communication) | Slack, Discord, Telegram, Email (SMTP/SendGrid), Twilio |
+| 4 | [Developer Tools](#developer-tools) | GitHub, Docker, JS executor, Shell |
+| 5 | [Productivity](#productivity) | Jira, Notion, Linear, ClickUp, Confluence, Google Calendar/Sheets |
+| 6 | [Email & Calendar](#email-calendar) | Gmail, Google Calendar, Todoist, Trello |
+| 7 | [Databases](#databases) | PostgreSQL, MySQL, SQLite, Redis, Neo4j |
+| 8 | [Data & Finance](#data-finance) | CSV, Stripe, Yahoo Finance, OpenWeather |
+| 9 | [AI & APIs](#ai-apis) | OpenAI, Firecrawl, Google Maps, Spotify |
+| 10 | [Scraping](#scraping) | Hacker News, Wikipedia, arXiv |
+| 11 | [Calculator & Utilities](#calculator-utilities) | Math, UUID, date/time |
+| 12 | [Shell (⚠️ privileged)](#shell-privileged) | System commands |
+
+---
+
+## Web & Browser {#web-browser}
+
+### `HttpClientTool`
+
+SSRF-protected HTTP client (GET, POST, PUT, PATCH, DELETE). Private IP ranges blocked by default.
+
+```ts
+import { HttpClientTool } from 'confused-ai';
+
+const ai = agent({
+  tools: [
+    new HttpClientTool({
+      allowedHosts:         ['api.github.com', 'api.openai.com'],  // allowlist
+      blockPrivateNetworks: true,  // default: true (SSRF protection)
+    }),
+  ],
+});
+
+await ai.run('GET https://api.github.com/repos/microsoft/typescript and report the star count');
+```
+
+### `BrowserTool`
+
+Fetches a URL and extracts title, visible text, and links. No headless browser required.
+
+```ts
+import { BrowserTool } from 'confused-ai';
+
+const ai = agent({ tools: [new BrowserTool()] });
+await ai.run('Summarise the homepage of https://typescriptlang.org');
+```
+
+### `PlaywrightPageTitleTool`
+
+Full headless browser for JavaScript-heavy pages. Requires `playwright` peer dep.
+
+```ts
+import { PlaywrightPageTitleTool } from 'confused-ai';
+
+const ai = agent({ tools: [new PlaywrightPageTitleTool()] });
+await ai.run('What is the title of https://app.example.com/dashboard after login?');
+```
+
+### `WriteFileTool` / `ReadFileTool`
+
+Read and write files within a sandboxed base directory.
+
+```ts
+import { WriteFileTool, ReadFileTool } from 'confused-ai';
+
+const ai = agent({
+  tools: [
+    new ReadFileTool({ baseDir: './data' }),
+    new WriteFileTool({ baseDir: './output' }),
+  ],
+});
+
+await ai.run('Read report.csv, summarise it, then save the summary to summary.md');
+```
+
+---
+
+## Web Search {#web-search}
+
+### `DuckDuckGoSearchTool` / `DuckDuckGoNewsTool`
+
+Free web search and news — no API key required.
+
+```ts
+import { DuckDuckGoSearchTool, DuckDuckGoNewsTool } from 'confused-ai';
+
+const ai = agent({ tools: [new DuckDuckGoSearchTool(), new DuckDuckGoNewsTool()] });
+await ai.run('What are the top stories about TypeScript 5.5 today?');
+```
+
+### `TavilySearchTool` / `TavilyExtractTool`
+
+AI-optimised web search and content extraction. Best for research-heavy agents.
+
+```ts
+import { TavilyToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: TavilyToolkit.create({ apiKey: process.env.TAVILY_API_KEY }),
+});
+await ai.run('Find the latest GPT-4o vs Claude 3.5 Sonnet benchmarks');
+```
+
+### `WikipediaSearchTool`
+
+Search and retrieve Wikipedia articles.
+
+```ts
+import { WikipediaSearchTool } from 'confused-ai';
+const ai = agent({ tools: [new WikipediaSearchTool()] });
+await ai.run('What is the history of the Byzantine Empire?');
+```
+
+### `HackerNewsToolkit`
+
+Browse HN top stories and user profiles.
+
+```ts
+import { HackerNewsToolkit } from 'confused-ai';
+const ai = agent({ tools: HackerNewsToolkit.create() });
+await ai.run('What are the top 5 stories on Hacker News right now?');
+```
+
+### `ArxivToolkit`
+
+Search and retrieve academic papers.
+
+```ts
+import { ArxivToolkit } from 'confused-ai';
+const ai = agent({ tools: ArxivToolkit.create() });
+await ai.run('Find recent papers on mixture-of-experts transformer architectures');
+```
+
+### `SerpApiToolkit`
+
+Google Search and YouTube via SerpAPI.
+
+```ts
+import { SerpApiToolkit } from 'confused-ai';
+const ai = agent({ tools: SerpApiToolkit.create({ apiKey: process.env.SERPAPI_KEY }) });
+```
+
+### `ExaToolkit`
+
+Neural search with content fetching.
+
+```ts
+import { ExaToolkit } from 'confused-ai';
+const ai = agent({ tools: ExaToolkit.create({ apiKey: process.env.EXA_API_KEY }) });
+await ai.run('Find pages similar to https://react.dev with their full content');
+```
+
+---
+
+## Communication {#communication}
+
+### Slack
+
+```ts
+import { SlackToolkit } from 'confused-ai';
+
+const ai = agent({ tools: SlackToolkit.create({ token: process.env.SLACK_BOT_TOKEN }) });
+await ai.run('Send "Deployment succeeded ✅" to the #deployments channel');
+```
+
+Available: `SlackSendMessageTool`, `SlackListChannelsTool`, `SlackGetChannelHistoryTool`
+
+### Discord
+
+```ts
+import { DiscordToolkit } from 'confused-ai';
+const ai = agent({ tools: DiscordToolkit.create({ token: process.env.DISCORD_BOT_TOKEN }) });
+```
+
+Available: `DiscordSendMessageTool`, `DiscordGetMessagesTool`, `DiscordCreateChannelTool`, `DiscordDeleteMessageTool`, `DiscordListMembersTool`
+
+### Email — SMTP / SendGrid
+
+```ts
+import { SmtpEmailTool, SendGridEmailTool } from 'confused-ai';
+
+// SMTP
+const smtpAgent = agent({
+  tools: [new SmtpEmailTool({ host: 'smtp.gmail.com', port: 587,
+    user: process.env.SMTP_USER, pass: process.env.SMTP_PASS })],
+});
+
+// SendGrid
+const sgAgent = agent({
+  tools: [new SendGridEmailTool({ apiKey: process.env.SENDGRID_API_KEY })],
+});
+await sgAgent.run('Email hello@example.com: subject "Weekly Report", body with Q1 summary');
+```
+
+### Telegram
+
+```ts
+import { TelegramToolkit } from 'confused-ai';
+const ai = agent({ tools: TelegramToolkit.create({ botToken: process.env.TELEGRAM_BOT_TOKEN }) });
+```
+
+### Twilio (SMS / Voice)
+
+```ts
+import { TwilioToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: TwilioToolkit.create({
+    accountSid: process.env.TWILIO_ACCOUNT_SID,
+    authToken:  process.env.TWILIO_AUTH_TOKEN,
+    fromNumber: process.env.TWILIO_FROM_NUMBER,
+  }),
+});
+await ai.run('Send SMS to +14155552671: "Your order has shipped!"');
+```
+
+Available: `TwilioSendSmsTool`, `TwilioMakeCallTool`
+
+---
+
+## Developer Tools {#developer-tools}
+
+### GitHub
+
+```ts
+import { GitHubToolkit } from 'confused-ai';
+
+const ai = agent({ tools: GitHubToolkit.create({ token: process.env.GITHUB_TOKEN }) });
+await ai.run('List all open issues labelled "bug" in microsoft/typescript');
+```
+
+Available: `GitHubSearchRepositoriesTool`, `GitHubGetRepositoryTool`, `GitHubListIssuesTool`, `GitHubCreateIssueTool`, `GitHubListPullRequestsTool`
+
+### Docker
+
+```ts
+import { DockerToolkit } from 'confused-ai';
+const ai = agent({ tools: DockerToolkit.create() });
+await ai.run('List all running containers and their exposed ports');
+```
+
+### `JavaScriptExecTool`
+
+Execute JavaScript/TypeScript in a sandboxed VM. Useful for code generation + execution loops.
+
+```ts
+import { JavaScriptExecTool } from 'confused-ai';
+
+const ai = agent({
+  tools: [new JavaScriptExecTool({ timeout: 5000 })],
+});
+await ai.run('Calculate the 10,000th Fibonacci number');
+```
+
+---
+
+## Productivity {#productivity}
+
+### Jira
+
+```ts
+import { JiraToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: JiraToolkit.create({
+    host:     'https://your-org.atlassian.net',
+    email:    process.env.JIRA_EMAIL,
+    apiToken: process.env.JIRA_API_TOKEN,
+  }),
+});
+await ai.run('Create a bug ticket: "Login fails when email contains a + sign"');
+```
+
+Available: `JiraGetIssueTool`, `JiraCreateIssueTool`, `JiraSearchIssuesTool`, `JiraAddCommentTool`
+
+### Notion
+
+```ts
+import { NotionToolkit } from 'confused-ai';
+
+const ai = agent({ tools: NotionToolkit.create({ apiKey: process.env.NOTION_API_KEY }) });
+await ai.run('Create a Notion page "Sprint 42 Retrospective" with a summary');
+```
+
+Available: `NotionCreatePageTool`, `NotionSearchTool`, `NotionUpdatePageTool`
+
+### Linear
+
+```ts
+import { LinearToolkit } from 'confused-ai';
+const ai = agent({ tools: LinearToolkit.create({ apiKey: process.env.LINEAR_API_KEY }) });
+```
+
+Available: `LinearCreateIssueTool`, `LinearGetIssueTool`, `LinearSearchIssuesTool`, `LinearUpdateIssueTool`, `LinearAddCommentTool`, `LinearListTeamsTool`
+
+### ClickUp
+
+```ts
+import { ClickUpToolkit } from 'confused-ai';
+const ai = agent({ tools: ClickUpToolkit.create({ apiKey: process.env.CLICKUP_API_KEY }) });
+await ai.run('List all overdue tasks in my ClickUp workspace');
+```
+
+Available: `ClickUpGetTasksTool`, `ClickUpCreateTaskTool`, `ClickUpUpdateTaskTool`, `ClickUpSearchTasksTool`, and 4 more
+
+### Confluence
+
+```ts
+import { ConfluenceToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: ConfluenceToolkit.create({
+    host:     'https://your-org.atlassian.net',
+    email:    process.env.CONFLUENCE_EMAIL,
+    apiToken: process.env.CONFLUENCE_API_TOKEN,
+  }),
+});
+await ai.run('Search Confluence for onboarding process pages');
+```
+
+### Google Calendar / Sheets
+
+```ts
+import { GoogleCalendarToolkit, GoogleSheetsToolkit } from 'confused-ai';
+
+const calAgent = agent({
+  tools: GoogleCalendarToolkit.create({ accessToken: process.env.GOOGLE_ACCESS_TOKEN }),
+});
+await calAgent.run('Schedule "Sprint Planning" for next Monday at 10am, 30 minutes');
+
+const sheetAgent = agent({
+  tools: GoogleSheetsToolkit.create({ accessToken: process.env.GOOGLE_ACCESS_TOKEN }),
+});
+await sheetAgent.run('Read A1:D10 from spreadsheet 1BxiMVs...');
+```
+
+---
+
+## Email & Calendar {#email-calendar}
+
+### Gmail
+
+```ts
+import { GmailToolkit } from 'confused-ai';
+const ai = agent({ tools: GmailToolkit.create({ accessToken: process.env.GMAIL_ACCESS_TOKEN }) });
+await ai.run('List the 5 most recent unread emails');
+```
+
+Available: `GmailListMessagesTool`, `GmailGetMessageTool`, `GmailSendEmailTool`, `GmailSearchMessagesTool`, and 2 more
+
+### Trello / Todoist
+
+```ts
+import { TrelloToolkit, TodoistToolkit } from 'confused-ai';
+
+const trello = agent({
+  tools: TrelloToolkit.create({ apiKey: process.env.TRELLO_API_KEY, token: process.env.TRELLO_TOKEN }),
+});
+await trello.run('Create a card "Fix login bug" in the Backlog list');
+
+const todoist = agent({ tools: TodoistToolkit.create({ apiToken: process.env.TODOIST_API_TOKEN }) });
+await todoist.run('Add task: "Review PR #142" due tomorrow, priority 2');
+```
+
+---
+
+## Databases {#databases}
+
+### PostgreSQL / MySQL / SQLite
+
+```ts
+import { DatabaseToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: DatabaseToolkit.create({
+    type:             'postgres',
+    connectionString: process.env.DATABASE_URL,
+  }),
+});
+await ai.run('How many users signed up in the last 7 days?');
+```
+
+Available: `PostgreSQLQueryTool`, `PostgreSQLInsertTool`, `MySQLQueryTool`, `SQLiteQueryTool`
+
+### Redis
+
+```ts
+import { RedisToolkit } from 'confused-ai';
+
+const ai = agent({ tools: RedisToolkit.create({ url: process.env.REDIS_URL }) });
+await ai.run('Check the cache key "feature_flags" and tell me its value');
+```
+
+Available: `RedisGetTool`, `RedisSetTool`, `RedisDeleteTool`, `RedisKeysTool`, `RedisHashGetTool`, `RedisIncrTool`
+
+### Neo4j
+
+```ts
+import { Neo4jToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: Neo4jToolkit.create({
+    uri:      process.env.NEO4J_URI,
+    username: process.env.NEO4J_USERNAME,
+    password: process.env.NEO4J_PASSWORD,
+  }),
+});
+await ai.run('Find all people connected to Alice within 2 hops');
+```
+
+Available: `Neo4jRunCypherTool`, `Neo4jCreateNodeTool`, `Neo4jCreateRelationshipTool`, `Neo4jFindNodesTool`, and 2 more
+
+---
+
+## Data & Finance {#data-finance}
+
+### CSV
+
+```ts
+import { CsvToolkit } from 'confused-ai';
+
+const ai = agent({ tools: CsvToolkit.create() });
+await ai.run(`
+  Parse this CSV, filter rows where status = active,
+  then sum the revenue column:
+  id,name,status,revenue
+  1,Alice,active,4200
+  2,Bob,inactive,1800
+  3,Carol,active,3100
+`);
+```
+
+Available: `CsvParseTool`, `CsvFilterTool`, `CsvSortTool`, `CsvAggregateTool`, `CsvToJsonTool`
+
+### Stripe
+
+```ts
+import { StripeToolkit } from 'confused-ai';
+
+const ai = agent({ tools: StripeToolkit.create({ secretKey: process.env.STRIPE_SECRET_KEY }) });
+await ai.run('Create a payment intent for $49.99 USD for customer cus_abc123');
+```
+
+Available: `StripeCreateCustomerTool`, `StripeCreatePaymentIntentTool`, `StripeCreateSubscriptionTool`, `StripeCancelSubscriptionTool`, `StripeRefundTool`
+
+### Yahoo Finance / OpenWeather
+
+```ts
+import { YFinanceTool } from 'confused-ai';
+import { OpenWeatherToolkit } from 'confused-ai';
+
+const financeAi = agent({ tools: [new YFinanceTool()] });
+await financeAi.run('What is the current stock price and PE ratio for NVDA?');
+
+const weatherAi = agent({
+  tools: OpenWeatherToolkit.create({ apiKey: process.env.OPENWEATHER_API_KEY }),
+});
+await weatherAi.run('5-day weather forecast for San Francisco');
+```
+
+---
+
+## AI & APIs {#ai-apis}
+
+### Firecrawl
+
+```ts
+import { FirecrawlToolkit } from 'confused-ai';
+
+const ai = agent({ tools: FirecrawlToolkit.create({ apiKey: process.env.FIRECRAWL_API_KEY }) });
+await ai.run('Scrape the pricing page at https://example.com/pricing and extract all plan details');
+```
+
+Available: `FirecrawlScrapeTool`, `FirecrawlCrawlTool`, `FirecrawlMapTool`
+
+### Google Maps
+
+```ts
+import { GoogleMapsToolkit } from 'confused-ai';
+
+const ai = agent({
+  tools: GoogleMapsToolkit.create({ apiKey: process.env.GOOGLE_MAPS_API_KEY }),
+});
+await ai.run('Find top 5 coffee shops near the Eiffel Tower with directions from the nearest Metro');
+```
+
+Available: `GoogleMapsSearchPlacesTool`, `GoogleMapsGeocodeTool`, `GoogleMapsDirectionsTool`, `GoogleMapsPlaceDetailsTool`
+
+### Spotify
+
+```ts
+import { SpotifyToolkit } from 'confused-ai';
+
+const ai = agent({ tools: SpotifyToolkit.create({ accessToken: process.env.SPOTIFY_ACCESS_TOKEN }) });
+await ai.run('Search for jazz playlists and start playing the top result');
+```
+
+Available: `SpotifySearchTool`, `SpotifyGetTrackTool`, `SpotifyPlayTool`, `SpotifyPauseTool`, `SpotifySkipTool`, and more
+
+---
+
+## Calculator & Utilities {#calculator-utilities}
+
+```ts
+import { CalculatorToolkit } from 'confused-ai';
+
+const ai = agent({ tools: CalculatorToolkit.create() });
+await ai.run('What is the compound interest on $10,000 at 5% annually for 10 years?');
+```
+
+---
+
+## Shell (⚠️ privileged) {#shell-privileged}
+
+::: danger Security warning
+`ShellTool` executes arbitrary shell commands. Only use in trusted, sandboxed environments. Never expose to untrusted user input.
+:::
+
+```ts
+import { ShellTool } from 'confused-ai/tools/shell';
+
+const ai = agent({
+  tools: [
+    new ShellTool({
+      allowedCommands: ['ls', 'cat', 'grep', 'find'],  // strict allowlist
+      cwd: '/safe/sandbox/dir',
+    }),
+  ],
+});
+```
 
 All tools are available from the main `confused-ai` import. You can also import by category subpath for better tree-shaking:
 

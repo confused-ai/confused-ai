@@ -1,8 +1,401 @@
+---
+title: API Reference
+description: Complete API reference for confused-ai — all classes, functions, types, and options indexed by package.
+outline: [2, 3]
+---
+
 # API Reference
 
-Full API reference for all confused-ai modules.
+Complete reference for all confused-ai packages. Each entry links to the detailed guide where real examples are available.
 
-## Run result (`AgenticRunResult`)
+---
+
+## Core — `confused-ai`
+
+### `agent(options)` → `Agent`
+
+Create an agent with the config-object API (most common).
+
+```ts
+import { agent } from 'confused-ai';
+
+const ai = agent({
+  model:        'gpt-4o',
+  instructions: 'You are a helpful assistant.',
+  tools:        [],
+  memory:       undefined,
+  sessionStore: undefined,
+  knowledge:    undefined,
+  guardrails:   undefined,
+  observe:      undefined,
+  hooks:        {},
+  maxSteps:     10,
+  temperature:  0.7,
+  budget:       { maxUsdPerRun: 0.50 },
+});
+```
+
+→ See [Agents guide](/guide/agents)
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `model` | `string \| LLMProvider` | Model name or provider instance |
+| `instructions` | `string` | System prompt |
+| `tools` | `LightweightTool[]` | Tools available to the LLM |
+| `memory` | `MemoryStore` | Cross-session memory backend |
+| `sessionStore` | `SessionStore` | Conversation history backend |
+| `knowledge` | `KnowledgeEngine` | RAG / vector knowledge base |
+| `guardrails` | `GuardrailEngine \| false` | Input/output safety validators |
+| `observe` | `Observer` | Logging, tracing, metrics |
+| `hooks` | `AgentHooks` | Lifecycle callbacks |
+| `maxSteps` | `number` | Max tool-call iterations (default: 10) |
+| `temperature` | `number` | LLM temperature (default: 0.7) |
+| `budget` | `BudgetOptions` | USD spend limits |
+
+### `agent.run(input, options?)` → `Promise<AgenticRunResult>`
+
+```ts
+const result = await ai.run('What is 2 + 2?', {
+  sessionId:   'my-session',
+  userId:      'user-001',
+  runId:       'run-abc',
+  metadata:    { source: 'api' },
+  temperature: 0.2,
+  maxSteps:    5,
+});
+
+result.text;      // string — the agent's final response
+result.runId;     // string — unique run identifier
+result.steps;     // ToolCallStep[] — all tool calls made
+result.usage;     // { inputTokens, outputTokens, totalTokens }
+result.messages;  // Message[] — full conversation
+```
+
+### `agent.stream(input, options?)` → `AsyncIterable<StreamChunk>`
+
+```ts
+for await (const chunk of ai.stream('Write a 3-paragraph essay')) {
+  process.stdout.write(chunk.text ?? '');
+}
+```
+
+### `defineAgent()` — builder API
+
+```ts
+import { defineAgent } from 'confused-ai';
+
+const ai = defineAgent()
+  .model('gpt-4o')
+  .instructions('...')
+  .tools([tool1, tool2])
+  .memory(myMemory)
+  .sessionStore(myStore)
+  .knowledge(myKnowledge)
+  .guardrails(myGuardrails)
+  .observe(myLogger)
+  .budget({ maxUsdPerRun: 0.50 })
+  .maxSteps(15)
+  .temperature(0.3)
+  .build();
+```
+
+→ See [Agents guide — builder API](/guide/agents#defineagent-builder)
+
+### `createAgent(options)` → `Agent`
+
+Mastra-compatible alias for `agent()`.
+
+### `bare(options)` → `Agent`
+
+Minimal agent with no default subsystems enabled.
+
+---
+
+## Tools — `confused-ai`
+
+### `defineTool()` → builder
+
+```ts
+import { defineTool } from 'confused-ai';
+import { z } from 'zod';
+
+const myTool = defineTool()
+  .name('myTool')
+  .description('What it does')
+  .parameters(z.object({ query: z.string() }))
+  .execute(async ({ query }) => ({ result: 'ok' }))
+  .timeout(10_000)
+  .approval(true)
+  .build();
+```
+
+### `tool(config)` → `LightweightTool`
+
+Config-object shorthand.
+
+### `createTool(config)` → `LightweightTool`
+
+Alias of `tool()`.
+
+### `createTools(map)` → `Record<string, LightweightTool>`
+
+Batch tool factory.
+
+→ See [Custom Tools guide](/guide/custom-tools)
+
+---
+
+## Models — `confused-ai/model`
+
+### Model shorthand strings
+
+```ts
+'gpt-4o'           // → OpenAI gpt-4o (default)
+'gpt-4o-mini'
+'o1'
+'o3-mini'
+'claude-opus-4-5'
+'claude-sonnet-4-5'
+'claude-haiku-3-5'
+'gemini-2.5-pro'
+'gemini-2.0-flash'
+```
+
+### `createFallbackChain(models)`
+
+```ts
+import { createFallbackChain } from 'confused-ai/model';
+const llm = createFallbackChain([{ model: 'gpt-4o' }, { model: 'claude-opus-4-5' }]);
+```
+
+---
+
+## Guardrails — `confused-ai/guardrails`
+
+| Export | Description |
+|--------|-------------|
+| `createGuardrails(options)` | Create a `GuardrailEngine` |
+| `createPiiDetectionRule(opts)` | Detect PII in input |
+| `createPromptInjectionRule(opts)` | Block jailbreak attempts |
+| `createOpenAiModerationRule(opts)` | OpenAI Moderation API |
+| `detectPii(text)` | Standalone PII check |
+
+→ See [Guardrails guide](/guide/guardrails)
+
+---
+
+## Production — `confused-ai/guard`
+
+| Export | Description |
+|--------|-------------|
+| `withResilience(agent, opts)` | Wrap agent with circuit breaker + rate limit + retry |
+| `RedisRateLimiter` | Distributed rate limiting |
+| `HealthMonitor` | Fleet-level agent health |
+| `createSqliteApprovalStore(path)` | HITL approval store (SQLite) |
+| `waitForApproval(opts)` | Pause run until approved |
+
+→ See [Production guide](/guide/production) · [HITL guide](/guide/hitl)
+
+---
+
+## Observability — `confused-ai/observe`
+
+| Export | Description |
+|--------|-------------|
+| `ConsoleLogger` | Development stdout logger |
+| `OtlpExporter` | OpenTelemetry OTLP exporter |
+| `Metrics` | Prometheus metrics |
+| `LangfuseExporter` | Langfuse integration |
+| `LangSmithExporter` | LangSmith integration |
+| `stackExporters(...obs)` | Combine multiple observers |
+| `runLlmAsJudge(opts)` | LLM-as-judge evaluation |
+| `EvalAggregator` | Batch evaluation aggregator |
+
+→ See [Observability guide](/guide/observability)
+
+---
+
+## Knowledge / RAG — `confused-ai/knowledge`
+
+| Export | Description |
+|--------|-------------|
+| `KnowledgeEngine` | Main RAG engine |
+| `TextLoader` | Load plain text |
+| `JSONLoader` | Load JSON documents |
+| `CSVLoader` | Load CSV data |
+| `URLLoader` | Fetch and index web pages |
+| `InMemoryVectorStore` | Dev vector store |
+| `PineconeVectorStore` | Pinecone backend |
+| `QdrantVectorStore` | Qdrant backend |
+| `PgVectorStore` | PostgreSQL pgvector backend |
+| `OpenAIEmbeddingProvider` | OpenAI embeddings |
+
+→ See [RAG guide](/guide/rag)
+
+---
+
+## Memory — `confused-ai/memory`
+
+| Export | Description |
+|--------|-------------|
+| `InMemoryStore` | Key-value memory (dev) |
+| `VectorMemoryStore` | Semantic memory with vector backend |
+| `OpenAIEmbeddingProvider` | OpenAI embeddings for memory |
+| `PineconeVectorStore` | Pinecone backend |
+| `QdrantVectorStore` | Qdrant backend |
+| `PgVectorStore` | pgvector backend |
+
+→ See [Memory guide](/guide/memory)
+
+---
+
+## Session — `confused-ai/session`
+
+| Export | Description |
+|--------|-------------|
+| `createSqliteSessionStore(path)` | SQLite session store |
+| `InMemorySessionStore` | In-memory (dev) |
+| `SqlSessionStore` | Generic SQL (Knex) |
+| `RedisSessionStore` | Redis-backed |
+
+→ See [Session guide](/guide/session)
+
+---
+
+## Orchestration — `confused-ai/workflow`
+
+| Export | Description |
+|--------|-------------|
+| `compose(...agents)` | Serial pipeline |
+| `AgentRouter` | Capability-based routing |
+| `createHandoff(opts)` | Delegate mid-run |
+| `ConsensusProtocol` | Multi-agent voting |
+| `createSupervisor(opts)` | Coordinator + worker team |
+| `createSwarm(opts)` | Peer-to-peer handoffs |
+| `MessageBusImpl` | Pub/sub between agents |
+| `RoundRobinLoadBalancer` | Distribute across instances |
+| `McpClient` | MCP server client |
+| `createHttpA2AClient(opts)` | Agent-to-Agent HTTP client |
+
+→ See [Orchestration guide](/guide/orchestration) · [MCP guide](/guide/mcp)
+
+---
+
+## Workflows — `confused-ai/execution`
+
+| Export | Description |
+|--------|-------------|
+| `createWorkflow(opts)` | Create a typed multi-step workflow |
+| `createStep(opts)` | Define a single typed step |
+| `parallel(steps)` | Fan-out step group |
+| `branch(opts)` | Conditional routing |
+| `suspend(ctx, opts)` | Pause workflow until resumed |
+
+→ See [Workflows guide](/guide/workflows)
+
+---
+
+## Graph — `confused-ai/graph`
+
+| Export | Description |
+|--------|-------------|
+| `createGraph(opts)` | Define a DAG |
+| `DAGEngine` | Execute DAGs |
+| `NodeKind` | AGENT, TOOL, TRANSFORM, CONDITION, PARALLEL, JOIN |
+
+→ See [Graph guide](/guide/graph)
+
+---
+
+## Voice — `confused-ai/voice`
+
+| Export | Description |
+|--------|-------------|
+| `createVoiceProvider(provider)` | Create a voice provider |
+| `OpenAIVoiceProvider` | OpenAI TTS + STT |
+| `ElevenLabsVoiceProvider` | ElevenLabs TTS |
+
+→ See [Voice guide](/guide/voice)
+
+---
+
+## Background — `confused-ai/background`
+
+| Export | Description |
+|--------|-------------|
+| `queueHook(queue, name, mapper)` | Create a hook that enqueues work |
+| `InMemoryBackgroundQueue` | Dev queue |
+| `BullMQBackgroundQueue` | Redis-backed BullMQ queue |
+| `KafkaBackgroundQueue` | Kafka queue |
+| `RabbitMQBackgroundQueue` | RabbitMQ queue |
+| `SQSBackgroundQueue` | AWS SQS queue |
+
+→ See [Background Queues guide](/guide/background-queues)
+
+---
+
+## Reasoning — `confused-ai`
+
+| Export | Description |
+|--------|-------------|
+| `ReasoningManager` | Chain-of-Thought reasoning loop |
+| `ReasoningEventType` | Event enum (STEP_COMPLETE, FINAL_ANSWER, …) |
+
+→ See [Reasoning guide](/guide/reasoning)
+
+---
+
+## Scheduler — `confused-ai`
+
+| Export | Description |
+|--------|-------------|
+| `ScheduleManager` | Cron-based job scheduler |
+| `validateCronExpr(expr)` | Validate a cron expression |
+| `computeNextRun(expr, opts)` | Compute upcoming run times |
+
+→ See [Scheduler guide](/guide/scheduler)
+
+---
+
+## Learning Machine — `confused-ai`
+
+| Export | Description |
+|--------|-------------|
+| `LearningMachine` | Five-store learning coordinator |
+| `InMemoryUserProfileStore` | In-memory user profiles |
+| `InMemoryUserMemoryStore` | In-memory user memories |
+| `InMemorySessionContextStore` | In-memory session context |
+| `InMemoryEntityMemoryStore` | In-memory entity memory |
+| `InMemoryLearnedKnowledgeStore` | In-memory learned knowledge |
+
+→ See [Learning Machine guide](/guide/learning-machine)
+
+---
+
+## HTTP Service — `confused-ai/serve`
+
+| Export | Description |
+|--------|-------------|
+| `createHttpService(opts)` | Create an Express HTTP server exposing agents |
+
+```ts
+import { createHttpService } from 'confused-ai/serve';
+
+const server = createHttpService({
+  agents:        { assistant: ai },
+  approvalStore: myApprovalStore,
+  port:          3000,
+});
+server.listen();
+```
+
+Routes exposed:
+- `POST /v1/agents/:name/run`
+- `POST /v1/agents/:name/stream`
+- `GET  /v1/approvals`
+- `POST /v1/approvals/:id/approve`
+- `POST /v1/approvals/:id/reject`
+- `GET  /health`
 
 Every `agent.run()` call returns this object:
 
