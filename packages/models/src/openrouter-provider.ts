@@ -24,6 +24,6 @@ export function createOpenRouterProvider(config: OpenRouterProviderConfig): LLMP
     return new OpenAIProvider({
         apiKey: config.apiKey,
         baseURL: OPENROUTER_BASE_URL,
-        model: config.model ?? ((typeof process !== 'undefined' && process.env?.OPENROUTER_MODEL) || 'qwen/qwen3.6-plus:free'),
+        model: config.model ?? ((typeof process !== 'undefined' && process.env?.['OPENROUTER_MODEL']) || 'qwen/qwen3.6-plus:free'),
     });
 }

@@ -83,8 +83,8 @@ export interface ShellToolConfig extends Partial<Omit<BaseToolConfig<typeof Shel
  * - Lazy child_process loading (no supply chain contamination)
  */
 export class ShellTool extends BaseTool<typeof ShellCommandParameters, ShellResult> {
-    private baseDir?: string;
-    private allowedCommands?: string[];
+    private baseDir: string | undefined;
+    private allowedCommands: string[] | undefined;
     private blockedCommands: string[];
     private blockedPatterns: RegExp[];
     private sanitizeEnv: boolean;
@@ -202,13 +202,13 @@ export class ShellTool extends BaseTool<typeof ShellCommandParameters, ShellResu
 
             // Sanitize environment: only pass safe env vars
             if (this.sanitizeEnv) {
-                execOptions.env = {
-                    PATH: process.env.PATH,
-                    HOME: process.env.HOME,
-                    USER: process.env.USER,
-                    SHELL: process.env.SHELL,
-                    LANG: process.env.LANG,
-                    TERM: process.env.TERM,
+                execOptions['env'] = {
+                    PATH: process.env['PATH'],
+                    HOME: process.env['HOME'],
+                    USER: process.env['USER'],
+                    SHELL: process.env['SHELL'],
+                    LANG: process.env['LANG'],
+                    TERM: process.env['TERM'],
                 };
             }
 

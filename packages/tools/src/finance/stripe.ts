@@ -30,7 +30,7 @@ interface StripeClient {
 }
 
 function getClient(config: StripeToolConfig): StripeClient {
-    const key = config.secretKey ?? process.env.STRIPE_SECRET_KEY;
+    const key = config.secretKey ?? process.env['STRIPE_SECRET_KEY'];
     if (!key) throw new Error('StripeTools require STRIPE_SECRET_KEY');
     const Stripe = require('stripe') as (k: string, o: object) => StripeClient;
     return Stripe(key, { apiVersion: '2024-12-18.acacia' });

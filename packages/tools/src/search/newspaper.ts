@@ -94,11 +94,11 @@ export class GetNewsArticleTool extends BaseTool<typeof GetArticleSchema, {
 
         return {
             url: input.url,
-            title: titleMatch?.[1],
-            description: descMatch?.[1],
             content,
-            publishedAt: publishedMatch?.[1],
-            source: sourceMatch?.[1],
+            ...(titleMatch?.[1] !== undefined && { title: titleMatch[1] }),
+            ...(descMatch?.[1] !== undefined && { description: descMatch[1] }),
+            ...(publishedMatch?.[1] !== undefined && { publishedAt: publishedMatch[1] }),
+            ...(sourceMatch?.[1] !== undefined && { source: sourceMatch[1] }),
         };
     }
 }
@@ -126,7 +126,7 @@ export class SearchNewsTool extends BaseTool<typeof SearchArticlesSchema, {
     }
 
     protected async performExecute(input: z.infer<typeof SearchArticlesSchema>, _ctx: ToolContext) {
-        const key = this.config.newsApiKey ?? process.env.NEWS_API_KEY;
+        const key = this.config.newsApiKey ?? process.env['NEWS_API_KEY'];
         if (!key) throw new Error('SearchNewsTool requires NEWS_API_KEY');
 
         const params = new URLSearchParams({
@@ -160,10 +160,10 @@ export class SearchNewsTool extends BaseTool<typeof SearchArticlesSchema, {
             articles: (data.articles ?? []).map(a => ({
                 title: a.title,
                 url: a.url,
-                description: a.description,
                 publishedAt: a.publishedAt,
                 source: a.source?.name ?? 'Unknown',
-                author: a.author ?? undefined,
+                ...(a.description !== undefined && { description: a.description }),
+                ...(a.author !== undefined && { author: a.author }),
             })),
         };
     }
@@ -185,7 +185,7 @@ export class GetTopHeadlinesTool extends BaseTool<typeof GetTopHeadlinesSchema, 
     }
 
     protected async performExecute(input: z.infer<typeof GetTopHeadlinesSchema>, _ctx: ToolContext) {
-        const key = this.config.newsApiKey ?? process.env.NEWS_API_KEY;
+        const key = this.config.newsApiKey ?? process.env['NEWS_API_KEY'];
         if (!key) throw new Error('GetTopHeadlinesTool requires NEWS_API_KEY');
 
         const params = new URLSearchParams({
@@ -208,9 +208,9 @@ export class GetTopHeadlinesTool extends BaseTool<typeof GetTopHeadlinesSchema, 
             articles: (data.articles ?? []).map(a => ({
                 title: a.title,
                 url: a.url,
-                description: a.description,
                 publishedAt: a.publishedAt,
                 source: a.source?.name ?? 'Unknown',
+                ...(a.description !== undefined && { description: a.description }),
             })),
         };
     }

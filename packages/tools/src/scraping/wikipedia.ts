@@ -130,6 +130,9 @@ export class WikipediaSearchTool extends BaseTool<typeof WikipediaSearchParamete
 
             // Get the first result's title and fetch its summary
             const firstResult = searchResults[0];
+            if (!firstResult) {
+                return { title: query, content: 'No results found on Wikipedia', url: '' };
+            }
             const pageTitle = firstResult.title;
 
             const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle.replace(/\s+/g, '_'))}`;

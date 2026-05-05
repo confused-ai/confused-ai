@@ -67,7 +67,7 @@ export class ToolCompressor {
     constructor(config: ToolCompressorConfig = {}) {
         this._maxBytes = config.maxBytes ?? 8000;
         this._strategy = config.strategy ?? 'truncate';
-        this._summarizeFn = config.summarize;
+        if (config.summarize !== undefined) this._summarizeFn = config.summarize;
         this._suffix = config.truncateSuffix ?? ' … [truncated]';
 
         if (this._strategy === 'summarize' && !this._summarizeFn) {

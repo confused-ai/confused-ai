@@ -16,9 +16,9 @@ export interface OpenBBToolConfig {
 }
 
 function getAuth(config: OpenBBToolConfig): { baseUrl: string; headers: Record<string, string> } {
-    const pat = config.pat ?? process.env.OPENBB_PAT;
+    const pat = config.pat ?? process.env['OPENBB_PAT'];
     if (!pat) throw new Error('OpenBBTools require OPENBB_PAT');
-    const host = (config.host ?? process.env.OPENBB_HOST ?? 'https://api.openbb.co').replace(/\/$/, '');
+    const host = (config.host ?? process.env['OPENBB_HOST'] ?? 'https://api.openbb.co').replace(/\/$/, '');
     return {
         baseUrl: host,
         headers: { Authorization: `Bearer ${pat}`, 'Content-Type': 'application/json' },

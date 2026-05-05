@@ -18,7 +18,7 @@ export interface ElevenLabsToolConfig {
 }
 
 function getKey(config: ElevenLabsToolConfig): string {
-    const key = config.apiKey ?? process.env.ELEVEN_LABS_API_KEY;
+    const key = config.apiKey ?? process.env['ELEVEN_LABS_API_KEY'];
     if (!key) throw new Error('ElevenLabsTools require ELEVEN_LABS_API_KEY');
     return key;
 }
@@ -146,13 +146,14 @@ export class ElevenLabsListVoicesTool extends BaseTool<typeof ListVoicesSchema, 
             voices?: Array<{ voice_id: string; name: string; category: string; description?: string; preview_url?: string }>;
         };
         return {
-            voices: (data.voices ?? []).map(v => ({
-                voiceId: v.voice_id,
-                name: v.name,
-                category: v.category,
-                description: v.description,
-                previewUrl: v.preview_url,
-            })),
+            voices: (data.voices ?? []).map(v => {
+                const voice: { voiceId: string; name: string; category: string; description?: string; previewUrl?: string } = {
+                    voiceId: v.voice_id, name: v.name, category: v.category,
+                };
+                if (v.description !== undefined) voice.description = v.description;
+                if (v.preview_url !== undefined) voice.previewUrl = v.preview_url;
+                return voice;
+            }),
         };
     }
 }

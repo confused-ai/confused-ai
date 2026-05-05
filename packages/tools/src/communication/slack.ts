@@ -83,7 +83,7 @@ export class SlackSendMessageTool extends BaseTool<typeof SlackSendMessageParame
             ...config,
         });
 
-        this.token = config?.token || process.env.SLACK_TOKEN || '';
+        this.token = config?.token || process.env['SLACK_TOKEN'] || '';
 
         if (!this.token) {
             throw new Error('Slack token is required. Set SLACK_TOKEN environment variable or pass token in config.');
@@ -101,7 +101,7 @@ export class SlackSendMessageTool extends BaseTool<typeof SlackSendMessageParame
             };
 
             if (params.thread_ts) {
-                body.thread_ts = params.thread_ts;
+                body['thread_ts'] = params['thread_ts'];
             }
 
             const response = await fetch(`${this.baseUrl}/chat.postMessage`, {
@@ -171,7 +171,7 @@ export class SlackListChannelsTool extends BaseTool<typeof SlackListChannelsPara
             ...config,
         });
 
-        this.token = config?.token || process.env.SLACK_TOKEN || '';
+        this.token = config?.token || process.env['SLACK_TOKEN'] || '';
 
         if (!this.token) {
             throw new Error('Slack token is required. Set SLACK_TOKEN environment variable or pass token in config.');
@@ -249,7 +249,7 @@ export class SlackGetChannelHistoryTool extends BaseTool<typeof SlackGetChannelH
             ...config,
         });
 
-        this.token = config?.token || process.env.SLACK_TOKEN || '';
+        this.token = config?.token || process.env['SLACK_TOKEN'] || '';
 
         if (!this.token) {
             throw new Error('Slack token is required. Set SLACK_TOKEN environment variable or pass token in config.');
@@ -313,13 +313,13 @@ export class SlackToolkit {
         const tools: Array<SlackSendMessageTool | SlackListChannelsTool | SlackGetChannelHistoryTool> = [];
 
         if (options?.enableSendMessage !== false) {
-            tools.push(new SlackSendMessageTool({ token: options?.token }));
+            tools.push(new SlackSendMessageTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
         if (options?.enableListChannels !== false) {
-            tools.push(new SlackListChannelsTool({ token: options?.token }));
+            tools.push(new SlackListChannelsTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
         if (options?.enableGetHistory !== false) {
-            tools.push(new SlackGetChannelHistoryTool({ token: options?.token }));
+            tools.push(new SlackGetChannelHistoryTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
 
         return tools;

@@ -16,13 +16,13 @@ export interface TwitterToolConfig {
 }
 
 function getBearerToken(config: TwitterToolConfig): string {
-    const token = config.bearerToken ?? process.env.X_BEARER_TOKEN;
+    const token = config.bearerToken ?? process.env['X_BEARER_TOKEN'];
     if (!token) throw new Error('TwitterTools require X_BEARER_TOKEN');
     return token;
 }
 
 function getAccessToken(config: TwitterToolConfig): string {
-    const token = config.accessToken ?? process.env.X_ACCESS_TOKEN;
+    const token = config.accessToken ?? process.env['X_ACCESS_TOKEN'];
     if (!token) throw new Error('TwitterTools require X_ACCESS_TOKEN for write operations');
     return token;
 }
@@ -34,7 +34,7 @@ async function twitterRequest(token: string, method: string, path: string, body?
             Authorization: tokenType === 'bearer' ? `Bearer ${token}` : `Bearer ${token}`,
             'Content-Type': 'application/json',
         },
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`Twitter/X API ${res.status}: ${await res.text()}`);
     return res.json();

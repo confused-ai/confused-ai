@@ -14,7 +14,7 @@ export interface SpiderToolConfig {
 }
 
 function getKey(config: SpiderToolConfig): string {
-    const key = config.apiKey ?? process.env.SPIDER_API_KEY;
+    const key = config.apiKey ?? process.env['SPIDER_API_KEY'];
     if (!key) throw new Error('SpiderTools require SPIDER_API_KEY');
     return key;
 }

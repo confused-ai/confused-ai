@@ -17,9 +17,9 @@ export interface ConfluenceToolConfig {
 }
 
 function getCreds(config: ConfluenceToolConfig): { baseUrl: string; auth: string } {
-    const baseUrl = config.baseUrl ?? process.env.CONFLUENCE_BASE_URL;
-    const email = config.email ?? process.env.CONFLUENCE_EMAIL;
-    const apiToken = config.apiToken ?? process.env.CONFLUENCE_API_TOKEN;
+    const baseUrl = config.baseUrl ?? process.env['CONFLUENCE_BASE_URL'];
+    const email = config.email ?? process.env['CONFLUENCE_EMAIL'];
+    const apiToken = config.apiToken ?? process.env['CONFLUENCE_API_TOKEN'];
     if (!baseUrl) throw new Error('ConfluenceTools require CONFLUENCE_BASE_URL');
     if (!email) throw new Error('ConfluenceTools require CONFLUENCE_EMAIL');
     if (!apiToken) throw new Error('ConfluenceTools require CONFLUENCE_API_TOKEN');
@@ -56,20 +56,20 @@ interface ConfluencePage {
 }
 
 function mapPage(p: Record<string, unknown>): ConfluencePage {
-    const body = p.body as Record<string, unknown> | undefined;
-    const storage = body?.storage as Record<string, unknown> | undefined;
-    const version = p.version as Record<string, unknown> | undefined;
+    const body = p['body'] as Record<string, unknown> | undefined;
+    const storage = body?.['storage'] as Record<string, unknown> | undefined;
+    const version = p['version'] as Record<string, unknown> | undefined;
     return {
-        id: p.id as string,
-        title: p.title as string,
-        spaceKey: (p.spaceId as string | undefined),
-        status: p.status as string ?? 'current',
-        version: version?.number as number ?? 1,
-        body: storage?.value as string | undefined,
-        url: p._links ? `${(p._links as Record<string, string>).webui}` : undefined,
-        authorId: (p.authorId as string | undefined),
-        createdAt: p.createdAt as string | undefined,
-        updatedAt: p.version ? (version?.createdAt as string | undefined) : undefined,
+        id: p['id'] as string,
+        title: p['title'] as string,
+        ...(p['spaceId'] !== undefined && { spaceKey: p['spaceId'] as string }),
+        status: p['status'] as string ?? 'current',
+        version: version?.['number'] as number ?? 1,
+        ...(storage?.['value'] !== undefined && { body: storage['value'] as string }),
+        ...(p['_links'] !== undefined && { url: `${(p['_links'] as Record<string, string>)['webui']}` }),
+        ...(p['authorId'] !== undefined && { authorId: p['authorId'] as string }),
+        ...(p['createdAt'] !== undefined && { createdAt: p['createdAt'] as string }),
+        ...(p['version'] && version?.['createdAt'] !== undefined ? { updatedAt: version['createdAt'] as string } : {}),
     };
 }
 
@@ -175,7 +175,7 @@ export class ConfluenceCreatePageTool extends BaseTool<typeof CreatePageSchema, 
             status: input.status ?? 'current',
             body: { representation: 'storage', value: input.body },
         };
-        if (input.parentId) body.parentId = input.parentId;
+        if (input['parentId']) body['parentId'] = input['parentId'];
         const page = await confluenceFetch(getCreds(this.config), 'POST', '/pages', body) as Record<string, unknown>;
         return mapPage(page);
     }
@@ -198,8 +198,8 @@ export class ConfluenceUpdatePageTool extends BaseTool<typeof UpdatePageSchema, 
             version: { number: input.version },
             status: input.status ?? 'current',
         };
-        if (input.title) body.title = input.title;
-        if (input.body) body.body = { representation: 'storage', value: input.body };
+        if (input['title']) body['title'] = input['title'];
+        if (input['body']) body['body'] = { representation: 'storage', value: input['body'] };
 
         const page = await confluenceFetch(getCreds(this.config), 'PUT', `/pages/${input.pageId}`, body) as Record<string, unknown>;
         return mapPage(page);

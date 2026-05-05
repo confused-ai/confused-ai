@@ -17,9 +17,9 @@ export interface ZendeskToolConfig {
 }
 
 function getAuth(config: ZendeskToolConfig): { baseUrl: string; headers: Record<string, string> } {
-    const subdomain = config.subdomain ?? process.env.ZENDESK_SUBDOMAIN;
-    const email = config.email ?? process.env.ZENDESK_EMAIL;
-    const apiToken = config.apiToken ?? process.env.ZENDESK_API_TOKEN;
+    const subdomain = config.subdomain ?? process.env['ZENDESK_SUBDOMAIN'];
+    const email = config.email ?? process.env['ZENDESK_EMAIL'];
+    const apiToken = config.apiToken ?? process.env['ZENDESK_API_TOKEN'];
     if (!subdomain) throw new Error('ZendeskTools require ZENDESK_SUBDOMAIN');
     if (!email) throw new Error('ZendeskTools require ZENDESK_EMAIL');
     if (!apiToken) throw new Error('ZendeskTools require ZENDESK_API_TOKEN');
@@ -34,7 +34,7 @@ async function zendeskRequest(auth: ReturnType<typeof getAuth>, method: string, 
     const res = await fetch(`${auth.baseUrl}${path}`, {
         method,
         headers: auth.headers,
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`Zendesk API ${res.status}: ${await res.text()}`);
     if (res.status === 204) return { success: true };

@@ -13,7 +13,7 @@ export interface ClickUpToolConfig {
 }
 
 function getToken(config: ClickUpToolConfig): string {
-    const token = config.apiToken ?? process.env.CLICKUP_API_TOKEN;
+    const token = config.apiToken ?? process.env['CLICKUP_API_TOKEN'];
     if (!token) throw new Error('ClickUpTools require CLICKUP_API_TOKEN');
     return token;
 }
@@ -42,19 +42,19 @@ interface ClickUpTask {
 }
 
 function mapTask(t: Record<string, unknown>): ClickUpTask {
-    const status = t.status as Record<string, unknown> | undefined;
-    const priority = t.priority as Record<string, unknown> | undefined;
+    const status = t['status'] as Record<string, unknown> | undefined;
+    const priority = t['priority'] as Record<string, unknown> | undefined;
     return {
-        id: t.id as string,
-        name: t.name as string,
-        description: t.description as string | undefined,
-        status: status?.status as string ?? 'open',
-        priority: priority?.priority as string | undefined,
-        dueDate: t.due_date as string | undefined,
-        url: t.url as string,
-        assignees: ((t.assignees as Array<{ username: string }>) ?? []).map((a) => a.username),
-        tags: ((t.tags as Array<{ name: string }>) ?? []).map((g) => g.name),
-        listId: (t.list as Record<string, string>)?.id ?? '',
+        id: t['id'] as string,
+        name: t['name'] as string,
+        ...(t['description'] !== undefined && { description: t['description'] as string }),
+        status: status?.['status'] as string ?? 'open',
+        ...(priority?.['priority'] !== undefined && { priority: priority['priority'] as string }),
+        ...(t['due_date'] !== undefined && { dueDate: t['due_date'] as string }),
+        url: t['url'] as string,
+        assignees: ((t['assignees'] as Array<{ username: string }>) ?? []).map((a) => a.username),
+        tags: ((t['tags'] as Array<{ name: string }>) ?? []).map((g) => g.name),
+        listId: (t['list'] as Record<string, string>)?.['id'] ?? '',
     };
 }
 
@@ -180,12 +180,11 @@ export class ClickUpGetListsTool extends BaseTool<typeof GetListsSchema, {
             lists: Array<{ id: string; name: string; task_count?: number; space: { id: string } }>;
         };
         return {
-            lists: (data.lists ?? []).map((l) => ({
-                id: l.id,
-                name: l.name,
-                taskCount: l.task_count,
-                spaceId: l.space?.id,
-            })),
+            lists: (data.lists ?? []).map((l) => {
+                const item: { id: string; name: string; taskCount?: number; spaceId: string } = { id: l.id, name: l.name, spaceId: l.space?.id ?? '' };
+                if (l.task_count !== undefined) item.taskCount = l.task_count;
+                return item;
+            }),
         };
     }
 }
@@ -235,12 +234,12 @@ export class ClickUpCreateTaskTool extends BaseTool<typeof CreateTaskSchema, Cli
 
     protected async performExecute(input: z.infer<typeof CreateTaskSchema>, _ctx: ToolContext) {
         const body: Record<string, unknown> = { name: input.name, notify_all: input.notifyAll ?? false };
-        if (input.description) body.description = input.description;
-        if (input.status) body.status = input.status;
-        if (input.priority) body.priority = input.priority;
-        if (input.dueDate) body.due_date = input.dueDate;
-        if (input.assignees?.length) body.assignees = input.assignees;
-        if (input.tags?.length) body.tags = input.tags;
+        if (input['description']) body['description'] = input['description'];
+        if (input['status']) body['status'] = input['status'];
+        if (input['priority']) body['priority'] = input['priority'];
+        if (input.dueDate) body['due_date'] = input.dueDate;
+        if (input['assignees']?.length) body['assignees'] = input['assignees'];
+        if (input['tags']?.length) body['tags'] = input['tags'];
 
         const task = await clickupFetch(getToken(this.config), 'POST', `/list/${input.listId}/task`, body) as Record<string, unknown>;
         return mapTask(task);
@@ -261,11 +260,11 @@ export class ClickUpUpdateTaskTool extends BaseTool<typeof UpdateTaskSchema, Cli
 
     protected async performExecute(input: z.infer<typeof UpdateTaskSchema>, _ctx: ToolContext) {
         const body: Record<string, unknown> = {};
-        if (input.name) body.name = input.name;
-        if (input.description !== undefined) body.description = input.description;
-        if (input.status) body.status = input.status;
-        if (input.priority) body.priority = input.priority;
-        if (input.dueDate) body.due_date = input.dueDate;
+        if (input['name']) body['name'] = input['name'];
+        if (input['description'] !== undefined) body['description'] = input['description'];
+        if (input['status']) body['status'] = input['status'];
+        if (input['priority']) body['priority'] = input['priority'];
+        if (input.dueDate) body['due_date'] = input.dueDate;
 
         const task = await clickupFetch(getToken(this.config), 'PUT', `/task/${input.taskId}`, body) as Record<string, unknown>;
         return mapTask(task);

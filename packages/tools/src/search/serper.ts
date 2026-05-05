@@ -19,7 +19,7 @@ export interface SerperToolConfig {
 }
 
 function getKey(config: SerperToolConfig): string {
-    const key = config.apiKey ?? process.env.SERPER_API_KEY;
+    const key = config.apiKey ?? process.env['SERPER_API_KEY'];
     if (!key) throw new Error('SerperTools require SERPER_API_KEY');
     return key;
 }

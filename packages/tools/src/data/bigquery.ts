@@ -17,8 +17,8 @@ export interface BigQueryToolConfig {
 }
 
 function getAuth(config: BigQueryToolConfig): { token: string; projectId: string } {
-    const token = config.accessToken ?? process.env.GOOGLE_ACCESS_TOKEN;
-    const projectId = config.projectId ?? process.env.GOOGLE_CLOUD_PROJECT ?? process.env.GCLOUD_PROJECT;
+    const token = config.accessToken ?? process.env['GOOGLE_ACCESS_TOKEN'];
+    const projectId = config.projectId ?? process.env['GOOGLE_CLOUD_PROJECT'] ?? process.env['GCLOUD_PROJECT'];
     if (!token) throw new Error('BigQueryTools require GOOGLE_ACCESS_TOKEN');
     if (!projectId) throw new Error('BigQueryTools require GOOGLE_CLOUD_PROJECT');
     return { token, projectId };
@@ -28,7 +28,7 @@ async function bqRequest(token: string, method: string, url: string, body?: obje
     const res = await fetch(url, {
         method,
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`BigQuery API ${res.status}: ${await res.text()}`);
     return res.json();
@@ -120,7 +120,7 @@ export class BigQueryQueryTool extends BaseTool<typeof QuerySchema, {
         return {
             jobId: data.jobReference?.jobId ?? '',
             totalRows: data.totalRows ?? '0',
-            schema: schema ? { fields: schema } : undefined,
+            ...(schema !== undefined && { schema: { fields: schema } }),
             rows,
         };
     }

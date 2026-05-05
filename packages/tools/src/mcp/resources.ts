@@ -145,8 +145,8 @@ export class McpResourceRegistry {
         return Array.from(this.resources.values()).map(r => ({
             uri: r.uri,
             name: r.name,
-            description: r.description,
-            mimeType: r.mimeType,
+            ...(r.description !== undefined ? { description: r.description } : {}),
+            ...(r.mimeType !== undefined ? { mimeType: r.mimeType } : {}),
         }));
     }
 
@@ -155,8 +155,8 @@ export class McpResourceRegistry {
         return this.templates.map(t => ({
             uriTemplate: t.uriTemplate,
             name: t.name,
-            description: t.description,
-            mimeType: t.mimeType,
+            ...(t.description !== undefined ? { description: t.description } : {}),
+            ...(t.mimeType !== undefined ? { mimeType: t.mimeType } : {}),
         }));
     }
 
@@ -165,11 +165,10 @@ export class McpResourceRegistry {
         const exact = this.resources.get(uri);
         if (exact) {
             const content = await exact.read();
-            return {
-                uri,
-                mimeType: exact.mimeType,
-                ...(content.type === 'text' ? { text: content.text } : { blob: content.blob }),
-            };
+            const r: { uri: string; mimeType?: string; text?: string; blob?: string } = { uri };
+            if (exact.mimeType !== undefined) r.mimeType = exact.mimeType;
+            if (content.type === 'text') r.text = content.text; else r.blob = content.blob;
+            return r;
         }
 
         // Try template matching
@@ -177,11 +176,10 @@ export class McpResourceRegistry {
             const vars = matchUriTemplate(tmpl.uriTemplate, uri);
             if (vars) {
                 const content = await tmpl.read(vars);
-                return {
-                    uri,
-                    mimeType: tmpl.mimeType,
-                    ...(content.type === 'text' ? { text: content.text } : { blob: content.blob }),
-                };
+                const r: { uri: string; mimeType?: string; text?: string; blob?: string } = { uri };
+                if (tmpl.mimeType !== undefined) r.mimeType = tmpl.mimeType;
+                if (content.type === 'text') r.text = content.text; else r.blob = content.blob;
+                return r;
             }
         }
         throw new Error(`Resource not found: ${uri}`);
@@ -197,7 +195,7 @@ function matchUriTemplate(template: string, uri: string): Record<string, string>
     });
     const match = new RegExp(`^${regexStr}$`).exec(uri);
     if (!match) return null;
-    return Object.fromEntries(varNames.map((name, i) => [name, decodeURIComponent(match[i + 1])]));
+    return Object.fromEntries(varNames.map((name, i) => [name, decodeURIComponent(match[i + 1]!)]));
 }
 
 // ── McpPromptRegistry ──────────────────────────────────────────────────────
@@ -246,8 +244,8 @@ export class McpPromptRegistry {
     list(): Array<{ name: string; description?: string; arguments?: McpPromptArgument[] }> {
         return Array.from(this.prompts.values()).map(p => ({
             name: p.name,
-            description: p.description,
-            arguments: p.arguments,
+            ...(p.description !== undefined ? { description: p.description } : {}),
+            ...(p.arguments !== undefined ? { arguments: p.arguments } : {}),
         }));
     }
 
@@ -258,7 +256,9 @@ export class McpPromptRegistry {
         const prompt = this.prompts.get(name);
         if (!prompt) throw new Error(`Prompt not found: ${name}`);
         const messages = await prompt.get(args);
-        return { description: prompt.description, messages };
+        const result: { description?: string; messages: McpPromptMessage[] } = { messages };
+        if (prompt.description !== undefined) result.description = prompt.description;
+        return result;
     }
 }
 

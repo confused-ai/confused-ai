@@ -68,7 +68,7 @@ export interface HttpToolConfig extends Partial<Omit<BaseToolConfig<typeof HttpT
  * HTTP client tool for making web requests
  */
 export class HttpClientTool extends BaseTool<typeof HttpToolParameters, HttpResponse> {
-    private allowedHosts?: string[];
+    private allowedHosts: string[] | undefined;
     private blockPrivateNetworks: boolean;
 
     constructor(config?: HttpToolConfig) {
@@ -82,9 +82,9 @@ export class HttpClientTool extends BaseTool<typeof HttpToolParameters, HttpResp
                 maxExecutionTimeMs: 30000,
                 ...config?.permissions,
             },
-            version: config?.version,
-            author: config?.author,
-            tags: config?.tags,
+            ...(config?.version !== undefined && { version: config.version }),
+            ...(config?.author !== undefined && { author: config.author }),
+            ...(config?.tags !== undefined && { tags: config.tags }),
         });
         this.allowedHosts = config?.allowedHosts;
         this.blockPrivateNetworks = config?.blockPrivateNetworks ?? true;

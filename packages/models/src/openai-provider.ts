@@ -132,8 +132,8 @@ export class OpenAIProvider implements LLMProvider {
         if (config.client) {
             this.client = config.client;
         } else {
-            const apiKey = config.apiKey ?? process.env.OPENAI_API_KEY;
-            const baseURL = config.baseURL ?? process.env.OPENAI_BASE_URL;
+            const apiKey = config.apiKey ?? process.env['OPENAI_API_KEY'];
+            const baseURL = config.baseURL ?? process.env['OPENAI_BASE_URL'];
             if (!baseURL && !apiKey) {
                 throw new Error('OpenAIProvider requires apiKey (or OPENAI_API_KEY) or baseURL (or OPENAI_BASE_URL)');
             }
@@ -166,8 +166,8 @@ export class OpenAIProvider implements LLMProvider {
 
         const tools = toOpenAITools(options?.tools);
         if (tools?.length) {
-            body.tools = tools;
-            body.tool_choice = options?.toolChoice === 'none' ? 'none' : 'auto';
+            body['tools'] = tools;
+            body['tool_choice'] = options?.toolChoice === 'none' ? 'none' : 'auto';
             this.logger.debug('Including tools in request', undefined, { toolCount: tools.length });
         }
 
@@ -176,7 +176,8 @@ export class OpenAIProvider implements LLMProvider {
         const choice = response.choices?.[0];
         if (!choice?.message) {
             this.logger.warn('Empty response from LLM');
-            return { text: '', finishReason: (choice?.finish_reason ?? 'stop') as GenerateResult['finishReason'] };
+            const fr = (choice?.finish_reason ?? 'stop') as GenerateResult['finishReason'];
+            return { text: '', finishReason: fr! };
         }
 
         const msg = choice.message;
@@ -201,18 +202,17 @@ export class OpenAIProvider implements LLMProvider {
             tokens: response.usage?.total_tokens,
         });
 
-        return {
-            text,
-            toolCalls: toolCalls?.length ? toolCalls : undefined,
-            finishReason: (choice.finish_reason ?? undefined) as GenerateResult['finishReason'],
-            usage: response.usage
-                ? {
-                    promptTokens: response.usage.prompt_tokens,
-                    completionTokens: response.usage.completion_tokens,
-                    totalTokens: response.usage.total_tokens,
-                }
-                : undefined,
-        };
+        const result: GenerateResult = { text };
+        if (toolCalls?.length) result.toolCalls = toolCalls;
+        if (choice.finish_reason != null) result.finishReason = choice.finish_reason as 'stop' | 'tool_calls' | 'max_tokens' | 'error';
+        if (response.usage) {
+            const u: NonNullable<GenerateResult['usage']> = {};
+            if (response.usage.prompt_tokens !== undefined) u.promptTokens = response.usage.prompt_tokens;
+            if (response.usage.completion_tokens !== undefined) u.completionTokens = response.usage.completion_tokens;
+            if (response.usage.total_tokens !== undefined) u.totalTokens = response.usage.total_tokens;
+            result.usage = u;
+        }
+        return result;
     }
 
     async streamText(messages: Message[], options?: GenerateOptions): Promise<GenerateResult> {
@@ -227,8 +227,8 @@ export class OpenAIProvider implements LLMProvider {
 
         const tools = toOpenAITools(options?.tools);
         if (tools?.length) {
-            body.tools = tools;
-            body.tool_choice = options?.toolChoice === 'none' ? 'none' : 'auto';
+            body['tools'] = tools;
+            body['tool_choice'] = options?.toolChoice === 'none' ? 'none' : 'auto';
         }
 
         const stream = await this.client.chat.completions.create(body as unknown as OpenAICreateParams) as AsyncIterable<OpenAIStreamChunk>;
@@ -277,9 +277,9 @@ export class OpenAIProvider implements LLMProvider {
 
             if (chunk.usage) {
                 usage = {
-                    promptTokens: chunk.usage.prompt_tokens,
-                    completionTokens: chunk.usage.completion_tokens,
-                    totalTokens: chunk.usage.total_tokens,
+                    ...(chunk.usage.prompt_tokens !== undefined && { promptTokens: chunk.usage.prompt_tokens }),
+                    ...(chunk.usage.completion_tokens !== undefined && { completionTokens: chunk.usage.completion_tokens }),
+                    ...(chunk.usage.total_tokens !== undefined && { totalTokens: chunk.usage.total_tokens }),
                 };
             }
         }
@@ -297,11 +297,10 @@ export class OpenAIProvider implements LLMProvider {
             })(),
         }));
 
-        return {
-            text: fullText,
-            toolCalls: toolCalls.length ? toolCalls : undefined,
-            finishReason,
-            usage,
-        };
+        const streamResult: GenerateResult = { text: fullText };
+        if (toolCalls.length) streamResult.toolCalls = toolCalls;
+        if (finishReason !== undefined) streamResult.finishReason = finishReason;
+        if (usage !== undefined) streamResult.usage = usage;
+        return streamResult;
     }
 }

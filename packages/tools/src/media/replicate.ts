@@ -14,7 +14,7 @@ export interface ReplicateToolConfig {
 }
 
 function getToken(config: ReplicateToolConfig): string {
-    const token = config.apiToken ?? process.env.REPLICATE_API_TOKEN;
+    const token = config.apiToken ?? process.env['REPLICATE_API_TOKEN'];
     if (!token) throw new Error('ReplicateTools require REPLICATE_API_TOKEN');
     return token;
 }

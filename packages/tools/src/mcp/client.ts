@@ -89,10 +89,10 @@ export class HttpMcpClient implements MCPClient {
             'tools/list'
         );
         const tools = result.tools ?? [];
-        return tools.map((t) => ({
+        return tools.map((t): MCPToolDescriptor => ({
             name: t.name,
-            description: t.description,
-            inputSchema: t.inputSchema,
+            ...(t.description !== undefined ? { description: t.description } : {}),
+            ...(t.inputSchema !== undefined ? { inputSchema: t.inputSchema } : {}),
         }));
     }
 
@@ -146,6 +146,6 @@ class McpBridgeTool extends BaseTool<ToolParameters, string> {
  * Shorthand: create a client and return framework `Tool` instances.
  */
 export async function loadMcpToolsFromUrl(url: string, headers?: Record<string, string>): Promise<Tool[]> {
-    const client = new HttpMcpClient({ url, headers });
+    const client = new HttpMcpClient({ url, ...(headers !== undefined && { headers }) });
     return client.getTools();
 }

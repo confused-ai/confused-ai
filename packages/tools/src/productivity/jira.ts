@@ -61,9 +61,9 @@ abstract class BaseJiraTool<TParams extends z.ZodObject<Record<string, z.ZodType
             ...config,
         });
 
-        this.serverUrl = config.serverUrl || process.env.JIRA_SERVER_URL || '';
-        this.token = config.token || process.env.JIRA_TOKEN || '';
-        this.email = config.email || process.env.JIRA_EMAIL || '';
+        this.serverUrl = config.serverUrl || process.env['JIRA_SERVER_URL'] || '';
+        this.token = config.token || process.env['JIRA_TOKEN'] || '';
+        this.email = config.email || process.env['JIRA_EMAIL'] || '';
 
         if (!this.serverUrl) {
             throw new Error('Jira server URL is required. Set JIRA_SERVER_URL environment variable or pass serverUrl in config.');
@@ -350,9 +350,9 @@ export class JiraToolkit {
         const tools: Array<JiraGetIssueTool | JiraCreateIssueTool | JiraSearchIssuesTool | JiraAddCommentTool> = [];
 
         const config = {
-            serverUrl: options?.serverUrl,
-            token: options?.token,
-            email: options?.email,
+            ...(options?.serverUrl !== undefined && { serverUrl: options.serverUrl }),
+            ...(options?.token !== undefined && { token: options.token }),
+            ...(options?.email !== undefined && { email: options.email }),
         };
 
         if (options?.enableGetIssue !== false) {

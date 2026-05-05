@@ -16,7 +16,7 @@ export interface GoogleCalendarToolConfig {
 }
 
 function getToken(config: GoogleCalendarToolConfig): string {
-    const token = config.accessToken ?? process.env.GOOGLE_CALENDAR_ACCESS_TOKEN;
+    const token = config.accessToken ?? process.env['GOOGLE_CALENDAR_ACCESS_TOKEN'];
     if (!token) throw new Error('GoogleCalendarTools require GOOGLE_CALENDAR_ACCESS_TOKEN');
     return token;
 }
@@ -45,19 +45,20 @@ interface CalendarEvent {
 }
 
 function mapEvent(e: Record<string, unknown>): CalendarEvent {
-    const start = e.start as { dateTime?: string; date?: string };
-    const end = e.end as { dateTime?: string; date?: string };
-    return {
-        id: e.id as string,
-        summary: e.summary as string ?? '(No title)',
-        description: e.description as string | undefined,
-        location: e.location as string | undefined,
+    const start = e['start'] as { dateTime?: string; date?: string };
+    const end = e['end'] as { dateTime?: string; date?: string };
+    const result: CalendarEvent = {
+        id: e['id'] as string,
+        summary: e['summary'] as string ?? '(No title)',
         start: start?.dateTime ?? start?.date ?? '',
         end: end?.dateTime ?? end?.date ?? '',
-        attendees: e.attendees as CalendarEvent['attendees'],
-        htmlLink: e.htmlLink as string | undefined,
-        status: e.status as string ?? 'confirmed',
+        status: e['status'] as string ?? 'confirmed',
     };
+    if (e['description'] !== undefined) result.description = e['description'] as string;
+    if (e['location'] !== undefined) result.location = e['location'] as string;
+    if (e['attendees'] !== undefined) result.attendees = e['attendees'] as Array<{ email: string; responseStatus?: string }>;
+    if (e['htmlLink'] !== undefined) result.htmlLink = e['htmlLink'] as string;
+    return result;
 }
 
 // ── Schemas ────────────────────────────────────────────────────────────────
@@ -157,9 +158,9 @@ export class GoogleCalendarCreateEventTool extends BaseTool<typeof CreateEventSc
             start: { dateTime: input.startDateTime, timeZone: input.timeZone ?? 'UTC' },
             end: { dateTime: input.endDateTime, timeZone: input.timeZone ?? 'UTC' },
         };
-        if (input.description) body.description = input.description;
-        if (input.location) body.location = input.location;
-        if (input.attendees?.length) body.attendees = input.attendees.map((e) => ({ email: e }));
+        if (input['description']) body['description'] = input['description'];
+        if (input['location']) body['location'] = input['location'];
+        if (input['attendees']?.length) body['attendees'] = input['attendees'].map((e) => ({ email: e }));
 
         const params = new URLSearchParams({ sendNotifications: String(input.sendNotifications ?? true) });
         const event = await calFetch(getToken(this.config), 'POST', `/calendars/${encodeURIComponent(calId)}/events?${params}`, body) as Record<string, unknown>;
@@ -182,11 +183,11 @@ export class GoogleCalendarUpdateEventTool extends BaseTool<typeof UpdateEventSc
     protected async performExecute(input: z.infer<typeof UpdateEventSchema>, _ctx: ToolContext) {
         const calId = input.calendarId ?? this.config.calendarId ?? 'primary';
         const body: Record<string, unknown> = {};
-        if (input.summary) body.summary = input.summary;
-        if (input.description !== undefined) body.description = input.description;
-        if (input.location !== undefined) body.location = input.location;
-        if (input.startDateTime) body.start = { dateTime: input.startDateTime, timeZone: input.timeZone ?? 'UTC' };
-        if (input.endDateTime) body.end = { dateTime: input.endDateTime, timeZone: input.timeZone ?? 'UTC' };
+        if (input['summary']) body['summary'] = input['summary'];
+        if (input['description'] !== undefined) body['description'] = input['description'];
+        if (input['location'] !== undefined) body['location'] = input['location'];
+        if (input.startDateTime) body['start'] = { dateTime: input.startDateTime, timeZone: input.timeZone ?? 'UTC' };
+        if (input.endDateTime) body['end'] = { dateTime: input.endDateTime, timeZone: input.timeZone ?? 'UTC' };
 
         const event = await calFetch(getToken(this.config), 'PATCH', `/calendars/${encodeURIComponent(calId)}/events/${input.eventId}`, body) as Record<string, unknown>;
         return mapEvent(event);

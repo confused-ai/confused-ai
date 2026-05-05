@@ -17,9 +17,9 @@ export interface BitbucketToolConfig {
 }
 
 function getAuth(config: BitbucketToolConfig): { headers: Record<string, string>; workspace: string } {
-    const workspace = config.workspace ?? process.env.BITBUCKET_WORKSPACE;
-    const username = config.username ?? process.env.BITBUCKET_USERNAME;
-    const appPassword = config.appPassword ?? process.env.BITBUCKET_APP_PASSWORD;
+    const workspace = config.workspace ?? process.env['BITBUCKET_WORKSPACE'];
+    const username = config.username ?? process.env['BITBUCKET_USERNAME'];
+    const appPassword = config.appPassword ?? process.env['BITBUCKET_APP_PASSWORD'];
     if (!workspace) throw new Error('BitbucketTools require BITBUCKET_WORKSPACE');
     if (!username || !appPassword) throw new Error('BitbucketTools require BITBUCKET_USERNAME and BITBUCKET_APP_PASSWORD');
     const credentials = Buffer.from(`${username}:${appPassword}`).toString('base64');
@@ -30,7 +30,7 @@ async function bbRequest(auth: ReturnType<typeof getAuth>, method: string, path:
     const res = await fetch(`https://api.bitbucket.org/2.0${path}`, {
         method,
         headers: auth.headers,
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`Bitbucket API ${res.status}: ${await res.text()}`);
     if (res.status === 204) return { success: true };

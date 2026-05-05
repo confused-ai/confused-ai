@@ -32,7 +32,7 @@ export class SleepTool extends BaseTool<typeof SleepSchema, {
     protected async performExecute(input: z.infer<typeof SleepSchema>, _ctx: ToolContext) {
         const ms = Math.round(input.seconds * 1000);
         await new Promise(resolve => setTimeout(resolve, ms));
-        return { sleptForSeconds: input.seconds, reason: input.reason };
+        return { sleptForSeconds: input.seconds, ...(input.reason !== undefined && { reason: input.reason }) };
     }
 }
 

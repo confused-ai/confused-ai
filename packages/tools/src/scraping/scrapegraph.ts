@@ -14,7 +14,7 @@ export interface ScrapeGraphToolConfig {
 }
 
 function getKey(config: ScrapeGraphToolConfig): string {
-    const key = config.apiKey ?? process.env.SGAI_API_KEY;
+    const key = config.apiKey ?? process.env['SGAI_API_KEY'];
     if (!key) throw new Error('ScrapeGraphTools require SGAI_API_KEY');
     return key;
 }

@@ -35,7 +35,7 @@
  *   name: 'my-tools',
  *   version: '1.0.0',
  *   port: 3100,
- *   auth: { type: 'bearer', token: process.env.MCP_TOKEN! },
+ *   auth: { type: 'bearer', token: process.env['MCP_TOKEN']! },
  * });
  * await server.start();
  * // GET http://localhost:3100/mcp → JSON-RPC endpoint
@@ -234,8 +234,8 @@ function toolToMcpDescriptor(tool: Tool): MCPToolDescriptor {
     }
     return {
         name: tool.name,
-        description: tool.description,
-        inputSchema,
+        ...(tool.description !== undefined ? { description: tool.description } : {}),
+        ...(inputSchema !== undefined ? { inputSchema } : {}),
     };
 }
 
@@ -312,7 +312,7 @@ export class McpHttpServer implements MCPServerAdapter {
     private readonly opts: Required<
         Pick<McpServerOptions, 'name' | 'version' | 'port' | 'host' | 'path' | 'maxBodyBytes' | 'toolTimeoutMs'>
     > & McpServerOptions;
-    private httpServer?: Server;
+    private httpServer: Server | undefined;
 
     constructor(registry: ToolRegistry, opts: McpServerOptions = {}) {
         this.registry = registry;
@@ -325,8 +325,8 @@ export class McpHttpServer implements MCPServerAdapter {
             maxBodyBytes: opts.maxBodyBytes ?? 1_048_576,
             toolTimeoutMs: opts.toolTimeoutMs ?? 60_000,
             cors: opts.cors !== undefined ? opts.cors : '*',
-            auth: opts.auth,
-            logger: opts.logger,
+            ...(opts.auth !== undefined ? { auth: opts.auth } : {}),
+            ...(opts.logger !== undefined ? { logger: opts.logger } : {}),
         };
     }
 
@@ -586,7 +586,7 @@ export class McpHttpServer implements MCPServerAdapter {
  * ```ts
  * const server = createMcpServer(myRegistry, {
  *   port: 3100,
- *   auth: { type: 'bearer', token: process.env.MCP_TOKEN! },
+ *   auth: { type: 'bearer', token: process.env['MCP_TOKEN']! },
  * });
  * await server.start();
  * console.log(server.baseUrl); // http://127.0.0.1:3100/mcp

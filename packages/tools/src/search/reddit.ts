@@ -19,11 +19,11 @@ async function redditFetch(path: string, config: RedditToolConfig): Promise<unkn
         Accept: 'application/json',
     };
 
-    const clientId = config.clientId ?? process.env.REDDIT_CLIENT_ID;
-    const clientSecret = config.clientSecret ?? process.env.REDDIT_CLIENT_SECRET;
+    const clientId = config.clientId ?? process.env['REDDIT_CLIENT_ID'];
+    const clientSecret = config.clientSecret ?? process.env['REDDIT_CLIENT_SECRET'];
     if (clientId && clientSecret) {
         const creds = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-        headers.Authorization = `Basic ${creds}`;
+        headers['Authorization'] = `Basic ${creds}`;
     }
 
     const baseUrl = clientId ? 'https://oauth.reddit.com' : 'https://www.reddit.com';
@@ -48,17 +48,17 @@ interface RedditPost {
 
 function mapPost(data: Record<string, unknown>): RedditPost {
     return {
-        id: data.id as string,
-        title: data.title as string,
-        author: data.author as string,
-        subreddit: data.subreddit as string,
-        score: data.score as number,
-        numComments: data.num_comments as number,
-        url: data.url as string,
-        selfText: data.selftext as string | undefined,
-        createdUtc: data.created_utc as number,
-        isVideo: data.is_video as boolean,
-        flair: data.link_flair_text as string | undefined,
+        id: data['id'] as string,
+        title: data['title'] as string,
+        author: data['author'] as string,
+        subreddit: data['subreddit'] as string,
+        score: data['score'] as number,
+        numComments: data['num_comments'] as number,
+        url: data['url'] as string,
+        createdUtc: data['created_utc'] as number,
+        isVideo: data['is_video'] as boolean,
+        ...(data['selftext'] !== undefined && data['selftext'] !== '' && { selfText: data['selftext'] as string }),
+        ...(data['link_flair_text'] !== undefined && { flair: data['link_flair_text'] as string }),
     };
 }
 

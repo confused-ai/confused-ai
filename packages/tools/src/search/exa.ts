@@ -13,7 +13,7 @@ export interface ExaToolConfig {
 }
 
 function getKey(config: ExaToolConfig): string {
-    const key = config.apiKey ?? process.env.EXA_API_KEY;
+    const key = config.apiKey ?? process.env['EXA_API_KEY'];
     if (!key) throw new Error('ExaTools require EXA_API_KEY');
     return key;
 }
@@ -41,14 +41,14 @@ interface ExaResult {
 
 function mapResult(r: Record<string, unknown>): ExaResult {
     return {
-        id: r.id as string,
-        url: r.url as string,
-        title: r.title as string,
-        score: r.score as number,
-        publishedDate: r.publishedDate as string | undefined,
-        author: r.author as string | undefined,
-        text: r.text as string | undefined,
-        highlights: r.highlights as string[] | undefined,
+        id: r['id'] as string,
+        url: r['url'] as string,
+        title: r['title'] as string,
+        score: r['score'] as number,
+        ...(r['publishedDate'] !== undefined && { publishedDate: r['publishedDate'] as string }),
+        ...(r['author'] !== undefined && { author: r['author'] as string }),
+        ...(r['text'] !== undefined && { text: r['text'] as string }),
+        ...(r['highlights'] !== undefined && { highlights: r['highlights'] as string[] }),
     };
 }
 
@@ -102,12 +102,12 @@ export class ExaSearchTool extends BaseTool<typeof SearchSchema, { results: ExaR
             useAutoprompt: input.useAutoprompt ?? true,
             type: input.type ?? 'auto',
         };
-        if (input.includeDomains?.length) body.includeDomains = input.includeDomains;
-        if (input.excludeDomains?.length) body.excludeDomains = input.excludeDomains;
-        if (input.startPublishedDate) body.startPublishedDate = input.startPublishedDate;
-        if (input.endPublishedDate) body.endPublishedDate = input.endPublishedDate;
-        if (input.includeText) body.contents = { text: true };
-        if (input.includeHighlights) body.contents = { ...(body.contents as object ?? {}), highlights: { numSentences: 3, highlightsPerUrl: 2 } };
+        if (input.includeDomains?.length) body['includeDomains'] = input.includeDomains;
+        if (input.excludeDomains?.length) body['excludeDomains'] = input.excludeDomains;
+        if (input.startPublishedDate) body['startPublishedDate'] = input.startPublishedDate;
+        if (input.endPublishedDate) body['endPublishedDate'] = input.endPublishedDate;
+        if (input.includeText) body['contents'] = { text: true };
+        if (input.includeHighlights) body['contents'] = { ...(body['contents'] as object ?? {}), highlights: { numSentences: 3, highlightsPerUrl: 2 } };
 
         const data = await exaFetch(getKey(this.config), '/search', body) as { results: Array<Record<string, unknown>> };
         const results = (data.results ?? []).map(mapResult);
@@ -132,9 +132,9 @@ export class ExaFindSimilarTool extends BaseTool<typeof FindSimilarSchema, { res
             url: input.url,
             numResults: input.numResults ?? 10,
         };
-        if (input.includeDomains?.length) body.includeDomains = input.includeDomains;
-        if (input.excludeDomains?.length) body.excludeDomains = input.excludeDomains;
-        if (input.includeText) body.contents = { text: true };
+        if (input.includeDomains?.length) body['includeDomains'] = input.includeDomains;
+        if (input.excludeDomains?.length) body['excludeDomains'] = input.excludeDomains;
+        if (input.includeText) body['contents'] = { text: true };
 
         const data = await exaFetch(getKey(this.config), '/findSimilar', body) as { results: Array<Record<string, unknown>> };
         const results = (data.results ?? []).map(mapResult);
@@ -157,9 +157,9 @@ export class ExaGetContentsTool extends BaseTool<typeof GetContentsSchema, { con
     protected async performExecute(input: z.infer<typeof GetContentsSchema>, _ctx: ToolContext) {
         const body: Record<string, unknown> = { ids: input.urls };
         const contentsOpts: Record<string, unknown> = {};
-        if (input.text) contentsOpts.text = true;
-        if (input.highlights) contentsOpts.highlights = { numSentences: 3, highlightsPerUrl: 2 };
-        if (Object.keys(contentsOpts).length) body.contents = contentsOpts;
+        if (input.text) contentsOpts['text'] = true;
+        if (input.highlights) contentsOpts['highlights'] = { numSentences: 3, highlightsPerUrl: 2 };
+        if (Object.keys(contentsOpts).length) body['contents'] = contentsOpts;
 
         const data = await exaFetch(getKey(this.config), '/contents', body) as { results: Array<Record<string, unknown>> };
         const contents = (data.results ?? []).map(mapResult);

@@ -109,7 +109,7 @@ export class PythonExecTool extends BaseTool<typeof PySchema, CodeExecResult> {
         return new Promise((resolve) => {
             const proc = spawn('python3', ['-c', input.code], {
                 timeout: timeoutMs,
-                env: { PATH: process.env.PATH ?? '/usr/bin:/bin' },
+                env: { PATH: process.env['PATH'] ?? '/usr/bin:/bin' },
             });
             let stdout = '';
             let stderr = '';
@@ -119,7 +119,7 @@ export class PythonExecTool extends BaseTool<typeof PySchema, CodeExecResult> {
                 resolve({
                     stdout: stdout.trim(), stderr: stderr.trim(), returnValue: null,
                     executionMs: Date.now() - start, success: code === 0,
-                    error: code !== 0 ? `Process exited with code ${code}` : undefined,
+                    ...(code !== 0 && { error: `Process exited with code ${code}` }),
                 });
             });
             proc.on('error', (err) => {
@@ -166,7 +166,7 @@ export class ShellCommandTool extends BaseTool<typeof ShellSchema, CodeExecResul
                 resolve({
                     stdout: stdout.trim(), stderr: stderr.trim(), returnValue: null,
                     executionMs: Date.now() - start, success: code === 0,
-                    error: code !== 0 ? `Exited with code ${code}` : undefined,
+                    ...(code !== 0 && { error: `Exited with code ${code}` }),
                 });
             });
             proc.on('error', (err) => {

@@ -15,7 +15,7 @@ export interface ResendToolConfig {
 }
 
 function getKey(config: ResendToolConfig): string {
-    const key = config.apiKey ?? process.env.RESEND_API_KEY;
+    const key = config.apiKey ?? process.env['RESEND_API_KEY'];
     if (!key) throw new Error('ResendTool requires RESEND_API_KEY');
     return key;
 }
@@ -62,7 +62,7 @@ export class ResendSendEmailTool extends BaseTool<typeof SendEmailSchema, {
     }
 
     protected async performExecute(input: z.infer<typeof SendEmailSchema>, _ctx: ToolContext) {
-        const from = input.from ?? this.config.from ?? process.env.RESEND_FROM_EMAIL;
+        const from = input.from ?? this.config.from ?? process.env['RESEND_FROM_EMAIL'];
         if (!from) throw new Error('ResendSendEmailTool requires a from address');
 
         const res = await fetch('https://api.resend.com/emails', {

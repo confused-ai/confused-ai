@@ -45,7 +45,7 @@ export class PerplexitySearchTool extends BaseTool<typeof SearchSchema, {
     }
 
     protected async performExecute(input: z.infer<typeof SearchSchema>, _ctx: ToolContext) {
-        const apiKey = this.config.apiKey ?? process.env.PERPLEXITY_API_KEY;
+        const apiKey = this.config.apiKey ?? process.env['PERPLEXITY_API_KEY'];
         if (!apiKey) throw new Error('PerplexitySearchTool requires PERPLEXITY_API_KEY');
 
         const body: Record<string, unknown> = {

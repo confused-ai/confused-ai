@@ -16,7 +16,7 @@ export interface E2BToolConfig {
 }
 
 function getKey(config: E2BToolConfig): string {
-    const key = config.apiKey ?? process.env.E2B_API_KEY;
+    const key = config.apiKey ?? process.env['E2B_API_KEY'];
     if (!key) throw new Error('E2BTools require E2B_API_KEY');
     return key;
 }

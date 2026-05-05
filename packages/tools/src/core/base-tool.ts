@@ -57,14 +57,14 @@ export abstract class BaseTool<TParams extends ToolParameters = ToolParameters, 
         this.permissions = {
             allowNetwork: config.permissions?.allowNetwork ?? false,
             allowFileSystem: config.permissions?.allowFileSystem ?? false,
-            allowedPaths: config.permissions?.allowedPaths,
-            allowedHosts: config.permissions?.allowedHosts,
+            ...(config.permissions?.allowedPaths !== undefined && { allowedPaths: config.permissions.allowedPaths }),
+            ...(config.permissions?.allowedHosts !== undefined && { allowedHosts: config.permissions.allowedHosts }),
             maxExecutionTimeMs: config.permissions?.maxExecutionTimeMs ?? 30000,
         };
         this.category = config.category ?? ToolCategory.UTILITY;
         this.version = config.version ?? '1.0.0';
-        this.author = config.author;
-        this.tags = config.tags;
+        if (config.author !== undefined) this.author = config.author;
+        if (config.tags !== undefined) this.tags = config.tags;
         this.logger = createDebugLogger(`Tool:${this.name}`, config.debug ?? false);
     }
 

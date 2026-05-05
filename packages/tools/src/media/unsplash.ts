@@ -14,7 +14,7 @@ export interface UnsplashToolConfig {
 }
 
 function getKey(config: UnsplashToolConfig): string {
-    const key = config.accessKey ?? process.env.UNSPLASH_ACCESS_KEY;
+    const key = config.accessKey ?? process.env['UNSPLASH_ACCESS_KEY'];
     if (!key) throw new Error('UnsplashTools require UNSPLASH_ACCESS_KEY');
     return key;
 }
@@ -119,22 +119,25 @@ export class UnsplashSearchPhotosTool extends BaseTool<typeof SearchPhotosSchema
             total_pages?: number;
         };
         return {
-            photos: (data.results ?? []).map(p => ({
-                id: p.id,
-                description: p.description,
-                altDescription: p.alt_description,
-                urls: {
-                    full: p.urls?.full ?? '',
-                    regular: p.urls?.regular ?? '',
-                    small: p.urls?.small ?? '',
-                    thumb: p.urls?.thumb ?? '',
-                },
-                width: p.width ?? 0,
-                height: p.height ?? 0,
-                likes: p.likes ?? 0,
-                user: { name: p.user?.name ?? '', username: p.user?.username ?? '' },
-                links: { html: p.links?.html ?? '', download: p.links?.download ?? '' },
-            })),
+            photos: (data.results ?? []).map(p => {
+                const photo: UnsplashPhoto = {
+                    id: p.id,
+                    urls: {
+                        full: p.urls?.full ?? '',
+                        regular: p.urls?.regular ?? '',
+                        small: p.urls?.small ?? '',
+                        thumb: p.urls?.thumb ?? '',
+                    },
+                    width: p.width ?? 0,
+                    height: p.height ?? 0,
+                    likes: p.likes ?? 0,
+                    user: { name: p.user?.name ?? '', username: p.user?.username ?? '' },
+                    links: { html: p.links?.html ?? '', download: p.links?.download ?? '' },
+                };
+                if (p.description !== undefined) photo.description = p.description;
+                if (p.alt_description !== undefined) photo.altDescription = p.alt_description;
+                return photo;
+            }),
             total: data.total ?? 0,
             totalPages: data.total_pages ?? 0,
         };

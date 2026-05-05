@@ -21,13 +21,13 @@ export interface ZoomToolConfig {
 
 async function getAccessToken(config: ZoomToolConfig): Promise<string> {
     // First try direct token
-    const directToken = config.accessToken ?? process.env.ZOOM_ACCESS_TOKEN;
+    const directToken = config.accessToken ?? process.env['ZOOM_ACCESS_TOKEN'];
     if (directToken) return directToken;
 
     // Try Server-to-Server OAuth
-    const accountId = config.accountId ?? process.env.ZOOM_ACCOUNT_ID;
-    const clientId = config.clientId ?? process.env.ZOOM_CLIENT_ID;
-    const clientSecret = config.clientSecret ?? process.env.ZOOM_CLIENT_SECRET;
+    const accountId = config.accountId ?? process.env['ZOOM_ACCOUNT_ID'];
+    const clientId = config.clientId ?? process.env['ZOOM_CLIENT_ID'];
+    const clientSecret = config.clientSecret ?? process.env['ZOOM_CLIENT_SECRET'];
 
     if (!accountId || !clientId || !clientSecret) {
         throw new Error('ZoomTools require ZOOM_ACCESS_TOKEN or (ZOOM_ACCOUNT_ID + ZOOM_CLIENT_ID + ZOOM_CLIENT_SECRET)');
@@ -47,7 +47,7 @@ async function zoomRequest(token: string, method: string, path: string, body?: o
     const res = await fetch(`https://api.zoom.us/v2${path}`, {
         method,
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`Zoom API ${res.status}: ${await res.text()}`);
     if (res.status === 204) return { success: true };

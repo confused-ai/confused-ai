@@ -61,7 +61,7 @@ abstract class BaseSerpApiTool<TParams extends z.ZodObject<Record<string, z.ZodT
             ...config,
         });
 
-        this.apiKey = config.apiKey || process.env.SERPAPI_API_KEY || '';
+        this.apiKey = config.apiKey || process.env['SERPAPI_API_KEY'] || '';
 
         if (!this.apiKey) {
             throw new Error('SerpApi API key is required. Set SERPAPI_API_KEY environment variable or pass apiKey in config.');
@@ -223,10 +223,10 @@ export class SerpApiToolkit {
         const tools: Array<SerpApiGoogleSearchTool | SerpApiYouTubeSearchTool> = [];
 
         if (options?.enableGoogleSearch !== false) {
-            tools.push(new SerpApiGoogleSearchTool({ apiKey: options?.apiKey }));
+            tools.push(new SerpApiGoogleSearchTool({ ...(options?.apiKey !== undefined && { apiKey: options.apiKey }) }));
         }
         if (options?.enableYouTubeSearch !== false) {
-            tools.push(new SerpApiYouTubeSearchTool({ apiKey: options?.apiKey }));
+            tools.push(new SerpApiYouTubeSearchTool({ ...(options?.apiKey !== undefined && { apiKey: options.apiKey }) }));
         }
 
         return tools;

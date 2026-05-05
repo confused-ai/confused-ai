@@ -16,8 +16,8 @@ export interface Crawl4AIToolConfig {
 }
 
 function getAuth(config: Crawl4AIToolConfig): { baseUrl: string; headers: Record<string, string> } {
-    const token = config.apiToken ?? process.env.CRAWL4AI_API_TOKEN;
-    const host = (config.host ?? process.env.CRAWL4AI_HOST ?? 'https://api.crawl4ai.com').replace(/\/$/, '');
+    const token = config.apiToken ?? process.env['CRAWL4AI_API_TOKEN'];
+    const host = (config.host ?? process.env['CRAWL4AI_HOST'] ?? 'https://api.crawl4ai.com').replace(/\/$/, '');
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     return { baseUrl: host, headers };

@@ -59,7 +59,6 @@ export default defineConfig({
         config: 'src/config/index.ts',
         dx: 'src/dx/index.ts',
         sdk: 'src/sdk/index.ts',
-        extensions: 'src/extensions/index.ts',
         graph: 'src/graph/index.ts',
     },
     format: ['cjs', 'esm'],

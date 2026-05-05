@@ -26,7 +26,7 @@ async function linearQuery(apiKey: string, query: string, variables?: Record<str
 }
 
 function getKey(config: LinearToolConfig): string {
-    const key = config.apiKey ?? process.env.LINEAR_API_KEY;
+    const key = config.apiKey ?? process.env['LINEAR_API_KEY'];
     if (!key) throw new Error('LinearTools require LINEAR_API_KEY');
     return key;
 }

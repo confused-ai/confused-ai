@@ -59,8 +59,8 @@ export class TelegramTool extends BaseTool<typeof TelegramSendMessageParameters,
             ...config,
         });
 
-        this.token = config?.token || process.env.TELEGRAM_TOKEN || '';
-        this.defaultChatId = config?.chatId || process.env.TELEGRAM_CHAT_ID || '';
+        this.token = config?.token || process.env['TELEGRAM_TOKEN'] || '';
+        this.defaultChatId = config?.chatId || process.env['TELEGRAM_CHAT_ID'] || '';
 
         if (!this.token) {
             throw new Error('Telegram token is required. Set TELEGRAM_TOKEN environment variable or pass token in config.');
@@ -122,6 +122,6 @@ export class TelegramTool extends BaseTool<typeof TelegramSendMessageParameters,
  */
 export class TelegramToolkit {
     static create(options: { token?: string; chatId?: string }): Array<TelegramTool> {
-        return [new TelegramTool({ token: options.token, chatId: options.chatId })];
+        return [new TelegramTool({ ...(options.token !== undefined && { token: options.token }), ...(options.chatId !== undefined && { chatId: options.chatId }) })];
     }
 }

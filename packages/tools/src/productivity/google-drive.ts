@@ -14,7 +14,7 @@ export interface GoogleDriveToolConfig {
 }
 
 function getToken(config: GoogleDriveToolConfig): string {
-    const token = config.accessToken ?? process.env.GOOGLE_ACCESS_TOKEN;
+    const token = config.accessToken ?? process.env['GOOGLE_ACCESS_TOKEN'];
     if (!token) throw new Error('GoogleDriveTools require GOOGLE_ACCESS_TOKEN');
     return token;
 }
@@ -25,7 +25,7 @@ async function driveRequest(token: string, method: string, path: string, body?: 
     const res = await fetch(url.toString(), {
         method,
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`Google Drive API ${res.status}: ${await res.text()}`);
     if (res.status === 204) return { success: true };

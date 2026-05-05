@@ -72,7 +72,7 @@ export const WRITER_BASE_URL = 'https://api.writer.com/v1';
 
 // ── Env var names ──────────────────────────────────────────────────────────
 
-const ENV: Record<string, string> = {
+const ENV = {
     OPENAI: 'OPENAI_API_KEY',
     ANTHROPIC: 'ANTHROPIC_API_KEY',
     GOOGLE: 'GOOGLE_API_KEY',         // also accepts GEMINI_API_KEY
@@ -116,6 +116,18 @@ function env(getEnv: EnvFn | undefined, key: string): string | undefined {
     return getEnv ? getEnv(key) : undefined;
 }
 
+function makeConfig(
+    base: { baseURL?: string; nativeProvider?: 'anthropic' | 'google' },
+    apiKey: string | undefined,
+    model: string,
+): ResolvedModelConfig {
+    const result: ResolvedModelConfig = { model };
+    if (base.baseURL !== undefined) result.baseURL = base.baseURL;
+    if (apiKey !== undefined) result.apiKey = apiKey;
+    if (base.nativeProvider !== undefined) result.nativeProvider = base.nativeProvider;
+    return result;
+}
+
 /**
  * Resolve "provider:model_id" → config.
  * Returns undefined when the string doesn't contain a recognised provider prefix.
@@ -134,97 +146,85 @@ export function resolveModelString(
 
     switch (provider) {
         case PROVIDER.OPENAI:
-            return { apiKey: env(ge, ENV.OPENAI), model: modelId };
+            return makeConfig({}, env(ge, ENV.OPENAI), modelId);
 
         case PROVIDER.ANTHROPIC:
-            return {
-                apiKey: env(ge, ENV.ANTHROPIC),
-                model: modelId,
-                nativeProvider: 'anthropic',
-            };
+            return makeConfig({ nativeProvider: 'anthropic' }, env(ge, ENV.ANTHROPIC), modelId);
 
         case PROVIDER.GOOGLE:
-            return {
-                apiKey: env(ge, ENV.GOOGLE) ?? env(ge, 'GEMINI_API_KEY'),
-                model: modelId,
-                nativeProvider: 'google',
-            };
+            return makeConfig({ nativeProvider: 'google' }, env(ge, ENV.GOOGLE) ?? env(ge, 'GEMINI_API_KEY'), modelId);
 
         case PROVIDER.GROQ:
-            return { baseURL: GROQ_BASE_URL, apiKey: env(ge, ENV.GROQ), model: modelId };
+            return makeConfig({ baseURL: GROQ_BASE_URL }, env(ge, ENV.GROQ), modelId);
 
         case PROVIDER.XAI:
-            return { baseURL: XAI_BASE_URL, apiKey: env(ge, ENV.XAI), model: modelId };
+            return makeConfig({ baseURL: XAI_BASE_URL }, env(ge, ENV.XAI), modelId);
 
         case PROVIDER.TOGETHER:
-            return { baseURL: TOGETHER_BASE_URL, apiKey: env(ge, ENV.TOGETHER), model: modelId };
+            return makeConfig({ baseURL: TOGETHER_BASE_URL }, env(ge, ENV.TOGETHER), modelId);
 
         case PROVIDER.FIREWORKS:
-            return { baseURL: FIREWORKS_BASE_URL, apiKey: env(ge, ENV.FIREWORKS), model: modelId };
+            return makeConfig({ baseURL: FIREWORKS_BASE_URL }, env(ge, ENV.FIREWORKS), modelId);
 
         case PROVIDER.DEEPSEEK:
-            return { baseURL: DEEPSEEK_BASE_URL, apiKey: env(ge, ENV.DEEPSEEK), model: modelId };
+            return makeConfig({ baseURL: DEEPSEEK_BASE_URL }, env(ge, ENV.DEEPSEEK), modelId);
 
         case PROVIDER.MISTRAL:
-            return { baseURL: MISTRAL_BASE_URL, apiKey: env(ge, ENV.MISTRAL), model: modelId };
+            return makeConfig({ baseURL: MISTRAL_BASE_URL }, env(ge, ENV.MISTRAL), modelId);
 
         case PROVIDER.COHERE:
-            return { baseURL: COHERE_BASE_URL, apiKey: env(ge, ENV.COHERE), model: modelId };
+            return makeConfig({ baseURL: COHERE_BASE_URL }, env(ge, ENV.COHERE), modelId);
 
         case PROVIDER.PERPLEXITY:
-            return { baseURL: PERPLEXITY_BASE_URL, apiKey: env(ge, ENV.PERPLEXITY), model: modelId };
+            return makeConfig({ baseURL: PERPLEXITY_BASE_URL }, env(ge, ENV.PERPLEXITY), modelId);
 
         case PROVIDER.OPENROUTER:
-            return { baseURL: OPENROUTER_BASE_URL, apiKey: env(ge, ENV.OPENROUTER), model: modelId };
+            return makeConfig({ baseURL: OPENROUTER_BASE_URL }, env(ge, ENV.OPENROUTER), modelId);
 
         case PROVIDER.OLLAMA:
-            return { baseURL: OLLAMA_BASE_URL, apiKey: 'not-needed', model: modelId };
+            return makeConfig({ baseURL: OLLAMA_BASE_URL }, 'not-needed', modelId);
 
         case PROVIDER.LLAMABARN:
-            return {
-                baseURL: LLAMABARN_BASE_URL,
-                apiKey: env(ge, ENV.LLAMABARN) ?? 'not-needed',
-                model: modelId,
-            };
+            return makeConfig({ baseURL: LLAMABARN_BASE_URL }, env(ge, ENV.LLAMABARN) ?? 'not-needed', modelId);
 
         case PROVIDER.CEREBRAS:
-            return { baseURL: CEREBRAS_BASE_URL, apiKey: env(ge, ENV.CEREBRAS), model: modelId };
+            return makeConfig({ baseURL: CEREBRAS_BASE_URL }, env(ge, ENV.CEREBRAS), modelId);
 
         case PROVIDER.SAMBANOVA:
-            return { baseURL: SAMBANOVA_BASE_URL, apiKey: env(ge, ENV.SAMBANOVA), model: modelId };
+            return makeConfig({ baseURL: SAMBANOVA_BASE_URL }, env(ge, ENV.SAMBANOVA), modelId);
 
         case PROVIDER.NVIDIA:
-            return { baseURL: NVIDIA_BASE_URL, apiKey: env(ge, ENV.NVIDIA), model: modelId };
+            return makeConfig({ baseURL: NVIDIA_BASE_URL }, env(ge, ENV.NVIDIA), modelId);
 
         case PROVIDER.AI21:
-            return { baseURL: AI21_BASE_URL, apiKey: env(ge, ENV.AI21), model: modelId };
+            return makeConfig({ baseURL: AI21_BASE_URL }, env(ge, ENV.AI21), modelId);
 
         case PROVIDER.HYPERBOLIC:
-            return { baseURL: HYPERBOLIC_BASE_URL, apiKey: env(ge, ENV.HYPERBOLIC), model: modelId };
+            return makeConfig({ baseURL: HYPERBOLIC_BASE_URL }, env(ge, ENV.HYPERBOLIC), modelId);
 
         case PROVIDER.LAMBDA:
-            return { baseURL: LAMBDA_BASE_URL, apiKey: env(ge, ENV.LAMBDA), model: modelId };
+            return makeConfig({ baseURL: LAMBDA_BASE_URL }, env(ge, ENV.LAMBDA), modelId);
 
         case PROVIDER.MOONSHOT:
-            return { baseURL: MOONSHOT_BASE_URL, apiKey: env(ge, ENV.MOONSHOT), model: modelId };
+            return makeConfig({ baseURL: MOONSHOT_BASE_URL }, env(ge, ENV.MOONSHOT), modelId);
 
         case PROVIDER.DASHSCOPE:
-            return { baseURL: DASHSCOPE_BASE_URL, apiKey: env(ge, ENV.DASHSCOPE), model: modelId };
+            return makeConfig({ baseURL: DASHSCOPE_BASE_URL }, env(ge, ENV.DASHSCOPE), modelId);
 
         case PROVIDER.ZHIPU:
-            return { baseURL: ZHIPU_BASE_URL, apiKey: env(ge, ENV.ZHIPU), model: modelId };
+            return makeConfig({ baseURL: ZHIPU_BASE_URL }, env(ge, ENV.ZHIPU), modelId);
 
         case PROVIDER.YI:
-            return { baseURL: YI_BASE_URL, apiKey: env(ge, ENV.YI), model: modelId };
+            return makeConfig({ baseURL: YI_BASE_URL }, env(ge, ENV.YI), modelId);
 
         case PROVIDER.UPSTAGE:
-            return { baseURL: UPSTAGE_BASE_URL, apiKey: env(ge, ENV.UPSTAGE), model: modelId };
+            return makeConfig({ baseURL: UPSTAGE_BASE_URL }, env(ge, ENV.UPSTAGE), modelId);
 
         case PROVIDER.NOVITA:
-            return { baseURL: NOVITA_BASE_URL, apiKey: env(ge, ENV.NOVITA), model: modelId };
+            return makeConfig({ baseURL: NOVITA_BASE_URL }, env(ge, ENV.NOVITA), modelId);
 
         case PROVIDER.WRITER:
-            return { baseURL: WRITER_BASE_URL, apiKey: env(ge, ENV.WRITER), model: modelId };
+            return makeConfig({ baseURL: WRITER_BASE_URL }, env(ge, ENV.WRITER), modelId);
 
         case PROVIDER.AZURE: {
             // format: azure:resource/deployment
@@ -233,11 +233,11 @@ export function resolveModelString(
             const resource = modelId.slice(0, slash);
             const deployment = modelId.slice(slash + 1);
             const apiVersion = env(ge, 'AZURE_OPENAI_API_VERSION') ?? '2025-01-01-preview';
-            return {
-                baseURL: `https://${resource}.openai.azure.com/openai/deployments/${deployment}?api-version=${apiVersion}`,
-                apiKey: env(ge, 'AZURE_OPENAI_API_KEY'),
-                model: deployment,
-            };
+            return makeConfig(
+                { baseURL: `https://${resource}.openai.azure.com/openai/deployments/${deployment}?api-version=${apiVersion}` },
+                env(ge, 'AZURE_OPENAI_API_KEY'),
+                deployment,
+            );
         }
 
         default:

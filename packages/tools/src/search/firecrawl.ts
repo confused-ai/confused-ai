@@ -13,7 +13,7 @@ export interface FirecrawlToolConfig {
 }
 
 function getKey(config: FirecrawlToolConfig): string {
-    const key = config.apiKey ?? process.env.FIRECRAWL_API_KEY;
+    const key = config.apiKey ?? process.env['FIRECRAWL_API_KEY'];
     if (!key) throw new Error('FirecrawlTools require FIRECRAWL_API_KEY');
     return key;
 }
@@ -87,22 +87,21 @@ export class FirecrawlScrapeTool extends BaseTool<typeof ScrapeSchema, ScrapedPa
             formats: input.formats ?? ['markdown'],
             onlyMainContent: input.onlyMainContent ?? true,
         };
-        if (input.waitFor) body.waitFor = input.waitFor;
-        if (input.timeout) body.timeout = input.timeout;
-        if (input.excludeTags?.length) body.excludeTags = input.excludeTags;
-        if (input.includeTags?.length) body.includeTags = input.includeTags;
+        if (input['waitFor']) body['waitFor'] = input['waitFor'];
+        if (input['timeout']) body['timeout'] = input['timeout'];
+        if (input['excludeTags']?.length) body['excludeTags'] = input['excludeTags'];
+        if (input['includeTags']?.length) body['includeTags'] = input['includeTags'];
 
         const data = await firecrawlFetch(getKey(this.config), '/scrape', body) as { data: Record<string, unknown> };
         const d = data.data ?? (data as Record<string, unknown>);
-        return {
-            url: input.url,
-            markdown: d.markdown as string | undefined,
-            html: d.html as string | undefined,
-            rawHtml: d.rawHtml as string | undefined,
-            links: d.links as string[] | undefined,
-            screenshot: d.screenshot as string | undefined,
-            metadata: d.metadata as ScrapedPage['metadata'],
-        };
+        const result: ScrapedPage = { url: input.url };
+        if (d['markdown'] !== undefined) result.markdown = d['markdown'] as string;
+        if (d['html'] !== undefined) result.html = d['html'] as string;
+        if (d['rawHtml'] !== undefined) result.rawHtml = d['rawHtml'] as string;
+        if (d['links'] !== undefined) result.links = d['links'] as string[];
+        if (d['screenshot'] !== undefined) result.screenshot = d['screenshot'] as string;
+        if (d['metadata'] !== undefined) result.metadata = d['metadata'] as NonNullable<ScrapedPage['metadata']>;
+        return result;
     }
 }
 
@@ -128,8 +127,8 @@ export class FirecrawlCrawlTool extends BaseTool<typeof CrawlSchema, { pages: Sc
             },
             maxDepth: input.maxDepth ?? 3,
         };
-        if (input.includePaths?.length) body.includePaths = input.includePaths;
-        if (input.excludePaths?.length) body.excludePaths = input.excludePaths;
+        if (input['includePaths']?.length) body['includePaths'] = input['includePaths'];
+        if (input['excludePaths']?.length) body['excludePaths'] = input['excludePaths'];
 
         const data = await firecrawlFetch(getKey(this.config), '/crawl', body) as {
             jobId?: string;
@@ -137,14 +136,15 @@ export class FirecrawlCrawlTool extends BaseTool<typeof CrawlSchema, { pages: Sc
         };
 
         const rawPages = (data.data ?? []) as Array<Record<string, unknown>>;
-        const pages: ScrapedPage[] = rawPages.map((d) => ({
-            url: d.url as string ?? '',
-            markdown: d.markdown as string | undefined,
-            html: d.html as string | undefined,
-            metadata: d.metadata as ScrapedPage['metadata'],
-        }));
+        const pages: ScrapedPage[] = rawPages.map((d) => {
+            const p: ScrapedPage = { url: d['url'] as string ?? '' };
+            if (d['markdown'] !== undefined) p.markdown = d['markdown'] as string;
+            if (d['html'] !== undefined) p.html = d['html'] as string;
+            if (d['metadata'] !== undefined) p.metadata = d['metadata'] as NonNullable<ScrapedPage['metadata']>;
+            return p;
+        });
 
-        return { pages, count: pages.length, jobId: data.jobId };
+        return { pages, count: pages.length, ...(data.jobId !== undefined && { jobId: data.jobId }) };
     }
 }
 
@@ -166,7 +166,7 @@ export class FirecrawlMapTool extends BaseTool<typeof MapSchema, { urls: string[
             limit: input.limit ?? 100,
             ignoreSitemap: input.ignoreSitemap ?? false,
         };
-        if (input.search) body.search = input.search;
+        if (input['search']) body['search'] = input['search'];
 
         const data = await firecrawlFetch(getKey(this.config), '/map', body) as { links?: string[]; urls?: string[] };
         const urls = data.links ?? data.urls ?? [];

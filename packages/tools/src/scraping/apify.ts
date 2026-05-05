@@ -14,7 +14,7 @@ export interface ApifyToolConfig {
 }
 
 function getToken(config: ApifyToolConfig): string {
-    const token = config.apiToken ?? process.env.APIFY_API_TOKEN;
+    const token = config.apiToken ?? process.env['APIFY_API_TOKEN'];
     if (!token) throw new Error('ApifyTools require APIFY_API_TOKEN');
     return token;
 }
@@ -24,7 +24,7 @@ async function apifyRequest(token: string, method: string, path: string, body?: 
     const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`Apify API ${res.status}: ${await res.text()}`);
     return res.json();

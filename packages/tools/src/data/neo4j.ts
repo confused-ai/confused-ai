@@ -22,12 +22,12 @@ export interface Neo4jToolConfig {
 interface Neo4jCreds { url: string; auth: string; database: string }
 
 function getCreds(config: Neo4jToolConfig): Neo4jCreds {
-    const url = (config.url ?? process.env.NEO4J_URL ?? 'http://localhost:7474').replace(/\/$/, '');
-    const username = config.username ?? process.env.NEO4J_USERNAME ?? 'neo4j';
-    const password = config.password ?? process.env.NEO4J_PASSWORD;
+    const url = (config.url ?? process.env['NEO4J_URL'] ?? 'http://localhost:7474').replace(/\/$/, '');
+    const username = config.username ?? process.env['NEO4J_USERNAME'] ?? 'neo4j';
+    const password = config.password ?? process.env['NEO4J_PASSWORD'];
     if (!password) throw new Error('Neo4jTools require NEO4J_PASSWORD');
     const auth = Buffer.from(`${username}:${password}`).toString('base64');
-    const database = config.database ?? process.env.NEO4J_DATABASE ?? 'neo4j';
+    const database = config.database ?? process.env['NEO4J_DATABASE'] ?? 'neo4j';
     return { url, auth, database };
 }
 
@@ -46,7 +46,7 @@ async function neo4jQuery(creds: Neo4jCreds, cypher: string, parameters: Record<
         results: Array<{ columns: string[]; data: Array<{ row: unknown[] }> }>;
         errors: Array<{ code: string; message: string }>;
     };
-    if (data.errors?.length) throw new Error(`Neo4j error: ${data.errors[0].message}`);
+    if (data.errors?.length) throw new Error(`Neo4j error: ${data.errors[0]?.message ?? 'Unknown error'}`);
     return data.results;
 }
 
@@ -136,7 +136,7 @@ export class Neo4jCreateNodeTool extends BaseTool<typeof CreateNodeSchema, { id:
         const results = await neo4jQuery(getCreds(this.config), cypher, { props: input.properties }) as Array<{ columns: string[]; data: Array<{ row: unknown[] }> }>;
         const rows = parseResults(results);
         const row = rows[0] ?? {};
-        return { id: row.id, labels: row.labels as string[], properties: row.props as Record<string, unknown> };
+        return { id: row['id'], labels: row['labels'] as string[], properties: row['props'] as Record<string, unknown> };
     }
 }
 
@@ -166,7 +166,7 @@ export class Neo4jCreateRelationshipTool extends BaseTool<typeof CreateRelations
         const results = await neo4jQuery(getCreds(this.config), cypher, params) as Array<{ columns: string[]; data: Array<{ row: unknown[] }> }>;
         const rows = parseResults(results);
         const row = rows[0] ?? {};
-        return { type: row.type as string ?? input.type, properties: row.props as Record<string, unknown> ?? {} };
+        return { type: row['type'] as string ?? input['type'], properties: row['props'] as Record<string, unknown> ?? {} };
     }
 }
 
@@ -189,7 +189,7 @@ export class Neo4jFindNodesTool extends BaseTool<typeof FindNodesSchema, { nodes
         const cypher = `MATCH (n:${input.label}) ${where} RETURN id(n) as id, labels(n) as labels, properties(n) as props SKIP ${input.skip ?? 0} LIMIT ${input.limit ?? 25}`;
         const results = await neo4jQuery(getCreds(this.config), cypher, props) as Array<{ columns: string[]; data: Array<{ row: unknown[] }> }>;
         const rows = parseResults(results);
-        const nodes = rows.map((r) => ({ id: r.id, labels: r.labels, ...(r.props as Record<string, unknown>) }));
+        const nodes = rows.map((r) => ({ id: r['id'], labels: r['labels'], ...(r['props'] as Record<string, unknown>) }));
         return { nodes, count: nodes.length };
     }
 }
@@ -211,7 +211,7 @@ export class Neo4jDeleteNodeTool extends BaseTool<typeof DeleteNodeSchema, { del
         const cypher = `MATCH (n:${input.label} {${input.property}: $value}) ${deleteClause} RETURN count(*) as deleted`;
         const results = await neo4jQuery(getCreds(this.config), cypher, { value: input.value }) as Array<{ columns: string[]; data: Array<{ row: unknown[] }> }>;
         const rows = parseResults(results);
-        return { deleted: rows[0]?.deleted as number ?? 0 };
+        return { deleted: rows[0]?.['deleted'] as number ?? 0 };
     }
 }
 
@@ -239,14 +239,14 @@ export class Neo4jGetSchemaTool extends BaseTool<typeof GetSchemaSchema, {
             neo4jQuery(creds, 'CALL db.propertyKeys() YIELD propertyKey RETURN collect(propertyKey) as keys'),
         ]) as Array<Array<{ columns: string[]; data: Array<{ row: unknown[] }> }>>;
 
-        const labelsRows = parseResults(labelsRes);
-        const relsRows = parseResults(relsRes);
-        const propsRows = parseResults(propsRes);
+        const labelsRows = parseResults(labelsRes ?? []);
+        const relsRows = parseResults(relsRes ?? []);
+        const propsRows = parseResults(propsRes ?? []);
 
         return {
-            labels: labelsRows[0]?.labels as string[] ?? [],
-            relationshipTypes: relsRows[0]?.types as string[] ?? [],
-            propertyKeys: propsRows[0]?.keys as string[] ?? [],
+            labels: labelsRows[0]?.['labels'] as string[] ?? [],
+            relationshipTypes: relsRows[0]?.['types'] as string[] ?? [],
+            propertyKeys: propsRows[0]?.['keys'] as string[] ?? [],
         };
     }
 }

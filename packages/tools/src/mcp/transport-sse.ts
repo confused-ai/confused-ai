@@ -84,7 +84,7 @@ export class StreamableMcpClient implements MCPClient {
     private readonly baseHeaders: Record<string, string>;
     private readonly timeoutMs: number;
     private readonly preferStreaming: boolean;
-    private sessionId?: string;
+    private sessionId: string | undefined;
     private idCounter = 0;
     private notificationHandlers: NotificationHandler[] = [];
 
@@ -206,10 +206,10 @@ export class StreamableMcpClient implements MCPClient {
         const result = await this.rpc<{
             tools?: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown> }>;
         }>('tools/list');
-        return (result.tools ?? []).map(t => ({
+        return (result.tools ?? []).map((t): MCPToolDescriptor => ({
             name: t.name,
-            description: t.description,
-            inputSchema: t.inputSchema,
+            ...(t.description !== undefined ? { description: t.description } : {}),
+            ...(t.inputSchema !== undefined ? { inputSchema: t.inputSchema } : {}),
         }));
     }
 

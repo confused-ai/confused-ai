@@ -13,7 +13,7 @@ export interface SearXNGToolConfig {
 }
 
 function getHost(config: SearXNGToolConfig): string {
-    return config.host ?? process.env.SEARXNG_HOST ?? 'https://searx.be';
+    return config.host ?? process.env['SEARXNG_HOST'] ?? 'https://searx.be';
 }
 
 const SearchSchema = z.object({
@@ -81,8 +81,8 @@ export class SearXNGSearchTool extends BaseTool<typeof SearchSchema, {
                 title: r.title,
                 url: r.url,
                 content: r.content,
-                engine: r.engine,
-                publishedDate: r.publishedDate,
+                ...(r.engine !== undefined && { engine: r.engine }),
+                ...(r.publishedDate !== undefined && { publishedDate: r.publishedDate }),
             })),
             suggestions: data.suggestions ?? [],
         };

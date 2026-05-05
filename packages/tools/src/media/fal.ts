@@ -14,7 +14,7 @@ export interface FalToolConfig {
 }
 
 function getKey(config: FalToolConfig): string {
-    const key = config.apiKey ?? process.env.FAL_KEY;
+    const key = config.apiKey ?? process.env['FAL_KEY'];
     if (!key) throw new Error('FalTools require FAL_KEY');
     return key;
 }

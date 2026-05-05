@@ -13,7 +13,7 @@ export interface YouTubeToolConfig {
 }
 
 function getKey(config: YouTubeToolConfig): string {
-    const key = config.apiKey ?? process.env.YOUTUBE_API_KEY;
+    const key = config.apiKey ?? process.env['YOUTUBE_API_KEY'];
     if (!key) throw new Error('YouTubeTools require YOUTUBE_API_KEY');
     return key;
 }
@@ -76,7 +76,7 @@ export class YouTubeSearchTool extends BaseTool<typeof SearchSchema, { videos: V
             order: input.order ?? 'relevance',
             videoDuration: input.videoDuration ?? 'any',
         };
-        if (input.channelId) params.channelId = input.channelId;
+        if (input.channelId) params['channelId'] = input.channelId;
 
         const data = await ytFetch(getKey(this.config), 'search', params) as {
             pageInfo: { totalResults: number };
@@ -93,7 +93,7 @@ export class YouTubeSearchTool extends BaseTool<typeof SearchSchema, { videos: V
             channelTitle: item.snippet.channelTitle,
             publishedAt: item.snippet.publishedAt,
             url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-            thumbnailUrl: item.snippet.thumbnails?.medium?.url,
+            ...(item.snippet.thumbnails?.medium?.url !== undefined && { thumbnailUrl: item.snippet.thumbnails.medium.url }),
         }));
 
         return { videos, totalResults: data.pageInfo?.totalResults ?? videos.length };
@@ -138,10 +138,10 @@ export class YouTubeGetVideoTool extends BaseTool<typeof GetVideoSchema, VideoIt
             channelTitle: item.snippet.channelTitle,
             publishedAt: item.snippet.publishedAt,
             url: `https://www.youtube.com/watch?v=${item.id}`,
-            thumbnailUrl: item.snippet.thumbnails?.medium?.url,
-            duration: item.contentDetails?.duration,
-            viewCount: item.statistics?.viewCount,
-            likeCount: item.statistics?.likeCount,
+            ...(item.snippet.thumbnails?.medium?.url !== undefined && { thumbnailUrl: item.snippet.thumbnails.medium.url }),
+            ...(item.contentDetails?.duration !== undefined && { duration: item.contentDetails.duration }),
+            ...(item.statistics?.viewCount !== undefined && { viewCount: item.statistics.viewCount }),
+            ...(item.statistics?.likeCount !== undefined && { likeCount: item.statistics.likeCount }),
         };
     }
 }

@@ -7,4 +7,15 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   treeshake: true,
+  // Optional peer dependencies — users install only what they need
+  external: [
+    'nodemailer',
+    '@sendgrid/mail',
+    'twilio',
+    'stripe',
+    'pg',
+    'mysql2',
+    'mysql2/promise',
+    'ioredis',
+  ],
 });

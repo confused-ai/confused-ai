@@ -17,8 +17,8 @@ export interface SalesforceToolConfig {
 }
 
 function getAuth(config: SalesforceToolConfig): { baseUrl: string; headers: Record<string, string> } {
-    const instanceUrl = (config.instanceUrl ?? process.env.SALESFORCE_INSTANCE_URL ?? '').replace(/\/$/, '');
-    const accessToken = config.accessToken ?? process.env.SALESFORCE_ACCESS_TOKEN;
+    const instanceUrl = (config.instanceUrl ?? process.env['SALESFORCE_INSTANCE_URL'] ?? '').replace(/\/$/, '');
+    const accessToken = config.accessToken ?? process.env['SALESFORCE_ACCESS_TOKEN'];
     if (!instanceUrl) throw new Error('SalesforceTools require SALESFORCE_INSTANCE_URL');
     if (!accessToken) throw new Error('SalesforceTools require SALESFORCE_ACCESS_TOKEN');
     const version = config.apiVersion ?? 'v59.0';
@@ -32,7 +32,7 @@ async function sfRequest(auth: ReturnType<typeof getAuth>, method: string, path:
     const res = await fetch(`${auth.baseUrl}${path}`, {
         method,
         headers: auth.headers,
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`Salesforce API ${res.status}: ${await res.text()}`);
     if (res.status === 204) return { success: true };

@@ -16,7 +16,7 @@ export interface GiphyToolConfig {
 }
 
 function getKey(config: GiphyToolConfig): string {
-    const key = config.apiKey ?? process.env.GIPHY_API_KEY;
+    const key = config.apiKey ?? process.env['GIPHY_API_KEY'];
     if (!key) throw new Error('GiphyTools require GIPHY_API_KEY');
     return key;
 }

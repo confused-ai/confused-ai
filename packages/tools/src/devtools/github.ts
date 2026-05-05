@@ -77,7 +77,7 @@ async function githubRequest(
     };
 
     if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
     }
 
     return fetch(`${GITHUB_API_BASE}${endpoint}`, {
@@ -116,7 +116,8 @@ export class GitHubSearchRepositoriesTool extends BaseTool<typeof GitHubSearchRe
             },
             ...config,
         });
-        this.token = config?.token || process.env.GITHUB_ACCESS_TOKEN;
+        const _gt = config?.token || process.env['GITHUB_ACCESS_TOKEN'];
+        if (_gt !== undefined) this.token = _gt;
     }
 
     protected async performExecute(
@@ -171,7 +172,8 @@ export class GitHubGetRepositoryTool extends BaseTool<typeof GitHubGetRepository
             },
             ...config,
         });
-        this.token = config?.token || process.env.GITHUB_ACCESS_TOKEN;
+        const _gt = config?.token || process.env['GITHUB_ACCESS_TOKEN'];
+        if (_gt !== undefined) this.token = _gt;
     }
 
     protected async performExecute(
@@ -228,7 +230,8 @@ export class GitHubListIssuesTool extends BaseTool<typeof GitHubListIssuesParame
             },
             ...config,
         });
-        this.token = config?.token || process.env.GITHUB_ACCESS_TOKEN;
+        const _gt = config?.token || process.env['GITHUB_ACCESS_TOKEN'];
+        if (_gt !== undefined) this.token = _gt;
     }
 
     protected async performExecute(
@@ -286,7 +289,8 @@ export class GitHubCreateIssueTool extends BaseTool<typeof GitHubCreateIssuePara
             },
             ...config,
         });
-        this.token = config?.token || process.env.GITHUB_ACCESS_TOKEN;
+        const _gt = config?.token || process.env['GITHUB_ACCESS_TOKEN'];
+        if (_gt !== undefined) this.token = _gt;
 
         if (!this.token) {
             throw new Error('GitHub access token is required for creating issues');
@@ -358,7 +362,8 @@ export class GitHubListPullRequestsTool extends BaseTool<typeof GitHubListPullRe
             },
             ...config,
         });
-        this.token = config?.token || process.env.GITHUB_ACCESS_TOKEN;
+        const _gt = config?.token || process.env['GITHUB_ACCESS_TOKEN'];
+        if (_gt !== undefined) this.token = _gt;
     }
 
     protected async performExecute(
@@ -412,19 +417,19 @@ export class GitHubToolkit {
         > = [];
 
         if (options?.enableSearch !== false) {
-            tools.push(new GitHubSearchRepositoriesTool({ token: options?.token }));
+            tools.push(new GitHubSearchRepositoriesTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
         if (options?.enableGetRepo !== false) {
-            tools.push(new GitHubGetRepositoryTool({ token: options?.token }));
+            tools.push(new GitHubGetRepositoryTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
         if (options?.enableListIssues !== false) {
-            tools.push(new GitHubListIssuesTool({ token: options?.token }));
+            tools.push(new GitHubListIssuesTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
         if (options?.enableCreateIssue !== false) {
-            tools.push(new GitHubCreateIssueTool({ token: options?.token }));
+            tools.push(new GitHubCreateIssueTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
         if (options?.enableListPRs !== false) {
-            tools.push(new GitHubListPullRequestsTool({ token: options?.token }));
+            tools.push(new GitHubListPullRequestsTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
 
         return tools;

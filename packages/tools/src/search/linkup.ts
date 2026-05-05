@@ -13,7 +13,7 @@ export interface LinkupToolConfig {
 }
 
 function getKey(config: LinkupToolConfig): string {
-    const key = config.apiKey ?? process.env.LINKUP_API_KEY;
+    const key = config.apiKey ?? process.env['LINKUP_API_KEY'];
     if (!key) throw new Error('LinkupSearchTool requires LINKUP_API_KEY');
     return key;
 }
@@ -64,7 +64,7 @@ export class LinkupSearchTool extends BaseTool<typeof SearchSchema, {
             results?: Array<{ name: string; url: string; content: string }>;
         };
 
-        return { query: input.query, answer: data.answer, results: data.results };
+        return { query: input.query, ...(data.answer !== undefined && { answer: data.answer }), results: data.results ?? [] };
     }
 }
 

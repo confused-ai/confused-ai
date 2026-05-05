@@ -13,7 +13,7 @@ export interface TavilyToolConfig {
 }
 
 function getKey(config: TavilyToolConfig): string {
-    const key = config.apiKey ?? process.env.TAVILY_API_KEY;
+    const key = config.apiKey ?? process.env['TAVILY_API_KEY'];
     if (!key) throw new Error('TavilyTools require TAVILY_API_KEY');
     return key;
 }
@@ -77,7 +77,7 @@ export class TavilySearchTool extends BaseTool<typeof SearchSchema, {
             results: Array<{ title: string; url: string; content: string; score: number }>;
             query: string;
         };
-        return { answer: data.answer, results: data.results ?? [], query: data.query };
+        return { ...(data.answer !== undefined && { answer: data.answer }), results: data.results ?? [], query: data.query };
     }
 }
 
@@ -103,7 +103,7 @@ export class TavilyExtractTool extends BaseTool<typeof ExtractSchema, {
             results: (data.results ?? []).map((r) => ({
                 url: r.url,
                 rawContent: r.raw_content,
-                failed: r.failed,
+                ...(r.failed !== undefined && { failed: r.failed }),
             })),
         };
     }

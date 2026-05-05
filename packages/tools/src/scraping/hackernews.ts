@@ -92,7 +92,7 @@ export class HackerNewsTopStoriesTool extends BaseTool<typeof HackerNewsTopStori
                     const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
                     if (storyResponse.ok) {
                         const story = (await storyResponse.json()) as HackerNewsStory;
-                        story.username = story.by;
+                        if (story.by !== undefined) story.username = story.by;
                         stories.push(story);
                     }
                 } catch {
@@ -152,12 +152,10 @@ export class HackerNewsUserTool extends BaseTool<typeof HackerNewsUserParameters
                 };
             }
 
-            const user: HackerNewsUser = {
-                id: userData.id,
-                karma: userData.karma,
-                about: userData.about,
-                total_items_submitted: userData.submitted?.length || 0,
-            };
+            const user: HackerNewsUser = { total_items_submitted: userData.submitted?.length || 0 };
+            if (userData.id !== undefined) user.id = userData.id;
+            if (userData.karma !== undefined) user.karma = userData.karma;
+            if (userData.about !== undefined) user.about = userData.about;
 
             return { user };
         } catch (error) {

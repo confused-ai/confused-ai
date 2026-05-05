@@ -30,7 +30,14 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { CreateAgentResult } from '../create-agent/types.js';
+
+/** Minimal agent interface required for eval — avoids a cross-package import. */
+interface CreateAgentResult {
+    run(prompt: string, options?: Record<string, unknown>): Promise<{
+        text: string;
+        usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+    }>;
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

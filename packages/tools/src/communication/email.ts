@@ -88,7 +88,7 @@ export class SendGridEmailTool extends BaseTool<typeof EmailSchema, EmailResult>
             setApiKey(k: string): void;
             send(m: object): Promise<unknown>;
         };
-        const apiKey = this.config.apiKey ?? process.env.SENDGRID_API_KEY;
+        const apiKey = this.config.apiKey ?? process.env['SENDGRID_API_KEY'];
         if (!apiKey) throw new Error('SendGrid requires SENDGRID_API_KEY');
         sgMail.setApiKey(apiKey);
         await sgMail.send({

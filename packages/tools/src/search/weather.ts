@@ -15,7 +15,7 @@ export interface OpenWeatherToolConfig {
 }
 
 function getKey(config: OpenWeatherToolConfig): string {
-    const key = config.apiKey ?? process.env.OPENWEATHER_API_KEY;
+    const key = config.apiKey ?? process.env['OPENWEATHER_API_KEY'];
     if (!key) throw new Error('OpenWeatherTools require OPENWEATHER_API_KEY');
     return key;
 }

@@ -13,7 +13,7 @@ export interface GoogleMapsToolConfig {
 }
 
 function getKey(config: GoogleMapsToolConfig): string {
-    const key = config.apiKey ?? process.env.GOOGLE_MAPS_API_KEY;
+    const key = config.apiKey ?? process.env['GOOGLE_MAPS_API_KEY'];
     if (!key) throw new Error('GoogleMapsTools require GOOGLE_MAPS_API_KEY');
     return key;
 }
@@ -78,8 +78,8 @@ export class GoogleMapsSearchPlacesTool extends BaseTool<typeof SearchPlacesSche
 
     protected async performExecute(input: z.infer<typeof SearchPlacesSchema>, _ctx: ToolContext) {
         const params: Record<string, string> = { query: input.query, radius: String(input.radius ?? 5000) };
-        if (input.location) params.location = input.location;
-        if (input.type) params.type = input.type;
+        if (input['location']) params['location'] = input['location'];
+        if (input['type']) params['type'] = input['type'];
 
         const data = await mapsGet(getKey(this.config), 'place/textsearch', params) as {
             results: Array<{
@@ -96,7 +96,7 @@ export class GoogleMapsSearchPlacesTool extends BaseTool<typeof SearchPlacesSche
             placeId: r.place_id,
             name: r.name,
             address: r.formatted_address,
-            rating: r.rating,
+            ...(r.rating !== undefined && { rating: r.rating }),
             types: r.types,
             location: r.geometry.location,
         }));
@@ -198,7 +198,7 @@ export class GoogleMapsDirectionsTool extends BaseTool<typeof DirectionsSchema, 
             destination: input.destination,
             mode: input.mode ?? 'driving',
         };
-        if (input.waypoints?.length) params.waypoints = input.waypoints.join('|');
+        if (input['waypoints']?.length) params['waypoints'] = input['waypoints'].join('|');
 
         const data = await mapsGet(getKey(this.config), 'directions', params) as {
             routes: Array<{
@@ -218,6 +218,7 @@ export class GoogleMapsDirectionsTool extends BaseTool<typeof DirectionsSchema, 
         const route = data.routes[0];
         if (!route) throw new Error('No route found');
         const leg = route.legs[0];
+        if (!leg) throw new Error('No route leg found');
 
         const stripHtml = (s: string) => s.replace(/<[^>]+>/g, '');
         return {

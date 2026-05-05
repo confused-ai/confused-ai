@@ -16,8 +16,8 @@ export interface BrowserbaseToolConfig {
 }
 
 function getAuth(config: BrowserbaseToolConfig): { apiKey: string; projectId: string } {
-    const apiKey = config.apiKey ?? process.env.BROWSERBASE_API_KEY;
-    const projectId = config.projectId ?? process.env.BROWSERBASE_PROJECT_ID;
+    const apiKey = config.apiKey ?? process.env['BROWSERBASE_API_KEY'];
+    const projectId = config.projectId ?? process.env['BROWSERBASE_PROJECT_ID'];
     if (!apiKey) throw new Error('BrowserbaseTools require BROWSERBASE_API_KEY');
     if (!projectId) throw new Error('BrowserbaseTools require BROWSERBASE_PROJECT_ID');
     return { apiKey, projectId };

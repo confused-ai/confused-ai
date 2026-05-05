@@ -51,7 +51,7 @@ abstract class BaseOpenAITool<TParams extends z.ZodObject<Record<string, z.ZodTy
             ...config,
         });
 
-        this.apiKey = config.apiKey || process.env.OPENAI_API_KEY || '';
+        this.apiKey = config.apiKey || process.env['OPENAI_API_KEY'] || '';
 
         if (!this.apiKey) {
             throw new Error('OpenAI API key is required. Set OPENAI_API_KEY environment variable or pass apiKey in config.');
@@ -109,8 +109,8 @@ export class OpenAIGenerateImageTool extends BaseOpenAITool<typeof OpenAIGenerat
             };
 
             if (params.model === 'dall-e-3') {
-                body.quality = params.quality;
-                body.style = params.style;
+                body['quality'] = params['quality'];
+                body['style'] = params['style'];
             }
 
             const response = await this.openAIRequest('/images/generations', {
@@ -128,6 +128,7 @@ export class OpenAIGenerateImageTool extends BaseOpenAITool<typeof OpenAIGenerat
 
             const data = (await response.json()) as OpenAIImageResponse;
             const imageData = data.data[0];
+            if (!imageData) throw new Error('No image data returned from OpenAI');
 
             return {
                 data: {
@@ -225,10 +226,10 @@ export class OpenAIToolkit {
         const tools: Array<OpenAIGenerateImageTool | OpenAITranscribeAudioTool> = [];
 
         if (options?.enableImageGeneration !== false) {
-            tools.push(new OpenAIGenerateImageTool({ apiKey: options?.apiKey }));
+            tools.push(new OpenAIGenerateImageTool({ ...(options?.apiKey !== undefined && { apiKey: options.apiKey }) }));
         }
         if (options?.enableTranscription !== false) {
-            tools.push(new OpenAITranscribeAudioTool({ apiKey: options?.apiKey }));
+            tools.push(new OpenAITranscribeAudioTool({ ...(options?.apiKey !== undefined && { apiKey: options.apiKey }) }));
         }
 
         return tools;

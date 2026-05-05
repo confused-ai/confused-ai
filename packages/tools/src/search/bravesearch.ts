@@ -17,7 +17,7 @@ export interface BraveSearchToolConfig {
 }
 
 function getKey(config: BraveSearchToolConfig): string {
-    const key = config.apiKey ?? process.env.BRAVE_API_KEY;
+    const key = config.apiKey ?? process.env['BRAVE_API_KEY'];
     if (!key) throw new Error('BraveSearchTool requires BRAVE_API_KEY');
     return key;
 }
@@ -86,7 +86,7 @@ export class BraveSearchTool extends BaseTool<typeof SearchSchema, {
                 title: r.title,
                 url: r.url,
                 description: r.description,
-                age: r.age,
+                ...(r.age !== undefined && { age: r.age }),
             })),
             totalResults: webResults.length,
         };
@@ -134,8 +134,8 @@ export class BraveNewsSearchTool extends BaseTool<typeof NewsSearchSchema, {
                 title: r.title,
                 url: r.url,
                 description: r.description,
-                age: r.age,
-                source: r.meta_url?.hostname,
+                ...(r.age !== undefined && { age: r.age }),
+                ...(r.meta_url?.hostname !== undefined && { source: r.meta_url.hostname }),
             })),
         };
     }

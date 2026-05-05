@@ -77,7 +77,7 @@ export class PostgreSQLInsertTool extends BaseTool<typeof PgInsertSchema, { id: 
         const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ');
         const sql = `INSERT INTO ${input.table} (${cols.join(', ')}) VALUES (${placeholders}) RETURNING id`;
         const result = await pool.query(sql, vals);
-        return { id: (result.rows[0] as Record<string, unknown>)?.id, success: true };
+        return { id: (result.rows[0] as Record<string, unknown>)?.['id'], success: true };
     }
 }
 

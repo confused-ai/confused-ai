@@ -15,7 +15,7 @@ export interface TodoistToolConfig {
 const TODOIST_API = 'https://api.todoist.com/rest/v2';
 
 function getToken(config: TodoistToolConfig): string {
-    const token = config.apiToken ?? process.env.TODOIST_API_TOKEN;
+    const token = config.apiToken ?? process.env['TODOIST_API_TOKEN'];
     if (!token) throw new Error('TodoistTools require TODOIST_API_TOKEN');
     return token;
 }
@@ -48,15 +48,15 @@ interface TodoistTask {
 
 function mapTask(t: Record<string, unknown>): TodoistTask {
     return {
-        id: t.id as string,
-        content: t.content as string,
-        description: t.description as string | undefined,
-        projectId: t.project_id as string | undefined,
-        due: t.due as { date: string; string: string } | undefined,
-        priority: t.priority as number,
-        isCompleted: t.is_completed as boolean,
-        labels: t.labels as string[],
-        url: t.url as string,
+        id: t['id'] as string,
+        content: t['content'] as string,
+        ...(t['description'] !== undefined && { description: t['description'] as string }),
+        ...(t['project_id'] !== undefined && { projectId: t['project_id'] as string }),
+        ...(t['due'] !== undefined && { due: t['due'] as { date: string; string: string } }),
+        priority: t['priority'] as number,
+        isCompleted: t['is_completed'] as boolean,
+        labels: t['labels'] as string[],
+        url: t['url'] as string,
     };
 }
 
@@ -105,10 +105,10 @@ export class TodoistUpdateTaskTool extends BaseTool<typeof UpdateTaskSchema, Tod
 
     protected async performExecute(input: z.infer<typeof UpdateTaskSchema>, _ctx: ToolContext) {
         const body: Record<string, unknown> = {};
-        if (input.content) body.content = input.content;
-        if (input.description) body.description = input.description;
-        if (input.dueString) body.due_string = input.dueString;
-        if (input.priority) body.priority = input.priority;
+        if (input['content']) body['content'] = input['content'];
+        if (input['description']) body['description'] = input['description'];
+        if (input.dueString) body['due_string'] = input.dueString;
+        if (input['priority']) body['priority'] = input['priority'];
         const task = await todoistFetch(getToken(this.config), 'POST', `/tasks/${input.taskId}`, body) as Record<string, unknown>;
         return mapTask(task);
     }
@@ -128,11 +128,11 @@ export class TodoistCreateTaskTool extends BaseTool<typeof CreateTaskSchema, Tod
 
     protected async performExecute(input: z.infer<typeof CreateTaskSchema>, _ctx: ToolContext) {
         const body: Record<string, unknown> = { content: input.content };
-        if (input.description) body.description = input.description;
-        if (input.dueString) body.due_string = input.dueString;
-        if (input.priority) body.priority = input.priority;
-        if (input.projectId) body.project_id = input.projectId;
-        if (input.labels?.length) body.labels = input.labels;
+        if (input['description']) body['description'] = input['description'];
+        if (input.dueString) body['due_string'] = input.dueString;
+        if (input['priority']) body['priority'] = input['priority'];
+        if (input.projectId) body['project_id'] = input.projectId;
+        if (input['labels']?.length) body['labels'] = input['labels'];
         const task = await todoistFetch(getToken(this.config), 'POST', '/tasks', body) as Record<string, unknown>;
         return mapTask(task);
     }

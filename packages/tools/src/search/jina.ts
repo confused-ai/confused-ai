@@ -15,7 +15,7 @@ export interface JinaToolConfig {
 
 function getHeaders(config: JinaToolConfig): Record<string, string> {
     const headers: Record<string, string> = { Accept: 'application/json' };
-    const key = config.apiKey ?? process.env.JINA_API_KEY;
+    const key = config.apiKey ?? process.env['JINA_API_KEY'];
     if (key) headers['Authorization'] = `Bearer ${key}`;
     return headers;
 }
@@ -75,9 +75,9 @@ export class JinaReaderTool extends BaseTool<typeof ReadSchema, {
             const data = await res.json() as { data?: { title?: string; content?: string; description?: string; url?: string } };
             return {
                 url: data.data?.url ?? input.url,
-                title: data.data?.title,
                 content: data.data?.content ?? '',
-                description: data.data?.description,
+                ...(data.data?.title !== undefined && { title: data.data.title }),
+                ...(data.data?.description !== undefined && { description: data.data.description }),
             };
         }
 

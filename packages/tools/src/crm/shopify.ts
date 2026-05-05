@@ -17,8 +17,8 @@ export interface ShopifyToolConfig {
 }
 
 function getAuth(config: ShopifyToolConfig): { baseUrl: string; headers: Record<string, string> } {
-    const storeUrl = (config.storeUrl ?? process.env.SHOPIFY_STORE_URL ?? '').replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const accessToken = config.accessToken ?? process.env.SHOPIFY_ACCESS_TOKEN;
+    const storeUrl = (config.storeUrl ?? process.env['SHOPIFY_STORE_URL'] ?? '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const accessToken = config.accessToken ?? process.env['SHOPIFY_ACCESS_TOKEN'];
     if (!storeUrl) throw new Error('ShopifyTools require SHOPIFY_STORE_URL');
     if (!accessToken) throw new Error('ShopifyTools require SHOPIFY_ACCESS_TOKEN');
     const version = config.apiVersion ?? '2024-01';
@@ -32,7 +32,7 @@ async function shopifyRequest(auth: ReturnType<typeof getAuth>, method: string, 
     const res = await fetch(`${auth.baseUrl}${path}`, {
         method,
         headers: auth.headers,
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`Shopify API ${res.status}: ${await res.text()}`);
     return res.json();

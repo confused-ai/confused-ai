@@ -13,7 +13,7 @@ export interface GmailToolConfig {
 }
 
 function getToken(config: GmailToolConfig): string {
-    const token = config.accessToken ?? process.env.GMAIL_ACCESS_TOKEN;
+    const token = config.accessToken ?? process.env['GMAIL_ACCESS_TOKEN'];
     if (!token) throw new Error('GmailTools require GMAIL_ACCESS_TOKEN');
     return token;
 }
@@ -66,16 +66,16 @@ function extractHeader(headers: Array<{ name: string; value: string }>, name: st
 }
 
 function extractBody(payload: Record<string, unknown>): string {
-    const mimeType = payload.mimeType as string;
-    const body = payload.body as { data?: string } | undefined;
-    const parts = payload.parts as Array<Record<string, unknown>> | undefined;
+    const mimeType = payload['mimeType'] as string;
+    const body = payload['body'] as { data?: string } | undefined;
+    const parts = payload['parts'] as Array<Record<string, unknown>> | undefined;
 
     if (mimeType === 'text/plain' && body?.data) return decodeBase64Url(body.data);
     if (mimeType === 'text/html' && body?.data) return decodeBase64Url(body.data);
     if (parts) {
-        const plain = parts.find((p) => (p.mimeType as string) === 'text/plain');
+        const plain = parts.find((p) => (p['mimeType'] as string) === 'text/plain');
         if (plain) return extractBody(plain);
-        const html = parts.find((p) => (p.mimeType as string) === 'text/html');
+        const html = parts.find((p) => (p['mimeType'] as string) === 'text/html');
         if (html) return extractBody(html);
     }
     return '';
@@ -147,16 +147,16 @@ export class GmailListMessagesTool extends BaseTool<typeof ListMessagesSchema, {
         const ids = (list.messages ?? []).map((m) => m.id);
         const messages = await Promise.all(ids.map(async (id) => {
             const msg = await gmailFetch(getToken(this.config), 'GET', `/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date`) as Record<string, unknown>;
-            const headers = (msg.payload as Record<string, unknown>)?.headers as Array<{ name: string; value: string }> ?? [];
+            const headers = (msg['payload'] as Record<string, unknown>)?.['headers'] as Array<{ name: string; value: string }> ?? [];
             return {
-                id: msg.id as string,
-                threadId: msg.threadId as string,
+                id: msg['id'] as string,
+                threadId: msg['threadId'] as string,
                 subject: extractHeader(headers, 'Subject'),
                 from: extractHeader(headers, 'From'),
                 to: extractHeader(headers, 'To'),
                 date: extractHeader(headers, 'Date'),
-                snippet: msg.snippet as string ?? '',
-                labels: msg.labelIds as string[] ?? [],
+                snippet: msg['snippet'] as string ?? '',
+                labels: msg['labelIds'] as string[] ?? [],
             } satisfies GmailMessage;
         }));
 
@@ -179,18 +179,19 @@ export class GmailGetMessageTool extends BaseTool<typeof GetMessageSchema, Gmail
     protected async performExecute(input: z.infer<typeof GetMessageSchema>, _ctx: ToolContext) {
         const format = input.includeBody ? 'full' : 'metadata';
         const msg = await gmailFetch(getToken(this.config), 'GET', `/messages/${input.messageId}?format=${format}`) as Record<string, unknown>;
-        const payload = msg.payload as Record<string, unknown>;
-        const headers = payload?.headers as Array<{ name: string; value: string }> ?? [];
+        const payload = msg['payload'] as Record<string, unknown>;
+        const headers = payload?.['headers'] as Array<{ name: string; value: string }> ?? [];
+        const bodyText = input.includeBody ? extractBody(payload) : undefined;
         return {
-            id: msg.id as string,
-            threadId: msg.threadId as string,
+            id: msg['id'] as string,
+            threadId: msg['threadId'] as string,
             subject: extractHeader(headers, 'Subject'),
             from: extractHeader(headers, 'From'),
             to: extractHeader(headers, 'To'),
             date: extractHeader(headers, 'Date'),
-            snippet: msg.snippet as string ?? '',
-            body: input.includeBody ? extractBody(payload) : undefined,
-            labels: msg.labelIds as string[] ?? [],
+            snippet: msg['snippet'] as string ?? '',
+            ...(bodyText !== undefined && { body: bodyText }),
+            labels: msg['labelIds'] as string[] ?? [],
         };
     }
 }
@@ -208,9 +209,9 @@ export class GmailSendEmailTool extends BaseTool<typeof SendEmailSchema, { id: s
     }
 
     protected async performExecute(input: z.infer<typeof SendEmailSchema>, _ctx: ToolContext) {
-        const raw = buildRawEmail({ to: input.to, subject: input.subject, body: input.body, cc: input.cc, isHtml: input.isHtml ?? false });
+        const raw = buildRawEmail({ to: input.to, subject: input.subject, body: input.body, ...(input.cc !== undefined && { cc: input.cc }), isHtml: input.isHtml ?? false });
         const body: Record<string, unknown> = { raw };
-        if (input.threadId) body.threadId = input.threadId;
+        if (input['threadId']) body['threadId'] = input['threadId'];
         const msg = await gmailFetch(getToken(this.config), 'POST', '/messages/send', body) as { id: string; threadId: string; labelIds: string[] };
         return { id: msg.id, threadId: msg.threadId, labelIds: msg.labelIds ?? [] };
     }
@@ -233,17 +234,17 @@ export class GmailModifyLabelsTool extends BaseTool<typeof ModifyLabelsSchema, G
             addLabelIds: input.addLabelIds ?? [],
             removeLabelIds: input.removeLabelIds ?? [],
         }) as Record<string, unknown>;
-        const payload = msg.payload as Record<string, unknown> ?? {};
-        const headers = payload.headers as Array<{ name: string; value: string }> ?? [];
+        const payload = msg['payload'] as Record<string, unknown> ?? {};
+        const headers = payload['headers'] as Array<{ name: string; value: string }> ?? [];
         return {
-            id: msg.id as string,
-            threadId: msg.threadId as string,
+            id: msg['id'] as string,
+            threadId: msg['threadId'] as string,
             subject: extractHeader(headers, 'Subject'),
             from: extractHeader(headers, 'From'),
             to: extractHeader(headers, 'To'),
             date: extractHeader(headers, 'Date'),
-            snippet: msg.snippet as string ?? '',
-            labels: msg.labelIds as string[] ?? [],
+            snippet: msg['snippet'] as string ?? '',
+            labels: msg['labelIds'] as string[] ?? [],
         };
     }
 }
@@ -287,18 +288,19 @@ export class GmailSearchMessagesTool extends BaseTool<typeof SearchMessagesSchem
         const format = input.includeBody ? 'full' : 'metadata';
         const messages = await Promise.all(ids.map(async (id) => {
             const msg = await gmailFetch(getToken(this.config), 'GET', `/messages/${id}?format=${format}`) as Record<string, unknown>;
-            const payload = msg.payload as Record<string, unknown> ?? {};
-            const headers = payload.headers as Array<{ name: string; value: string }> ?? [];
+            const payload = msg['payload'] as Record<string, unknown> ?? {};
+            const headers = payload['headers'] as Array<{ name: string; value: string }> ?? [];
+            const _body = input.includeBody ? extractBody(payload) : undefined;
             return {
-                id: msg.id as string,
-                threadId: msg.threadId as string,
+                id: msg['id'] as string,
+                threadId: msg['threadId'] as string,
                 subject: extractHeader(headers, 'Subject'),
                 from: extractHeader(headers, 'From'),
                 to: extractHeader(headers, 'To'),
                 date: extractHeader(headers, 'Date'),
-                snippet: msg.snippet as string ?? '',
-                body: input.includeBody ? extractBody(payload) : undefined,
-                labels: msg.labelIds as string[] ?? [],
+                snippet: msg['snippet'] as string ?? '',
+                ...(_body !== undefined && { body: _body }),
+                labels: msg['labelIds'] as string[] ?? [],
             } satisfies GmailMessage;
         }));
         return { messages, count: messages.length };

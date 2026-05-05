@@ -40,7 +40,7 @@ interface BrowserPageResult {
 
 function extractTitle(html: string): string {
     const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    return match ? stripTags(match[1]).trim() : '';
+    return match ? stripTags(match[1] ?? '').trim() : '';
 }
 
 function stripTags(html: string): string {
@@ -64,7 +64,7 @@ function extractLinks(html: string, baseUrl: string): string[] {
     const links: string[] = [];
     let m: RegExpExecArray | null;
     while ((m = hrefRegex.exec(html)) !== null) {
-        let href = m[1].trim();
+        let href = (m[1] ?? '').trim();
         if (!href || href.startsWith('#') || href.startsWith('javascript:')) continue;
         try {
             const resolved = new URL(href, baseUrl).href;
@@ -106,11 +106,11 @@ export class BrowserTool extends BaseTool<typeof BrowserToolParameters, BrowserP
                 maxExecutionTimeMs: 30000,
                 ...config?.permissions,
             },
-            version: config?.version,
-            author: config?.author,
-            tags: config?.tags,
+            ...(config?.version !== undefined && { version: config.version }),
+            ...(config?.author !== undefined && { author: config.author }),
+            ...(config?.tags !== undefined && { tags: config.tags }),
         });
-        this.allowedHosts = config?.allowedHosts;
+        if (config?.allowedHosts !== undefined) this.allowedHosts = config.allowedHosts;
         this.blockPrivateNetworks = config?.blockPrivateNetworks ?? true;
     }
 

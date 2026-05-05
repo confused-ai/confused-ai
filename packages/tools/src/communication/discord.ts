@@ -15,7 +15,7 @@ export interface DiscordToolConfig {
 const DISCORD_API = 'https://discord.com/api/v10';
 
 function getToken(config: DiscordToolConfig): string {
-    const token = config.botToken ?? process.env.DISCORD_BOT_TOKEN;
+    const token = config.botToken ?? process.env['DISCORD_BOT_TOKEN'];
     if (!token) throw new Error('DiscordTools require DISCORD_BOT_TOKEN');
     return token;
 }

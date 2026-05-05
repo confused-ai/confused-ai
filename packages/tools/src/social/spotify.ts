@@ -15,7 +15,7 @@ export interface SpotifyToolConfig {
 }
 
 function getToken(config: SpotifyToolConfig): string {
-    const token = config.accessToken ?? process.env.SPOTIFY_ACCESS_TOKEN;
+    const token = config.accessToken ?? process.env['SPOTIFY_ACCESS_TOKEN'];
     if (!token) throw new Error('SpotifyTools require SPOTIFY_ACCESS_TOKEN');
     return token;
 }
@@ -44,19 +44,20 @@ interface SpotifyTrack {
 }
 
 function mapTrack(t: Record<string, unknown>): SpotifyTrack {
-    const artists = (t.artists as Array<{ name: string }> ?? []).map((a) => a.name);
-    const album = t.album as Record<string, unknown> | undefined;
-    return {
-        id: t.id as string,
-        name: t.name as string,
+    const artists = (t['artists'] as Array<{ name: string }> ?? []).map((a) => a.name);
+    const album = t['album'] as Record<string, unknown> | undefined;
+    const track: SpotifyTrack = {
+        id: t['id'] as string,
+        name: t['name'] as string,
         artists,
-        album: album?.name as string ?? '',
-        durationMs: t.duration_ms as number,
-        uri: t.uri as string,
-        previewUrl: t.preview_url as string | undefined,
-        explicit: t.explicit as boolean,
-        popularity: t.popularity as number | undefined,
+        album: album?.['name'] as string ?? '',
+        durationMs: t['duration_ms'] as number,
+        uri: t['uri'] as string,
+        explicit: t['explicit'] as boolean,
     };
+    if (t['preview_url'] !== undefined) track.previewUrl = t['preview_url'] as string;
+    if (t['popularity'] !== undefined) track.popularity = t['popularity'] as number;
+    return track;
 }
 
 // ── Schemas ────────────────────────────────────────────────────────────────
@@ -128,10 +129,10 @@ export class SpotifySearchTool extends BaseTool<typeof SearchSchema, { tracks?: 
         const data = await spotifyFetch(getToken(this.config), 'GET', `/search?${params}`) as {
             tracks?: { items: Array<Record<string, unknown>>; total: number };
         };
-        return {
-            tracks: data.tracks?.items.map(mapTrack),
-            totalTracks: data.tracks?.total,
-        };
+        const result: { tracks?: SpotifyTrack[]; totalTracks?: number } = {};
+        if (data.tracks !== undefined) result.tracks = data.tracks.items.map(mapTrack);
+        if (data.tracks?.total !== undefined) result.totalTracks = data.tracks.total;
+        return result;
     }
 }
 
@@ -176,14 +177,15 @@ export class SpotifyGetPlaylistTool extends BaseTool<typeof GetPlaylistSchema, {
             owner: { display_name: string };
             tracks: { items: Array<{ track: Record<string, unknown> }>; total: number };
         };
-        return {
+        const result: { id: string; name: string; description?: string; tracks: SpotifyTrack[]; totalTracks: number; owner: string } = {
             id: data.id,
             name: data.name,
-            description: data.description,
-            owner: data.owner?.display_name,
             tracks: (data.tracks?.items ?? []).filter((i) => i.track).map((i) => mapTrack(i.track)),
-            totalTracks: data.tracks?.total,
+            totalTracks: data.tracks?.total ?? 0,
+            owner: data.owner?.display_name ?? '',
         };
+        if (data.description !== undefined) result.description = data.description;
+        return result;
     }
 }
 
@@ -204,15 +206,19 @@ export class SpotifyGetCurrentPlaybackTool extends BaseTool<typeof GetCurrentPla
     protected async performExecute(_input: z.infer<typeof GetCurrentPlaybackSchema>, _ctx: ToolContext) {
         const data = await spotifyFetch(getToken(this.config), 'GET', '/me/player') as Record<string, unknown> | null;
         if (!data) return null;
-        const item = data.item as Record<string, unknown> | undefined;
-        const device = data.device as Record<string, unknown> | undefined;
-        return {
-            isPlaying: data.is_playing as boolean,
-            track: item ? mapTrack(item) : undefined,
-            deviceName: device?.name as string | undefined,
-            progressMs: data.progress_ms as number | undefined,
-            shuffleState: data.shuffle_state as boolean | undefined,
+        const item = data['item'] as Record<string, unknown> | undefined;
+        const device = data['device'] as Record<string, unknown> | undefined;
+        const result: { isPlaying: boolean; track?: SpotifyTrack; deviceName?: string; progressMs?: number; shuffleState?: boolean } = {
+            isPlaying: data['is_playing'] as boolean,
         };
+        if (item !== undefined) result.track = mapTrack(item);
+        const dn = device?.['name'] as string | undefined;
+        if (dn !== undefined) result.deviceName = dn;
+        const pm = data['progress_ms'] as number | undefined;
+        if (pm !== undefined) result.progressMs = pm;
+        const ss = data['shuffle_state'] as boolean | undefined;
+        if (ss !== undefined) result.shuffleState = ss;
+        return result;
     }
 }
 
@@ -231,9 +237,9 @@ export class SpotifyPlayTool extends BaseTool<typeof PlaySchema, { success: bool
     protected async performExecute(input: z.infer<typeof PlaySchema>, _ctx: ToolContext) {
         const path = input.deviceId ? `/me/player/play?device_id=${input.deviceId}` : '/me/player/play';
         const body: Record<string, unknown> = {};
-        if (input.uris?.length) body.uris = input.uris;
-        if (input.contextUri) body.context_uri = input.contextUri;
-        if (input.positionMs !== undefined) body.position_ms = input.positionMs;
+        if (input['uris']?.length) body['uris'] = input['uris'];
+        if (input.contextUri) body['context_uri'] = input.contextUri;
+        if (input.positionMs !== undefined) body['position_ms'] = input.positionMs;
         await spotifyFetch(getToken(this.config), 'PUT', path, body);
         return { success: true };
     }
@@ -304,13 +310,16 @@ export class SpotifyGetUserPlaylistsTool extends BaseTool<typeof GetUserPlaylist
             }>;
         };
         return {
-            playlists: (data.items ?? []).map((p) => ({
-                id: p.id,
-                name: p.name,
-                trackCount: p.tracks?.total,
-                owner: p.owner?.display_name,
-                public: p.public,
-            })),
+            playlists: (data.items ?? []).map((p) => {
+                const pl: { id: string; name: string; trackCount: number; owner: string; public?: boolean } = {
+                    id: p.id,
+                    name: p.name,
+                    trackCount: p.tracks?.total ?? 0,
+                    owner: p.owner?.display_name ?? '',
+                };
+                if (p.public !== undefined) pl.public = p.public;
+                return pl;
+            }),
         };
     }
 }

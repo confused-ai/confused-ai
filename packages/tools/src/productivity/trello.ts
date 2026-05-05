@@ -13,8 +13,8 @@ export interface TrelloToolConfig {
 }
 
 function getCreds(config: TrelloToolConfig): { key: string; token: string } {
-    const key = config.apiKey ?? process.env.TRELLO_API_KEY;
-    const token = config.token ?? process.env.TRELLO_TOKEN;
+    const key = config.apiKey ?? process.env['TRELLO_API_KEY'];
+    const token = config.token ?? process.env['TRELLO_TOKEN'];
     if (!key) throw new Error('TrelloTools require TRELLO_API_KEY');
     if (!token) throw new Error('TrelloTools require TRELLO_TOKEN');
     return { key, token };
@@ -99,11 +99,11 @@ export class TrelloGetBoardsTool extends BaseTool<typeof GetBoardsSchema, {
         const data = await trelloFetch(getCreds(this.config), 'GET', `/members/me/boards?filter=${input.filter ?? 'open'}`) as Array<Record<string, unknown>>;
         return {
             boards: data.map((b) => ({
-                id: b.id as string,
-                name: b.name as string,
-                url: b.url as string,
-                closed: b.closed as boolean,
-                desc: b.desc as string ?? '',
+                id: b['id'] as string,
+                name: b['name'] as string,
+                url: b['url'] as string,
+                closed: b['closed'] as boolean,
+                desc: b['desc'] as string ?? '',
             })),
         };
     }
@@ -134,14 +134,14 @@ export class TrelloGetBoardTool extends BaseTool<typeof GetBoardSchema, {
             id: string; name: string; url: string; desc: string;
             lists?: Array<{ id: string; name: string; closed: boolean }>;
         } = {
-            id: board.id as string,
-            name: board.name as string,
-            url: board.url as string,
-            desc: board.desc as string ?? '',
+            id: board['id'] as string,
+            name: board['name'] as string,
+            url: board['url'] as string,
+            desc: board['desc'] as string ?? '',
         };
         if (input.includeLists) {
             const lists = await trelloFetch(creds, 'GET', `/boards/${input.boardId}/lists`) as Array<Record<string, unknown>>;
-            result.lists = lists.map((l) => ({ id: l.id as string, name: l.name as string, closed: l.closed as boolean }));
+            result.lists = lists.map((l) => ({ id: l['id'] as string, name: l['name'] as string, closed: l['closed'] as boolean }));
         }
         return result;
     }
@@ -168,15 +168,18 @@ export class TrelloGetCardsTool extends BaseTool<typeof GetCardsSchema, {
             : `/boards/${input.boardId}/cards/${input.filter ?? 'open'}`;
         const data = await trelloFetch(getCreds(this.config), 'GET', path) as Array<Record<string, unknown>>;
         return {
-            cards: data.map((c) => ({
-                id: c.id as string,
-                name: c.name as string,
-                desc: c.desc as string ?? '',
-                url: c.url as string,
-                due: c.due as string | undefined,
-                listId: c.idList as string,
-                labels: ((c.labels as Array<{ name: string }>) ?? []).map((l) => l.name),
-            })),
+            cards: data.map((c) => {
+                const card: { id: string; name: string; desc: string; url: string; due?: string; listId: string; labels: string[] } = {
+                    id: c['id'] as string,
+                    name: c['name'] as string,
+                    desc: c['desc'] as string ?? '',
+                    url: c['url'] as string,
+                    listId: c['idList'] as string,
+                    labels: ((c['labels'] as Array<{ name: string }>) ?? []).map((l) => l.name),
+                };
+                if (c['due'] !== undefined) card.due = c['due'] as string;
+                return card;
+            }),
         };
     }
 }
@@ -199,13 +202,13 @@ export class TrelloCreateCardTool extends BaseTool<typeof CreateCardSchema, { id
             idList: input.listId,
             pos: input.position ?? 'bottom',
         };
-        if (input.description) body.desc = input.description;
-        if (input.due) body.due = input.due;
-        if (input.labelIds?.length) body.idLabels = input.labelIds.join(',');
-        if (input.memberIds?.length) body.idMembers = input.memberIds.join(',');
+        if (input.description) body['desc'] = input.description;
+        if (input['due']) body['due'] = input['due'];
+        if (input.labelIds?.length) body['idLabels'] = input.labelIds.join(',');
+        if (input.memberIds?.length) body['idMembers'] = input.memberIds.join(',');
 
         const card = await trelloFetch(getCreds(this.config), 'POST', '/cards', body) as Record<string, unknown>;
-        return { id: card.id as string, name: card.name as string, url: card.url as string, shortUrl: card.shortUrl as string };
+        return { id: card['id'] as string, name: card['name'] as string, url: card['url'] as string, shortUrl: card['shortUrl'] as string };
     }
 }
 
@@ -223,15 +226,15 @@ export class TrelloUpdateCardTool extends BaseTool<typeof UpdateCardSchema, { id
 
     protected async performExecute(input: z.infer<typeof UpdateCardSchema>, _ctx: ToolContext) {
         const body: Record<string, unknown> = {};
-        if (input.name) body.name = input.name;
-        if (input.description !== undefined) body.desc = input.description;
-        if (input.due !== undefined) body.due = input.due;
-        if (input.closed !== undefined) body.closed = input.closed;
-        if (input.listId) body.idList = input.listId;
-        if (input.position) body.pos = input.position;
+        if (input['name']) body['name'] = input['name'];
+        if (input.description !== undefined) body['desc'] = input.description;
+        if (input['due'] !== undefined) body['due'] = input['due'];
+        if (input['closed'] !== undefined) body['closed'] = input['closed'];
+        if (input.listId) body['idList'] = input.listId;
+        if (input.position) body['pos'] = input.position;
 
         const card = await trelloFetch(getCreds(this.config), 'PUT', `/cards/${input.cardId}`, body) as Record<string, unknown>;
-        return { id: card.id as string, name: card.name as string, url: card.url as string };
+        return { id: card['id'] as string, name: card['name'] as string, url: card['url'] as string };
     }
 }
 
@@ -249,7 +252,7 @@ export class TrelloAddCommentTool extends BaseTool<typeof AddCommentSchema, { id
 
     protected async performExecute(input: z.infer<typeof AddCommentSchema>, _ctx: ToolContext) {
         const action = await trelloFetch(getCreds(this.config), 'POST', `/cards/${input.cardId}/actions/comments`, { text: input.text }) as Record<string, unknown>;
-        return { id: action.id as string, text: input.text };
+        return { id: action['id'] as string, text: input.text };
     }
 }
 
@@ -271,7 +274,7 @@ export class TrelloCreateListTool extends BaseTool<typeof CreateListSchema, { id
             name: input.name,
             pos: input.position ?? 'bottom',
         }) as Record<string, unknown>;
-        return { id: list.id as string, name: list.name as string, boardId: list.idBoard as string };
+        return { id: list['id'] as string, name: list['name'] as string, boardId: list['idBoard'] as string };
     }
 }
 

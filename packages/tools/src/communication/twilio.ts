@@ -25,9 +25,9 @@ interface TwilioClient {
 }
 
 function getClient(config: TwilioToolConfig): { client: TwilioClient; from: string } {
-    const accountSid = config.accountSid ?? process.env.TWILIO_ACCOUNT_SID;
-    const authToken = config.authToken ?? process.env.TWILIO_AUTH_TOKEN;
-    const from = config.fromNumber ?? process.env.TWILIO_FROM_NUMBER ?? '';
+    const accountSid = config.accountSid ?? process.env['TWILIO_ACCOUNT_SID'];
+    const authToken = config.authToken ?? process.env['TWILIO_AUTH_TOKEN'];
+    const from = config.fromNumber ?? process.env['TWILIO_FROM_NUMBER'] ?? '';
     if (!accountSid) throw new Error('TwilioTools require TWILIO_ACCOUNT_SID');
     if (!authToken) throw new Error('TwilioTools require TWILIO_AUTH_TOKEN');
     const twilio = require('twilio') as (sid: string, token: string) => TwilioClient;

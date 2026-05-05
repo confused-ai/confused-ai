@@ -67,7 +67,7 @@ export class DuckDuckGoSearchTool extends BaseTool<typeof WebSearchParameters, W
             },
             ...config,
         });
-        this.modifier = config?.modifier;
+        if (config?.modifier !== undefined) this.modifier = config.modifier;
     }
 
     protected async performExecute(
@@ -120,7 +120,7 @@ export class DuckDuckGoSearchTool extends BaseTool<typeof WebSearchParameters, W
 
         while ((match = resultRegex.exec(html)) !== null && urls.length < maxResults) {
             const url = match[1];
-            const title = match[2].replace(/<[^>]*>/g, ''); // Strip HTML tags
+            const title = (match[2] ?? "").replace(/<[^>]*>/g, ''); // Strip HTML tags
             if (url && !url.startsWith('/')) {
                 urls.push(url);
                 titles.push(title);
@@ -130,7 +130,7 @@ export class DuckDuckGoSearchTool extends BaseTool<typeof WebSearchParameters, W
         for (let i = 0; i < urls.length; i++) {
             results.push({
                 title: titles[i] || 'Untitled',
-                url: urls[i],
+                url: urls[i] ?? "",
                 source: 'DuckDuckGo',
             });
         }
@@ -201,7 +201,7 @@ export class DuckDuckGoNewsTool extends BaseTool<typeof WebSearchParameters, New
         let match;
         while ((match = resultRegex.exec(html)) !== null && results.length < maxResults) {
             const url = match[1];
-            const title = match[2].replace(/<[^>]*>/g, '');
+            const title = (match[2] ?? "").replace(/<[^>]*>/g, '');
             if (url && !url.startsWith('/')) {
                 results.push({
                     title: title || 'Untitled',
@@ -244,7 +244,7 @@ export class WebSearchTool extends BaseTool<typeof GenericWebSearchParameters, W
             },
             ...config,
         });
-        this.modifier = config?.modifier;
+        if (config?.modifier !== undefined) this.modifier = config.modifier;
     }
 
     protected async performExecute(
@@ -301,7 +301,7 @@ export class WebSearchTool extends BaseTool<typeof GenericWebSearchParameters, W
         let match;
         while ((match = resultRegex.exec(html)) !== null && results.length < maxResults) {
             const url = match[1];
-            const title = match[2].replace(/<[^>]*>/g, '');
+            const title = (match[2] ?? "").replace(/<[^>]*>/g, '');
             if (url && !url.startsWith('/')) {
                 results.push({
                     title: title || 'Untitled',
@@ -321,7 +321,7 @@ export class WebSearchTool extends BaseTool<typeof GenericWebSearchParameters, W
 export class WebSearchToolkit {
     static createDuckDuckGo(options?: { modifier?: string; enableNews?: boolean }): Array<DuckDuckGoSearchTool | DuckDuckGoNewsTool> {
         const tools: Array<DuckDuckGoSearchTool | DuckDuckGoNewsTool> = [
-            new DuckDuckGoSearchTool({ modifier: options?.modifier }),
+            new DuckDuckGoSearchTool({ ...(options?.modifier !== undefined && { modifier: options.modifier }) }),
         ];
         if (options?.enableNews !== false) {
             tools.push(new DuckDuckGoNewsTool());
@@ -330,6 +330,6 @@ export class WebSearchToolkit {
     }
 
     static createGeneric(options?: { modifier?: string }): Array<WebSearchTool> {
-        return [new WebSearchTool({ modifier: options?.modifier })];
+        return [new WebSearchTool({ ...(options?.modifier !== undefined && { modifier: options.modifier }) })];
     }
 }

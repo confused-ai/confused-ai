@@ -21,10 +21,10 @@ function buildParams(config: PubMedToolConfig, extra: Record<string, string>): U
     const params = new URLSearchParams({
         ...extra,
         retmode: 'json',
-        tool: config.toolName ?? process.env.NCBI_TOOL ?? 'agent-framework',
-        email: config.email ?? process.env.NCBI_EMAIL ?? 'agent@example.com',
+        tool: config.toolName ?? process.env['NCBI_TOOL'] ?? 'agent-framework',
+        email: config.email ?? process.env['NCBI_EMAIL'] ?? 'agent@example.com',
     });
-    const key = config.apiKey ?? process.env.NCBI_API_KEY;
+    const key = config.apiKey ?? process.env['NCBI_API_KEY'];
     if (key) params.set('api_key', key);
     return params;
 }
@@ -155,11 +155,11 @@ export class PubMedSearchTool extends BaseTool<typeof SearchSchema, {
             return {
                 pmid,
                 title: typeof art?.ArticleTitle === 'string' ? art.ArticleTitle : String(art?.ArticleTitle ?? ''),
-                abstract,
                 authors,
-                journal,
-                pubDate: pubDateStr,
-                doi,
+                ...(abstract !== undefined && { abstract }),
+                ...(journal !== undefined && { journal }),
+                ...(pubDateStr !== undefined && { pubDate: pubDateStr }),
+                ...(doi !== undefined && { doi }),
             };
         });
 

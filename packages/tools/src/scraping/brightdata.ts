@@ -18,8 +18,8 @@ export interface BrightDataToolConfig {
 }
 
 function getAuth(config: BrightDataToolConfig): { token: string; zone: string } {
-    const token = config.apiToken ?? process.env.BRIGHTDATA_API_TOKEN;
-    const zone = config.zone ?? process.env.BRIGHTDATA_ZONE ?? 'scraping_browser1';
+    const token = config.apiToken ?? process.env['BRIGHTDATA_API_TOKEN'];
+    const zone = config.zone ?? process.env['BRIGHTDATA_ZONE'] ?? 'scraping_browser1';
     if (!token) throw new Error('BrightDataTools require BRIGHTDATA_API_TOKEN');
     return { token, zone };
 }

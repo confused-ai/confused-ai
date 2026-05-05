@@ -52,8 +52,9 @@ abstract class BaseNotionTool<TParams extends z.ZodObject<Record<string, z.ZodTy
             ...config,
         });
 
-        this.token = config.token || process.env.NOTION_API_TOKEN || '';
-        this.databaseId = config.databaseId || process.env.NOTION_DATABASE_ID;
+        this.token = config.token || process.env['NOTION_API_TOKEN'] || '';
+        const _ndb = config.databaseId || process.env['NOTION_DATABASE_ID'];
+        if (_ndb !== undefined) this.databaseId = _ndb;
 
         if (!this.token) {
             throw new Error('Notion API token is required. Set NOTION_API_TOKEN environment variable or pass token in config.');
@@ -193,7 +194,7 @@ export class NotionSearchTool extends BaseNotionTool<typeof NotionSearchParamete
             };
 
             if (params.filter) {
-                body.filter = {
+                body['filter'] = {
                     value: params.filter,
                     property: 'object',
                 };
@@ -308,13 +309,13 @@ export class NotionToolkit {
         const tools: Array<NotionCreatePageTool | NotionSearchTool | NotionUpdatePageTool> = [];
 
         if (options?.enableCreatePage !== false) {
-            tools.push(new NotionCreatePageTool({ token: options?.token, databaseId: options?.databaseId }));
+            tools.push(new NotionCreatePageTool({ ...(options?.token !== undefined && { token: options.token }), ...(options?.databaseId !== undefined && { databaseId: options.databaseId }) }));
         }
         if (options?.enableSearch !== false) {
-            tools.push(new NotionSearchTool({ token: options?.token }));
+            tools.push(new NotionSearchTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
         if (options?.enableUpdatePage !== false) {
-            tools.push(new NotionUpdatePageTool({ token: options?.token }));
+            tools.push(new NotionUpdatePageTool({ ...(options?.token !== undefined && { token: options.token }) }));
         }
 
         return tools;

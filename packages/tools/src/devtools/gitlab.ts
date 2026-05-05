@@ -15,9 +15,9 @@ export interface GitLabToolConfig {
 }
 
 function getAuth(config: GitLabToolConfig): { headers: Record<string, string>; baseUrl: string } {
-    const token = config.token ?? process.env.GITLAB_TOKEN;
+    const token = config.token ?? process.env['GITLAB_TOKEN'];
     if (!token) throw new Error('GitLabTools require GITLAB_TOKEN');
-    const host = (config.host ?? process.env.GITLAB_HOST ?? 'https://gitlab.com').replace(/\/$/, '');
+    const host = (config.host ?? process.env['GITLAB_HOST'] ?? 'https://gitlab.com').replace(/\/$/, '');
     return {
         headers: { 'PRIVATE-TOKEN': token, 'Content-Type': 'application/json' },
         baseUrl: `${host}/api/v4`,
@@ -28,7 +28,7 @@ async function glRequest(auth: ReturnType<typeof getAuth>, method: string, path:
     const res = await fetch(`${auth.baseUrl}${path}`, {
         method,
         headers: auth.headers,
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
     });
     if (!res.ok) throw new Error(`GitLab API ${res.status}: ${await res.text()}`);
     if (res.status === 204) return { success: true };

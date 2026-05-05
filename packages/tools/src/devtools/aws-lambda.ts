@@ -27,14 +27,14 @@ interface AWSCreds {
 }
 
 function getAuth(config: AWSLambdaToolConfig): AWSCreds {
-    const region = config.region ?? process.env.AWS_DEFAULT_REGION ?? process.env.AWS_REGION;
-    const accessKeyId = config.accessKeyId ?? process.env.AWS_ACCESS_KEY_ID;
-    const secretAccessKey = config.secretAccessKey ?? process.env.AWS_SECRET_ACCESS_KEY;
-    const sessionToken = config.sessionToken ?? process.env.AWS_SESSION_TOKEN;
+    const region = config.region ?? process.env['AWS_DEFAULT_REGION'] ?? process.env['AWS_REGION'];
+    const accessKeyId = config.accessKeyId ?? process.env['AWS_ACCESS_KEY_ID'];
+    const secretAccessKey = config.secretAccessKey ?? process.env['AWS_SECRET_ACCESS_KEY'];
+    const sessionToken = config.sessionToken ?? process.env['AWS_SESSION_TOKEN'];
     if (!region) throw new Error('AWSLambdaTools require AWS_DEFAULT_REGION');
     if (!accessKeyId) throw new Error('AWSLambdaTools require AWS_ACCESS_KEY_ID');
     if (!secretAccessKey) throw new Error('AWSLambdaTools require AWS_SECRET_ACCESS_KEY');
-    return { region, accessKeyId, secretAccessKey, sessionToken };
+    return { region, accessKeyId, secretAccessKey, ...(sessionToken !== undefined && { sessionToken }) };
 }
 
 /** AWS Signature Version 4 signing */
@@ -136,7 +136,10 @@ export class AWSLambdaInvokeTool extends BaseTool<typeof InvokeSchema, {
         let payload: unknown;
         try { payload = JSON.parse(responseText); } catch { payload = responseText; }
 
-        return { statusCode, executedVersion, payload, logResult, functionError };
+        const result: { statusCode: number; executedVersion: string; payload: unknown; logResult?: string; functionError?: string } = { statusCode, executedVersion, payload };
+        if (logResult !== undefined) result.logResult = logResult;
+        if (functionError !== undefined) result.functionError = functionError;
+        return result;
     }
 }
 

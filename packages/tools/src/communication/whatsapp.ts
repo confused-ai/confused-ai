@@ -15,8 +15,8 @@ export interface WhatsAppToolConfig {
 }
 
 function getConfig(config: WhatsAppToolConfig): { token: string; phoneNumberId: string } {
-    const token = config.accessToken ?? process.env.WHATSAPP_TOKEN;
-    const phoneNumberId = config.phoneNumberId ?? process.env.WHATSAPP_PHONE_NUMBER_ID;
+    const token = config.accessToken ?? process.env['WHATSAPP_TOKEN'];
+    const phoneNumberId = config.phoneNumberId ?? process.env['WHATSAPP_PHONE_NUMBER_ID'];
     if (!token) throw new Error('WhatsAppTools require WHATSAPP_TOKEN');
     if (!phoneNumberId) throw new Error('WhatsAppTools require WHATSAPP_PHONE_NUMBER_ID');
     return { token, phoneNumberId };
