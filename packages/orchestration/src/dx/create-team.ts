@@ -31,8 +31,6 @@
  */
 
 import type { RoleAgent } from './define-role.js';
-import type { TeamResult } from '../multi-agent/team.js';
-import { Team } from '../multi-agent/team.js';
 import type { AgentRouterConfig, RoutableAgent } from '../multi-agent/router.js';
 import { createAgentRouter } from '../multi-agent/router.js';
 import type { AgenticRunResult } from '@confused-ai/agentic';
@@ -94,11 +92,7 @@ export interface TeamRunResult {
 
 /** Convert an `AgenticRunResult` to a plain string. */
 function extractText(result: AgenticRunResult): string {
-  if (typeof result.output === 'string') return result.output;
-  if (result.output && typeof (result.output as { text?: unknown }).text === 'string') {
-    return (result.output as { text: string }).text;
-  }
-  return JSON.stringify(result.output ?? '');
+  return result.text;
 }
 
 // ── Factory ───────────────────────────────────────────────────────────────────
@@ -107,7 +101,7 @@ function extractText(result: AgenticRunResult): string {
  * Build a team and return a simple `{ run }` handle.
  */
 export function createTeam(opts: TeamOptions): TeamHandle {
-  const { name, mode, agents, timeoutMs = 120_000 } = opts;
+  const { name, mode, agents, timeoutMs: _timeoutMs = 120_000 } = opts;
 
   if (agents.length === 0) {
     throw new Error(`createTeam("${name}"): at least one agent is required.`);
@@ -125,8 +119,8 @@ export function createTeam(opts: TeamOptions): TeamHandle {
         agent: {
           id: agent.name,
           name: agent.name,
-          run: (input) => agent.run({ prompt: typeof input === 'string' ? input : String(input) }),
-        } as RoutableAgent['agent'],
+          run: (input: unknown) => agent.run({ prompt: typeof input === 'string' ? input : String(input) }),
+        } as unknown as RoutableAgent['agent'],
         capabilities: caps,
         description: agent.systemPrompt.slice(0, 200),
       };

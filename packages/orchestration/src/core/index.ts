@@ -11,6 +11,6 @@ export type {
     MCPClient,
     MCPServerAdapter,
     MCPToolDescriptor,
-    A2AMessage,
-    A2AClient as LegacyA2AClientInterface,
+    MCPAgentMessage as A2AMessage,
+    MCPAgentClient as LegacyA2AClientInterface,
 } from './mcp-types.js';

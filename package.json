@@ -1,6 +1,6 @@
 {
     "name": "confused-ai",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "TypeScript framework for building production-grade AI agents, teams, and services",
     "type": "module",
     "packageManager": "bun@1.3.11",
@@ -318,11 +318,12 @@
         "example:code-review": "bun examples/code-review-pipeline.ts",
         "example:eval": "bun examples/eval-regression.ts",
         "build": "bun run build:root",
-        "build:root": "NODE_OPTIONS=--max-old-space-size=4096 tsup && tsc -p tsconfig.json --emitDeclarationOnly --declarationDir dist",
+        "build:root": "tsup && node scripts/gen-root-dts.mjs",
         "build:packages": "turbo run build --filter='./packages/*'",
         "build:all": "bun run build:packages && bun run build:root",
+        "publish:packages": "node scripts/publish-packages.mjs",
         "dev": "tsup --watch",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "tsc -p tsconfig.typecheck.json",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
@@ -397,6 +398,7 @@
         "@typescript-eslint/parser": "^8.59.0",
         "@vitest/coverage-v8": "^4.0.18",
         "better-sqlite3": "^11.0.0",
+        "dts-bundle-generator": "^9.5.1",
         "eslint": "^10.2.1",
         "eslint-plugin-boundaries": "^6.0.2",
         "playwright": "^1.59.1",
@@ -408,6 +410,45 @@
         "vitest": "^4.0.18"
     },
     "dependencies": {
+        "@confused-ai/adapter-redis": "0.1.0",
+        "@confused-ai/agentic": "0.1.0",
+        "@confused-ai/artifacts": "0.1.0",
+        "@confused-ai/background": "0.1.0",
+        "@confused-ai/cli": "0.1.0",
+        "@confused-ai/compression": "0.1.0",
+        "@confused-ai/config": "0.1.0",
+        "@confused-ai/context": "0.1.0",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/db": "0.1.0",
+        "@confused-ai/eval": "0.1.0",
+        "@confused-ai/execution": "0.1.0",
+        "@confused-ai/graph": "0.1.0",
+        "@confused-ai/guard": "0.1.0",
+        "@confused-ai/guardrails": "0.1.0",
+        "@confused-ai/knowledge": "0.1.0",
+        "@confused-ai/learning": "0.1.0",
+        "@confused-ai/memory": "0.1.0",
+        "@confused-ai/models": "0.1.0",
+        "@confused-ai/observe": "0.1.0",
+        "@confused-ai/orchestration": "0.1.0",
+        "@confused-ai/planner": "0.1.0",
+        "@confused-ai/playground": "0.1.0",
+        "@confused-ai/plugins": "0.1.0",
+        "@confused-ai/production": "0.1.0",
+        "@confused-ai/reasoning": "0.1.0",
+        "@confused-ai/router": "0.1.0",
+        "@confused-ai/scheduler": "0.1.0",
+        "@confused-ai/sdk": "0.1.0",
+        "@confused-ai/serve": "0.1.0",
+        "@confused-ai/session": "0.1.0",
+        "@confused-ai/shared": "0.1.0",
+        "@confused-ai/storage": "0.1.0",
+        "@confused-ai/test-utils": "0.1.0",
+        "@confused-ai/tools": "0.1.0",
+        "@confused-ai/video": "0.1.0",
+        "@confused-ai/voice": "0.1.0",
+        "@confused-ai/workflow": "0.1.0",
         "commander": "^14.0.3",
         "dotenv": "^17.3.1",
         "uuid": "^13.0.0",
@@ -415,33 +456,59 @@
     },
     "peerDependencies": {
         "@aws-sdk/client-bedrock-runtime": "^3.0.0",
-        "@anthropic-ai/sdk":              ">=0.30.0",
-        "@google/generative-ai":           ">=0.5.0",
-        "@ffmpeg-installer/ffmpeg":        "^1.1.0",
-        "better-sqlite3":                  "^11.0.0",
-        "duck-duck-scrape":                ">=2.0.0",
-        "fluent-ffmpeg":                   "^2.1.3",
-        "ioredis":                         ">=5.0.0",
-        "ollama":                          ">=0.5.0",
-        "openai":                          "^6.17.0",
-        "pexels":                          "^1.4.0",
-        "playwright":                      "^1.0.0",
-        "yahoo-finance2":                  "^2.11.3"
+        "@anthropic-ai/sdk": ">=0.30.0",
+        "@google/generative-ai": ">=0.5.0",
+        "@ffmpeg-installer/ffmpeg": "^1.1.0",
+        "better-sqlite3": "^11.0.0",
+        "duck-duck-scrape": ">=2.0.0",
+        "fluent-ffmpeg": "^2.1.3",
+        "ioredis": ">=5.0.0",
+        "ollama": ">=0.5.0",
+        "openai": "^6.17.0",
+        "pexels": "^1.4.0",
+        "playwright": "^1.0.0",
+        "yahoo-finance2": "^2.11.3"
     },
     "peerDependenciesMeta": {
-        "@aws-sdk/client-bedrock-runtime": { "optional": true },
-        "@anthropic-ai/sdk":               { "optional": true },
-        "@google/generative-ai":            { "optional": true },
-        "@ffmpeg-installer/ffmpeg":         { "optional": true },
-        "better-sqlite3":                  { "optional": true },
-        "duck-duck-scrape":                { "optional": true },
-        "fluent-ffmpeg":                   { "optional": true },
-        "ioredis":                         { "optional": true },
-        "ollama":                          { "optional": true },
-        "openai":                          { "optional": true },
-        "pexels":                          { "optional": true },
-        "playwright":                      { "optional": true },
-        "yahoo-finance2":                  { "optional": true }
+        "@aws-sdk/client-bedrock-runtime": {
+            "optional": true
+        },
+        "@anthropic-ai/sdk": {
+            "optional": true
+        },
+        "@google/generative-ai": {
+            "optional": true
+        },
+        "@ffmpeg-installer/ffmpeg": {
+            "optional": true
+        },
+        "better-sqlite3": {
+            "optional": true
+        },
+        "duck-duck-scrape": {
+            "optional": true
+        },
+        "fluent-ffmpeg": {
+            "optional": true
+        },
+        "ioredis": {
+            "optional": true
+        },
+        "ollama": {
+            "optional": true
+        },
+        "openai": {
+            "optional": true
+        },
+        "pexels": {
+            "optional": true
+        },
+        "playwright": {
+            "optional": true
+        },
+        "yahoo-finance2": {
+            "optional": true
+        }
     },
     "engines": {
         "node": ">=18.0.0"

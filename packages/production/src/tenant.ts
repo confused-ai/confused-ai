@@ -24,9 +24,7 @@
  * ```
  */
 
-import type { SessionStore } from '@confused-ai/session';
-import type { SessionQuery, Session, SessionId, SessionRun } from '@confused-ai/session';
-import type { Message } from '@confused-ai/core';
+import type { SessionStore, SessionData, SessionMessage } from '@confused-ai/session';
 import { RateLimiter } from './rate-limiter.js';
 import type { RateLimiterConfig } from './rate-limiter.js';
 
@@ -65,74 +63,36 @@ export class TenantScopedSessionStore implements SessionStore {
         return `${this.tenantId}:${id}`;
     }
 
-    private unprefix(id: string): string {
+    private unprefixData(data: SessionData): SessionData {
         const p = `${this.tenantId}:`;
-        return id.startsWith(p) ? id.slice(p.length) : id;
+        const id = data.id.startsWith(p) ? data.id.slice(p.length) : data.id;
+        return { ...data, id };
     }
 
-    private prefixSession(session: Session): Session {
-        return { ...session, id: this.unprefix(session.id) as SessionId };
+    async get(id: string): Promise<SessionData | undefined> {
+        const data = await this.base.get(this.prefix(id));
+        return data ? this.unprefixData(data) : undefined;
     }
 
-    async create(session: Omit<Session, 'id' | 'createdAt' | 'updatedAt'>): Promise<Session> {
-        const s = await this.base.create(session);
-        return this.prefixSession(s);
+    async create(data: { agentId: string; userId?: string; messages?: SessionMessage[] } | string): Promise<SessionData> {
+        const result = await this.base.create(data);
+        return this.unprefixData(result);
     }
 
-    async get(sessionId: SessionId): Promise<Session | null> {
-        const s = await this.base.get(this.prefix(sessionId));
-        return s ? this.prefixSession(s) : null;
+    async update(id: string, data: { messages: SessionMessage[] }): Promise<void> {
+        return this.base.update(this.prefix(id), data);
     }
 
-    async update(sessionId: SessionId, updates: Partial<Omit<Session, 'id' | 'createdAt'>>): Promise<Session> {
-        const s = await this.base.update(this.prefix(sessionId), updates);
-        return this.prefixSession(s);
+    async getMessages(id: string): Promise<SessionMessage[]> {
+        return this.base.getMessages(this.prefix(id));
     }
 
-    async delete(sessionId: SessionId): Promise<boolean> {
-        return this.base.delete(this.prefix(sessionId));
+    async appendMessage(id: string, message: SessionMessage): Promise<void> {
+        return this.base.appendMessage(this.prefix(id), message);
     }
 
-    async list(query?: SessionQuery): Promise<Session[]> {
-        const sessions = await this.base.list(query);
-        return sessions
-            .filter((s) => s.id.startsWith(`${this.tenantId}:`))
-            .map((s) => this.prefixSession(s));
-    }
-
-    async addMessage(sessionId: SessionId, message: Message): Promise<Session> {
-        const s = await this.base.addMessage(this.prefix(sessionId), message);
-        return this.prefixSession(s);
-    }
-
-    async getMessages(sessionId: SessionId): Promise<Message[]> {
-        return this.base.getMessages(this.prefix(sessionId));
-    }
-
-    async clearMessages(sessionId: SessionId): Promise<Session> {
-        const s = await this.base.clearMessages(this.prefix(sessionId));
-        return this.prefixSession(s);
-    }
-
-    async setContext(sessionId: SessionId, key: string, value: unknown): Promise<Session> {
-        const s = await this.base.setContext(this.prefix(sessionId), key, value);
-        return this.prefixSession(s);
-    }
-
-    async getContext(sessionId: SessionId, key: string): Promise<unknown> {
-        return this.base.getContext(this.prefix(sessionId), key);
-    }
-
-    async recordRun(run: Omit<SessionRun, 'id'>): Promise<SessionRun> {
-        return this.base.recordRun({ ...run, sessionId: this.prefix(run.sessionId) });
-    }
-
-    async getRuns(sessionId: SessionId): Promise<SessionRun[]> {
-        return this.base.getRuns(this.prefix(sessionId));
-    }
-
-    async cleanup(): Promise<number> {
-        return this.base.cleanup();
+    async delete(id: string): Promise<void> {
+        return this.base.delete(this.prefix(id));
     }
 }
 

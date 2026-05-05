@@ -16,17 +16,20 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsup",
-    "dev":   "tsup --watch",
-    "test":  "vitest run",
+    "dev": "tsup --watch",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "sideEffects": false,
   "dependencies": {
-    "@confused-ai/graph": "workspace:*",
-    "@confused-ai/shared": "workspace:*",
+    "@confused-ai/graph": "*",
+    "@confused-ai/shared": "*",
     "commander": "^14.0.3"
   },
   "peerDependencies": {

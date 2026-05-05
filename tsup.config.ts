@@ -60,6 +60,7 @@ export default defineConfig({
         dx: 'src/dx/index.ts',
         sdk: 'src/sdk/index.ts',
         graph: 'src/graph/index.ts',
+        playground: 'src/playground.ts',
     },
     format: ['cjs', 'esm'],
     dts: false,

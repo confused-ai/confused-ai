@@ -63,6 +63,7 @@ export class KafkaBackgroundQueue implements BackgroundQueue {
     private async getProducer(): Promise<unknown> {
         if (this.producerConnected) return this.producer;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // @ts-ignore -- kafkajs is an optional peer dep
         const { Kafka } = (await import('kafkajs')) as any;
         this.kafka = new Kafka({
             clientId: this.opts.clientId ?? 'confused-ai-bg',
@@ -110,6 +111,7 @@ export class KafkaBackgroundQueue implements BackgroundQueue {
         options: WorkerOptions = {},
     ): Promise<() => Promise<void>> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // @ts-ignore -- kafkajs is an optional peer dep
         const { Kafka } = (await import('kafkajs')) as any;
         if (!this.kafka) {
             this.kafka = new Kafka({

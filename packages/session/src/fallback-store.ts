@@ -91,10 +91,6 @@ export class FallbackSessionStore implements SessionStore {
     }
   }
 
-  private get _active(): SessionStore {
-    return this._degraded ? this._fallback : this._primary;
-  }
-
   private async _attempt<T>(fn: () => Promise<T>, fallbackFn: () => Promise<T>): Promise<T> {
     if (this._degraded) return fallbackFn();
     try {

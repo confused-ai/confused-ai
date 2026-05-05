@@ -3,24 +3,13 @@
   "version": "0.1.0",
   "description": "Long-term memory and vector storage for confused-ai agents",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "require": "./src/index.ts"
-    }
-  },
-  "publishConfig": {
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js",
-        "require": "./dist/index.cjs"
-      }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "scripts": {
@@ -29,22 +18,31 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@confused-ai/core": "workspace:*",
-    "@confused-ai/shared": "workspace:*"
+    "@confused-ai/core": "*",
+    "@confused-ai/shared": "*"
   },
   "peerDependencies": {
     "@pinecone-database/pinecone": ">=3.0.0",
-    "pg":                          ">=8.0.0",
-    "@confused-ai/db":             "workspace:*"
+    "pg": ">=8.0.0",
+    "@confused-ai/db": "*"
   },
   "peerDependenciesMeta": {
-    "@pinecone-database/pinecone": { "optional": true },
-    "pg":                          { "optional": true },
-    "@confused-ai/db":             { "optional": true }
+    "@pinecone-database/pinecone": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "@confused-ai/db": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vitest": "^3.2.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

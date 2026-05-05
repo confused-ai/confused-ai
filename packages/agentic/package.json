@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "description": "ReAct-style agentic loop with tool dispatch, guardrails, and human-in-the-loop",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
@@ -16,29 +16,43 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@confused-ai/core": "workspace:*",
-    "@confused-ai/guard": "workspace:*",
-    "@confused-ai/guardrails": "workspace:*",
-    "@confused-ai/observe": "workspace:*",
-    "@confused-ai/shared": "workspace:*",
+    "@confused-ai/core": "*",
+    "@confused-ai/guard": "*",
+    "@confused-ai/guardrails": "*",
+    "@confused-ai/observe": "*",
+    "@confused-ai/shared": "*",
     "zod": "^3.0.0"
   },
   "peerDependencies": {
-    "@confused-ai/compression": "workspace:*",
-    "@confused-ai/knowledge": "workspace:*",
-    "@confused-ai/production": "workspace:*",
-    "@confused-ai/reasoning": "workspace:*",
+    "@confused-ai/compression": "*",
+    "@confused-ai/knowledge": "*",
+    "@confused-ai/production": "*",
+    "@confused-ai/reasoning": "*",
     "@opentelemetry/api": "^1.0.0"
   },
   "peerDependenciesMeta": {
-    "@confused-ai/compression": { "optional": true },
-    "@confused-ai/knowledge": { "optional": true },
-    "@confused-ai/production": { "optional": true },
-    "@confused-ai/reasoning": { "optional": true },
-    "@opentelemetry/api": { "optional": true }
+    "@confused-ai/compression": {
+      "optional": true
+    },
+    "@confused-ai/knowledge": {
+      "optional": true
+    },
+    "@confused-ai/production": {
+      "optional": true
+    },
+    "@confused-ai/reasoning": {
+      "optional": true
+    },
+    "@opentelemetry/api": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "tsup": "*",
     "typescript": "*"
-  }
+  },
+  "files": [
+    "dist"
+  ],
+  "module": "./dist/index.js"
 }

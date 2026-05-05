@@ -66,6 +66,7 @@ export class BullMQBackgroundQueue implements BackgroundQueue {
     private async getQueue(): Promise<BullMQQueue> {
         if (this.queue) return this.queue;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // @ts-ignore -- bullmq is an optional peer dep
         const { Queue } = (await import('bullmq')) as any;
         this.queue = new Queue(this.opts.queueName ?? 'agent-background', {
             connection: typeof this.opts.redis === 'string'
@@ -101,6 +102,7 @@ export class BullMQBackgroundQueue implements BackgroundQueue {
         options: WorkerOptions = {},
     ): Promise<() => Promise<void>> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // @ts-ignore -- bullmq is an optional peer dep
         const { Worker } = (await import('bullmq')) as any;
         const worker = new Worker(
             this.opts.queueName ?? 'agent-background',

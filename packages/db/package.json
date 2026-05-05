@@ -3,40 +3,68 @@
   "version": "0.1.0",
   "description": "Unified agent database — Agno-style single AgentDb class covering sessions, memories, learnings, knowledge, traces and schedules. SQLite, Postgres, MongoDB, Redis, JSON-file backends.",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".":           { "types": "./src/index.ts",          "default": "./src/index.ts" },
-    "./sqlite":    { "types": "./src/sqlite.ts",         "default": "./src/sqlite.ts" },
-    "./postgres":  { "types": "./src/postgres.ts",       "default": "./src/postgres.ts" },
-    "./mongo":     { "types": "./src/mongo.ts",          "default": "./src/mongo.ts" },
-    "./redis":     { "types": "./src/redis.ts",          "default": "./src/redis.ts" },
-    "./json":      { "types": "./src/json.ts",           "default": "./src/json.ts" },
-    "./in-memory": { "types": "./src/in-memory.ts",     "default": "./src/in-memory.ts" },
-    "./mysql":     { "types": "./src/mysql.ts",         "default": "./src/mysql.ts" },
-    "./dynamodb":  { "types": "./src/dynamodb.ts",      "default": "./src/dynamodb.ts" },
-    "./turso":     { "types": "./src/turso.ts",         "default": "./src/turso.ts" },
-    "./factory":   { "types": "./src/factory.ts",       "default": "./src/factory.ts" }
-  },
-  "publishConfig": {
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".":           { "types": "./dist/index.d.ts",         "import": "./dist/index.js",         "require": "./dist/index.cjs" },
-      "./sqlite":    { "types": "./dist/sqlite.d.ts",        "import": "./dist/sqlite.js",        "require": "./dist/sqlite.cjs" },
-      "./postgres":  { "types": "./dist/postgres.d.ts",      "import": "./dist/postgres.js",      "require": "./dist/postgres.cjs" },
-      "./mongo":     { "types": "./dist/mongo.d.ts",         "import": "./dist/mongo.js",         "require": "./dist/mongo.cjs" },
-      "./redis":     { "types": "./dist/redis.d.ts",         "import": "./dist/redis.js",         "require": "./dist/redis.cjs" },
-      "./json":      { "types": "./dist/json.d.ts",          "import": "./dist/json.js",          "require": "./dist/json.cjs" },
-      "./in-memory": { "types": "./dist/in-memory.d.ts",     "import": "./dist/in-memory.js",     "require": "./dist/in-memory.cjs" },
-      "./mysql":     { "types": "./dist/mysql.d.ts",        "import": "./dist/mysql.js",        "require": "./dist/mysql.cjs" },
-      "./dynamodb":  { "types": "./dist/dynamodb.d.ts",     "import": "./dist/dynamodb.js",     "require": "./dist/dynamodb.cjs" },
-      "./turso":     { "types": "./dist/turso.d.ts",        "import": "./dist/turso.js",        "require": "./dist/turso.cjs" },
-      "./factory":   { "types": "./dist/factory.d.ts",      "import": "./dist/factory.js",      "require": "./dist/factory.cjs" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./sqlite": {
+      "types": "./dist/sqlite.d.ts",
+      "import": "./dist/sqlite.js",
+      "require": "./dist/sqlite.cjs"
+    },
+    "./postgres": {
+      "types": "./dist/postgres.d.ts",
+      "import": "./dist/postgres.js",
+      "require": "./dist/postgres.cjs"
+    },
+    "./mongo": {
+      "types": "./dist/mongo.d.ts",
+      "import": "./dist/mongo.js",
+      "require": "./dist/mongo.cjs"
+    },
+    "./redis": {
+      "types": "./dist/redis.d.ts",
+      "import": "./dist/redis.js",
+      "require": "./dist/redis.cjs"
+    },
+    "./json": {
+      "types": "./dist/json.d.ts",
+      "import": "./dist/json.js",
+      "require": "./dist/json.cjs"
+    },
+    "./in-memory": {
+      "types": "./dist/in-memory.d.ts",
+      "import": "./dist/in-memory.js",
+      "require": "./dist/in-memory.cjs"
+    },
+    "./mysql": {
+      "types": "./dist/mysql.d.ts",
+      "import": "./dist/mysql.js",
+      "require": "./dist/mysql.cjs"
+    },
+    "./dynamodb": {
+      "types": "./dist/dynamodb.d.ts",
+      "import": "./dist/dynamodb.js",
+      "require": "./dist/dynamodb.cjs"
+    },
+    "./turso": {
+      "types": "./dist/turso.d.ts",
+      "import": "./dist/turso.js",
+      "require": "./dist/turso.cjs"
+    },
+    "./factory": {
+      "types": "./dist/factory.d.ts",
+      "import": "./dist/factory.js",
+      "require": "./dist/factory.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -47,30 +75,47 @@
   "dependencies": {},
   "peerDependencies": {
     "better-sqlite3": ">=11.0.0",
-    "ioredis":        ">=5.0.0",
-    "mongodb":        ">=6.0.0",
-    "pg":                        ">=8.0.0",
-    "mysql2":                    ">=3.0.0",
-    "@aws-sdk/client-dynamodb":  ">=3.0.0",
-    "@aws-sdk/lib-dynamodb":     ">=3.0.0",
-    "@libsql/client":            ">=0.5.0"
+    "ioredis": ">=5.0.0",
+    "mongodb": ">=6.0.0",
+    "pg": ">=8.0.0",
+    "mysql2": ">=3.0.0",
+    "@aws-sdk/client-dynamodb": ">=3.0.0",
+    "@aws-sdk/lib-dynamodb": ">=3.0.0",
+    "@libsql/client": ">=0.5.0"
   },
   "peerDependenciesMeta": {
-    "better-sqlite3":            { "optional": true },
-    "ioredis":                   { "optional": true },
-    "mongodb":                   { "optional": true },
-    "pg":                        { "optional": true },
-    "mysql2":                    { "optional": true },
-    "@aws-sdk/client-dynamodb":  { "optional": true },
-    "@aws-sdk/lib-dynamodb":     { "optional": true },
-    "@libsql/client":            { "optional": true }
+    "better-sqlite3": {
+      "optional": true
+    },
+    "ioredis": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    },
+    "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
+    "@aws-sdk/lib-dynamodb": {
+      "optional": true
+    },
+    "@libsql/client": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",
-    "@types/pg":             "^8.0.0",
-    "tsup":                  "^8.4.0",
-    "typescript":            "^5.9.3",
-    "vitest":                "^4.0.18"
+    "@types/pg": "^8.0.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "module": "./dist/index.js"
 }

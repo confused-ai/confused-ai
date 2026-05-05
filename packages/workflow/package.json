@@ -3,26 +3,33 @@
   "version": "0.1.0",
   "description": "Multi-agent orchestration patterns: compose, supervisor, swarm. Opt-in — not bundled in core.",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".":            { "types": "./src/index.ts",      "default": "./src/index.ts" },
-    "./compose":    { "types": "./src/compose.ts",    "default": "./src/compose.ts" },
-    "./supervisor": { "types": "./src/supervisor.ts", "default": "./src/supervisor.ts" },
-    "./swarm":      { "types": "./src/swarm.ts",      "default": "./src/swarm.ts" }
-  },
-  "publishConfig": {
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".":            { "types": "./dist/index.d.ts",      "import": "./dist/index.js",      "require": "./dist/index.cjs" },
-      "./compose":    { "types": "./dist/compose.d.ts",    "import": "./dist/compose.js",    "require": "./dist/compose.cjs" },
-      "./supervisor": { "types": "./dist/supervisor.d.ts", "import": "./dist/supervisor.js", "require": "./dist/supervisor.cjs" },
-      "./swarm":      { "types": "./dist/swarm.d.ts",      "import": "./dist/swarm.js",      "require": "./dist/swarm.cjs" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./compose": {
+      "types": "./dist/compose.d.ts",
+      "import": "./dist/compose.js",
+      "require": "./dist/compose.cjs"
+    },
+    "./supervisor": {
+      "types": "./dist/supervisor.d.ts",
+      "import": "./dist/supervisor.js",
+      "require": "./dist/supervisor.cjs"
+    },
+    "./swarm": {
+      "types": "./dist/swarm.d.ts",
+      "import": "./dist/swarm.js",
+      "require": "./dist/swarm.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -31,13 +38,14 @@
     "lint": "eslint src --max-warnings 0"
   },
   "dependencies": {
-    "@confused-ai/contracts": "workspace:*",
-    "@confused-ai/core": "workspace:*"
+    "@confused-ai/contracts": "*",
+    "@confused-ai/core": "*"
   },
   "devDependencies": {
     "tsup": "^8.4.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "module": "./dist/index.js"
 }

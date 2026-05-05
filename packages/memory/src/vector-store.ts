@@ -41,6 +41,7 @@ export class VectorMemoryStore implements MemoryStore {
             similarityThreshold: config.similarityThreshold ?? 0.7,
             embeddingDimension: config.embeddingDimension ?? this.embeddingProvider.getDimension(),
             debug: config.debug ?? false,
+            retentionDays: config.retentionDays ?? 0,
         };
     }
 

@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "description": "High-level SDK: typed agent definitions, multi-step workflows, orchestration adapters",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
@@ -16,14 +16,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@confused-ai/core": "workspace:*",
-    "@confused-ai/memory": "workspace:*",
-    "@confused-ai/tools": "workspace:*",
-    "@confused-ai/planner": "workspace:*",
-    "@confused-ai/execution": "workspace:*"
+    "@confused-ai/core": "*",
+    "@confused-ai/memory": "*",
+    "@confused-ai/tools": "*",
+    "@confused-ai/planner": "*",
+    "@confused-ai/execution": "*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
-  }
+  },
+  "files": [
+    "dist"
+  ],
+  "module": "./dist/index.js"
 }

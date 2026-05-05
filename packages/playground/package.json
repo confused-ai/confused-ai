@@ -3,27 +3,18 @@
   "version": "0.1.0",
   "description": "Interactive browser-based playground UI for confused-ai agents — zero framework, pure Node.js HTTP.",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
-  "publishConfig": {
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js",
-        "require": "./dist/index.cjs"
-      }
-    }
-  },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -31,10 +22,10 @@
     "dev": "node --loader ts-node/esm src/index.ts"
   },
   "dependencies": {
-    "@confused-ai/contracts": "workspace:*"
+    "@confused-ai/contracts": "*"
   },
   "peerDependencies": {
-    "@confused-ai/agentic": "workspace:*"
+    "@confused-ai/agentic": "*"
   },
   "peerDependenciesMeta": {
     "@confused-ai/agentic": {
@@ -44,5 +35,6 @@
   "devDependencies": {
     "typescript": "^5.4.5",
     "tsup": "^8.0.2"
-  }
+  },
+  "module": "./dist/index.js"
 }

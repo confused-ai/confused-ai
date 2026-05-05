@@ -3,63 +3,38 @@
   "version": "0.1.0",
   "description": "Core agent runner: createAgent(), agent(), and the ReAct loop. Only runtime dependency is zod.",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./agent": {
-      "types": "./src/agent.ts",
-      "default": "./src/agent.ts"
+      "types": "./dist/agent.d.ts",
+      "import": "./dist/agent.js",
+      "require": "./dist/agent.cjs"
     },
     "./runner": {
-      "types": "./src/runner/index.ts",
-      "default": "./src/runner/index.ts"
+      "types": "./dist/runner.d.ts",
+      "import": "./dist/runner.js",
+      "require": "./dist/runner.cjs"
     },
     "./types": {
-      "types": "./src/types.ts",
-      "default": "./src/types.ts"
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "require": "./dist/types.cjs"
     },
     "./errors": {
-      "types": "./src/errors.ts",
-      "default": "./src/errors.ts"
+      "types": "./dist/errors.d.ts",
+      "import": "./dist/errors.js",
+      "require": "./dist/errors.cjs"
     }
   },
-  "publishConfig": {
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js",
-        "require": "./dist/index.cjs"
-      },
-      "./agent": {
-        "types": "./dist/agent.d.ts",
-        "import": "./dist/agent.js",
-        "require": "./dist/agent.cjs"
-      },
-      "./runner": {
-        "types": "./dist/runner.d.ts",
-        "import": "./dist/runner.js",
-        "require": "./dist/runner.cjs"
-      },
-      "./types": {
-        "types": "./dist/types.d.ts",
-        "import": "./dist/types.js",
-        "require": "./dist/types.cjs"
-      },
-      "./errors": {
-        "types": "./dist/errors.d.ts",
-        "import": "./dist/errors.js",
-        "require": "./dist/errors.cjs"
-      }
-    }
-  },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -68,23 +43,30 @@
     "lint": "eslint src --max-warnings 0"
   },
   "dependencies": {
-    "@confused-ai/contracts": "workspace:*",
+    "@confused-ai/contracts": "*",
     "zod": ">=3.22.0"
   },
   "peerDependencies": {
-    "@confused-ai/db":      "workspace:*",
-    "@confused-ai/guard":   "workspace:*",
-    "@confused-ai/observe": "workspace:*"
+    "@confused-ai/db": "*",
+    "@confused-ai/guard": "*",
+    "@confused-ai/observe": "*"
   },
   "peerDependenciesMeta": {
-    "@confused-ai/db":      { "optional": true },
-    "@confused-ai/guard":   { "optional": true },
-    "@confused-ai/observe": { "optional": true }
+    "@confused-ai/db": {
+      "optional": true
+    },
+    "@confused-ai/guard": {
+      "optional": true
+    },
+    "@confused-ai/observe": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "tsup": "^8.4.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "module": "./dist/index.js"
 }

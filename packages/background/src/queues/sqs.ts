@@ -53,6 +53,7 @@ export class SQSBackgroundQueue implements BackgroundQueue {
     private async getClient(): Promise<unknown> {
         if (this.client) return this.client;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // @ts-ignore -- @aws-sdk/client-sqs is an optional peer dep
         const { SQSClient } = (await import('@aws-sdk/client-sqs')) as any;
         this.client = new SQSClient({
             region: this.opts.region ?? 'us-east-1',
@@ -72,6 +73,7 @@ export class SQSBackgroundQueue implements BackgroundQueue {
         } as BackgroundTask<TPayload>;
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // @ts-ignore -- @aws-sdk/client-sqs is an optional peer dep
         const { SendMessageCommand } = (await import('@aws-sdk/client-sqs')) as any;
         const client = await this.getClient() as { send: (cmd: unknown) => Promise<void> };
         await client.send(new SendMessageCommand({
@@ -92,6 +94,7 @@ export class SQSBackgroundQueue implements BackgroundQueue {
     ): Promise<() => Promise<void>> {
         const concurrency = options.concurrency ?? 5;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // @ts-ignore -- @aws-sdk/client-sqs is an optional peer dep
         const { ReceiveMessageCommand, DeleteMessageCommand } = (await import('@aws-sdk/client-sqs')) as any;
         const client = await this.getClient() as {
             send: (cmd: unknown) => Promise<{ Messages?: Array<{ Body: string; ReceiptHandle: string }> }>;

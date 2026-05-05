@@ -59,6 +59,7 @@ export class RabbitMQBackgroundQueue implements BackgroundQueue {
 
     private async getChannel(): Promise<unknown> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // @ts-ignore -- amqplib is an optional peer dep
         const amqplib = (await import('amqplib')) as any;
         if (!this.connection) {
             this.connection = await amqplib.connect(this.opts.url, this.opts.socketOptions);

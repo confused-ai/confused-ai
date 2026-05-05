@@ -3,30 +3,43 @@
   "version": "0.1.0",
   "description": "LLM provider adapters for confused-ai. All SDKs are optional peer deps — installed only when you use that provider.",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".":           { "types": "./src/index.ts",          "default": "./src/index.ts" },
-    "./openai":    { "types": "./src/openai.ts",         "default": "./src/openai.ts" },
-    "./anthropic": { "types": "./src/anthropic.ts",      "default": "./src/anthropic.ts" },
-    "./google":    { "types": "./src/google.ts",         "default": "./src/google.ts" },
-    "./ollama":    { "types": "./src/ollama.ts",         "default": "./src/ollama.ts" },
-    "./bedrock":   { "types": "./src/bedrock.ts",        "default": "./src/bedrock.ts" }
-  },
-  "publishConfig": {
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".":           { "types": "./dist/index.d.ts",     "import": "./dist/index.js",     "require": "./dist/index.cjs" },
-      "./openai":    { "types": "./dist/openai.d.ts",    "import": "./dist/openai.js",    "require": "./dist/openai.cjs" },
-      "./anthropic": { "types": "./dist/anthropic.d.ts", "import": "./dist/anthropic.js", "require": "./dist/anthropic.cjs" },
-      "./google":    { "types": "./dist/google.d.ts",    "import": "./dist/google.js",    "require": "./dist/google.cjs" },
-      "./ollama":    { "types": "./dist/ollama.d.ts",    "import": "./dist/ollama.js",    "require": "./dist/ollama.cjs" },
-      "./bedrock":   { "types": "./dist/bedrock.d.ts",   "import": "./dist/bedrock.js",   "require": "./dist/bedrock.cjs" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./openai": {
+      "types": "./dist/openai.d.ts",
+      "import": "./dist/openai.js",
+      "require": "./dist/openai.cjs"
+    },
+    "./anthropic": {
+      "types": "./dist/anthropic.d.ts",
+      "import": "./dist/anthropic.js",
+      "require": "./dist/anthropic.cjs"
+    },
+    "./google": {
+      "types": "./dist/google.d.ts",
+      "import": "./dist/google.js",
+      "require": "./dist/google.cjs"
+    },
+    "./ollama": {
+      "types": "./dist/ollama.d.ts",
+      "import": "./dist/ollama.js",
+      "require": "./dist/ollama.cjs"
+    },
+    "./bedrock": {
+      "types": "./dist/bedrock.d.ts",
+      "import": "./dist/bedrock.js",
+      "require": "./dist/bedrock.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -35,23 +48,33 @@
     "lint": "eslint src --max-warnings 0"
   },
   "dependencies": {
-    "@confused-ai/contracts": "workspace:*",
-    "@confused-ai/core": "workspace:*",
-    "@confused-ai/shared": "workspace:*"
+    "@confused-ai/contracts": "*",
+    "@confused-ai/core": "*",
+    "@confused-ai/shared": "*"
   },
   "peerDependencies": {
-    "openai":                    ">=4.0.0",
-    "@anthropic-ai/sdk":         ">=0.30.0",
-    "@google/generative-ai":     ">=0.5.0",
-    "ollama":                    ">=0.5.0",
+    "openai": ">=4.0.0",
+    "@anthropic-ai/sdk": ">=0.30.0",
+    "@google/generative-ai": ">=0.5.0",
+    "ollama": ">=0.5.0",
     "@aws-sdk/client-bedrock-runtime": ">=3.0.0"
   },
   "peerDependenciesMeta": {
-    "openai":                          { "optional": true },
-    "@anthropic-ai/sdk":               { "optional": true },
-    "@google/generative-ai":           { "optional": true },
-    "ollama":                          { "optional": true },
-    "@aws-sdk/client-bedrock-runtime": { "optional": true }
+    "openai": {
+      "optional": true
+    },
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "@google/generative-ai": {
+      "optional": true
+    },
+    "ollama": {
+      "optional": true
+    },
+    "@aws-sdk/client-bedrock-runtime": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@anthropic-ai/sdk": ">=0.30.0",
@@ -63,5 +86,6 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "module": "./dist/index.js"
 }

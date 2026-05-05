@@ -3,45 +3,33 @@
   "version": "0.1.0",
   "description": "Zero-dependency interfaces and types shared across confused-ai packages.",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
-    "./errors": "./src/errors.ts",
-    "./result": "./src/result.ts",
-    "./adapters": "./src/adapters.ts"
-  },
-  "publishConfig": {
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js",
-        "require": "./dist/index.cjs"
-      },
-      "./errors": {
-        "types": "./dist/errors.d.ts",
-        "import": "./dist/errors.js",
-        "require": "./dist/errors.cjs"
-      },
-      "./result": {
-        "types": "./dist/result.d.ts",
-        "import": "./dist/result.js",
-        "require": "./dist/result.cjs"
-      },
-      "./adapters": {
-        "types": "./dist/adapters.d.ts",
-        "import": "./dist/adapters.js",
-        "require": "./dist/adapters.cjs"
-      }
+    "./errors": {
+      "types": "./dist/errors.d.ts",
+      "import": "./dist/errors.js",
+      "require": "./dist/errors.cjs"
+    },
+    "./result": {
+      "types": "./dist/result.d.ts",
+      "import": "./dist/result.js",
+      "require": "./dist/result.cjs"
+    },
+    "./adapters": {
+      "types": "./dist/adapters.d.ts",
+      "import": "./dist/adapters.js",
+      "require": "./dist/adapters.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -54,5 +42,6 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "module": "./dist/index.js"
 }

@@ -337,3 +337,114 @@ Track these metrics quarterly to measure strategic progress:
 | Platform foundation | 5 | ~50 engineer-days |
 | Community/ecosystem | 4 | ~40 engineer-days |
 | **Total v2.0** | **14** | **~150 engineer-days** |
+
+### Cumulative Roadmap Budget
+
+| Release | Engineer-Days | Calendar Time | Milestone Date (estimate) |
+|---------|:-------------:|:-------------:|:------------------------:|
+| v1.2 | ~61 | 6 weeks | mid-June 2026 |
+| v1.3 | ~69 | 10 weeks post-v1.2 | late August 2026 |
+| v2.0 | ~150 | 6 months post-v1.3 | Q1 2027 |
+| **Total horizon** | **~280** | **~10 months** | |
+
+---
+
+## Risk Register
+
+Risks are ranked by `Severity × Likelihood`. Each risk has a designated owner package or team role.
+
+| # | Risk | Severity | Likelihood | Score | Mitigation | Owner |
+|---|------|:--------:|:----------:|:-----:|-----------|-------|
+| R-01 | `ShellTool` security vulnerability exploited before v1.2 ships | Critical | Medium | 🔴 High | Patch default-deny in a hotfix (v1.1.8) immediately; do not wait for v1.2 train | `packages/tools` |
+| R-02 | SSRF via `HttpClientTool` in a deployed integration | Critical | Low | 🟠 Medium | Same as R-01 — hotfix eligible; add `SECURITY.md` advisory | `packages/tools` |
+| R-03 | Agno ships agent-driven memory parity before confused-ai v1.2 | High | Medium | 🟠 Medium | Accelerate `AgentDrivenMemory` sprint; publicize roadmap commitment on GitHub | `packages/memory` |
+| R-04 | LangChain releases TypeScript-first rewrite targeting same audience | High | Low | 🟡 Low-Medium | Maintain production-safety moat; track langchainjs releases quarterly | Strategy |
+| R-05 | Node.js 18 EOL (April 2025) creates CI matrix complexity | Medium | High | 🟠 Medium | Drop Node 18 support in v1.3; update CI matrix; document in CHANGELOG | DevOps |
+| R-06 | `DurableExecutor` event-store growth unbounded in long-running graphs | High | Medium | 🟠 Medium | Implement compaction / snapshot strategy; add `maxEventAge` config in v1.2 | `packages/execution` |
+| R-07 | pnpm workspace hoisting causes transitive type conflicts at build | Medium | Low | 🟡 Low | Maintain `isolatedModules: true`; pin critical shared deps in `tsconfig.base.json` | Build |
+| R-08 | Anthropic / OpenAI API schema breaking change invalidates provider adapters | Medium | Medium | 🟠 Medium | Provider adapter tests run against recorded fixtures; monitor provider changelogs | `packages/models` |
+| R-09 | Community fork emerges due to slow v1.2 delivery | Low | Low | 🟢 Low | Monthly public progress updates; respond to issues within 48 hours | Community |
+| R-10 | Contributor bandwidth insufficient to ship v1.3 on schedule | High | Medium | 🟠 Medium | Identify two external contributors for DX track by end of v1.2; document contribution paths | Engineering lead |
+
+### Risk Thresholds
+
+- 🔴 **High** — Requires immediate escalation and sprint re-prioritization
+- 🟠 **Medium** — Requires mitigation plan within current release cycle
+- 🟡 **Low-Medium** — Monitor quarterly; mitigation optional
+- 🟢 **Low** — Log and accept
+
+---
+
+## Dependencies & External Blockers
+
+These are hard external dependencies that must be resolved or de-risked before the dependent task can begin.
+
+| Dependency | Blocks | Resolution Path | ETA |
+|-----------|--------|----------------|-----|
+| OpenAI structured output stable API | `defineAgent().outputSchema()` (v2.0) | API is GA; adapter implementation unblocked | — |
+| Pinecone / Qdrant SDK v2 stability | `AgentDrivenMemory` vector backend | Both SDKs stable; integration test suite covers v2 | — |
+| E2B sandbox API key provisioning | E2B sandbox tool (v1.3) | Requires E2B account + env var; document in setup guide | Before v1.3 kickoff |
+| PostgreSQL test fixture in CI | `PostgresAuditStore`, `PostgresCheckpointStore` (v1.2) | Add `postgres:16` service container to GitHub Actions matrix | v1.2 sprint 1 |
+| Helm chart registry hosting | Helm chart (v1.3) | Decision needed: GitHub Container Registry vs. ArtifactHub | v1.3 planning |
+| VS Code extension marketplace registration | VS Code extension (v2.0) | Microsoft publisher account required; 1–2 week approval | 6 weeks before v2.0 |
+| CLIP model hosting for multi-modal memory (v2.0) | `MultiModalVectorStore` | Self-hosted vs. managed inference TBD | v2.0 planning |
+
+---
+
+## Governance & Review Cadence
+
+### Document Ownership
+
+| Section | Owner | Update Trigger |
+|---------|-------|---------------|
+| Roadmap tasks + acceptance criteria | Engineering lead | Before each release cycle kick-off |
+| Risk Register | Engineering lead | Monthly; or after any 🔴 risk event |
+| KPI baselines + targets | Engineering lead | Each quarterly review |
+| Quality gates | Any contributor (PR required) | When gate definitions change |
+| Effort estimates | Task owner | After sprint planning refinement |
+
+### Review Schedule
+
+| Review | Cadence | Participants | Output |
+|--------|---------|-------------|--------|
+| Sprint sync | Every 2 weeks | Engineering team | Task status update; risk re-scoring |
+| Release readiness review | 1 week before each release | Engineering lead + at least one external contributor | Go/no-go decision against quality gates |
+| Quarterly strategy review | Quarterly | Engineering leadership | KPI measurement; roadmap re-prioritization |
+| Security gate audit | Each release | Engineering lead (security focus) | Sign-off on Security Gate checklist |
+| Competitive analysis refresh | Quarterly | Engineering lead | Updated competitive scores; new gap items added to backlog |
+
+### Change Process
+
+Any change to a **v1.2 P0 task**, a **Non-Negotiable Quality Gate**, or a **v1.2/v1.3 Definition of Done** requires:
+1. A PR updating this document with a clear rationale
+2. Approval from the engineering lead
+3. A corresponding entry in `CHANGELOG.md`
+
+Additions to the v1.3 and v2.0 backlogs may be made via PR without blocking approval, but must include effort estimates and acceptance criteria.
+
+---
+
+## Immediate Actions (Now → Next 2 Weeks)
+
+The following actions should begin **this sprint**, ahead of the formal v1.2 release train, due to their risk level or blocking nature.
+
+| Priority | Action | Rationale | Owner |
+|----------|--------|-----------|-------|
+| **P0** | Open hotfix branch `v1.1.8-security`; patch `ShellTool` default-deny and `HttpClientTool` SSRF block | R-01, R-02 — critical vulnerabilities in current release | `packages/tools` |
+| **P0** | Add `postgres:16` service container to GitHub Actions CI matrix | Unblocks `PostgresAuditStore` and `PostgresCheckpointStore` work in v1.2 sprint 1 | DevOps |
+| **P0** | Draft `AgentDrivenMemory` interface contract in `packages/contracts` | Allows parallel work on memory persistence and system-tool wiring without coupling | `packages/memory` |
+| **P1** | Tag v1.1.7 in GitHub; publish release notes summarizing current capability baseline | Provides clean anchor for CHANGELOG and competitive benchmarks | Engineering lead |
+| **P1** | Create GitHub milestone `v1.2` and assign all P0/P1 tasks from this roadmap | Enables public progress tracking; activates community contribution surface | Engineering lead |
+| **P1** | Add `halfOpenSuccessThreshold` config option to `CircuitBreakerConfig` (1-day effort) | Quick win from audit findings; directly improves production reliability score | `packages/guard` |
+| **P2** | Audit and document all existing `ConsoleLogger` output for API key patterns | Prerequisite for secret-masking implementation; unblocks security track sprint | `packages/observe` |
+
+---
+
+## Document Revision History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | April 2026 | Engineering lead | Initial draft: roadmap structure, v1.2 P0 tasks |
+| 1.1.0 | April 2026 | Engineering lead | Added v1.3 DX track; expanded v2.0 platform section |
+| 1.1.7 | May 2026 | Engineering lead | Aligned to v1.1.7 baseline; added KPIs, quality gates, documentation architecture |
+| **1.1.8** | **May 2026** | **Engineering lead** | **Added Risk Register, Dependencies, Governance, Immediate Actions, Revision History; completed Appendix with cumulative budget table** |

@@ -52,7 +52,7 @@ export async function handleFeedback(
     };
   }
 
-  const entry = await store.append(parsed.data);
+  const entry = await store.append(parsed.data as Parameters<FeedbackStore['append']>[0]);
   return {
     status: 201,
     body: entry,
