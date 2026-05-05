@@ -31,7 +31,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@confused-ai/contracts": "workspace:*"
+    "@confused-ai/contracts": "workspace:*",
+    "@confused-ai/production": "workspace:*"
   },
   "peerDependencies": {
     "zod": ">=3.22.0"

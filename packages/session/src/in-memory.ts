@@ -12,9 +12,24 @@
 
 import type { SessionStore, SessionData, SessionMessage } from './types.js';
 
+export interface InMemorySessionStoreOptions {
+  /**
+   * Number of days after which sessions are considered expired and eligible
+   * for eviction by `pruneExpired()`. Measured from `updatedAt`.
+   * When `undefined` (default) sessions are kept indefinitely.
+   */
+  retentionDays?: number;
+}
+
 export class InMemorySessionStore implements SessionStore {
   /** O(1) average for all operations. */
   private readonly _store = new Map<string, SessionData>();
+  private readonly _retentionMs: number | undefined;
+
+  constructor(opts: InMemorySessionStoreOptions = {}) {
+    this._retentionMs =
+      opts.retentionDays !== undefined ? opts.retentionDays * 86_400_000 : undefined;
+  }
 
   get(id: string): Promise<SessionData | undefined> {
     return Promise.resolve(this._store.get(id));
@@ -68,11 +83,29 @@ export class InMemorySessionStore implements SessionStore {
     return Promise.resolve();
   }
 
+  /**
+   * Remove all sessions whose `updatedAt` is older than `retentionDays`.
+   * Returns the number of sessions deleted.
+   * No-op when `retentionDays` was not configured.
+   */
+  pruneExpired(): number {
+    if (this._retentionMs === undefined) return 0;
+    const cutoff = Date.now() - this._retentionMs;
+    let pruned = 0;
+    for (const [id, session] of this._store) {
+      if (session.updatedAt < cutoff) {
+        this._store.delete(id);
+        pruned++;
+      }
+    }
+    return pruned;
+  }
+
   /** O(1) — Map.size is a property. */
   get size(): number { return this._store.size; }
 }
 
 /** Factory function. */
-export function createInMemoryStore(): InMemorySessionStore {
-  return new InMemorySessionStore();
+export function createInMemoryStore(opts?: InMemorySessionStoreOptions): InMemorySessionStore {
+  return new InMemorySessionStore(opts);
 }

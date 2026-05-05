@@ -24,13 +24,17 @@
     "zod": "^3.0.0"
   },
   "peerDependencies": {
+    "@confused-ai/compression": "workspace:*",
     "@confused-ai/knowledge": "workspace:*",
     "@confused-ai/production": "workspace:*",
+    "@confused-ai/reasoning": "workspace:*",
     "@opentelemetry/api": "^1.0.0"
   },
   "peerDependenciesMeta": {
+    "@confused-ai/compression": { "optional": true },
     "@confused-ai/knowledge": { "optional": true },
     "@confused-ai/production": { "optional": true },
+    "@confused-ai/reasoning": { "optional": true },
     "@opentelemetry/api": { "optional": true }
   },
   "devDependencies": {

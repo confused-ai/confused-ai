@@ -30,12 +30,14 @@ import type {
 import type { HumanInTheLoopHooks, GuardrailContext } from './_guardrail-types.js';
 import type { GuardrailEngine } from './_guardrail-types.js';
 import type { Span } from '@opentelemetry/api';
-import { LLMError } from '@confused-ai/shared';
+import { LLMError, ToolNotAuthorizedError } from '@confused-ai/shared';
 import { toolToLLMDef } from './_zod-to-schema.js';
 import { validateStructuredOutput, buildStructuredOutputPrompt } from './_structured-output.js';
 import { withRetry as guardWithRetry, runToolWithTimeout, createDeadline } from '@confused-ai/guard';
 import type { RetryPolicy } from '@confused-ai/guard';
-import { withSpan } from '@confused-ai/observe';
+import { withSpan, Metrics } from '@confused-ai/observe';
+import { ReasoningManager, TreeOfThoughtEngine } from '@confused-ai/reasoning';
+import { CompressionManager } from '@confused-ai/compression';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -56,6 +58,8 @@ interface RunContext {
     readonly toolTimeoutMs: number;
     readonly retry: AgenticRetryPolicy;
     readonly step: number;
+    /** Tool allowlist for this run (undefined = no restriction). */
+    readonly allowedTools: string[] | undefined;
 }
 
 // ── Pure utility functions ────────────────────────────────────────────────────
@@ -131,6 +135,12 @@ export class AgenticRunner {
     private guardrails?: GuardrailEngine;
     /** Zod → JSON Schema computed once at construction; tools are immutable after creation. */
     private readonly _cachedLlmTools: LLMToolDefinition[];
+    /** Optional reasoning manager (CoT) — created lazily when strategy is 'cot' or 'react'. */
+    private _reasoningManager?: ReasoningManager;
+    /** Optional ToT engine — created lazily when strategy is 'tot'. */
+    private _totEngine?: TreeOfThoughtEngine;
+    /** Optional compression manager — created lazily when compression is enabled. */
+    private _compressionManager?: CompressionManager;
 
     constructor(config: AgenticRunnerConfig) {
         this.config = { ...config, toolMiddleware: config.toolMiddleware ?? [] };
@@ -205,10 +215,25 @@ export class AgenticRunner {
             ({ messages, steps } = await this._restoreCheckpoint(checkpointStore, runId, messages, steps));
         }
 
+        // ── Pre-run reasoning enrichment ──────────────────────────────────────
+        // Only run on a fresh session (no checkpoint restore) to avoid double-enrichment.
+        if (steps === 0 && this.config.reasoning?.enabled) {
+            const enriched = await this._applyReasoning(prompt, systemPrompt);
+            if (enriched) {
+                // Inject as an extra assistant message so the LLM sees its own chain-of-thought
+                messages = [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user',   content: prompt },
+                    { role: 'assistant', content: `[Reasoning]\n${enriched}` },
+                ];
+            }
+        }
+
         const baseCtx: Omit<RunContext, 'step'> = {
             agentId, sessionId, lifecycle, streamHooks,
             toolTimeoutMs: DEFAULT_TOOL_TIMEOUT_MS,
             retry,
+            allowedTools: runConfig.allowedTools,
         };
 
         let lastText = '';
@@ -249,6 +274,15 @@ export class AgenticRunner {
                     result.usage.promptTokens ?? 0,
                     result.usage.completionTokens ?? 0,
                 );
+                // Record context window utilization when contextWindowSize is configured.
+                const promptTokens = result.usage.promptTokens;
+                const cwSize = this.config.contextWindowSize;
+                if (promptTokens !== undefined && cwSize !== undefined && cwSize > 0) {
+                    Metrics.contextWindowUtilization.record(
+                        promptTokens / cwSize,
+                        { agent_name: agentId, model: this.config.budgetModelId ?? 'unknown' },
+                    );
+                }
             }
 
             if (result.text) {
@@ -281,6 +315,11 @@ export class AgenticRunner {
 
             const toolMessages = await this._executeAllTools(result.toolCalls, { ...baseCtx, step: steps });
             messages.push(...toolMessages);
+
+            // ── Auto context compression ───────────────────────────────────
+            if (this.config.compression?.enabled) {
+                await this._maybeCompress(messages);
+            }
 
             if (steps >= maxSteps) finishReason = 'max_steps';
 
@@ -328,6 +367,84 @@ export class AgenticRunner {
         }
 
         return finalResult;
+    }
+
+    // ── Private: reasoning pre-pass ──────────────────────────────────────────
+
+    /**
+     * Runs a CoT or ToT reasoning pass and returns the enriched reasoning text
+     * to prepend to the conversation. Returns `undefined` if reasoning yields nothing.
+     */
+    private async _applyReasoning(prompt: string, systemPrompt: string): Promise<string | undefined> {
+        const cfg = this.config.reasoning!;
+        const strategy = cfg.strategy ?? 'cot';
+        const maxSteps  = cfg.maxSteps ?? 6;
+
+        // Build a lightweight generate fn that delegates to the runner's LLM
+        const generate = async (msgs: Array<{ role: string; content: string }>): Promise<string> => {
+            const result = await this.config.llm.generateText(msgs as Message[]);
+            return result.text ?? '';
+        };
+
+        if (strategy === 'tot') {
+            if (!this._totEngine) {
+                this._totEngine = new TreeOfThoughtEngine({
+                    generate,
+                    beamWidth: cfg.beamWidth ?? 3,
+                    maxDepth:  maxSteps,
+                });
+            }
+            const result = await this._totEngine.solve(prompt, systemPrompt).catch(() => null);
+            if (!result) return undefined;
+            // Summarise the best branch as a reasoning preamble
+            return result.nodes
+                .filter((n) => n.score > 0.3)
+                .map((n, i) => `Thought ${i + 1} (score=${n.score.toFixed(2)}): ${n.thought}`)
+                .join('\n');
+        }
+
+        // CoT (default) and 'react' both use ReasoningManager
+        if (!this._reasoningManager) {
+            this._reasoningManager = new ReasoningManager({ generate, maxSteps });
+        }
+        const result = await this._reasoningManager.run([{ role: 'user', content: prompt }]).catch(() => null);
+        if (!result?.steps.length) return undefined;
+        return result.steps
+            .map((s, i) =>
+                `Step ${i + 1}${s.title ? ` — ${s.title}` : ''}: ${s.result ?? s.action ?? ''}`,
+            )
+            .join('\n');
+    }
+
+    // ── Private: context compression ─────────────────────────────────────────
+
+    /**
+     * Lazily instantiates `CompressionManager` and compresses messages in-place
+     * when the message list grows beyond the configured thresholds.
+     */
+    private async _maybeCompress(messages: Message[]): Promise<void> {
+        if (!this._compressionManager) {
+            const generate = async (msgs: Array<{ role: string; content: string }>): Promise<string> => {
+                const result = await this.config.llm.generateText(msgs as Message[]);
+                return result.text ?? '';
+            };
+            const cfg = this.config.compression!;
+            // messageSizeThreshold is in chars; CompressionManager works in estimated tokens (chars/4)
+            const tokenLimit = Math.ceil((cfg.messageSizeThreshold ?? 2000) / 4);
+            this._compressionManager = new CompressionManager({
+                generate,
+                compressToolResults:      true,
+                compressToolResultsLimit: cfg.toolResultsLimit ?? 3,
+                compressTokenLimit:       tokenLimit,
+            });
+        }
+
+        // CompressibleMessage is structurally compatible with Message (same role/content shape)
+        type CM = Parameters<CompressionManager['shouldCompress']>[0];
+        const compressible = messages as unknown as CM;
+        if (this._compressionManager.shouldCompress(compressible)) {
+            await this._compressionManager.acompress(compressible);
+        }
     }
 
     // ── Private: system prompt ────────────────────────────────────────────────
@@ -451,6 +568,11 @@ export class AgenticRunner {
             return this._toolErrorMessage(tc.id, `Unknown tool: ${tc.name}`);
         }
 
+        // Tool authorization: if allowedTools is set, reject tools not in the list.
+        if (ctx.allowedTools !== undefined && !ctx.allowedTools.includes(tc.name)) {
+            throw new ToolNotAuthorizedError(tc.name);
+        }
+
         const guardrailCtx: GuardrailContext = {
             agentId, sessionId, toolName: tc.name, toolArgs: tc.arguments,
         };
@@ -480,6 +602,7 @@ export class AgenticRunner {
 
         let toolResult: unknown;
         let toolResultObj: ToolResult<unknown> | undefined;
+        const _toolStart = Date.now();
         try {
             const out = await withSpan(
                 'tool.call',
@@ -490,9 +613,15 @@ export class AgenticRunner {
                     tc.name,
                 ),
             );
+            Metrics.toolDurationMs.record(Date.now() - _toolStart, {
+                tool_name: tc.name, agent_name: agentId,
+            });
             toolResultObj = out;
             toolResult = out.success ? out.data : (out.error ? { error: out.error.message } : out);
         } catch (err) {
+            Metrics.toolDurationMs.record(Date.now() - _toolStart, {
+                tool_name: tc.name, agent_name: agentId,
+            });
             const error = err instanceof Error ? err : new Error(String(err));
             for (const m of middleware) {
                 if (m.onError) await m.onError(tool, error, toolContext);

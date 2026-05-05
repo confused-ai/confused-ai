@@ -3,3 +3,5 @@ export * from './schemas.js';
 export * from './hardening.js';
 export * from './auth.js';
 export * from './lifecycle.js';
+export * from './a2a.js';
+export * from './feedback.js';

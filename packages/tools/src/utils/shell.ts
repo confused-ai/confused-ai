@@ -117,18 +117,28 @@ export class ShellTool extends BaseTool<typeof ShellCommandParameters, ShellResu
     }
 
     /**
-     * Validate command against allowlist/blocklist before execution
+     * Validate command against allowlist/blocklist before execution.
+     *
+     * Allowlist semantics (default-deny):
+     *  - undefined  → no allowlist enforced; only blocklist applies
+     *  - []         → deny ALL commands (empty allowlist = total block)
+     *  - ['git', …] → only commands whose trimmed string starts with a listed prefix are allowed
      */
     private validateCommand(command: string): string | null {
         const trimmed = command.trim();
 
-        // Check allowlist first (if set, only allowed commands pass)
-        if (this.allowedCommands && this.allowedCommands.length > 0) {
-            const allowed = this.allowedCommands.some(prefix =>
-                trimmed.startsWith(prefix)
-            );
+        // Default-deny: when allowedCommands is provided (even as empty array), enforce it.
+        // An empty array means NO commands are permitted.
+        if (this.allowedCommands !== undefined) {
+            const allowed =
+                this.allowedCommands.length > 0 &&
+                this.allowedCommands.some(prefix => trimmed.startsWith(prefix));
             if (!allowed) {
-                return `Command '${trimmed.substring(0, 50)}...' is not in the allowed commands list`;
+                const hint =
+                    this.allowedCommands.length === 0
+                        ? 'No commands are permitted (allowedCommands is empty). Add allowed command prefixes to ShellToolConfig.allowedCommands.'
+                        : `Allowed prefixes: ${this.allowedCommands.join(', ')}. Command '${trimmed.substring(0, 60)}' does not match any.`;
+                return hint;
             }
         }
 

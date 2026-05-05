@@ -30,6 +30,13 @@ export interface CircuitBreakerConfig {
     readonly failureThreshold?: number;
     /** Number of successes in half-open before closing (default: 2) */
     readonly successThreshold?: number;
+    /**
+     * Alias for `successThreshold`. Number of consecutive successes required
+     * in the HALF_OPEN state before the circuit transitions back to CLOSED.
+     * When both are set, `halfOpenSuccessThreshold` takes precedence.
+     * Default: 2.
+     */
+    readonly halfOpenSuccessThreshold?: number;
     /** Time in ms before attempting recovery (default: 30000) */
     readonly resetTimeoutMs?: number;
     /** Time window in ms for counting failures (default: 60000) */
@@ -107,7 +114,8 @@ export class CircuitBreaker {
         this.config = {
             name: config.name,
             failureThreshold: config.failureThreshold ?? 5,
-            successThreshold: config.successThreshold ?? 2,
+            successThreshold: config.halfOpenSuccessThreshold ?? config.successThreshold ?? 2,
+            halfOpenSuccessThreshold: config.halfOpenSuccessThreshold ?? config.successThreshold ?? 2,
             resetTimeoutMs: config.resetTimeoutMs ?? 30_000,
             failureWindowMs: config.failureWindowMs ?? 60_000,
             metrics: config.metrics,
@@ -148,7 +156,7 @@ export class CircuitBreaker {
         this.checkStateTransition();
 
         if (this.state === CircuitState.OPEN) {
-            const resetAt = this.getResetTime()!;
+            const resetAt = this.getResetTime() ?? new Date(Date.now() + this.config.resetTimeoutMs);
             this.recordMetric('circuit_rejected', 1);
             return {
                 success: false,

@@ -14,3 +14,11 @@ export type {
     STTResult,
     OpenAIVoice,
 } from './voice-provider.js';
+
+// ── Real-time streaming ──────────────────────────────────────────────────────
+export { VoiceStreamSession } from './stream.js';
+export type {
+    VoiceStreamConfig,
+    VoiceStreamEvent,
+    VoiceStreamEventType,
+} from './stream.js';

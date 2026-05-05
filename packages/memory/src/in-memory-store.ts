@@ -23,6 +23,8 @@ const DEFAULT_CONFIG: Required<MemoryStoreConfig> = {
     similarityThreshold: 0.7,
     embeddingDimension: 1536,
     debug: false,
+    // 0 = unlimited retention (no eviction based on age)
+    retentionDays: 0,
 };
 
 /**
@@ -176,6 +178,34 @@ export class InMemoryStore implements MemoryStore {
 
     async snapshot(): Promise<MemoryEntry[]> {
         return Array.from(this.memories.values());
+    }
+
+    /**
+     * Remove all memory entries whose age exceeds `retentionDays`.
+     * Respects individual `expiresAt` dates first; falls back to `retentionDays`
+     * when no explicit expiry is set.
+     *
+     * Returns the number of entries deleted.
+     * No-op when `retentionDays` was not configured (config value 0).
+     */
+    pruneExpired(): number {
+        const now = new Date();
+        const retentionMs =
+            this.config.retentionDays > 0 ? this.config.retentionDays * 86_400_000 : null;
+
+        let pruned = 0;
+        for (const [id, entry] of this.memories) {
+            const expired =
+                (entry.expiresAt !== undefined && entry.expiresAt < now) ||
+                (retentionMs !== null &&
+                    now.getTime() - entry.createdAt.getTime() > retentionMs);
+            if (expired) {
+                if (entry.type === MemoryType.SHORT_TERM) this.shortTermCount--;
+                this.memories.delete(id);
+                pruned++;
+            }
+        }
+        return pruned;
     }
 
     /**

@@ -58,6 +58,19 @@ features:
   - icon: 🔌
     title: MCP client + server
     details: "Connect to any Model Context Protocol server. MCP tools become first-class citizens of the agent loop. Or expose your own tools as an MCP server with one function call."
+
+---
+
+## Engineering Reference
+
+| Document | Audience | Description |
+|----------|----------|-------------|
+| [Architecture Specification](./ARCHITECTURE-SPECIFICATION.md) | Core contributors, enterprise architects | Deep technical spec: layer model, interfaces, ADRs, data flow |
+| [Competitive Analysis](./COMPETITIVE-ANALYSIS.md) | Engineering leadership | Gap analysis vs. Agno, LangChain, CrewAI with remediation plan |
+| [Production-Readiness Audit](./PRODUCTION-READINESS-AUDIT.md) | SRE, security, compliance teams | Enterprise readiness scorecard: security, resilience, telemetry |
+| [Integration Blueprints](./INTEGRATION-BLUEPRINTS.md) | Integration engineers | 9 production-ready patterns: multi-tenant SaaS, RAG, HITL, distributed graph, MCP |
+| [Glossary](./GLOSSARY.md) | All audiences | Canonical definitions for all technical terms |
+| [Strategic Transformation Roadmap](./STRATEGIC-TRANSFORMATION-ROADMAP.md) | Engineering leadership | v1.2 → v1.3 → v2.0 delivery plan with KPIs |
     link: /guide/mcp
     linkText: MCP guide
   - icon: 🏛️

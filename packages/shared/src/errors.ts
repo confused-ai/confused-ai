@@ -196,3 +196,28 @@ export class PermissionError extends AgentError {
         Object.setPrototypeOf(this, PermissionError.prototype);
     }
 }
+
+/**
+ * Tool not in the per-run or per-tenant `allowedTools` allowlist.
+ * Thrown before tool execution so no side-effects occur.
+ */
+export class ToolNotAuthorizedError extends AgentError {
+    readonly toolName: string;
+
+    constructor(toolName: string, options: { tenantId?: string; context?: Record<string, unknown> } = {}) {
+        super(
+            `Tool '${toolName}' is not in the allowed-tools list for this run.`,
+            {
+                code: ErrorCode.PERMISSION_DENIED,
+                context: {
+                    toolName,
+                    ...(options.tenantId !== undefined && { tenantId: options.tenantId }),
+                    ...options.context,
+                },
+            }
+        );
+        this.name = 'ToolNotAuthorizedError';
+        this.toolName = toolName;
+        Object.setPrototypeOf(this, ToolNotAuthorizedError.prototype);
+    }
+}

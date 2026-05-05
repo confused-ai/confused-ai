@@ -13,3 +13,16 @@ export { compose }          from './compose.js';
 export { createSupervisor } from './supervisor.js';
 export { createSwarm }      from './swarm.js';
 export type { PipelineStep, SupervisorOptions, SwarmOptions } from './types.js';
+
+// ── Branching & loop primitives ───────────────────────────────────────────
+export { branch, loopUntil, forEach, race, retry } from './branching.js';
+export type {
+    WorkflowStep,
+    BranchBuilder,
+    BranchCondition,
+    LoopUntilOptions,
+    ForEachOptions,
+    ForEachResult,
+    RaceOptions,
+    WorkflowRetryOptions,
+} from './branching.js';

@@ -29,3 +29,27 @@ export * from './regression.js';
 
 // Observability types (MetricsCollector, MetricValue, MetricType)
 export * from './obs-types.js';
+
+// Fine-tuning dataset generator
+export * from './finetune.js';
+
+// Benchmark pipeline runner
+export {
+    runBenchmark,
+    exactMatchScorer,
+    containsScorer,
+    wordOverlapScorer,
+    rougeLScorer,
+    llmJudgeScorer,
+    customScorer,
+    formatBenchmarkReport,
+} from './benchmark.js';
+export type {
+    BenchmarkSample,
+    BenchmarkSampleResult,
+    BenchmarkReport,
+    BenchmarkSummary,
+    BenchmarkOptions,
+    Scorer,
+    ScorerFn,
+} from './benchmark.js';

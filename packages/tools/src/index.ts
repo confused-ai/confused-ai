@@ -153,3 +153,7 @@ export * from './utils/file.js';
 export * from './utils/shell.js';
 export * from './utils/browser.js';
 export * from './utils/calculator.js';
+
+// ── Tool composition helpers ──────────────────────────────────────────────
+export { composeTool, parallelTools, fallbackTool, retryTool, timeoutTool, mapTool, filterTool } from './compose.js';
+export type { ComposeToolOptions, ParallelToolsOptions, FallbackToolOptions, RetryToolOptions } from './compose.js';

@@ -74,6 +74,12 @@ export interface MemoryStoreConfig {
     readonly embeddingDimension?: number;
     /** Enable debug logging */
     readonly debug?: boolean;
+    /**
+     * Number of days after which memory entries without a custom `expiresAt`
+     * are considered stale and eligible for eviction.
+     * When `undefined` (default) entries without `expiresAt` are kept indefinitely.
+     */
+    readonly retentionDays?: number;
 }
 
 /**

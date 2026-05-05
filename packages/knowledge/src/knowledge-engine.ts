@@ -78,6 +78,68 @@ class InMemoryVectorStore implements VectorStore {
   }
 }
 
+// ── Embedding result cache ────────────────────────────────────────────────────
+// LRU cache using Map (insertion order) — evicts the oldest entry when full.
+// Keyed by the raw text; value is the embedding vector.
+// Space: O(maxSize × vector_dim). For 500 entries at 1536 dim ≈ 3 MB.
+
+class EmbeddingCache {
+  private readonly _cache = new Map<string, number[]>();
+  private readonly _maxSize: number;
+
+  constructor(maxSize: number) {
+    this._maxSize = maxSize;
+  }
+
+  get(text: string): number[] | undefined {
+    const hit = this._cache.get(text);
+    if (hit !== undefined) {
+      // Promote to most-recently-used by re-inserting at the end.
+      this._cache.delete(text);
+      this._cache.set(text, hit);
+    }
+    return hit;
+  }
+
+  set(text: string, embedding: number[]): void {
+    if (this._cache.has(text)) {
+      this._cache.delete(text);
+    } else if (this._cache.size >= this._maxSize) {
+      // Evict the least-recently-used entry (first key in the Map).
+      const lru = this._cache.keys().next().value;
+      if (lru !== undefined) this._cache.delete(lru);
+    }
+    this._cache.set(text, embedding);
+  }
+
+  /** Number of cached entries. */
+  get size(): number { return this._cache.size; }
+
+  /** Remove all cached embeddings. */
+  clear(): void { this._cache.clear(); }
+}
+
+/**
+ * Wrap an `EmbeddingFn` with an LRU cache.
+ *
+ * @param embed    The underlying embedding function to wrap.
+ * @param maxSize  Maximum number of entries to cache. Default: 500.
+ */
+export function withEmbeddingCache(embed: EmbeddingFn, maxSize = 500): EmbeddingFn & { cache: EmbeddingCache } {
+  const cache = new EmbeddingCache(maxSize);
+  const cached: EmbeddingFn & { cache: EmbeddingCache } = Object.assign(
+    async (text: string): Promise<number[]> => {
+      const hit = cache.get(text);
+      if (hit !== undefined) return hit;
+      const result = await embed(text);
+      cache.set(text, result);
+      return result;
+    },
+    { cache },
+  );
+  return cached;
+}
+
 // ── TF-IDF fallback embedding (zero deps) ─────────────────────────────────────
 // Suitable for development/testing without an embedding API key.
 
@@ -105,6 +167,12 @@ export interface KnowledgeEngineOptions {
   topK?: number;
   /** Max chars of context to inject. Default: 4000. */
   maxContextChars?: number;
+  /**
+   * Maximum number of embedding results to cache in memory (LRU cache).
+   * Set to `0` to disable caching.
+   * Default: 500.
+   */
+  embeddingCacheSize?: number;
 }
 
 /**
@@ -116,7 +184,9 @@ export class KnowledgeEngine implements RAGEngine {
   private readonly _maxContextChars: number;
 
   constructor(opts: KnowledgeEngineOptions = {}) {
-    const embed   = opts.embed ?? tfidfEmbed;
+    const rawEmbed = opts.embed ?? tfidfEmbed;
+    const cacheSize = opts.embeddingCacheSize ?? 500;
+    const embed = cacheSize > 0 ? withEmbeddingCache(rawEmbed, cacheSize) : rawEmbed;
     this._store   = opts.store ?? new InMemoryVectorStore(embed);
     this._topK    = opts.topK  ?? 5;
     this._maxContextChars = opts.maxContextChars ?? 4_000;

@@ -1,6 +1,17 @@
 /**
  * Confused-AI — Architecture & Developer Guide
  *
+ * > For the full architectural specification, interface contracts, ADRs, and data-flow
+ * > diagrams, see docs/ARCHITECTURE-SPECIFICATION.md
+ * >
+ * > For the competitive analysis (Agno / LangChain / CrewAI), see docs/COMPETITIVE-ANALYSIS.md
+ * >
+ * > For the enterprise production-readiness audit, see docs/PRODUCTION-READINESS-AUDIT.md
+ * >
+ * > For production-grade integration blueprints, see docs/INTEGRATION-BLUEPRINTS.md
+ * >
+ * > For the strategic transformation roadmap (v1.2 → v2.0), see docs/STRATEGIC-TRANSFORMATION-ROADMAP.md
+ *
  * ## Quick Start (5 seconds)
  *
  * ```ts

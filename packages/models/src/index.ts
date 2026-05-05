@@ -29,3 +29,31 @@ export {
     PROVIDER,
     LLAMABARN_BASE_URL,
 } from './model-resolver.js';
+
+// Multi-modal content builders
+export {
+    text,
+    image,
+    audio,
+    video,
+    file,
+    buildMessage,
+    contentToText,
+    isVisionCapable,
+    isAudioCapable,
+} from './multimodal.js';
+export type { ContentPart, AudioContent, VideoContent, FileContent } from './multimodal.js';
+
+// Streaming consumer utilities
+export {
+    streamToText,
+    streamToChunks,
+    streamToSSE,
+    streamWithBudget,
+    streamTee,
+    streamMap,
+    streamFilter,
+    streamMerge,
+    streamToNodeCallback,
+} from './stream-utils.js';
+export type { StreamToSSEOptions, StreamBudgetOptions } from './stream-utils.js';

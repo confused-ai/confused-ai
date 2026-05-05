@@ -200,6 +200,18 @@ export class ForbiddenError extends ConfusedAIError {
   }
 }
 
+export class ToolNotAuthorizedError extends ConfusedAIError {
+  constructor(toolName: string, tenantId?: string) {
+    super({
+      code: ERROR_CODES.TOOL_NOT_AUTHORIZED,
+      message: `Tool '${toolName}' is not in the allowed-tools list for this tenant/run.`,
+      retryable: false,
+      context: tenantId !== undefined ? { toolName, tenantId } : { toolName },
+    });
+    this.name = 'ToolNotAuthorizedError';
+  }
+}
+
 // --- Type guards ----------------------------------------------------------
 
 /** Type guard — returns `true` when `e` is any `ConfusedAIError` subclass. */

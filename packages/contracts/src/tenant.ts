@@ -50,6 +50,13 @@ export interface TenantContext {
    * e.g. `'gpt-4o-mini'` for a free tier.
    */
   modelOverride?: string;
+  /**
+   * Explicit tool allowlist for this tenant.
+   * When set, the agent will only execute tools whose `name` appears in this list.
+   * An empty array blocks ALL tool execution.
+   * When `undefined` (default), all registered tools are permitted.
+   */
+  allowedTools?: string[];
 }
 
 // ── Key namespacing ────────────────────────────────────────────────────────

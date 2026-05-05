@@ -26,3 +26,15 @@ export type {
 // ── AgentDb-backed store ────────────────────────────────────────────────────
 export { DbMemoryStore, createDbMemoryStore } from './db-store.js';
 export type { DbMemoryStoreOptions } from './db-store.js';
+
+// ── Memory distiller ────────────────────────────────────────────────────────
+export { MemoryDistiller, summariseMemories, summariseConversation } from './distiller.js';
+export type { MemoryDistillerConfig, DistillationResult } from './distiller.js';
+
+// ── Agent-driven memory tools ────────────────────────────────────────────────
+export { createAgentMemoryTools } from './agent-memory-tools.js';
+export type { AgentMemoryTools, AgentMemoryToolsOptions } from './agent-memory-tools.js';
+
+// ── SummaryBufferMemory middleware ────────────────────────────────────────────
+export { createSummaryBufferHook } from './summary-buffer.js';
+export type { SummaryBufferOptions, SummaryBeforeStepHook } from './summary-buffer.js';

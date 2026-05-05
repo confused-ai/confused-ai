@@ -28,8 +28,22 @@ export const Metrics = {
   toolCallsTotal: meter.createCounter('agent.tool_calls.total'),
   /** Tool invocations that resulted in an error. Attributes: `tool_name`. */
   toolErrorsTotal: meter.createCounter('agent.tool_errors.total'),
-  /** Tool execution duration. Attributes: `tool_name`. */
-  toolDurationMs: meter.createHistogram('agent.tool.duration_ms', { unit: 'ms' }),
+  /** Tool execution duration histogram. Attributes: `tool_name`, `agent_name`. */
+  toolDurationMs: meter.createHistogram('agent.tool.duration_ms', {
+    description: 'Tool execution latency',
+    unit: 'ms',
+  }),
+
+  // ── Context window ───────────────────────────────────────────────────────
+  /**
+   * Fraction of the model's context window consumed by the prompt.
+   * Value in [0, 1]. Attributes: `agent_name`, `model`.
+   * Record after each LLM call when usage.promptTokens is available.
+   */
+  contextWindowUtilization: meter.createHistogram('agent.context_window.utilization', {
+    description: 'Fraction of context window used by the prompt (0–1)',
+    unit: '1',
+  }),
 
   // ── LLM ─────────────────────────────────────────────────────────────────
   /** LLM token usage. Attributes: `model`, `token_type` (`input`|`output`). */

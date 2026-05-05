@@ -4,9 +4,11 @@
 
 export * from './types.js';
 export { AgenticRunner } from './runner.js';
-export type { Tool, ToolResult, ToolRegistry, ToolMiddleware, ToolContext, ToolPermissions, ToolCategory, ToolProvider } from './_tool-types.js';
-export { toToolRegistry } from './_tool-types.js';
+export type { Tool, ToolResult, ToolRegistry, ToolMiddleware, ToolContext, ToolPermissions, ToolProvider } from './_tool-types.js';
+export { ToolCategory, toToolRegistry } from './_tool-types.js';
 export type { GuardrailEngine, HumanInTheLoopHooks, GuardrailContext, GuardrailViolation, GuardrailResult } from './_guardrail-types.js';
+export { createStructuredAgent, StructuredOutputError } from './structured-agent.js';
+export type { StructuredAgentResult, StructuredAgentConfig } from './structured-agent.js';
 
 import type { LLMProvider } from '@confused-ai/core';
 import type { Message } from '@confused-ai/core';

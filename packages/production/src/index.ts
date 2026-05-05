@@ -98,6 +98,26 @@ export {
 } from './audit-store.js';
 export type { AuditStore, AuditEntry, AuditFilter } from './audit-store.js';
 
+// ── Feedback store ───────────────────────────────────────────────────────────
+export {
+    InMemoryFeedbackStore,
+    FeedbackEntrySchema,
+} from './feedback-store.js';
+export type { FeedbackEntry, FeedbackFilter, FeedbackStore } from './feedback-store.js';
+
+// ── Postgres stores ──────────────────────────────────────────────────────────
+export {
+    PostgresAuditStore,
+    PostgresCheckpointStore,
+    createPostgresAuditStore,
+    createPostgresCheckpointStore,
+} from './postgres-stores.js';
+export type { PgQueryable } from './postgres-stores.js';
+
+// ── Cascade delete ───────────────────────────────────────────────────────────
+export { deleteSession } from './cascade-delete.js';
+export type { CascadeDeleteDeps, CascadeDeleteResult } from './cascade-delete.js';
+
 // ── Approval store ───────────────────────────────────────────────────────────
 export {
     InMemoryApprovalStore,

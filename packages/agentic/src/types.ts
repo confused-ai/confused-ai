@@ -47,6 +47,12 @@ export interface AgenticRunConfig {
      * Passed as a parameter (not mutation) so concurrent runs are fully isolated.
      */
     readonly hooks?: AgenticLifecycleHooks;
+    /**
+     * Tool allowlist for this run. When set, only tools whose `name` is in this
+     * array will be executed. An empty array blocks all tool calls.
+     * When `undefined` (default) all registered tools are permitted.
+     */
+    readonly allowedTools?: string[];
 }
 
 /** AbortSignal-compatible (subset for cancellation) */
@@ -166,6 +172,41 @@ export interface AgenticRunnerConfig {
      * and tool calls / outputs during execution.
      */
     readonly guardrails?: import('@confused-ai/guardrails').GuardrailEngine;
+    /**
+     * Optional reasoning configuration.
+     * When enabled, a pre-run CoT or ToT pass enriches the initial prompt with
+     * structured reasoning steps before the ReAct loop begins.
+     */
+    readonly reasoning?: {
+        /** Enable pre-run reasoning. Default: false */
+        readonly enabled: boolean;
+        /** Strategy to use. Default: 'cot' */
+        readonly strategy?: 'cot' | 'tot' | 'react';
+        /** Maximum reasoning steps (CoT) or tree depth (ToT). Default: 6 */
+        readonly maxSteps?: number;
+        /** ToT-only: number of branches to explore per level. Default: 3 */
+        readonly beamWidth?: number;
+    };
+    /**
+     * Optional auto context-compression configuration.
+     * When enabled, tool results are compressed using an LLM after each step
+     * if the message list grows beyond the configured threshold.
+     */
+    readonly compression?: {
+        /** Enable automatic context compression. Default: false */
+        readonly enabled: boolean;
+        /** Minimum number of tool messages before triggering compression. Default: 3 */
+        readonly toolResultsLimit?: number;
+        /** Approximate character count per message above which to compress. Default: 2000 */
+        readonly messageSizeThreshold?: number;
+    };
+    /**
+     * Context window size in tokens for the configured LLM model.
+     * When set alongside LLM usage reporting, `agent.context_window.utilization`
+     * metric is recorded after each LLM call.
+     * Example: 128_000 for gpt-4o, 200_000 for claude-3.5.
+     */
+    readonly contextWindowSize?: number;
 }
 
 /** Convert a framework Tool to LLM tool definition (name, description, parameters as JSON Schema) */

@@ -48,6 +48,14 @@ export * from './a2a/client.js';
 export * from './a2a/http-client.js';
 export * from './a2a/server.js';
 
+// ── Developer-experience helpers ──────────────────────────────────────────
+// defineRole: CrewAI-style role builder → structured system prompt + agent
+// createTeam: ergonomic team factory wrapping Team / Router / Pipeline
+export { defineRole, buildSystemPrompt } from './dx/define-role.js';
+export type { RoleDefinition, RoleAgent } from './dx/define-role.js';
+export { createTeam } from './dx/create-team.js';
+export type { TeamMode, TeamOptions, TeamHandle, TeamRunResult } from './dx/create-team.js';
+
 // ── Context builder ────────────────────────────────────────────────────────
 export { AgentContextBuilder } from './_context-builder.js';
 
@@ -58,3 +66,15 @@ export {
     generateTraceparent,
 } from './_trace-context.js';
 export type { TraceContext } from './_trace-context.js';
+
+// ── Typed agent event bus ──────────────────────────────────────────────────
+export { createAgentEventBus, AgentEventBusTimeoutError } from './event-bus.js';
+export type {
+    AgentEventBus,
+    AgentEventBusOptions,
+    AgentEventBusMetrics,
+    EventMap,
+    EventHandler,
+    WildcardHandler,
+    EventSubscription,
+} from './event-bus.js';

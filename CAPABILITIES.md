@@ -2,6 +2,12 @@
 
 Use this as a checklist of what the framework can do and which import path to start from. Not every feature needs to be used in one app.
 
+> **See also:**
+> - `docs/ARCHITECTURE-SPECIFICATION.md` — deep technical spec, interface contracts, ADRs
+> - `docs/INTEGRATION-BLUEPRINTS.md` — 9 production-ready patterns with complete, runnable code
+> - `docs/COMPETITIVE-ANALYSIS.md` — capability comparison vs. Agno, LangChain, CrewAI
+> - `docs/GLOSSARY.md` — canonical definitions for all terms in this document
+
 ## Core agent loop
 
 | Capability | Where | Notes |
