@@ -21,7 +21,7 @@ export default defineConfig({
         // Favicon & theme
         ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
         ['link', { rel: 'shortcut icon', href: `${base}favicon.svg` }],
-        ['meta', { name: 'theme-color', content: '#8b5cf6' }],
+        ['meta', { name: 'theme-color', content: '#6366f1' }],
 
         // Open Graph
         ['meta', { property: 'og:type', content: 'website' }],
@@ -79,7 +79,7 @@ export default defineConfig({
         sidebar: {
             '/guide/': [
                 {
-                    text: '🚀 Introduction',
+                    text: 'Introduction',
                     collapsed: false,
                     items: [
                         { text: 'Getting Started', link: '/guide/getting-started' },
@@ -89,7 +89,7 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: '🤖 Building Agents',
+                    text: 'Building Agents',
                     collapsed: false,
                     items: [
                         { text: 'Creating Agents', link: '/guide/agents' },
@@ -102,7 +102,7 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: '💾 Data & Storage',
+                    text: 'Data & Storage',
                     collapsed: false,
                     items: [
                         { text: 'RAG / Knowledge', link: '/guide/rag' },
@@ -113,7 +113,7 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: '🧠 Intelligence',
+                    text: 'Intelligence',
                     collapsed: false,
                     items: [
                         { text: 'Learning Machine', link: '/guide/learning-machine' },
@@ -124,7 +124,7 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: '🔀 Multi-Agent',
+                    text: 'Multi-Agent',
                     collapsed: false,
                     items: [
                         { text: 'Orchestration', link: '/guide/orchestration' },
@@ -135,7 +135,7 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: '📤 Output & Media',
+                    text: 'Output & Media',
                     collapsed: true,
                     items: [
                         { text: 'Artifacts', link: '/guide/artifacts' },
@@ -144,7 +144,7 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: '🏭 Enterprise Production',
+                    text: 'Enterprise Production',
                     collapsed: false,
                     items: [
                         { text: 'Guardrails & Safety', link: '/guide/guardrails' },

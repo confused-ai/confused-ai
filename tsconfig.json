@@ -59,6 +59,11 @@
       "@confused-ai/storage": ["./packages/storage/src/index.ts"],
       "@confused-ai/test-utils": ["./packages/test-utils/src/index.ts"],
       "@confused-ai/tools": ["./packages/tools/src/index.ts"],
+      "@confused-ai/tools/shell": ["./packages/tools/src/shell.ts"],
+      "@confused-ai/tools/http": ["./packages/tools/src/http-client.ts"],
+      "@confused-ai/tools/fs": ["./packages/tools/src/file-system.ts"],
+      "@confused-ai/tools/browser": ["./packages/tools/src/browser.ts"],
+
       "@confused-ai/video": ["./packages/video/src/index.ts"],
       "@confused-ai/voice": ["./packages/voice/src/index.ts"],
       "@confused-ai/workflow": ["./packages/workflow/src/index.ts"]

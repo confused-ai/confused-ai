@@ -36,13 +36,19 @@
 ## Install
 
 ```bash
-npm install confused-ai        # npm
+npm install confused-ai        # npm  — installs root + all 39 @confused-ai/* packages
 bun add confused-ai            # bun
 pnpm add confused-ai           # pnpm
 yarn add confused-ai           # yarn
 ```
 
 > **Node.js ≥ 18 required.** Set at least one LLM provider key — that's the only required config.
+
+**Prefer a minimal install?** Pick only the packages you need:
+
+```bash
+npm install @confused-ai/core @confused-ai/models @confused-ai/tools
+```
 
 ```bash
 # .env
@@ -537,6 +543,10 @@ Includes: `Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`, `k8s.ya
 
 ## Subpath Packages
 
+`confused-ai` is published as a **monorepo of 39 individually-installable packages** — all automatically included when you `npm install confused-ai`, or installable à la carte for leaner bundles.
+
+### Root subpath imports
+
 | Import | Contents |
 |--------|---------|
 | `confused-ai` | Main barrel (`agent`, `createAgent`) |
@@ -550,8 +560,74 @@ Includes: `Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`, `k8s.ya
 | `confused-ai/graph` | Advanced graph builder, durable execution, event stores |
 | `confused-ai/adapters` | 20-category adapter registry |
 | `confused-ai/contracts` | Dependency-free shared interfaces |
+| `confused-ai/tools/shell` | `ShellTool` — ⚠️ requires security review |
+| `confused-ai/tools/search` | `TavilySearchTool`, `DuckDuckGoTool`, `ExaToolkit` |
+| `confused-ai/tools/communication` | `SlackToolkit`, `GmailToolkit`, `DiscordTool` |
+| `confused-ai/tools/devtools` | `GitHubToolkit`, `DockerToolkit` |
+| `confused-ai/tools/productivity` | `ClickUpToolkit`, `NotionToolkit` |
+| `confused-ai/tools/data` | `DatabaseToolkit`, `Neo4jToolkit` |
+| `confused-ai/tools/finance` | `StripeToolkit`, `YahooFinanceTool` |
 
-*(Legacy paths like `confused-ai/tools`, `confused-ai/production`, `confused-ai/runtime` are preserved for backward compatibility).*
+### Individual `@confused-ai/*` packages
+
+Each sub-package is **published separately on npm** and can be installed on its own:
+
+```bash
+npm install @confused-ai/core       # agent engine only (~50 kB)
+npm install @confused-ai/tools      # all tools
+npm install @confused-ai/memory     # session + vector memory
+npm install @confused-ai/knowledge  # RAG + document loaders
+npm install @confused-ai/observe    # OTLP tracing + metrics
+npm install @confused-ai/serve      # HTTP runtime
+npm install @confused-ai/workflow   # pipelines + graph engine
+```
+
+<details>
+<summary>All 39 <code>@confused-ai/*</code> packages</summary>
+
+| Package | Description |
+|---------|-------------|
+| `@confused-ai/adapter-redis` | Redis adapter for rate limiting and caching |
+| `@confused-ai/agentic` | Agentic loop primitives |
+| `@confused-ai/artifacts` | Markdown / file artifact generation |
+| `@confused-ai/background` | BullMQ, Kafka, RabbitMQ, SQS background queues |
+| `@confused-ai/cli` | `confused-ai` CLI |
+| `@confused-ai/compression` | Context-window compression |
+| `@confused-ai/config` | Configuration helpers |
+| `@confused-ai/context` | Multi-tenancy context provider |
+| `@confused-ai/contracts` | Shared dependency-free interfaces |
+| `@confused-ai/core` | Agent engine, session, model interface |
+| `@confused-ai/db` | Database adapters |
+| `@confused-ai/eval` | Evaluation harness |
+| `@confused-ai/execution` | Step executor |
+| `@confused-ai/graph` | Durable DAG graph engine |
+| `@confused-ai/guard` | Circuit breakers, rate limiter, budgets |
+| `@confused-ai/guardrails` | Content safety validators |
+| `@confused-ai/knowledge` | RAG engine + document loaders |
+| `@confused-ai/learning` | Reinforcement / feedback learning |
+| `@confused-ai/memory` | In-memory + vector memory stores |
+| `@confused-ai/models` | LLM provider adapters (OpenAI, Anthropic, Gemini…) |
+| `@confused-ai/observe` | OTLP tracing, metrics, structured logger |
+| `@confused-ai/orchestration` | Multi-agent orchestration primitives |
+| `@confused-ai/planner` | LLM planning module |
+| `@confused-ai/playground` | Local chat UI server |
+| `@confused-ai/plugins` | Plugin middleware system |
+| `@confused-ai/production` | Production hardening (audit log, HITL, idempotency) |
+| `@confused-ai/reasoning` | Chain-of-thought reasoning |
+| `@confused-ai/router` | Intelligent LLM router |
+| `@confused-ai/scheduler` | Cron / scheduled agent tasks |
+| `@confused-ai/sdk` | SDK builder for external consumers |
+| `@confused-ai/serve` | HTTP runtime, OpenAPI, WebSocket |
+| `@confused-ai/session` | Session store (in-memory + SQLite) |
+| `@confused-ai/shared` | Internal shared utilities |
+| `@confused-ai/storage` | File + blob storage adapters |
+| `@confused-ai/test-utils` | Testing mocks and helpers |
+| `@confused-ai/tools` | 100+ built-in tools |
+| `@confused-ai/video` | Video processing tools |
+| `@confused-ai/voice` | TTS + STT (OpenAI / ElevenLabs) |
+| `@confused-ai/workflow` | Workflow pipelines + graph runner |
+
+</details>
 
 ---
 

@@ -775,3 +775,77 @@ import {
 // Extension interfaces — bring-your-own implementations
 import type { BudgetStore, SessionStore, LLMProvider, Tool } from 'confused-ai/contracts/extensions';
 ```
+
+---
+
+## Individual `@confused-ai/*` packages
+
+Every capability is also published as a **standalone npm package**. Install only what you need:
+
+```bash
+npm install @confused-ai/core        # agent engine
+npm install @confused-ai/tools       # 100+ built-in tools
+npm install @confused-ai/memory      # session + vector memory
+npm install @confused-ai/knowledge   # RAG engine + loaders
+npm install @confused-ai/observe     # OTLP tracing + metrics
+npm install @confused-ai/serve       # HTTP runtime
+npm install @confused-ai/workflow    # pipelines + graph engine
+npm install @confused-ai/guard       # circuit breakers + budgets + HITL
+npm install @confused-ai/guardrails  # content safety
+npm install @confused-ai/production  # audit log + idempotency
+npm install @confused-ai/session     # conversation history
+npm install @confused-ai/models      # LLM provider adapters
+npm install @confused-ai/contracts   # shared interfaces (no deps)
+```
+
+| Package | Version | Description |
+|---------|---------|-------------|
+| `@confused-ai/adapter-redis` | 0.1.0 | Redis-backed rate limiter + cache |
+| `@confused-ai/agentic` | 0.1.0 | Agentic loop primitives |
+| `@confused-ai/artifacts` | 0.1.0 | Markdown / file artifacts |
+| `@confused-ai/background` | 0.1.0 | BullMQ, Kafka, RabbitMQ, SQS queues |
+| `@confused-ai/cli` | 0.1.0 | `confused-ai` CLI |
+| `@confused-ai/compression` | 0.1.0 | Context-window compression |
+| `@confused-ai/config` | 0.1.0 | Configuration helpers |
+| `@confused-ai/context` | 0.1.0 | Multi-tenancy context provider |
+| `@confused-ai/contracts` | 0.1.0 | Dependency-free shared interfaces |
+| `@confused-ai/core` | 0.1.0 | Agent engine, session, model interface |
+| `@confused-ai/db` | 0.1.0 | Database adapters |
+| `@confused-ai/eval` | 0.1.0 | Evaluation harness |
+| `@confused-ai/execution` | 0.1.0 | Step executor |
+| `@confused-ai/graph` | 0.1.0 | Durable DAG graph engine |
+| `@confused-ai/guard` | 0.1.0 | Circuit breakers, rate limiter, budgets |
+| `@confused-ai/guardrails` | 0.1.0 | Content safety validators |
+| `@confused-ai/knowledge` | 0.1.0 | RAG engine + document loaders |
+| `@confused-ai/learning` | 0.1.0 | Reinforcement / feedback learning |
+| `@confused-ai/memory` | 0.1.0 | In-memory + vector memory stores |
+| `@confused-ai/models` | 0.1.0 | LLM provider adapters |
+| `@confused-ai/observe` | 0.1.0 | OTLP tracing, metrics, structured logger |
+| `@confused-ai/orchestration` | 0.1.0 | Multi-agent orchestration primitives |
+| `@confused-ai/planner` | 0.1.0 | LLM planning module |
+| `@confused-ai/playground` | 0.1.0 | Local chat UI server |
+| `@confused-ai/plugins` | 0.1.0 | Plugin middleware system |
+| `@confused-ai/production` | 0.1.0 | Audit log, HITL, idempotency |
+| `@confused-ai/reasoning` | 0.1.0 | Chain-of-thought reasoning |
+| `@confused-ai/router` | 0.1.0 | Intelligent LLM router |
+| `@confused-ai/scheduler` | 0.1.0 | Cron / scheduled tasks |
+| `@confused-ai/sdk` | 0.1.0 | SDK builder |
+| `@confused-ai/serve` | 0.1.0 | HTTP runtime, OpenAPI, WebSocket |
+| `@confused-ai/session` | 0.1.0 | Session store (in-memory + SQLite) |
+| `@confused-ai/shared` | 0.1.0 | Internal shared utilities |
+| `@confused-ai/storage` | 0.1.0 | File + blob storage adapters |
+| `@confused-ai/test-utils` | 0.1.0 | Testing mocks and helpers |
+| `@confused-ai/tools` | 0.1.0 | 100+ built-in tools |
+| `@confused-ai/video` | 0.1.0 | Video processing tools |
+| `@confused-ai/voice` | 0.1.0 | TTS + STT (OpenAI / ElevenLabs) |
+| `@confused-ai/workflow` | 0.1.0 | Workflow pipelines + graph runner |
+
+### `@confused-ai/tools` sub-paths
+
+```ts
+import { ShellTool }     from '@confused-ai/tools/shell';        // ⚠️ privileged
+import { HttpClientTool }from '@confused-ai/tools/http';
+import { FileReadTool }  from '@confused-ai/tools/fs';
+import { BrowserTool }   from '@confused-ai/tools/browser';
+import { TavilySearch }  from '@confused-ai/tools/search';
+```

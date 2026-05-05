@@ -30,11 +30,6 @@
       "types": "./dist/browser.d.ts",
       "import": "./dist/browser.js",
       "require": "./dist/browser.cjs"
-    },
-    "./search": {
-      "types": "./dist/search.d.ts",
-      "import": "./dist/search.js",
-      "require": "./dist/search.cjs"
     }
   },
   "files": [

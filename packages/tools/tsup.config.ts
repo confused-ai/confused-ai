@@ -6,7 +6,6 @@ export default defineConfig({
     'src/http-client.ts',
     'src/file-system.ts',
     'src/browser.ts',
-    'src/search.ts',
   ],
   format: ['esm', 'cjs'],
   dts: true,

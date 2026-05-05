@@ -32,6 +32,29 @@ yarn add confused-ai
 ```
 :::
 
+Installing `confused-ai` automatically includes all **39 `@confused-ai/*` sub-packages** as dependencies.
+
+::: details Install individual packages instead (smaller footprint)
+```bash
+# Core engine only (~50 kB)
+npm install @confused-ai/core @confused-ai/models
+
+# Add tools
+npm install @confused-ai/tools
+
+# Add RAG
+npm install @confused-ai/knowledge
+
+# Add memory
+npm install @confused-ai/memory
+
+# Add observability
+npm install @confused-ai/observe
+```
+
+Every `@confused-ai/*` package is published to npm and can be used standalone.
+:::
+
 Then set your API key in the environment:
 
 ```bash [.env]

@@ -11,10 +11,10 @@ confused-ai ships **100+ production-ready tools** organised into 12 categories. 
 ## Import strategy
 
 ```ts
-// Option A — import everything (simple, works for prototypes)
+// Option A — import everything from the root package
 import { TavilySearchTool, GitHubToolkit } from 'confused-ai';
 
-// Option B — category subpaths (tree-shake to only what you use)
+// Option B — root subpath (tree-shake by category)
 import { TavilySearchTool, ExaToolkit }    from 'confused-ai/tools/search';
 import { SlackToolkit, GmailToolkit }       from 'confused-ai/tools/communication';
 import { GitHubToolkit, DockerToolkit }     from 'confused-ai/tools/devtools';
@@ -22,7 +22,28 @@ import { ClickUpToolkit, NotionToolkit }    from 'confused-ai/tools/productivity
 import { DatabaseToolkit, Neo4jToolkit }    from 'confused-ai/tools/data';
 import { StripeToolkit }                    from 'confused-ai/tools/finance';
 import { ShellTool }                        from 'confused-ai/tools/shell'; // ⚠️ security review required
+
+// Option C — install @confused-ai/tools standalone
+import { TavilySearchTool }  from '@confused-ai/tools';
+import { ShellTool }         from '@confused-ai/tools/shell';
+import { SlackToolkit }      from '@confused-ai/tools/communication';
 ```
+
+### `@confused-ai/tools` sub-path exports
+
+| Sub-path | Contents |
+|----------|---------|
+| `@confused-ai/tools` | All tools |
+| `@confused-ai/tools/shell` | `ShellTool` ⚠️ |
+| `@confused-ai/tools/search` | `TavilySearchTool`, `DuckDuckGoTool`, `ExaToolkit` |
+| `@confused-ai/tools/communication` | `SlackToolkit`, `GmailToolkit`, `DiscordTool`, `EmailTool` |
+| `@confused-ai/tools/devtools` | `GitHubToolkit`, `DockerToolkit` |
+| `@confused-ai/tools/productivity` | `ClickUpToolkit`, `NotionToolkit`, `JiraToolkit` |
+| `@confused-ai/tools/data` | `DatabaseToolkit`, `CSVTool`, `Neo4jToolkit` |
+| `@confused-ai/tools/finance` | `StripeToolkit`, `YahooFinanceTool` |
+| `@confused-ai/tools/http` | `HttpClientTool` |
+| `@confused-ai/tools/fs` | `FileReadTool`, `FileWriteTool` |
+| `@confused-ai/tools/browser` | `BrowserTool` |
 
 ## Quick example
 
