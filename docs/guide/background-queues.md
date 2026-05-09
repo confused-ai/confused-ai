@@ -38,13 +38,13 @@ import { queueHook,
 
 const queue = new InMemoryBackgroundQueue();
 
-// Start a worker that processes jobs
-queue.process('after-run', async (job) => {
+// Register a worker that consumes jobs
+queue.consume('after-run', async (task) => {
   await analytics.track({
     event:    'agent_run_completed',
-    runId:    job.data.runId,
-    tokens:   job.data.usage?.totalTokens,
-    latencyMs: job.data.latencyMs,
+    runId:    task.payload.runId,
+    tokens:   task.payload.usage?.totalTokens,
+    latencyMs: task.payload.latencyMs,
   });
 });
 
@@ -81,8 +81,8 @@ const queue = new BullMQBackgroundQueue({
 });
 
 // Worker (can run in a separate process)
-queue.process('after-run', async (job) => {
-  const { text, runId, sessionId } = job.data;
+queue.consume('after-run', async (task) => {
+  const { text, runId, sessionId } = task.payload;
   await posthog.capture({ distinctId: sessionId, event: 'agent.complete', properties: { runId } });
 });
 

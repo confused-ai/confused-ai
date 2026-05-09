@@ -18,11 +18,11 @@ Without tenant isolation, all users share the same session namespace and rate li
 
 ```ts
 import { createAgent } from 'confused-ai';
-import { createTenantContext } from 'confused-ai/guard';
-import { createSqliteSessionStore } from 'confused-ai/session';
+import { createTenantContext } from 'confused-ai/production';
+import { createSqliteStore } from 'confused-ai/session';
 
 // Create the base stores once (shared across tenants)
-const baseSessionStore = await createSqliteSessionStore('./agent.db');
+const baseSessionStore = createSqliteStore('./agent.db');
 
 // In your request handler — scope to the authenticated tenant:
 app.post('/chat', async (req, res) => {
@@ -114,10 +114,10 @@ function getTenantContext(tenantId: string, plan: 'free' | 'pro' | 'enterprise')
 The `TenantScopedSessionStore` wraps any `SessionStore` and transparently adds the tenant prefix to every session ID. Use it directly if you want more control:
 
 ```ts
-import { TenantScopedSessionStore } from 'confused-ai/guard';
-import { createSqliteSessionStore } from 'confused-ai/session';
+import { TenantScopedSessionStore } from 'confused-ai/production';
+import { createSqliteStore } from 'confused-ai/session';
 
-const base = await createSqliteSessionStore('./shared.db');
+const base = createSqliteStore('./shared.db');
 const tenantStore = new TenantScopedSessionStore(base, 'tenant-acme');
 
 // All operations automatically prefix with 'tenant-acme:'

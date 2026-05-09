@@ -31,9 +31,9 @@ const r = await ai.run({ prompt: 'What is my name?', sessionId: 'alice' });
 Persists to a local file. No external database required:
 
 ```ts
-import { createSqliteSessionStore } from 'confused-ai/session';
+import { createSqliteStore } from 'confused-ai/session';
 
-const sessions = createSqliteSessionStore('./sessions.db');
+const sessions = createSqliteStore('./sessions.db');
 
 const ai = agent({
   model: 'gpt-4o',
@@ -48,24 +48,35 @@ Session data survives process restarts automatically.
 For distributed deployments where multiple instances share sessions:
 
 ```ts
-import { createRedisSessionStore } from 'confused-ai/session';
+import { createRedisStore } from 'confused-ai/session';
 
-const sessions = createRedisSessionStore({
+const sessions = createRedisStore({
   url: process.env.REDIS_URL!,
   keyPrefix: 'agent:session:',
   ttlSeconds: 86_400,  // sessions expire after 24 hours
 });
 ```
 
-## Postgres
+## Database-backed (Postgres / SQLite via AgentDb)
 
 ```ts
-import { createPostgresSessionStore } from 'confused-ai/session';
+import { createDbSessionStore } from 'confused-ai/session';
+import { createAgentDb }       from 'confused-ai/db';
 
-const sessions = createPostgresSessionStore({
-  connectionString: process.env.DATABASE_URL!,
-  tableName: 'agent_sessions',
-  ttlSeconds: 7 * 86_400,  // 1 week
+const db = createAgentDb({ connectionString: process.env.DATABASE_URL! });
+const sessions = createDbSessionStore({ db });
+```
+
+## Fallback (primary + hot-standby)
+
+Automatically falls back to the secondary store if the primary fails:
+
+```ts
+import { createFallbackSessionStore } from 'confused-ai/session';
+
+const sessions = createFallbackSessionStore({
+  primary:   redisStore,
+  secondary: sqliteStore,
 });
 ```
 
@@ -74,10 +85,9 @@ const sessions = createPostgresSessionStore({
 ```ts
 import { InMemorySessionStore } from 'confused-ai/session';
 
-const sessions = new InMemorySessionStore({
-  maxMessages: 100,       // keep last 100 messages per session
-  retentionDays: 30,      // auto-expire after 30 days
-});
+const sessions = new InMemorySessionStore();
+// options are passed to the constructor:
+// new InMemorySessionStore({ maxMessages: 100 })
 ```
 
 ## Working with sessions directly

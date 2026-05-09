@@ -64,7 +64,7 @@ import { createGraph, DAGEngine, DurableExecutor, computeWaves } from '@confused
 Multi-agent coordination: team, pipeline, swarm, supervisor, router, consensus, A2A protocol.
 
 ```ts
-import { AgentTeam, AgentPipeline, AgentSwarm, createTeam, defineRole } from '@confused-ai/orchestration';
+import { createTeam, defineRole, Team, createPipeline, createSupervisor, SwarmOrchestrator, createSwarm, ConsensusProtocol, createConsensus, AgentRouter } from '@confused-ai/orchestration';
 ```
 → [Orchestration guide](/guide/orchestration)
 
@@ -154,7 +154,7 @@ import { Neo4jKnowledgeAdapter, ChromaKnowledgeAdapter, PgvectorKnowledgeAdapter
 Session persistence — in-memory, SQLite, Redis, Postgres.
 
 ```ts
-import { InMemorySessionStore, createSqliteSessionStore, createRedisSessionStore } from '@confused-ai/session';
+import { InMemorySessionStore, createSqliteStore, createRedisStore, createDbSessionStore, createFallbackSessionStore } from '@confused-ai/session';
 ```
 → [Session guide](/guide/session)
 
@@ -208,10 +208,17 @@ import { CircuitBreaker, RateLimiter, HealthCheckManager, createGracefulShutdown
 → [Production guide](/guide/production)
 
 ### `@confused-ai/guard`
-`withResilience()` wrapper — circuit breaker + rate limit + retry in one call.
+Circuit breaker, retry, and timeout guard primitives (low-level).
 
 ```ts
-import { withResilience, retry, timeout } from '@confused-ai/guard';
+import { CircuitBreaker, retry, timeout } from '@confused-ai/guard';
+```
+
+### `@confused-ai/production` (resilient agent wrapper)
+`withResilience()` — wraps any agent with circuit breaker + rate limit + retry in one call.
+
+```ts
+import { withResilience, ResilientAgent } from '@confused-ai/production';
 ```
 
 ### `@confused-ai/observe`

@@ -178,9 +178,9 @@ Without a session store, every `run()` starts fresh. SQLite persistence requires
 
 ```ts [session-agent.ts]
 import { agent } from 'confused-ai';
-import { createSqliteSessionStore } from 'confused-ai/session';
+import { createSqliteStore } from 'confused-ai/session';
 
-const sessions = createSqliteSessionStore('./sessions.db');
+const sessions = createSqliteStore('./sessions.db');
 
 const ai = agent({
   model: 'gpt-4o-mini',
@@ -263,7 +263,7 @@ console.log(result.text); // polished blog post
 
 ```ts [resilient-agent.ts]
 import { agent } from 'confused-ai';
-import { withResilience } from 'confused-ai/guard';
+import { withResilience } from 'confused-ai/production';
 
 const base = agent({
   model: 'gpt-4o',

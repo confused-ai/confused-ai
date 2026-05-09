@@ -58,75 +58,89 @@ console.log(result.agentResults); // per-agent breakdown
 | `coordinate` | Parallel — all agents run concurrently, results are merged |
 | `route` | Routes the prompt to the single most capable agent |
 
-## AgentTeam
+## `Team` — direct team class
 
-More control with `AgentTeam`:
+More control with `Team` directly:
 
 ```ts
-import { AgentTeam } from 'confused-ai/orchestration';
+import { Team } from 'confused-ai/orchestration';
+import type { TeamAgent } from 'confused-ai/orchestration';
 
-const team = new AgentTeam([researchAgent, writerAgent, reviewerAgent]);
+const members: TeamAgent[] = [
+  { id: 'researcher', name: 'Researcher', agent: researchAgent, role: { name: 'Researcher', description: 'Finds facts' } },
+  { id: 'writer',     name: 'Writer',     agent: writerAgent,   role: { name: 'Writer',     description: 'Writes content' } },
+  { id: 'reviewer',   name: 'Reviewer',   agent: reviewerAgent, role: { name: 'Reviewer',   description: 'Reviews output' } },
+];
+
+const team = new Team({
+  name: 'ContentTeam',
+  agents: members,
+  strategy: 'sequential',  // 'parallel' | 'sequential' | 'hierarchical'
+});
+
 const result = await team.run('Research and write a blog post about Rust');
 ```
 
-## AgentPipeline
+## `createPipeline()` — sequential pipeline
 
-Explicit sequential pipeline with named stages:
-
-```ts
-import { AgentPipeline } from 'confused-ai/orchestration';
-
-const pipeline = new AgentPipeline([
-  { name: 'research', agent: researchAgent },
-  { name: 'draft',    agent: writerAgent },
-  { name: 'review',   agent: reviewerAgent },
-]);
-
-const result = await pipeline.run('AI trends in 2025');
-console.log(result.stageOutputs.research);  // researcher's notes
-console.log(result.stageOutputs.draft);     // writer's draft
-console.log(result.output);                 // reviewer's final text
-```
-
-## AgentSupervisor
-
-Hierarchical — a supervisor agent delegates to specialist workers:
+Run agents in sequence — output of each feeds into the next:
 
 ```ts
-import { AgentSupervisor } from 'confused-ai/orchestration';
+import { createPipeline } from 'confused-ai/orchestration';
 
-const supervisor = new AgentSupervisor({
-  supervisor: plannerAgent,
-  workers: [
-    { name: 'coder',    agent: codingAgent },
-    { name: 'tester',   agent: testingAgent },
-    { name: 'deployer', agent: deployAgent },
-  ],
+const pipeline = createPipeline({
+  name: 'ContentPipeline',
+  agents: [researchAgent, writerAgent, reviewerAgent],
 });
 
-const result = await supervisor.run('Build and deploy a REST API for user management');
+// pipeline is an OrchestrableAgent — call .run() on it
+const result = await pipeline.run({ prompt: 'AI trends in 2025' }, ctx);
 ```
 
-The supervisor decides which worker to call and when to declare completion.
+## `createSupervisor()` — hierarchical delegation
 
-## AgentSwarm
-
-Autonomous agents that hand off to each other dynamically:
+A coordinator that delegates subtasks to specialist sub-agents:
 
 ```ts
-import { AgentSwarm } from 'confused-ai/orchestration';
+import { createSupervisor } from 'confused-ai/orchestration';
+import { CoordinationType } from 'confused-ai/orchestration';
 
-const swarm = new AgentSwarm({
-  agents: [
-    { name: 'triage',  agent: triageAgent,  capabilities: ['classify', 'route'] },
-    { name: 'billing', agent: billingAgent, capabilities: ['payments', 'refunds'] },
-    { name: 'support', agent: supportAgent, capabilities: ['troubleshoot', 'escalate'] },
+const supervisor = createSupervisor({
+  name: 'EngineeringSupervisor',
+  subAgents: [
+    { agent: codingAgent,   role: { name: 'Coder',    description: 'Writes code' } },
+    { agent: testingAgent,  role: { name: 'Tester',   description: 'Writes tests' } },
+    { agent: deployAgent,   role: { name: 'Deployer', description: 'Deploys artifacts' } },
   ],
-  entryAgent: 'triage',
-  maxHandoffs: 5,
+  coordinationType: CoordinationType.SEQUENTIAL, // or PARALLEL
 });
 
-const result = await swarm.run('I was charged twice for my subscription');
+// supervisor is an OrchestrableAgent
+const result = await supervisor.run({ prompt: 'Build and deploy a REST API' }, ctx);
+```
+
+## `SwarmOrchestrator` / `createSwarm()` — dynamic swarm
+
+Autonomous agents that decompose tasks and run subtasks in parallel:
+
+```ts
+import { createSwarm } from 'confused-ai/orchestration';
+
+const swarm = createSwarm({
+  llmConfig: {
+    provider: myLLMProvider,
+    temperature: 0.7,
+  },
+  maxSubagents: 5,
+  maxExecutionTimeMs: 60_000,
+});
+
+const result = await swarm.run(
+  { prompt: 'I was charged twice for my subscription. Investigate and resolve.' },
+  ctx,
+);
+// result.aggregatedOutput — combined output
+// result.metrics          — parallelism efficiency
 ```
 
 ## AgentRouter
@@ -149,23 +163,25 @@ const result = await router.run('Write a pandas DataFrame transformation');
 // → routed to py-expert
 ```
 
-## Consensus (multi-agent voting)
+## Consensus — `ConsensusProtocol` / `createConsensus()`
 
-Get multiple agents to vote and agree on an answer:
+Get multiple agents to independently analyse and vote:
 
 ```ts
-import { AgentConsensus } from 'confused-ai/orchestration';
+import { createConsensus } from 'confused-ai/orchestration';
 
-const consensus = new AgentConsensus({
-  agents: [agentA, agentB, agentC],
-  strategy: 'majority',   // 'majority' | 'unanimous' | 'weighted'
-  timeout: 30_000,
+const consensus = createConsensus({
+  agents: { analyst1: agentA, analyst2: agentB, analyst3: agentC },
+  strategy: 'majority-vote',  // 'majority-vote' | 'unanimous' | 'weighted' | 'best-of-n'
+  quorum: 2,                  // min agents that must agree (default: ceil(n/2))
+  parallel: true,             // run all agents concurrently
+  agentTimeoutMs: 30_000,
 });
 
-const result = await consensus.run('Should we migrate to microservices?');
+const result = await consensus.decide('Should we migrate to microservices?');
 console.log(result.decision);    // agreed answer
+console.log(result.confidence);  // agreement ratio (e.g. 0.67)
 console.log(result.votes);       // per-agent votes
-console.log(result.confidence);  // agreement score
 ```
 
 ## compose() and pipe()

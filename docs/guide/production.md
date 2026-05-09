@@ -65,7 +65,7 @@ Wrap any agent with circuit breaker + rate limit + retries:
 
 ```ts
 import { agent } from 'confused-ai';
-import { withResilience } from 'confused-ai/guard';
+import { withResilience } from 'confused-ai/production';
 
 const base = agent({ model: 'gpt-4o' });
 
