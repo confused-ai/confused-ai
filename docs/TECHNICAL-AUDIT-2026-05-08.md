@@ -11,9 +11,9 @@ Current validation baseline:
 | Gate | Result | Notes |
 |---|---:|---|
 | `bun run typecheck` | Pass | `tsc -p tsconfig.typecheck.json` completed cleanly. |
-| `bun run test` | Pass | Terminal context shows exit code 0; prior audit output reports 755 passing, 12 skipped. |
+| `bun run test` | Pass | **1 569 passing, 12 skipped** (72 test files) as of May 9 2026. |
 | `bun run lint` | Fail | Legacy `src/**` lint config lacks the TypeScript ESLint plugin while file comments reference plugin rules; boundaries rule is deprecated. |
-| `bun run lint:packages` | Fail | 982 problems: 956 errors, 26 warnings. Includes real typed lint issues in `core`, `knowledge`, `models`, `observe`, `serve`, `session`, `tools`, and `workflow`. |
+| `bun run lint:packages` | **Pass** | **0 errors, 2 warnings** (under `--max-warnings 10`) as of May 9 2026. Was 982 problems at audit time; fixed: unnecessary type assertions, confusing void expressions, tautological conditions, unnecessary optional chains. |
 
 Overall grade: B+ today, with a credible path to A/A+ if the next phase prioritizes consolidation over expansion.
 

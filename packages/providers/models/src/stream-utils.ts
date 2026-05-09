@@ -195,6 +195,7 @@ export function streamTee(
 
     async function* makeConsumer(buf: StreamDelta[], side: 'drainA' | 'drainB'): AsyncIterable<StreamDelta> {
         while (true) {
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (buf.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 yield buf.shift()!;

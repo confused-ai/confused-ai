@@ -7,6 +7,43 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0] — 2026-05-09
+
+### Added
+
+- **`defineAgent(name)` fluent builder** — `defineAgent('my-agent').instructions('...').model('openai:gpt-4o').tools(...).build()` returns a fully-typed `TypedAgent<TIn, TOut>` with `.run()`, `.stream()`, `.resume()`, and `.plan()`. Old `defineAgentFromConfig(config)` kept for backward compatibility.
+- **`confused-ai chat` CLI REPL** — `confused-ai chat [--system <instructions>] [--model <id>] [--session-id <id>]` starts an interactive readline loop. Session ID is preserved across all turns; `/exit` and Ctrl-C handled cleanly.
+- **`@confused-ai/playground` package** — `createPlayground(agents, options?)` spins up a pure Node.js HTTP server with a built-in dark-theme chat UI. Routes: `GET /`, `POST /api/chat`, `GET /api/agents`, `GET /health`. CSP headers, 64 KB body cap, zero framework dependencies.
+- **DNS-based SSRF guard** — `HttpClientTool` now resolves every hostname via `dns.promises.lookup()` (2-second timeout) before making any request. Requests resolving to RFC 1918 / loopback addresses are blocked with a descriptive error. Redirects are followed manually and re-validated on each hop.
+- **`SpanName` constants** — `packages/platform/observe/src/spans.ts` exports 30+ canonical span name constants (`SpanName.AGENT_RUN`, `SpanName.LLM_GENERATE`, `SpanName.TOOL_CALL`, etc.). Import from `@confused-ai/observe`.
+- **`SecretManagerAdapter.watch()`** — polling-based secret rotation watch (5-minute default interval) added to all five adapter classes (`EnvSecretManager`, `AwsSecretsManagerAdapter`, `VaultSecretManager`, `AzureKeyVaultAdapter`, `GcpSecretManagerAdapter`). Fail-closed on errors.
+- **DB migration runner** — `packages/state/db/src/migrations/runner.ts` applies versioned schema migrations on `PostgresAgentDb._doInit()`. Ships with a v1 baseline schema.
+- **E2E integration tests** (`tests/e2e-agent.test.ts`) — 28 full-stack ReAct-loop tests covering: single/multi-turn tool use, tool error recovery, guardrail injection blocking, session persistence, max-steps guard, AbortSignal cancellation, all lifecycle hooks, concurrent run isolation, HTTP service, eval suite regression detection, prompt injection detection, and budget enforcement.
+- **OTLP span validation tests** (`packages/observe/tests/span-validation.test.ts`) — 21 tests with a zero-dep in-memory `TracerProvider` built from `@opentelemetry/api` interfaces.
+- **Migration guides** — `docs/guide/migration-langchain.md`, `docs/guide/migration-crewai.md`, `docs/guide/migration-vercel.md` with concept tables and side-by-side code examples.
+- **Custom adapter guide** — `docs/guide/custom-adapter.md` covers `SessionStore`, `MemoryStore`, `VectorStore`, `LLMProvider`, and `QueueAdapter` with real interface signatures and ~30-line implementations.
+- **`scripts/check-docs-claims.mjs`** — CI gate (`bun run check:docs`) that scans `docs/**/*.md` for `packages/…` and `src/…` file references and exits 1 if any referenced path does not exist on disk.
+- **`scripts/check-bundle-size.mjs`** — CI gate (`bun run check:bundle`) that esbuild-bundles + gzip-measures every package and fails if any exceeds its configured budget (default 80 KB).
+- **Complete test coverage** — every workspace package now has a test file. Total: **1 569 tests passing, 12 skipped** across **72 test files**.
+
+### Changed
+
+- **Package domain restructure** — 39 packages reorganised into six domain groups: `packages/foundation/`, `packages/platform/`, `packages/providers/`, `packages/runtime/`, `packages/state/`, `packages/tools-layer/`, `packages/developer/`, `packages/extensions/`. `pnpm-workspace.yaml` updated to `packages/*/*`.
+- **Examples** — all 12 `examples/*.ts` and 5 `examples/quickstart/*.ts` now import from `confused-ai` / `@confused-ai/*` package paths; zero `../src/` relative imports remain.
+- **`MockLLMProvider`** added to `@confused-ai/test-utils` for use in examples and conformance suites.
+
+### Fixed
+
+- **`lint:packages` gate** — reduced from 956 errors / 26 warnings (audit baseline, May 8) to **0 errors / 2 warnings** under `--max-warnings 10`. Fixes cover: unnecessary type assertions, confusing void expressions in arrow shorthand, tautological conditions, non-null assertions without comments, and unnecessary optional chains.
+- **`HttpClientTool` SSRF** — private-IP requests now blocked by default via DNS resolution; no `allowedDomains` config required for the common case.
+
+### Security
+
+- `HttpClientTool` — DNS-based SSRF guard blocks all RFC 1918 and loopback destinations by default (see **Added** above).
+- `SecretManagerAdapter.watch()` — secrets can now be rotated without redeployment.
+
+---
+
 ## [1.1.7] — 2026-05-04
 
 ### Added

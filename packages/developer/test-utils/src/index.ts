@@ -41,7 +41,7 @@ export class MockLLMProvider implements LLMProvider {
             text,
             finishReason: toolCalls.length > 0 ? 'tool_calls' : 'stop',
             ...(toolCalls.length > 0 ? { toolCalls } : {}),
-        } as GenerateResult;
+        };
     }
 
     streamText = this.generateText.bind(this);

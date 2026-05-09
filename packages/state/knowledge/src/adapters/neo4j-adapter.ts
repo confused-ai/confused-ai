@@ -160,7 +160,7 @@ export class Neo4jKnowledgeAdapter implements VectorStore {
         });
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         this._driver = ((neo4j as { default?: { driver: (...args: unknown[]) => Neo4jDriver }; driver?: (...args: unknown[]) => Neo4jDriver })
-            .default?.driver?.(this._config.uri, (neo4j as { default?: { auth?: { basic: (u: string, p: string) => unknown } } }).default?.auth?.basic(this._config.username, this._config.password))
+            .default?.driver(this._config.uri, (neo4j as { default?: { auth?: { basic: (u: string, p: string) => unknown } } }).default?.auth?.basic(this._config.username, this._config.password))
             ?? (neo4j as { driver: (uri: string, auth: unknown) => Neo4jDriver }).driver(
                 this._config.uri,
                 (neo4j as { auth: { basic: (u: string, p: string) => unknown } }).auth.basic(this._config.username, this._config.password),

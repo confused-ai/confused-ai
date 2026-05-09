@@ -51,7 +51,7 @@ function isPrivateIp(ip: string): boolean {
 async function checkDns(hostname: string): Promise<string | null> {
   try {
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('DNS lookup timed out')), 2_000),
+      setTimeout(() => { reject(new Error('DNS lookup timed out')); }, 2_000),
     );
     const { address } = await Promise.race([dnsLookup(hostname), timeout]);
     if (isPrivateIp(address)) {
