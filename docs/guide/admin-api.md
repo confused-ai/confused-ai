@@ -138,7 +138,7 @@ import { createHttpService, listenService } from 'confused-ai/serve';
 import {
   createSqliteAuditStore,
   createSqliteCheckpointStore,
-} from 'confused-ai/guard';
+} from 'confused-ai/production';
 
 const service = createHttpService({
   agents: { assistant },

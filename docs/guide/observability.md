@@ -11,11 +11,11 @@ outline: [2, 3]
 ## Structured logger
 
 ```ts
-import { ConsoleLogger, LogLevel } from 'confused-ai/observe';
+import { ConsoleLogger } from 'confused-ai/observe';
+import type { LogLevel } from 'confused-ai/observe';
 
 const logger = new ConsoleLogger({
-  level: LogLevel.INFO,
-  prettyPrint: process.env.NODE_ENV !== 'production',
+  level: 'info',  // LogLevel is 'debug' | 'info' | 'warn' | 'error'
   // Automatically masks: sk-*, AIza*, AKIA*, Bearer tokens, JSON secrets
 });
 
@@ -27,24 +27,31 @@ Sensitive values (API keys, JWT tokens, AWS credentials) are automatically redac
 
 ## OTLP tracing
 
-Export traces to any OpenTelemetry-compatible backend (Jaeger, Tempo, Honeycomb, DataDog, etc.):
+The framework is instrumented with OpenTelemetry. Plug in your own OTEL SDK setup and every `agent.run()`, tool call, and LLM request automatically emits spans.
 
 ```ts
-import { OtelTracer } from 'confused-ai/observe';
+// 1. Set up OTEL (standard SDK — not confused-ai-specific)
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
-const tracer = new OtelTracer({
+const sdk = new NodeSDK({
   serviceName: 'my-agent-service',
-  endpoint: 'http://localhost:4318/v1/traces',  // OTLP HTTP endpoint
+  traceExporter: new OTLPTraceExporter({
+    url: 'http://localhost:4318/v1/traces',
+  }),
 });
+sdk.start();
 
-await tracer.start();
+// 2. Use withSpan() from confused-ai/observe for custom spans
+import { withSpan } from 'confused-ai/observe';
 
-// Traces are created automatically for every agent.run(), tool call, and LLM call
-const result = await ai.run({ prompt: 'Hello' });
-// → trace with spans: agent.run → agentic.step → llm.generate → tool.call
+const result = await withSpan('my-custom-step', async (span) => {
+  span.setAttribute('user_id', userId);
+  return await ai.run({ prompt });
+});
 ```
 
-### Environment-based config
+### Environment-based OTEL config
 
 ```bash
 OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
@@ -53,10 +60,8 @@ OTEL_RESOURCE_ATTRIBUTES=deployment.environment=production
 ```
 
 ```ts
-import { OtelTracer } from 'confused-ai/observe';
-
-// Reads OTEL_* env vars automatically
-const tracer = new OtelTracer({ fromEnv: true });
+// OTEL env vars are picked up automatically by the NodeSDK
+// OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES
 ```
 
 ## Prometheus metrics
@@ -64,16 +69,25 @@ const tracer = new OtelTracer({ fromEnv: true });
 Expose a `/metrics` endpoint for Prometheus scraping:
 
 ```ts
-import { PrometheusMetrics } from 'confused-ai/observe';
-import { serve } from 'confused-ai';
+import { createPrometheusHandler } from 'confused-ai/observe';
+import { createHttpService } from 'confused-ai/serve';
 
-const metrics = new PrometheusMetrics({
-  prefix: 'agent_',
-  labels: { service: 'my-agent', env: 'production' },
+// Standalone handler — plug into any HTTP framework
+const metricsHandler = createPrometheusHandler({
+  extraLabels: { service: 'my-agent', env: 'production' },
 });
 
-await serve(ai, { port: 3000, metrics });
-// GET /metrics → Prometheus text format
+// Hono / Express example:
+app.get('/metrics', metricsHandler);
+```
+
+Or scrape the metrics text directly:
+
+```ts
+import { scrapePrometheusMetrics } from 'confused-ai/observe';
+
+const text = await scrapePrometheusMetrics({ service: 'my-agent' });
+// text is Prometheus exposition format
 ```
 
 Default metrics exposed:
@@ -85,21 +99,16 @@ Default metrics exposed:
 - `agent_errors_total` — errors by type
 - `agent_circuit_breaker_state` — circuit breaker status
 
-## Custom metrics
+## Built-in metrics
+
+The framework records these OpenTelemetry metrics automatically via the `Metrics` object:
 
 ```ts
-import { MetricsCollector } from 'confused-ai/observe';
+import { Metrics } from 'confused-ai/observe';
 
-const metrics = new MetricsCollector();
-
-// Counter
-metrics.increment('custom.events', 1, { event: 'user_query' });
-
-// Gauge
-metrics.gauge('active_sessions', sessionCount);
-
-// Histogram
-metrics.histogram('embedding_time_ms', duration);
+// Record custom attributes on existing meters
+Metrics.agentRunsTotal.add(1, { agent_name: 'SupportAgent' });
+Metrics.toolCallsTotal.add(1, { tool_name: 'search', agent_name: 'SupportAgent' });
 ```
 
 ## Hooks-based observability

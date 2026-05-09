@@ -225,7 +225,7 @@ import { withResilience, ResilientAgent } from '@confused-ai/production';
 OTLP tracing, Prometheus metrics, structured logger, span tracking.
 
 ```ts
-import { OtelTracer, PrometheusMetrics, ConsoleLogger } from '@confused-ai/observe';
+import { ConsoleLogger, createLogger, withSpan, getTracer, Metrics, createPrometheusHandler, scrapePrometheusMetrics } from '@confused-ai/observe';
 ```
 → [Observability guide](/guide/observability)
 
@@ -233,7 +233,7 @@ import { OtelTracer, PrometheusMetrics, ConsoleLogger } from '@confused-ai/obser
 Evaluation framework — LLM-as-judge, ROUGE, regression runner, dataset loader.
 
 ```ts
-import { LLMJudge, runBenchmark, RegressionRunner, loadDataset } from '@confused-ai/eval';
+import { runLlmAsJudge, createMultiCriteriaJudge, runBenchmark, runRegression, loadDataset, createSqliteEvalStore, wordOverlapF1, rougeLWords } from '@confused-ai/eval';
 ```
 → [Eval guide](/guide/eval)
 

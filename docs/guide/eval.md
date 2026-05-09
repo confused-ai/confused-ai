@@ -10,26 +10,45 @@ outline: [2, 3]
 
 ## Quick start — LLM-as-judge
 
+Single-call rubric scoring:
+
 ```ts
-import { LLMJudge } from 'confused-ai/eval';
+import { runLlmAsJudge } from 'confused-ai/eval';
 
-const judge = new LLMJudge({
+const result = await runLlmAsJudge({
   llm: myProvider,
-  rubric: [
-    { criterion: 'accuracy',    weight: 0.4 },
-    { criterion: 'completeness', weight: 0.3 },
-    { criterion: 'clarity',     weight: 0.3 },
-  ],
-});
-
-const score = await judge.score({
-  prompt: 'What is the capital of France?',
-  response: 'The capital of France is Paris.',
+  rubric: 'Score this response for accuracy, completeness, and clarity (0–10)',
+  candidate: 'The capital of France is Paris.',
   reference: 'Paris',
 });
 
-console.log(score.overall);   // 0.95
-console.log(score.breakdown); // { accuracy: 1.0, completeness: 0.9, clarity: 0.95 }
+console.log(result.score);     // e.g. 9
+console.log(result.rationale); // LLM explanation
+```
+
+## Multi-criteria judge
+
+Score across multiple named dimensions:
+
+```ts
+import { createMultiCriteriaJudge } from 'confused-ai/eval';
+
+const judge = createMultiCriteriaJudge({
+  llm: myProvider,
+  criteria: [
+    { name: 'accuracy',     description: 'Is the answer factually correct?' },
+    { name: 'completeness', description: 'Does it cover all aspects?' },
+    { name: 'clarity',      description: 'Is it clearly written?' },
+  ],
+});
+
+const result = await judge({
+  candidate: 'The capital of France is Paris.',
+  reference:  'Paris',
+});
+
+console.log(result.overallScore);         // e.g. 0.93 (normalised 0–1)
+console.log(result.criteria[0]?.score);   // per-criterion score
 ```
 
 ## Benchmark pipeline
@@ -82,45 +101,48 @@ const lengthScorer = customScorer('length', (response, expected) => {
 ```ts
 import { loadDataset } from 'confused-ai/eval';
 
-// Load JSON
-const dataset = await loadDataset('./evals/customer-support.json');
+// Load JSON array or JSON lines
+const dataset = await loadDataset({ source: './evals/customer-support.json' });
 
 // Load JSON Lines (.jsonl)
-const jsonl = await loadDataset('./evals/qa-pairs.jsonl');
+const jsonl = await loadDataset({ source: './evals/qa-pairs.jsonl' });
 
-// Load CSV
-const csv = await loadDataset('./evals/test-cases.csv', {
-  inputColumn: 'question',
+// Load CSV (specify column names)
+const csv = await loadDataset({
+  source:          './evals/test-cases.csv',
+  inputColumn:    'question',
   expectedColumn: 'answer',
+});
+
+// Pass raw text instead of a file path
+const inline = await loadDataset({
+  source: '[{"input":"Hello","expected":"Hi"}]',
+  raw: true,
 });
 ```
 
 ## Eval store — persist and query results
 
 ```ts
-import { createEvalStore } from 'confused-ai/eval';
+import { createSqliteEvalStore, runEvalSuite } from 'confused-ai/eval';
 
-const store = createEvalStore({ url: 'file:./evals.db' });
+const store = createSqliteEvalStore('./evals.db');
+// or in-memory for tests:
+// const store = new InMemoryEvalStore();
 
-// Save a run
-const runId = await store.saveRun({
-  agentName: 'CustomerSupport',
-  datasetName: 'support-v2',
-  score: 0.87,
-  cases: report.cases,
+const report = await runEvalSuite({
+  suiteName: 'CustomerSupport-v2',
+  dataset:   dataset,          // EvalDatasetItem[]
+  agent:     myAgent,
+  store,
+  passingScore:        0.8,    // samples below 0.8 count as failed
+  regressionThreshold: 0.05,   // fail suite if score drops >5% from baseline
+  concurrency:         4,
 });
 
-// Query historical runs
-const history = await store.queryRuns({
-  agentName: 'CustomerSupport',
-  limit: 10,
-});
-
-// Detect regression
-const baseline = await store.getBaseline('CustomerSupport');
-if (report.score < baseline.score - 0.05) {
-  throw new Error(`Regression detected: ${report.score} < ${baseline.score}`);
-}
+console.log(report.passed);     // true / false
+console.log(report.score);      // overall score
+console.log(report.regression); // score delta vs baseline
 ```
 
 ## Regression runner (CI/CD)
@@ -128,68 +150,73 @@ if (report.score < baseline.score - 0.05) {
 Fail CI if quality drops:
 
 ```ts
-import { RegressionRunner } from 'confused-ai/eval';
+import { runRegression, printRegressionReport } from 'confused-ai/eval';
+import { loadDataset } from 'confused-ai/eval';
 
-const runner = new RegressionRunner({
-  store,
-  threshold: 0.80,          // minimum acceptable score
-  regressionTolerance: 0.03, // allow 3% drop before failing
+const samples = await loadDataset({ source: './evals/qa.jsonl' });
+
+const report = await runRegression({
+  samples,
+  run: async (input) => {
+    const result = await myAgent.run({ prompt: input });
+    return result.text;
+  },
+  score: (candidate, expected) =>
+    candidate.trim() === expected?.trim() ? 1 : 0,
+  threshold: 0.80,    // fail if < 80% pass
+  concurrency: 4,
 });
 
-await runner.run({
-  agent: myAgent,
-  dataset,
-  scorers: [exactMatchScorer(), llmJudgeScorer({ llm: myProvider })],
-});
-// Throws RegressionError if score < threshold or drops by > tolerance
+printRegressionReport(report);  // human-readable summary
+if (!report.passed) process.exit(1);
 ```
 
 ## Text metrics (no LLM needed)
 
 ```ts
-import { wordOverlapF1, rougeL, bleu } from 'confused-ai/eval';
+import { wordOverlapF1, rougeLWords } from 'confused-ai/eval';
 
+// F1 word-overlap score (0–1)
 const f1 = wordOverlapF1('Paris is the capital of France', 'Paris');
-// → { precision: 1.0, recall: 0.2, f1: 0.33 }
+// → 0.33
 
-const rouge = rougeL('The quick brown fox', 'The brown fox');
-// → { score: 0.75 }
+// ROUGE-L word score (0–1)
+const rouge = rougeLWords('The quick brown fox', 'The brown fox');
+// → 0.75
 ```
 
 ## Latency and cost metrics
 
-```ts
-import { EvalMetricsCollector } from 'confused-ai/eval';
+Record per-run metrics using the `Metrics` object from `confused-ai/observe`:
 
-const metrics = new EvalMetricsCollector();
+```ts
+import { Metrics } from 'confused-ai/observe';
 
 const start = Date.now();
-const result = await agent.run({ prompt });
-metrics.record({
-  latencyMs: Date.now() - start,
-  tokens: result.usage?.totalTokens,
-  cost: result.usage?.cost,
-  steps: result.steps,
-});
+const result = await myAgent.run({ prompt });
+const durationMs = Date.now() - start;
 
-console.log(metrics.summary());
-// { p50: 1200ms, p95: 3400ms, avgTokens: 1500, avgCost: '$0.002' }
+Metrics.agentRunDurationMs.record(durationMs, { agent_name: 'eval-agent' });
+Metrics.llmTokensTotal.add(result.usage?.totalTokens ?? 0, { model: 'gpt-4o', token_type: 'total' });
 ```
 
 ## Fine-tuning dataset generation
 
-Generate JSONL training data from agent runs:
+Generate JSONL training data from labelled examples:
 
 ```ts
-import { generateFineTuningDataset } from 'confused-ai/eval';
+import { generateDataset } from 'confused-ai/eval';
+import type { TrainingExample } from 'confused-ai/eval';
 
-const dataset = await generateFineTuningDataset({
-  agent: myAgent,
-  examples: [
-    { input: 'Hello', expectedOutput: 'Hello! How can I help?' },
-    // ... more examples
-  ],
-  format: 'openai',  // 'openai' | 'anthropic'
-  outputFile: './finetune-data.jsonl',
+const examples: TrainingExample[] = [
+  { input: 'Hello',   output: 'Hello! How can I help?', score: 1.0 },
+  // ... more examples
+];
+
+const jsonl = generateDataset(examples, {
+  format:       'openai',    // 'openai' | 'alpaca' | 'sharegpt'
+  systemPrompt: 'You are a helpful assistant.',
 });
+
+await Bun.write('./finetune-data.jsonl', jsonl);
 ```

@@ -35,7 +35,7 @@ agent.run()
 ```ts
 import { agent, defineTool }          from 'confused-ai';
 import { createSqliteApprovalStore,
-         waitForApproval }            from 'confused-ai/guard';
+         waitForApproval }            from 'confused-ai/production';
 import { createHttpService }          from 'confused-ai/serve';
 import { z }                          from 'zod';
 
@@ -123,10 +123,10 @@ await ai.resume(runId);
 ### Custom approval store
 
 ```ts
-import type { ApprovalStore, ApprovalRequest } from 'confused-ai/guard';
+import type { ApprovalStore, HitlRequest } from 'confused-ai/production';
 
 const myApprovalStore: ApprovalStore = {
-  async create(request: ApprovalRequest): Promise<string> {
+  async create(request: HitlRequest): Promise<string> {
     const id = crypto.randomUUID();
     await db.approvals.insert({ id, ...request });
     await notifySlack(`New approval needed: ${request.actionSummary}`);
@@ -189,7 +189,7 @@ import { defineTool } from 'confused-ai';
 import {
   createSqliteApprovalStore,
   waitForApproval,
-} from 'confused-ai/guard';
+} from 'confused-ai/production';
 import { z } from 'zod';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
@@ -247,7 +247,7 @@ Pass `approvalStore` to `createHttpService` — it auto-wires the approval endpo
 
 ```ts
 import { createHttpService } from 'confused-ai/serve';
-import { createSqliteApprovalStore } from 'confused-ai/guard';
+import { createSqliteApprovalStore } from 'confused-ai/production';
 
 const approvalStore = createSqliteApprovalStore('./agent.db');
 
@@ -296,7 +296,7 @@ await approvalStore.decide(approvalId, {
 ### SQLite (durable default)
 
 ```ts
-import { createSqliteApprovalStore } from 'confused-ai/guard';
+import { createSqliteApprovalStore } from 'confused-ai/production';
 
 const store = createSqliteApprovalStore('./agent.db');
 ```
@@ -304,7 +304,7 @@ const store = createSqliteApprovalStore('./agent.db');
 ### In-memory (tests)
 
 ```ts
-import { InMemoryApprovalStore } from 'confused-ai/guard';
+import { InMemoryApprovalStore } from 'confused-ai/production';
 
 const store = new InMemoryApprovalStore();
 ```
@@ -312,7 +312,7 @@ const store = new InMemoryApprovalStore();
 ### Custom (Postgres, Redis, etc.)
 
 ```ts
-import type { ApprovalStore, HitlRequest, ApprovalDecision } from 'confused-ai/guard';
+import type { ApprovalStore, HitlRequest, ApprovalDecision } from 'confused-ai/production';
 
 class PostgresApprovalStore implements ApprovalStore {
   async create(req) { /* INSERT */ }
@@ -353,7 +353,7 @@ interface HitlRequest {
 When an approval is rejected, the agent throws `ApprovalRejectedError`. Handle it gracefully:
 
 ```ts
-import { ApprovalRejectedError } from 'confused-ai/guard';
+import { ApprovalRejectedError } from 'confused-ai/production';
 
 try {
   const result = await agent.run('Send a welcome email to alice@acme.com', { runId: 'run-001' });

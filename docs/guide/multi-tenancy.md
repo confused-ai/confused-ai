@@ -73,7 +73,7 @@ interface TenantContext {
 ## Per-tenant rate limiting
 
 ```ts
-import { createTenantContext } from 'confused-ai/guard';
+import { createTenantContext } from 'confused-ai/production';
 
 const ctx = createTenantContext('tenant-enterprise', {
   rateLimitConfig: {
