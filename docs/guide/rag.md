@@ -1,373 +1,203 @@
 ---
-title: RAG & Knowledge
-description: KnowledgeEngine, document loaders (Text, JSON, CSV, URL), vector stores, and semantic retrieval — grounded agents in minutes.
+title: RAG / Knowledge Base
+description: Build knowledge bases with document loaders, vector stores, and semantic retrieval.
 outline: [2, 3]
 ---
 
-# RAG & Knowledge
+# RAG / Knowledge Base
 
-The `KnowledgeEngine` indexes your documents into a vector store and automatically retrieves relevant context before each LLM call. Attach it to any agent with a single option.
-
----
+`@confused-ai/knowledge` provides a `KnowledgeEngine` that loads documents, embeds them, stores them in a vector store, and injects relevant chunks into agent context automatically.
 
 ## Quick start
 
 ```ts
 import { agent } from 'confused-ai';
-import { KnowledgeEngine, InMemoryVectorStore, TextLoader } from 'confused-ai/knowledge';
-import { readFileSync } from 'fs';
+import { KnowledgeEngine, loadUrl } from 'confused-ai/knowledge';
+import { OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/memory';
 
-// 1. Load and index your documents
+// 1. Build the engine
 const knowledge = new KnowledgeEngine({
+  embedding: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
   vectorStore: new InMemoryVectorStore(),
-  chunkSize:   500,
-  overlap:     50,
 });
 
-await knowledge.load(new TextLoader([
-  { id: 'handbook', content: readFileSync('./docs/employee-handbook.txt', 'utf8') },
-  { id: 'policy',   content: readFileSync('./docs/expense-policy.txt', 'utf8') },
-]));
+// 2. Load documents
+const docs = await loadUrl('https://docs.myapp.com/api');
+await knowledge.ingest(docs);
 
-// 2. Attach to an agent
-const hr = agent({
-  model:        'gpt-4o',
-  instructions: 'You are an HR assistant. Use the provided context to answer questions.',
-  knowledge,
+// 3. Attach to agent — retrieval happens automatically each run
+const ai = agent({
+  model: 'gpt-4o',
+  systemPrompt: 'Answer questions using the provided documentation.',
+  knowledgebase: knowledge,
 });
 
-const result = await hr.run('What is the reimbursement limit for team lunches?');
-console.log(result.text);
+const result = await ai.run({ prompt: 'How do I authenticate?' });
 ```
-
----
 
 ## Document loaders
 
-| Loader | Use case |
-|--------|---------|
-| `TextLoader` | Plain text files |
-| `JSONLoader` | JSON arrays / objects |
-| `CSVLoader` | Tabular CSV data |
-| `URLLoader` | Fetch & extract web pages |
-
-### `TextLoader`
+### URL loader
 
 ```ts
-import { TextLoader } from 'confused-ai/knowledge';
+import { loadUrl } from 'confused-ai/knowledge';
 
-const loader = new TextLoader([
-  { id: 'readme',  content: readFileSync('./README.md', 'utf8') },
-  { id: 'license', content: readFileSync('./LICENSE', 'utf8') },
-]);
-await knowledge.load(loader);
-```
-
-### `JSONLoader`
-
-```ts
-import { JSONLoader } from 'confused-ai/knowledge';
-
-const loader = new JSONLoader(
-  [{ title: 'Page 1', body: 'Content...' }],
-  { textFields: ['title', 'body'] }
-);
-await knowledge.load(loader);
-```
-
-### `CSVLoader`
-
-```ts
-import { CSVLoader } from 'confused-ai/knowledge';
-
-const loader = new CSVLoader(readFileSync('./products.csv', 'utf8'), {
-  textColumns: ['name', 'description'],
-  metaColumns: ['sku', 'price'],
+const docs = await loadUrl('https://example.com/docs', {
+  timeout: 10_000,
+  // allowedHosts: ['example.com'],  // SSRF guard
 });
-await knowledge.load(loader);
 ```
 
-### `URLLoader`
+### PDF loader
 
 ```ts
-import { URLLoader } from 'confused-ai/knowledge';
+import { loadPdf } from 'confused-ai/knowledge';
 
-const loader = new URLLoader([
-  'https://docs.example.com/api',
-  'https://docs.example.com/guide',
-]);
-await knowledge.load(loader);
+const docs = await loadPdf('./report.pdf');
+// Returns one Document per page with page number in metadata
 ```
 
----
+### CSV loader
 
-## Vector stores
+```ts
+import { loadCsv } from 'confused-ai/knowledge';
 
-| Store | Class | Notes |
-|-------|-------|-------|
-| In-memory | `InMemoryVectorStore` | Dev / testing — not persistent |
-| Pinecone | `PineconeVectorStore` | Cloud-hosted, serverless |
-| Qdrant | `QdrantVectorStore` | Self-hosted or cloud |
-| pgvector | `PgVectorStore` | PostgreSQL extension |
+const docs = await loadCsv('./products.csv', {
+  contentColumns: ['name', 'description'],
+  metadataColumns: ['sku', 'category'],
+  delimiter: ',',
+});
+```
+
+### Plain text / custom documents
+
+```ts
+import type { Document } from 'confused-ai/knowledge';
+
+const docs: Document[] = [
+  {
+    id: 'doc-1',
+    content: 'Our refund policy allows returns within 30 days.',
+    metadata: { source: 'policy.txt', section: 'returns' },
+  },
+];
+
+await knowledge.ingest(docs);
+```
+
+## Vector store adapters
+
+### In-memory (development)
+
+```ts
+import { InMemoryVectorStore } from 'confused-ai/memory';
+const store = new InMemoryVectorStore();
+```
 
 ### Pinecone
 
 ```ts
-import { PineconeVectorStore } from 'confused-ai/knowledge';
+import { PineconeVectorStore } from 'confused-ai/memory';
 
-const vectorStore = new PineconeVectorStore({
-  apiKey:    process.env.PINECONE_API_KEY!,
-  indexName: 'my-knowledge-base',
+const store = new PineconeVectorStore({
+  apiKey: process.env.PINECONE_API_KEY!,
+  index: 'my-knowledge-base',
+  namespace: 'prod',
 });
 ```
 
 ### Qdrant
 
 ```ts
-import { QdrantVectorStore } from 'confused-ai/knowledge';
+import { QdrantVectorStore } from 'confused-ai/memory';
 
-const vectorStore = new QdrantVectorStore({
-  url:            'http://localhost:6333',
-  collectionName: 'knowledge',
-  apiKey:         process.env.QDRANT_API_KEY,
+const store = new QdrantVectorStore({
+  url: 'http://localhost:6333',
+  collection: 'knowledge',
+  dimension: 1536,
 });
 ```
 
-### pgvector
+### pgvector (Postgres)
 
 ```ts
-import { PgVectorStore } from 'confused-ai/knowledge';
+import { PgvectorKnowledgeAdapter } from 'confused-ai/knowledge';
 
-const vectorStore = new PgVectorStore({
+const store = new PgvectorKnowledgeAdapter({
   connectionString: process.env.DATABASE_URL!,
-  tableName:        'knowledge_embeddings',
+  table: 'knowledge_embeddings',
 });
 ```
 
----
-
-## Custom embeddings
-
-By default, `KnowledgeEngine` uses OpenAI `text-embedding-3-small`. Swap to any provider:
+### ChromaDB
 
 ```ts
-import { KnowledgeEngine, OpenAIEmbeddingProvider } from 'confused-ai/knowledge';
+import { ChromaKnowledgeAdapter } from 'confused-ai/knowledge';
 
-const knowledge = new KnowledgeEngine({
-  vectorStore:       new InMemoryVectorStore(),
-  embeddingProvider: new OpenAIEmbeddingProvider({
-    apiKey: process.env.OPENAI_API_KEY!,
-    model:  'text-embedding-3-large',
-  }),
+const store = new ChromaKnowledgeAdapter({
+  url: 'http://localhost:8000',
+  collection: 'my-docs',
 });
 ```
 
----
-
-## Manual retrieval
-
-Query chunks outside an agent run:
+### Neo4j (graph + vector)
 
 ```ts
-const results = await knowledge.search('expense reimbursement policy', { topK: 5 });
+import { Neo4jKnowledgeAdapter } from 'confused-ai/knowledge';
 
-for (const doc of results) {
-  console.log(doc.id);       // 'policy'
-  console.log(doc.content);  // matching chunk text
-  console.log(doc.score);    // cosine similarity 0–1
-  console.log(doc.metadata); // source metadata
-}
+const store = new Neo4jKnowledgeAdapter({
+  url: 'bolt://localhost:7687',
+  username: 'neo4j',
+  password: process.env.NEO4J_PASSWORD!,
+  indexName: 'knowledge',
+});
 ```
 
----
-
-## `KnowledgeEngine` options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `vectorStore` | `VectorStore` | required | Where to store/query embeddings |
-| `embeddingProvider` | `EmbeddingProvider` | OpenAI | Embedding model |
-| `chunkSize` | `number` | `500` | Characters per chunk |
-| `overlap` | `number` | `50` | Character overlap between chunks |
-| `topK` | `number` | `5` | Chunks to retrieve per run |
-| `minScore` | `number` | `0` | Minimum cosine similarity threshold |
-
-> **New:** Use a `RagAdapter` (via `ragAdapter`) to plug any RAG pipeline — Pinecone, Qdrant, OpenSearch, or your own — without configuring the full `KnowledgeEngine`. See the [Adapters guide](./adapters.md).
-
-## Quick setup
+### Database-backed (SQLite/Postgres built-in)
 
 ```ts
-import {
-  KnowledgeEngine,
-  InMemoryVectorStore,
-  TextLoader,
-} from 'confused-ai/knowledge';
+import { createDbKnowledgeEngine } from 'confused-ai/knowledge';
+
+const knowledge = createDbKnowledgeEngine({
+  url: 'file:./knowledge.db',  // SQLite — zero deps
+  // url: process.env.DATABASE_URL,  // Postgres
+  embedding: myEmbeddingProvider,
+});
+```
+
+## Manual querying
+
+```ts
+// Query the knowledge base directly
+const results = await knowledge.query('refund policy', { topK: 5 });
+
+results.forEach(r => {
+  console.log(`[${r.score.toFixed(3)}] ${r.document.content.slice(0, 100)}`);
+});
+```
+
+## Embedding providers
+
+```ts
 import { OpenAIEmbeddingProvider } from 'confused-ai/memory';
-// or: import { ... } from 'confused-ai';
 
-const knowledge = new KnowledgeEngine({
-  embeddingProvider: new OpenAIEmbeddingProvider({
-    apiKey: process.env.OPENAI_API_KEY!,
-    model: 'text-embedding-3-small', // optional, this is the default
-  }),
-  vectorStore: new InMemoryVectorStore(),
-});
-
-// Ingest documents
-await knowledge.ingest([
-  { id: 'doc-1', content: 'confused-ai is a TypeScript framework for production AI agents.' },
-  { id: 'doc-2', content: 'It supports RAG, multi-agent orchestration, and lifecycle hooks.' },
-]);
-
-// Query
-const results = await knowledge.query('What does confused-ai support?', { topK: 3 });
-// results: [{ id, content, score, metadata }]
-```
-
-## Document loaders
-
-Load content from files, URLs, or any source:
-
-```ts
-import {
-  TextLoader,
-  JSONLoader,
-  CSVLoader,
-  URLLoader,
-} from 'confused-ai/knowledge';
-
-// Plain text / markdown files
-const textDocs = await new TextLoader('./docs/').load();
-
-// JSON files
-const jsonDocs = await new JSONLoader('./data/products.json', {
-  textField: 'description', // which field to embed
-}).load();
-
-// CSV files
-const csvDocs = await new CSVLoader('./data/faq.csv', {
-  textColumn: 'answer',
-}).load();
-
-// Fetch a URL
-const webDocs = await new URLLoader('https://example.com/docs').load();
-
-// Ingest all at once
-await knowledge.ingest([...textDocs, ...jsonDocs, ...csvDocs, ...webDocs]);
-```
-
-## Attaching to an agent
-
-```ts
-import { agent } from 'confused-ai';
-
-const ragAgent = agent({
-  model: 'gpt-4o-mini',
-  instructions: `
-    You are a documentation assistant.
-    Use the knowledge base to answer questions.
-    Always cite document IDs when you reference content.
-  `,
-  knowledgebase: knowledge,
-  tools: [], // Disable default tools (web fetching) to strictly rely on the knowledgebase
-});
-
-const answer = await ragAgent.run('How do I add lifecycle hooks?');
-console.log(answer.text);
-```
-
-## Hybrid search
-
-The engine supports keyword + semantic hybrid search when you implement `HybridSearchProvider`:
-
-```ts
-import type { HybridSearchProvider } from 'confused-ai/knowledge';
-
-class MyHybridSearch implements HybridSearchProvider {
-  async search(query: string, topK: number) {
-    // combine BM25 keyword results with your vector results
-    return combinedResults;
-  }
-}
-
-const knowledge = new KnowledgeEngine({
-  embeddingProvider: new OpenAIEmbeddingProvider({ apiKey }),
-  vectorStore: new InMemoryVectorStore(),
-  hybridSearch: new MyHybridSearch(),
+// OpenAI
+const embedding = new OpenAIEmbeddingProvider({
+  apiKey: process.env.OPENAI_API_KEY!,
+  model: 'text-embedding-3-small',  // or text-embedding-3-large
+  dimensions: 1536,
 });
 ```
 
-## Reranking
+## Embedding cache
 
-Add a reranker to improve result precision:
+Avoid re-embedding the same text repeatedly:
 
 ```ts
-import type { RerankerProvider } from 'confused-ai/knowledge';
+import { withEmbeddingCache } from 'confused-ai/knowledge';
 
-class CohereReranker implements RerankerProvider {
-  async rerank(query: string, results: RAGChunk[], topN: number) {
-    // call Cohere rerank API
-    return rerankedResults;
-  }
-}
-
-const knowledge = new KnowledgeEngine({
-  embeddingProvider: new OpenAIEmbeddingProvider({ apiKey }),
-  vectorStore: new InMemoryVectorStore(),
-  reranker: new CohereReranker(),
+const cachedEngine = withEmbeddingCache(knowledge, {
+  maxSize: 10_000,
+  ttlMs: 3_600_000,  // 1 hour
 });
-```
-
-## Custom vector store
-
-Implement `VectorStore` to use Pinecone, Weaviate, Qdrant, pgvector, etc.:
-
-```ts
-import type { VectorStore } from 'confused-ai/memory';
-
-class PineconeVectorStore implements VectorStore {
-  async upsert(id: string, embedding: number[], metadata: Record<string, unknown>): Promise<void> {
-    await pinecone.upsert([{ id, values: embedding, metadata }]);
-  }
-
-  async query(embedding: number[], topK: number): Promise<Array<{ id: string; score: number; metadata: Record<string, unknown> }>> {
-    const results = await pinecone.query({ vector: embedding, topK });
-    return results.matches.map(m => ({ id: m.id, score: m.score, metadata: m.metadata ?? {} }));
-  }
-
-  async delete(id: string): Promise<void> {
-    await pinecone.deleteOne(id);
-  }
-}
-```
-
-## Text splitting
-
-Large documents are automatically split into chunks. Control chunk size:
-
-```ts
-const knowledge = new KnowledgeEngine({
-  embeddingProvider: myEmbedder,
-  vectorStore: myVectorStore,
-  splitter: {
-    chunkSize: 512,       // tokens per chunk
-    chunkOverlap: 64,     // overlap between chunks
-  },
-});
-```
-
-## KnowledgeEngineConfig reference
-
-```ts
-interface KnowledgeEngineConfig {
-  embeddingProvider: EmbeddingProvider;     // required
-  vectorStore: VectorStore;                 // required
-  hybridSearch?: HybridSearchProvider;      // optional
-  reranker?: RerankerProvider;              // optional
-  splitter?: {
-    chunkSize?: number;                     // default: 512
-    chunkOverlap?: number;                  // default: 64
-  };
-  defaultTopK?: number;                     // default: 5
-}
 ```

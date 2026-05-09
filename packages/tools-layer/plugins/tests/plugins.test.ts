@@ -132,7 +132,7 @@ describe('PluginRegistry hooks', () => {
             version: '1',
             onError: () => { throw new Error('plugin failed'); },
         });
-        await expect(registry.runErrorHooks(new Error('x'), makeContext())).resolves.not.toThrow();
+        await expect(registry.runErrorHooks(new Error('x'), makeContext())).resolves.toBeUndefined();
     });
 });
 

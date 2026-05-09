@@ -22,7 +22,24 @@ describe('CircuitBreaker', () => {
 
   it('transitions OPEN → HALF_OPEN → CLOSED on success', async () => {
     let t = 0;
+    // halfOpenSuccessThreshold now defaults to 2 — two successes required to close.
     const cb = new CircuitBreaker({ threshold: 1, timeout: 100, service: 's', now: () => t });
+    await expect(cb.call(() => Promise.reject(new Error('x')))).rejects.toThrow();
+    expect(cb.getState()).toBe('OPEN');
+    t += 200;
+    // First success: HALF_OPEN → stays HALF_OPEN (threshold is 2)
+    const r1 = await cb.call(() => Promise.resolve(42));
+    expect(r1).toBe(42);
+    expect(cb.getState()).toBe('HALF_OPEN');
+    // Second success: HALF_OPEN → CLOSED
+    const r2 = await cb.call(() => Promise.resolve(99));
+    expect(r2).toBe(99);
+    expect(cb.getState()).toBe('CLOSED');
+  });
+
+  it('transitions OPEN → HALF_OPEN → CLOSED with explicit threshold=1', async () => {
+    let t = 0;
+    const cb = new CircuitBreaker({ threshold: 1, timeout: 100, service: 's', now: () => t, halfOpenSuccessThreshold: 1 });
     await expect(cb.call(() => Promise.reject(new Error('x')))).rejects.toThrow();
     expect(cb.getState()).toBe('OPEN');
     t += 200;
@@ -83,6 +100,35 @@ describe('withRetry', () => {
         { maxAttempts: 2, sleep: () => Promise.resolve() },
       ),
     ).rejects.toBeInstanceOf(ConfusedAIError);
+  });
+
+  it('uses retry-after header delay instead of exponential backoff', async () => {
+    const delays: number[] = [];
+    const err = Object.assign(
+      new ConfusedAIError({ code: ERROR_CODES.LLM_RATE_LIMITED, message: 'r', retryable: true }),
+      { headers: { 'retry-after': '2' } }, // 2 seconds → 2000 ms
+    );
+    let calls = 0;
+    await withRetry(
+      () => { calls++; return calls < 2 ? Promise.reject(err) : Promise.resolve('ok'); },
+      { maxAttempts: 3, sleep: (ms) => { delays.push(ms); return Promise.resolve(); } },
+    );
+    expect(delays).toHaveLength(1);
+    expect(delays[0]).toBe(2000);
+  });
+
+  it('uses x-ratelimit-reset-requests header delay (OpenAI format)', async () => {
+    const delays: number[] = [];
+    const err = Object.assign(
+      new ConfusedAIError({ code: ERROR_CODES.LLM_RATE_LIMITED, message: 'r', retryable: true }),
+      { headers: { 'x-ratelimit-reset-requests': '5' } },
+    );
+    let calls = 0;
+    await withRetry(
+      () => { calls++; return calls < 2 ? Promise.reject(err) : Promise.resolve('ok'); },
+      { maxAttempts: 3, sleep: (ms) => { delays.push(ms); return Promise.resolve(); } },
+    );
+    expect(delays[0]).toBe(5000);
   });
 });
 

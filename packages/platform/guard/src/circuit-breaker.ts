@@ -11,9 +11,9 @@ export interface CircuitBreakerOptions {
   service: string;
   /**
    * Number of consecutive successes in HALF_OPEN state before returning to CLOSED.
-   * Defaults to 1 (single successful probe closes the circuit).
+   * Defaults to 2 — requires two successful probes before closing the circuit.
    * Increase for high-reliability scenarios that require N consecutive successes.
-   * @default 1
+   * @default 2
    */
   halfOpenSuccessThreshold?: number;
   /** Optional clock — useful for tests. */
@@ -38,7 +38,7 @@ export class CircuitBreaker {
 
   constructor(private readonly opts: CircuitBreakerOptions) {
     this.now = opts.now ?? Date.now;
-    this.halfOpenSuccessThreshold = opts.halfOpenSuccessThreshold ?? 1;
+    this.halfOpenSuccessThreshold = opts.halfOpenSuccessThreshold ?? 2;
   }
 
   async call<T>(fn: () => Promise<T>): Promise<T> {

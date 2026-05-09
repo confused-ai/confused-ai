@@ -29,6 +29,12 @@ const SSRF_BLOCKED_PATTERNS: RegExp[] = [
   /^192\.168\./,
   /^169\.254\./,       // AWS/GCP/Azure instance metadata service (IMDS)
   /^100\.64\./,        // Carrier-grade NAT (RFC 6598) — may reach internal services
+  // IPv6-mapped IPv4 addresses (e.g. ::ffff:10.0.0.1 bypasses plain IPv4 checks)
+  /^::ffff:10\./i,
+  /^::ffff:127\./i,
+  /^::ffff:169\.254\./i,
+  /^::ffff:192\.168\./i,
+  /^::ffff:172\.(1[6-9]|2[0-9]|3[01])\./i,
   /\.internal$/i,
   /\.local$/i,
 ];

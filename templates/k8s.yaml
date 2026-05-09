@@ -148,3 +148,57 @@ spec:
   resources:
     requests:
       storage: 5Gi
+
+---
+# NetworkPolicy — restrict ingress/egress to only what the agent needs.
+# Adjust egress ports to match your storage/LLM provider topology.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: confused-ai-agent-netpol
+  namespace: agents
+spec:
+  podSelector:
+    matchLabels:
+      app: confused-ai-agent
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Accept traffic on the HTTP port from any namespace (e.g. ingress controller)
+    - ports:
+        - protocol: TCP
+          port: 8787
+  egress:
+    # DNS — required for LLM provider hostname resolution
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # HTTPS — LLM provider APIs (OpenAI, Anthropic, etc.)
+    - ports:
+        - protocol: TCP
+          port: 443
+    # Redis session / rate-limit store (remove if not used)
+    - ports:
+        - protocol: TCP
+          port: 6379
+    # PostgreSQL (remove if not used)
+    - ports:
+        - protocol: TCP
+          port: 5432
+
+---
+# PodDisruptionBudget — guarantee at least 1 replica remains available during
+# voluntary disruptions (node drains, rolling updates, cluster upgrades).
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: confused-ai-agent-pdb
+  namespace: agents
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: confused-ai-agent

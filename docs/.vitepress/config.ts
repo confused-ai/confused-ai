@@ -6,12 +6,26 @@ const SITE_URL = process.env.SITE_URL ?? 'https://rvuyyuru2.github.io/agent-fram
 export default defineConfig({
     base,
     title: 'Confused-AI',
-    titleTemplate: ':title — Confused-AI',
-    description: 'TypeScript framework for building production-grade AI agents, teams, and services. ReAct loop, 100+ tools, multi-agent orchestration, circuit breakers, HITL, budget enforcement — all in one package.',
+    titleTemplate: ':title — Confused-AI | TypeScript AI Agent Framework',
+    description: 'Build production-grade AI agents in TypeScript. 40+ LLM providers, 100+ built-in tools, multi-agent orchestration, RAG, guardrails, circuit breakers, HITL, budget enforcement, OTLP tracing. Open source. CrewAI / LangChain alternative.',
+
     lang: 'en-US',
 
     cleanUrls: true,
     lastUpdated: true,
+
+    // Exclude internal planning/architecture docs from the built site
+    srcExclude: [
+        'PHASES.md',
+        'ARCHITECTURE-SPECIFICATION.md',
+        'COMPETITIVE-ANALYSIS.md',
+        'INTEGRATION-BLUEPRINTS.md',
+        'STRATEGIC-TRANSFORMATION-ROADMAP.md',
+        'PRODUCTION-READINESS-AUDIT.md',
+        'PROGRESS.md',
+        'GLOSSARY.md',
+        'TECHNICAL-AUDIT-2026-05-08.md',
+    ],
 
     sitemap: {
         hostname: SITE_URL,
@@ -26,21 +40,25 @@ export default defineConfig({
         // Open Graph
         ['meta', { property: 'og:type', content: 'website' }],
         ['meta', { property: 'og:site_name', content: 'Confused-AI' }],
-        ['meta', { property: 'og:title', content: 'Confused-AI — Production-Grade AI Agent Framework' }],
-        ['meta', { property: 'og:description', content: 'Build and ship AI agents in TypeScript. 100+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, MCP, OTLP tracing — zero magic, every escape hatch open.' }],
+        ['meta', { property: 'og:title', content: 'Confused-AI — TypeScript AI Agent Framework | Build Production AI Agents' }],
+        ['meta', { property: 'og:description', content: 'Open-source TypeScript framework for production AI agents. 40+ LLM providers, 100+ tools, multi-agent teams, RAG, guardrails, circuit breakers, budget enforcement, OTLP tracing. CrewAI / LangChain alternative.' }],
+        ['meta', { property: 'og:locale', content: 'en_US' }],
         ['meta', { property: 'og:image', content: `${SITE_URL}/og-banner.svg` }],
         ['meta', { property: 'og:url', content: SITE_URL }],
 
         // Twitter / X
         ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-        ['meta', { name: 'twitter:title', content: 'Confused-AI — Production-Grade AI Agent Framework' }],
-        ['meta', { name: 'twitter:description', content: 'Build and ship AI agents in TypeScript. 100+ tools, multi-agent orchestration, circuit breakers, budget caps, HITL, MCP.' }],
+        ['meta', { name: 'twitter:site', content: '@confusedai' }],
+        ['meta', { name: 'twitter:title', content: 'Confused-AI — TypeScript AI Agent Framework' }],
+        ['meta', { name: 'twitter:description', content: 'Build production AI agents in TypeScript. 40+ LLMs, 100+ tools, multi-agent teams, RAG, guardrails, budget caps — open source.' }],
         ['meta', { name: 'twitter:image', content: `${SITE_URL}/og-banner.svg` }],
 
         // SEO
-        ['meta', { name: 'keywords', content: 'AI agent framework, TypeScript AI agents, LLM orchestration, multi-agent, RAG, MCP, production AI, OpenAI, Anthropic, Google Gemini' }],
+        ['meta', { name: 'keywords', content: 'AI agent framework TypeScript, build AI agents TypeScript, LLM orchestration framework, multi-agent system TypeScript, agentic AI framework, ReAct agent loop, autonomous AI agents, AI agent SDK, production AI agents, AI workflow automation, OpenAI agent framework, Anthropic Claude agents, Google Gemini agents, Groq LLM agents, Ollama local LLM agents, LLM router TypeScript, RAG TypeScript, retrieval augmented generation, vector store TypeScript, knowledge base AI, MCP model context protocol, tool use LLM, function calling LLM, HITL human in the loop AI, AI guardrails PII detection, prompt injection defense, circuit breaker LLM, AI rate limiting, budget enforcement LLM, cost control AI API, AI observability OTLP, OpenTelemetry AI agents, Prometheus AI metrics, AI eval framework, LLM judge evaluation, AI regression testing, AI session management, multi-tenant AI, AI scheduler cron, background queue AI, DAG workflow engine, durable execution AI, tree of thought reasoning, chain of thought AI, CrewAI alternative, LangChain alternative, LangGraph alternative, Agno alternative, AutoGen alternative, TypeScript LLM framework, Bun AI framework, AI agent starter kit, open source AI agent framework' }],
         ['meta', { name: 'author', content: 'Confused-AI contributors' }],
         ['meta', { name: 'robots', content: 'index, follow' }],
+        ['meta', { name: 'google-site-verification', content: '' }],
+        ['link', { rel: 'canonical', href: SITE_URL }],
 
         // Performance
         ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],

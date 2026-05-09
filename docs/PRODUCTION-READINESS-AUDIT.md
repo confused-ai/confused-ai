@@ -79,14 +79,14 @@ State machine: CLOSED → OPEN → HALF-OPEN → CLOSED
 | LLM provider outage | Circuit breaker + fallback model | ✅ A |
 | Tool timeout (30s) | `ToolExecutionError`, agent continues | ✅ A |
 | Memory store unavailable | Falls back to in-memory | ⚠️ B — not all stores have fallbacks |
-| Session store unavailable | `SessionNotFoundError` thrown | ⚠️ B — no automatic fallback |
+| Session store unavailable | Automatic in-memory fallback via `FallbackSessionStore` | ✅ A |
 | Vector DB unavailable | KnowledgeEngine throws | ⚠️ B — no degraded-mode RAG |
 | Budget exceeded mid-run | `BudgetExceededError` + partial result returned | ✅ A |
 | HITL timeout | Configurable timeout + rejection path | ✅ A |
 
-**Gap:** Session and vector store unavailability causes hard failures rather than degraded-mode operation. In production, agents should continue operating without persistent session context rather than failing completely.
+**Note:** Session store graceful degradation is implemented via `createFallbackSessionStore(primary, { fallback: 'in-memory', onFallback: (err) => ... })` in `@confused-ai/session`. Wrap any store (Redis, Postgres, SQLite) to get automatic in-memory degradation on failure and a `recover()` method for re-promotion.
 
-**Recommendation (P1):** Implement `fallback: 'in-memory' | 'skip' | 'throw'` option on `SessionStore` and `VectorStore` adapters.
+**Remaining gap:** Vector store unavailability still causes hard failures — no degraded-mode RAG. `VectorStore` graceful degradation is tracked for v1.2.
 
 ---
 
@@ -389,11 +389,18 @@ Enterprise Kubernetes deployments standardize on Helm. The absence of a Helm cha
 
 | Risk | Severity | Likelihood | Mitigation | Status |
 |------|----------|-----------|-----------|--------|
-| ShellTool open execution | Critical | Medium | Default-deny + `allowedCommands` | ⚠️ Pending fix |
-| SSRF via HttpClientTool | High | Low-Medium | Domain allowlist + block metadata IPs | ⚠️ Pending fix |
-| Tool authorization bypass | High | Low | Tenant-scoped `allowedTools` | ⚠️ Pending |
-| Session last-write-wins race | Medium | Low | Optimistic locking | ⚠️ Backlog |
+| ShellTool open execution | Critical | Medium | Default-deny + `allowedCommands` | ✅ Fixed — `createShellTool()` denies all by default; unrestricted singleton removed from barrel |
+| SSRF via HttpClientTool | High | Low-Medium | Domain allowlist + block metadata IPs | ✅ Fixed — DNS guard blocks RFC-1918 + IPv6-mapped IPv4 (`::ffff:*`); redirects re-validated |
+| SSRF via IPv6-mapped IPv4 | High | Low | Extend DNS guard to `::ffff:` prefix range | ✅ Fixed — `SSRF_BLOCKED_PATTERNS` updated in v1.1.8 |
+| Log-trace correlation gap | High | High | Inject `traceId`/`spanId` into `ConsoleLogger.emit()` | ✅ Fixed — auto-injected in v1.1.8 without requiring `withTraceContext` wrapper |
+| Circuit breaker half-open inconsistency | Medium | Medium | Align `halfOpenSuccessThreshold` default to 2 in guard package | ✅ Fixed — v1.1.8 |
+| Tool authorization bypass | High | Low | Tenant-scoped `allowedTools` | ⚠️ Pending — tracked in v1.2 roadmap |
+| Session last-write-wins race (multi-replica) | Medium | Low | Cross-process optimistic locking on Postgres | ⚠️ Backlog |
 | Audit log tamper (SQLite) | Medium | Low | Write-only store + external SIEM | ⚠️ Backlog |
-| PostgreSQL audit gap | Medium | Medium | `PostgresAuditStore` implementation | ⚠️ Pending |
+| No GDPR cascade delete | Medium | Medium | `deleteSession({ cascade: true })` across memory + audit | ⚠️ Pending — tracked in v1.2 roadmap |
+| PostgreSQL audit gap | Medium | Medium | `PostgresAuditStore` implementation | ✅ Fixed — `PostgresAuditStore` ships in `packages/platform/production` |
 | UUID collision (now fixed) | Low | N/A | `crypto.randomUUID()` in v1.1.7 | ✅ Fixed |
 | Connection pool double-init | Low | N/A | `_initPromise` guard in v1.1.7 | ✅ Fixed |
+| Redis rate-limiter same-ms collision | Low | N/A | Unique ZSET member per request | ✅ Fixed |
+| x-forwarded-for IP spoofing | High | Medium | `trustProxy` flag gates header trust | ✅ Fixed |
+| Idempotency key cross-user leakage | High | Low | Keys scoped to method/path/agent/user/session | ✅ Fixed |

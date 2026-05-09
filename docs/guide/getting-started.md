@@ -1,14 +1,12 @@
 ---
 title: Getting Started
-description: Install confused-ai, create your first agent, and ship to production — step by step.
+description: Install confused-ai, create your first agent, and ship to production in minutes.
 outline: [2, 3]
 ---
 
 # Getting Started
 
-<p class="lead">
-confused-ai is a TypeScript framework for building production-grade AI agents. You get sensible defaults out of the box — LLM provider auto-detection, in-memory session, HTTP + browser tools — and full escape hatches at every layer.
-</p>
+**confused-ai** is a TypeScript framework for building production-grade AI agents. You get sensible defaults — auto-detected LLM provider, session memory, 100+ built-in tools — with full control at every layer.
 
 ## Prerequisites
 

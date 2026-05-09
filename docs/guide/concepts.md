@@ -1,210 +1,158 @@
 ---
 title: Core Concepts
-description: The mental model behind confused-ai — agents, tools, memory, sessions, and how they fit together.
+description: How confused-ai works — agents, tools, sessions, the ReAct loop, and the package architecture.
 outline: [2, 3]
 ---
 
 # Core Concepts
 
-This page explains the mental model. Understanding these primitives makes every other guide click immediately.
+## Architecture overview
 
----
-
-## The agent run loop
-
-An agent is an LLM plus a set of capabilities (tools, memory, knowledge). Each `run()` call executes a **ReAct loop** — it keeps calling the LLM and executing tool calls until the model emits a final answer or hits `maxSteps`:
+confused-ai is a **monorepo of 40 focused packages** published individually on npm and bundled together as `confused-ai`. Every layer is swappable.
 
 ```
-agent.run(prompt)
- │
- ├─ 1. Build context
- │      • load session history
- │      • inject long-term memory (top-K vector recall)
- │      • retrieve relevant knowledge chunks (RAG)
- │
- ├─ 2. LLM call → response
- │      ├─ tool_call  → execute tool → append result → loop
- │      └─ final text → return AgenticRunResult
- │
- ├─ 3. Repeat up to maxSteps (default 15)
- │
- └─ 4. Return { text, messages, steps, usage, finishReason, … }
+confused-ai (root bundle)
+├── @confused-ai/core          — Agent interface, runner base, types
+├── @confused-ai/agentic       — ReAct loop, tool dispatch, HITL
+├── @confused-ai/models        — 40+ LLM provider adapters
+├── @confused-ai/tools         — 100+ built-in tools (HTTP, browser, Slack…)
+├── @confused-ai/memory        — Short/long-term memory, vector stores
+├── @confused-ai/knowledge     — RAG engine, document loaders, vector adapters
+├── @confused-ai/session       — Session persistence (SQLite, Redis, Postgres)
+├── @confused-ai/orchestration — Multi-agent: team, swarm, pipeline, supervisor
+├── @confused-ai/graph         — DAG engine, durable execution, event store
+├── @confused-ai/production    — Circuit breakers, rate limiting, health checks
+├── @confused-ai/guardrails    — PII detection, prompt injection, content rules
+├── @confused-ai/eval          — LLM-as-judge, ROUGE, regression runner
+├── @confused-ai/observe       — OTLP tracing, Prometheus metrics, logger
+└── ... 27 more packages
 ```
 
----
+## The agent
+
+An **agent** is the core primitive. It wraps:
+
+1. An **LLM provider** — generates text and tool calls
+2. A **tool registry** — functions the LLM can invoke
+3. A **session store** — remembers conversation history
+4. **Lifecycle hooks** — observe and control every step
+
+```ts
+import { agent } from 'confused-ai';
+
+const ai = agent({
+  model: 'gpt-4o',          // provider auto-detected from env
+  systemPrompt: '...',      // agent persona
+  tools: [...],             // what the agent can do
+  sessionStore: store,      // where messages are saved
+  maxSteps: 10,             // max ReAct iterations
+});
+```
+
+## The ReAct loop
+
+Every `agent.run()` call executes the **ReAct** (Reason + Act) loop:
+
+```
+User prompt
+  │
+  ▼
+┌─────────────────────────┐
+│  LLM: think + plan      │  ← systemPrompt + message history + tools
+└────────┬────────────────┘
+         │ tool_calls or stop
+         ▼
+   ┌─────────────┐
+   │ Tool dispatch│  ← execute tool, apply guardrails, HITL if configured
+   └──────┬──────┘
+          │ tool_result
+          └──── back to LLM (repeat up to maxSteps)
+  │
+  ▼
+Final response → AgenticRunResult
+```
+
+Steps continue until the LLM emits `stop` (no more tool calls) or `maxSteps` is reached.
 
 ## Tools
 
-Tools are typed functions the LLM can invoke. confused-ai handles everything automatically:
-
-1. Converts your Zod schema to JSON Schema and sends it to the LLM
-2. Parses and validates the LLM's tool-call arguments
-3. Executes your `execute()` function
-4. Appends the result to the conversation and continues the loop
+A **tool** is a typed function the LLM can call. Tools have:
+- An `id` — unique name the LLM uses to call it
+- A `description` — what the LLM reads to decide when to use it
+- A Zod `parameters` schema — validated input
+- An `execute` function — the actual implementation
 
 ```ts
-import { defineTool } from 'confused-ai';
+import { tool } from 'confused-ai';
 import { z } from 'zod';
 
-const lookup = defineTool()
-  .name('lookup')
-  .description('Look up a product by SKU')
-  .parameters(z.object({ sku: z.string() }))
-  .execute(async ({ sku }) => db.products.findOne({ sku }))
-  .build();
+const lookupUser = tool({
+  id: 'lookup_user',
+  description: 'Look up a user by email address',
+  parameters: z.object({ email: z.string().email() }),
+  execute: async ({ email }) => db.users.findByEmail(email),
+});
 ```
 
-→ [Custom Tools guide](/guide/custom-tools) · [100+ built-in tools](/guide/tools)
+## Sessions
 
----
-
-## Session
-
-A **session** gives an agent conversation memory across multiple `run()` calls. Without a session store, every call starts fresh.
+A **session** is a conversation thread identified by `sessionId`. Messages are stored in a session store and loaded on every `run()`:
 
 ```ts
-// Same sessionId = continuous conversation
-await agent.run('My name is Alice.', { sessionId: 'user-42' });
-await agent.run('What is my name?',  { sessionId: 'user-42' });
+// Messages are loaded and appended automatically
+await ai.run({ prompt: 'My name is Alice', sessionId: 'user-123' });
+await ai.run({ prompt: 'What is my name?',  sessionId: 'user-123' });
 // → "Your name is Alice."
 ```
 
-Sessions are backed by a **SessionStore** — in-memory, SQLite, Redis, or any SQL database.
+Without a `sessionStore`, every run starts fresh (in-memory only).
 
-→ [Session guide](/guide/session)
+## Providers
 
----
-
-## Memory
-
-Memory is distinct from session. Session tracks *this conversation*. Memory tracks *knowledge across all conversations*.
-
-| Type | Class | What it stores |
-|------|-------|---------------|
-| Short-term | `InMemoryStore` | Current conversation turns |
-| Long-term (semantic) | `VectorMemoryStore` | Embedded facts recalled by similarity |
-| Structured | `LearningMachine` | User profiles, entity facts, learned insights |
-
-→ [Memory guide](/guide/memory) · [Learning Machine guide](/guide/learning-machine)
-
----
-
-## Knowledge (RAG)
-
-A `KnowledgeEngine` lets agents answer questions from your documents. Before each LLM call, the most relevant chunks are retrieved and injected as context — invisible to you, automatic:
+A **provider** implements the `LLMProvider` interface:
 
 ```ts
-const knowledge = new KnowledgeEngine({
-  embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: '...' }),
-  vectorStore: new InMemoryVectorStore(),
-});
-await knowledge.ingest(docs);
-
-const ragAgent = agent({ knowledgebase: knowledge, ... });
-// On every run() → top-K chunks auto-injected
+interface LLMProvider {
+  generateText(messages: Message[], options?: GenerateOptions): Promise<GenerateResult>;
+  streamText?(messages: Message[], options?: GenerateOptions): Promise<AsyncIterable<StreamChunk>>;
+}
 ```
 
-→ [RAG / Knowledge guide](/guide/rag)
+40+ providers ship out of the box. The model string shorthand auto-detects which to use:
 
----
+| Model prefix | Provider | Env var |
+|---|---|---|
+| `gpt-*` | OpenAI | `OPENAI_API_KEY` |
+| `claude-*` | Anthropic | `ANTHROPIC_API_KEY` |
+| `gemini-*` | Google | `GOOGLE_API_KEY` |
+| `llama-*` | Groq | `GROQ_API_KEY` |
+| `mistral-*` | Mistral | `MISTRAL_API_KEY` |
+| `deepseek-*` | DeepSeek | `DEEPSEEK_API_KEY` |
 
-## Lifecycle Hooks
+## Hooks
 
-Hooks let you intercept the run at well-defined points without modifying the agent:
-
-| Hook | Fires when |
-|------|-----------|
-| `beforeRun` | Before the first LLM call |
-| `afterRun` | After the final response |
-| `beforeStep` | Before each LLM step |
-| `afterStep` | After each LLM step |
-| `beforeToolCall` | Before a tool executes |
-| `afterToolCall` | After a tool returns |
-| `onError` | On any unhandled error |
+Hooks let you observe and intercept the agent lifecycle:
 
 ```ts
 const ai = agent({
+  model: 'gpt-4o',
   hooks: {
-    afterRun: async (result) => {
-      await analytics.track('agent.run', {
-        steps: result.steps,
-        tokens: result.usage?.totalTokens,
-      });
-      return result; // hooks must return the value
-    },
+    beforeRun:      async (ctx) => console.log('Starting', ctx.prompt),
+    afterRun:       async (result) => analytics.track(result),
+    beforeToolCall: async (tool, args) => audit.log(tool.id, args),
+    afterToolCall:  async (tool, result) => cache.set(tool.id, result),
+    onError:        async (err) => alerts.send(err),
   },
 });
 ```
 
-→ [Lifecycle Hooks guide](/guide/hooks)
+## Next steps
 
----
-
-## Guardrails
-
-Guardrails validate inputs and outputs. They run synchronously in the loop — a blocked result stops execution and returns a rejection to the caller.
-
-```ts
-import { createGuardrails } from 'confused-ai/guardrails';
-
-const guardrails = createGuardrails({
-  validateInput:  async (input) => /DROP TABLE/i.test(input)
-    ? { blocked: true, reason: 'SQL injection detected' }
-    : { blocked: false },
-  validateOutput: async (output) => output.includes('SECRET')
-    ? { blocked: true, reason: 'Leaked credential' }
-    : { blocked: false },
-});
-```
-
-→ [Guardrails guide](/guide/guardrails)
-
----
-
-## Orchestration
-
-Multiple agents working together. The key patterns:
-
-| Pattern | API | Use case |
-|---------|-----|---------|
-| **Pipeline** | `compose(a, b, c)` | Serial — output flows through each agent |
-| **Router** | `AgentRouter` | One of N agents handles the request |
-| **Handoff** | `createHandoff` | Agent A delegates to specialist mid-conversation |
-| **Supervisor** | `createSupervisor` | Coordinator manages a worker team |
-| **Swarm** | `createSwarm` | Peer-to-peer handoffs |
-| **Consensus** | `ConsensusProtocol` | Multiple agents vote on a response |
-
-→ [Orchestration guide](/guide/orchestration)
-
----
-
-## Adapters
-
-Adapters are the plug points between confused-ai and your infrastructure. There are 20 adapter categories covering databases, vector stores, caches, queues, auth, rate-limiting, and more. Every adapter has a zero-config in-memory default and a drop-in production replacement.
-
-```ts
-import { createProductionSetup } from 'confused-ai/adapters';
-
-// Opinionated default production wiring
-const setup = createProductionSetup({
-  redisUrl:    process.env.REDIS_URL,
-  postgresUrl: process.env.DATABASE_URL,
-  pineconeKey: process.env.PINECONE_API_KEY,
-});
-```
-
-→ [Adapters guide](/guide/adapters)
-
----
-
-## Plugins
-
-Plugins are reusable middleware attached to an agent via `.use()`. They wrap every tool call with cross-cutting logic (logging, caching, rate-limiting, telemetry) without modifying the tool itself:
-
-```ts
-import { loggingPlugin } from 'confused-ai/plugins';
-
-const ai = defineAgent().instructions('...').use(loggingPlugin({ level: 'debug' })).build();
-```
-
-→ [Plugins guide](/guide/plugins)
+| | |
+|---|---|
+| [Creating Agents](/guide/agents) | All agent config options |
+| [Built-in Tools](/guide/tools) | 100+ ready-to-use tools |
+| [LLM Providers](/guide/providers) | 40+ supported models |
+| [Memory](/guide/memory) | Short/long-term + vector |
+| [RAG / Knowledge](/guide/rag) | Build knowledge bases |
+| [Multi-Agent](/guide/orchestration) | Teams, pipelines, swarms |

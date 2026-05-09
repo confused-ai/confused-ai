@@ -97,11 +97,17 @@ export class ConsoleLogger implements Logger {
 
   private emit(level: LogLevel, message: string, ctx?: Record<string, unknown>): void {
     if (LEVEL_RANK[level] < LEVEL_RANK[this.level]) return;
+    // Automatically inject OTEL trace/span IDs when an active span exists.
+    // This provides log-trace correlation without requiring callers to use
+    // withTraceContext(). Context supplied in `ctx` always takes precedence.
+    const otel = tryGetOtelSpanContext();
     const entry: LogEntry = {
       level,
       message,
       timestamp: new Date().toISOString(),
       ...this.bindings,
+      ...(otel.traceId !== undefined && { traceId: otel.traceId }),
+      ...(otel.spanId  !== undefined && { spanId:  otel.spanId }),
       ...(ctx ?? {}),
     };
     this.write(JSON.stringify(entry));

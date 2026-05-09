@@ -68,4 +68,37 @@ export const Metrics = {
   httpRequestDurationMs: meter.createHistogram('http.request.duration_ms', { unit: 'ms' }),
   /** Number of active SSE / streaming connections. */
   httpActiveStreams: meter.createUpDownCounter('http.active_streams'),
+
+  // ── Session ───────────────────────────────────────────────────────────────
+  /**
+   * Number of messages in a session at the time of read/write.
+   * Attributes: `agent_name`, `store_type` (`memory`|`sqlite`|`redis`|`postgres`).
+   * Use to detect session bloat before the context window limit is hit.
+   */
+  sessionMessageCount: meter.createHistogram('agent.session.size', {
+    description: 'Number of messages in a session',
+    unit: '{messages}',
+  }),
+
+  // ── Knowledge / RAG ───────────────────────────────────────────────────────
+  /**
+   * End-to-end latency of a knowledge retrieval call (embedding + vector search).
+   * Attributes: `agent_name`, `store_type` (`pgvector`|`pinecone`|`qdrant`|`memory`).
+   * Critical for differentiating RAG latency from LLM latency in traces.
+   */
+  knowledgeRetrievalLatencyMs: meter.createHistogram('knowledge.retrieval.duration_ms', {
+    description: 'End-to-end latency of knowledge/RAG retrieval',
+    unit: 'ms',
+  }),
+
+  // ── Background queues ─────────────────────────────────────────────────────
+  /**
+   * Current depth (pending job count) of a background queue.
+   * Attributes: `queue_name`, `queue_type` (`bullmq`|`kafka`|`sqs`|`rabbitmq`|`redis`).
+   * Use as an autoscaling signal for background job consumers.
+   */
+  backgroundQueueDepth: meter.createObservableGauge('background.queue.depth', {
+    description: 'Number of pending jobs in a background queue',
+    unit: '{jobs}',
+  }),
 } as const;

@@ -1,747 +1,353 @@
-<div align="center">
-  <img src="docs/public/logo.svg" alt="Confused-AI logo" width="96" />
-  <h1>Confused-AI</h1>
-  <p><strong>TypeScript AI Agent Framework — Build Production-Grade LLM Agents in Minutes</strong></p>
-  <p>
-    ReAct-loop agents · 100+ built-in tools · Multi-agent orchestration · RAG · MCP · Circuit breakers · Budget caps · HITL · OTLP tracing
-  </p>
+# confused-ai
 
-  [![CI](https://github.com/confused-ai/confused-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/confused-ai/confused-ai/actions/workflows/ci.yml)
-  [![CodeQL](https://github.com/confused-ai/confused-ai/actions/workflows/codeql.yml/badge.svg)](https://github.com/confused-ai/confused-ai/actions/workflows/codeql.yml)
-  [![npm version](https://img.shields.io/npm/v/confused-ai?color=8b5cf6&logo=npm&label=Confused-AI)](https://www.npmjs.com/package/confused-ai)
-  [![npm downloads](https://img.shields.io/npm/dm/confused-ai?color=22d3ee&logo=npm)](https://www.npmjs.com/package/confused-ai)
-  [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e.svg)](./LICENSE)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org/)
-  [![Docs](https://img.shields.io/badge/docs-vitepress-8b5cf6?logo=vitepress)](https://confused-ai.github.io/confused-ai/)
-  [![GitHub Stars](https://img.shields.io/github/stars/confused-ai/confused-ai?style=social)](https://github.com/confused-ai/confused-ai)
-  [![GitHub Issues](https://img.shields.io/github/issues/confused-ai/confused-ai?color=f97316)](https://github.com/confused-ai/confused-ai/issues)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/confused-ai/confused-ai/blob/main/CONTRIBUTING.md)
+> TypeScript framework for building production-grade AI agents.  
+> 40+ LLM providers · 100+ built-in tools · Multi-agent orchestration · Circuit breakers · RAG · HITL · Budget enforcement
 
-  <p>
-    <a href="https://confused-ai.github.io/confused-ai/"><strong>Documentation</strong></a> ·
-    <a href="https://confused-ai.github.io/confused-ai/guide/getting-started">Getting Started</a> ·
-    <a href="https://confused-ai.github.io/confused-ai/examples/">18 Examples</a> ·
-    <a href="https://www.npmjs.com/package/confused-ai">npm</a> ·
-    <a href="./CHANGELOG.md">Changelog</a>
-  </p>
-</div>
-
----
-
-> **Confused-AI** is a TypeScript-first AI agent framework designed for production. It gives you a complete stack — LLM providers, 100+ tools, multi-agent orchestration, RAG, session memory, guardrails, circuit breakers, budget enforcement, OTLP tracing, and an HTTP runtime — so you never have to stitch libraries together again.
+[![npm](https://img.shields.io/npm/v/confused-ai?label=npm&color=6366f1)](https://www.npmjs.com/package/confused-ai)
+[![Version](https://img.shields.io/badge/version-2.1.0-6366f1)](./CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 
 ---
 
 ## Install
 
 ```bash
-npm install confused-ai        # npm  — installs root + all 39 @confused-ai/* packages
+npm install confused-ai        # npm
 bun add confused-ai            # bun
 pnpm add confused-ai           # pnpm
-yarn add confused-ai           # yarn
 ```
 
-> **Node.js ≥ 18 required.** Set at least one LLM provider key — that's the only required config.
-
-**Prefer a minimal install?** Pick only the packages you need:
+Set at least one provider key:
 
 ```bash
-npm install @confused-ai/core @confused-ai/models @confused-ai/tools
-```
-
-```bash
-# .env
-OPENAI_API_KEY=sk-...           # OpenAI GPT-4o, GPT-4o-mini, o1, o3-mini
-ANTHROPIC_API_KEY=sk-ant-...    # Anthropic Claude 3.5 Sonnet / Haiku
-GOOGLE_API_KEY=...              # Google Gemini 1.5 Pro / Flash
-OPENROUTER_API_KEY=sk-or-...    # OpenRouter — 100+ models in one key
+OPENAI_API_KEY=sk-...
+# or ANTHROPIC_API_KEY / GOOGLE_API_KEY / GROQ_API_KEY / MISTRAL_API_KEY / …
 ```
 
 ---
 
-## Quickstart — AI Agent in 3 Lines
+## Quick start
 
 ```ts
 import { agent } from 'confused-ai';
 
-const ai = agent('You are a helpful assistant.');
-const { text } = await ai.run('Summarise the key points of the React 19 release.');
-console.log(text);
+const ai = agent({ model: 'gpt-4o' });
+const result = await ai.run({ prompt: 'What is 2 + 2?' });
+console.log(result.output); // "4"
 ```
 
-No config files. No wiring. No boilerplate. Add tools, sessions, RAG, guardrails, and observability only when you need them.
+The model string auto-detects the provider from environment variables.
 
 ---
 
-## Table of Contents
-
-- [Install](#install)
-- [Quickstart](#quickstart--ai-agent-in-3-lines)
-- [What You Can Build](#what-you-can-build)
-- [Why confused-ai](#why-confused-ai--feature-comparison)
-- [Creating Agents](#creating-agents)
-- [100+ Built-in Tools](#50-built-in-tools)
-- [Custom Tools](#custom-tools)
-- [Multi-Agent Orchestration](#multi-agent-orchestration)
-- [Intelligent LLM Router](#intelligent-llm-router)
-- [RAG — Retrieval-Augmented Generation](#rag--retrieval-augmented-generation)
-- [Session Memory & Chat History](#session-memory--chat-history)
-- [Guardrails & Content Safety](#guardrails--content-safety)
-- [Production Hardening](#production-hardening)
-  - [Circuit Breakers & Rate Limiting](#circuit-breakers--rate-limiting)
-  - [Budget Enforcement (USD Caps)](#budget-enforcement-usd-caps)
-  - [Human-in-the-Loop (HITL)](#human-in-the-loop-hitl)
-  - [Multi-Tenancy](#multi-tenancy)
-  - [Audit Log & Idempotency](#audit-log--idempotency)
-- [HTTP Runtime & REST API](#http-runtime--rest-api)
-- [Observability — OTLP, Tracing & Metrics](#observability--otlp-tracing--metrics)
-- [MCP — Model Context Protocol](#mcp--model-context-protocol)
-- [Voice — TTS & STT](#voice--tts--stt)
-- [Deployment](#deployment)
-- [All Subpath Packages](#all-subpath-packages)
-- [Supported LLM Providers](#supported-llm-providers)
-- [Testing Utilities](#testing-utilities)
-- [CLI](#cli)
-- [Enterprise Checklist](#enterprise-checklist)
-- [Contributing](#contributing)
-- [License](#license)
-
----
-
-## What You Can Build
-
-confused-ai covers the entire spectrum of LLM-powered applications:
-
-| Use Case | What you use |
-|----------|-------------|
-| **AI chatbot with memory** | `createAgent` + `SessionStore` + `createHttpService` |
-| **Customer support bot** | + `KnowledgeEngine` (RAG) + `GuardrailValidator` |
-| **Code review / coding agent** | + `ShellTool`, `FileReadTool`, `GitHubTool` |
-| **Data analysis pipeline** | + `PostgreSQLTool`, `CSVTool`, `defineTool` |
-| **Multi-agent research team** | `compose()` / `createSupervisor()` / `createSwarm()` |
-| **AI-powered REST API** | `createHttpService` + OpenAPI + SSE streaming |
-| **Cost-controlled LLM gateway** | `LLMRouter` + `budget` caps + `RateLimiter` |
-| **Voice assistant** | `createVoiceProvider` (OpenAI / ElevenLabs TTS + STT) |
-| **MCP-connected agent** | `loadMcpToolsFromUrl` + any MCP server |
-| **Multi-tenant SaaS AI feature** | `createTenantContext` + per-tenant rate limits & budgets |
-
----
-
-## Why confused-ai — Feature Comparison
-
-Most AI agent frameworks stop at the prototype. confused-ai ships production infrastructure out of the box:
-
-| Enterprise Capability | **Confused-AI** | LangChain.js | Vercel AI SDK | Mastra |
-|-----------------------|:---:|:---:|:---:|:---:|
-| **Zero-Config Progressive DX** | ✅ | ⚠️ | ✅ | ⚠️ |
-| **First-Class TypeScript** | ✅ | ⚠️ | ✅ | ✅ |
-| **100+ Built-In Tools** | ✅ | ✅ | ❌ | ⚠️ |
-| **Multi-Agent Orchestration** | ✅ | ✅ | ❌ | ✅ |
-| **Durable DAG Graph Engine** | ✅ | ⚠️ *(LangGraph)* | ❌ | ❌ |
-| **Native MCP Support** | ✅ | ⚠️ | ❌ | ✅ |
-| **OTLP Distributed Tracing** | ✅ | ⚠️ *(LangSmith)* | ⚠️ | ⚠️ |
-| **Circuit Breakers & Retries** | ✅ | ❌ | ❌ | ❌ |
-| **USD Budget Enforcement** | ✅ | ❌ | ❌ | ❌ |
-| **Multi-Tenancy Context** | ✅ | ❌ | ❌ | ❌ |
-| **Persistent Audit Logging** | ✅ | ❌ | ❌ | ❌ |
-| **Idempotency Keys** | ✅ | ❌ | ❌ | ❌ |
-| **Human-in-the-Loop (HITL)** | ✅ | ⚠️ | ❌ | ⚠️ |
-| **Intelligent LLM Router** | ✅ | ❌ | ❌ | ❌ |
-| **Automatic REST API** | ✅ | ❌ | ❌ | ⚠️ |
-| **Background Job Queues** | ✅ | ❌ | ❌ | ❌ |
-| **Voice (TTS/STT) & Video** | ✅ | ⚠️ | ❌ | ❌ |
-
-> **Note on audit logging:** Persistent audit logging provides an event trail suitable as one input to a compliance programme. It does not constitute SOC2 or HIPAA certification on its own. Achieving those certifications requires infrastructure controls, access policies, and third-party audits beyond what any logging library provides.
-
----
-
-## Creating Agents
-
-### Option A: `createAgent` (recommended)
+## Add tools
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { openai } from 'confused-ai/model';
-import { CalculatorAddTool, HttpClientTool } from 'confused-ai/tools';
-
-const agent = createAgent({
-  name:         'Assistant',
-  instructions: 'You are a helpful assistant.',
-  model:        openai('gpt-4o-mini'),
-  tools:        [new CalculatorAddTool(), new HttpClientTool()],
-});
-
-const { text, steps, finishReason } = await agent.run('What is 40 + 2?');
-```
-
-### Option B: DX fluent builder
-
-```ts
-import { defineAgent } from 'confused-ai';
-import { anthropic } from 'confused-ai/model';
-
-const agent = defineAgent()
-  .name('Assistant')
-  .instructions('You are concise and accurate.')
-  .model(anthropic('claude-3-5-sonnet-20241022'))
-  .tools([new CalculatorAddTool()])
-  .withSession()
-  .build();
-```
-
-### Option C: Typed agents with Zod I/O
-
-```ts
-import { defineTypedAgent, createWorkflow } from 'confused-ai';
+import { agent, tool } from 'confused-ai';
+import { tavilySearch, httpClient, slackTool } from 'confused-ai/tools';
 import { z } from 'zod';
 
-const planner = defineTypedAgent({
-  name:         'plan',
-  inputSchema:  z.object({ goal: z.string() }),
-  outputSchema: z.object({ bullets: z.array(z.string()) }),
-  handler:      async (i) => ({ bullets: [i.goal, 'execute', 'verify'] }),
+// Custom tool
+const getPrice = tool({
+  id: 'get_price',
+  description: 'Get the current price of a stock by ticker',
+  parameters: z.object({ ticker: z.string() }),
+  execute: async ({ ticker }) => fetch(`/api/price/${ticker}`).then(r => r.json()),
 });
 
-const { results } = await createWorkflow().task('plan', planner).execute({ goal: 'Ship v1' });
-```
-
-### `createAgent` options
-
-| Option | Description |
-|--------|-------------|
-| `name`, `instructions` | **Required.** Agent identity and system behavior |
-| `model` | `openai:gpt-4o`, `anthropic:claude-3-5-sonnet-20241022`, `google:gemini-1.5-pro`, … |
-| `llm` | Custom `LLMProvider` (overrides `model`) |
-| `tools` | `Tool[]` or `ToolRegistry` |
-| `sessionStore` | In-memory default; plug in SQLite/Redis/Postgres for production |
-| `guardrails` | `true` (sensitive-data rule), `false`, or a `GuardrailEngine` |
-| `budget` | `{ maxUsdPerRun?, maxUsdPerUser? }` — hard USD caps |
-| `knowledgebase` | `RAGEngine` for automatic retrieval-augmented generation |
-| `maxSteps`, `timeoutMs` | Loop limits |
-| `retry` | Retry policy for LLM / tool calls |
-| `logger` | `ConsoleLogger` or custom |
-| `dev` | `true` → dev logger + tool middleware |
-
----
-
-## Tools (100+)
-
-```ts
-import {
-  HttpClientTool, BrowserTool,           // Web
-  EmailTool, SlackTool, DiscordTool,     // Communication
-  PostgreSQLTool, MySQLTool, SQLiteTool, // Databases
-  RedisTool, CSVTool,                    // Data
-  DuckDuckGoTool, WikipediaTool,         // Search
-  FileReadTool, FileWriteTool, ShellTool, // File system
-  StripeTool, YahooFinanceTool,          // Finance
-  GitHubTool, CalculatorAddTool,         // Dev / Utilities
-} from 'confused-ai/tools';
-```
-
-Every tool is Zod-validated, tree-shakeable, and dependency-lazy. Build custom tools with `defineTool()` or `tool()`:
-
-```ts
-import { tool } from 'confused-ai/tool';
-import { z } from 'zod';
-
-const lookupOrder = tool({
-  name: 'lookupOrder',
-  description: 'Look up an order by ID',
-  parameters: z.object({ orderId: z.string() }),
-  execute: async ({ orderId }) => db.orders.findById(orderId)
+const ai = agent({
+  model: 'gpt-4o',
+  tools: [tavilySearch, httpClient, slackTool, getPrice],
 });
 ```
 
 ---
 
-## Multi-Agent Orchestration
-
-```ts
-import { agent, compose } from 'confused-ai';
-import { MultiAgentOrchestrator } from 'confused-ai/workflow';
-
-// Sequential pipeline — output of researcher feeds writer
-const pipeline = compose(
-  agent('Research and return key facts.'),
-  agent('Turn facts into polished reports.'),
-);
-const { text } = await pipeline.run('TypeScript 5.5 features');
-
-// Orchestrator with sub-agents
-const orchestrator = new MultiAgentOrchestrator()
-  .addAgent({ name: 'Researcher', instructions: 'Find info' })
-  .addAgent({ name: 'Writer', instructions: 'Draft report' });
-
-const result = await orchestrator.runConsensus({
-  agents: ['Researcher', 'Writer'],
-  task: 'Coordinate to produce a final deliverable.',
-  strategy: 'best'
-});
-```
-
----
-
-## LLM Router
-
-```ts
-import { createCostOptimizedRouter } from 'confused-ai';
-
-const router = createCostOptimizedRouter({
-  providers: { fast: gpt4oMini, smart: gpt4o },
-});
-
-// Task type auto-detected: simple → fast, coding → smart
-const { text } = await router.run('Explain async/await in JavaScript');
-```
-
-Four built-in strategies: `balanced`, `cost`, `quality`, `speed`. Custom override rules supported.
-
----
-
-## RAG & Knowledge
-
-```ts
-import { KnowledgeEngine, TextLoader, URLLoader, OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/knowledge';
-
-// ⚠️ InMemoryVectorStore — for development and testing only. Data is lost on restart.
-const knowledge = new KnowledgeEngine({
-  embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
-  vectorStore:       new InMemoryVectorStore(), // swap for PgVectorStore in production
-});
-
-// Production: persistent vector store (PostgreSQL + pgvector)
-// import { PgVectorStore } from 'confused-ai/knowledge';
-// const knowledge = new KnowledgeEngine({
-//   embeddingProvider: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
-//   vectorStore: new PgVectorStore({ connectionString: process.env.DATABASE_URL! }),
-// });
-
-await knowledge.ingest([
-  ...await new TextLoader('./docs/policy.md').load(),
-  ...await new URLLoader('https://example.com/faq').load(),
-]);
-
-const agent = createAgent({
-  instructions: 'Answer questions using the knowledge base.',
-  knowledgebase: knowledge,
-});
-```
-
----
-
-## Sessions & Memory
+## Session memory
 
 ```ts
 import { createSqliteSessionStore } from 'confused-ai/session';
 
-const agent = createAgent({
-  instructions: 'You are a helpful assistant.',
+const ai = agent({
+  model: 'gpt-4o',
   sessionStore: createSqliteSessionStore('./sessions.db'),
 });
 
-const sessionId = await agent.createSession('user-123');
-const r1 = await agent.run('My name is Alice.', { sessionId });
-const r2 = await agent.run('What is my name?', { sessionId }); // → "Alice"
+await ai.run({ prompt: 'My name is Alice', sessionId: 'alice' });
+const r = await ai.run({ prompt: 'What is my name?', sessionId: 'alice' });
+// → "Your name is Alice."
 ```
 
 ---
 
-## Guardrails
+## RAG / Knowledge base
 
 ```ts
-import { GuardrailValidator, createSensitiveDataRule } from 'confused-ai/guardrails';
-import { createAgent } from 'confused-ai';
+import { KnowledgeEngine, loadPdf, loadUrl } from 'confused-ai/knowledge';
+import { OpenAIEmbeddingProvider, InMemoryVectorStore } from 'confused-ai/memory';
 
-const agent = createAgent({
-  instructions: 'You are a support agent.',
-  guardrails:   new GuardrailValidator({ rules: [createSensitiveDataRule()] }),
+const knowledge = new KnowledgeEngine({
+  embedding: new OpenAIEmbeddingProvider({ apiKey: process.env.OPENAI_API_KEY! }),
+  vectorStore: new InMemoryVectorStore(),
+});
+
+await knowledge.ingest(await loadPdf('./docs/manual.pdf'));
+await knowledge.ingest(await loadUrl('https://docs.myapp.com'));
+
+const ai = agent({
+  model: 'gpt-4o',
+  knowledgebase: knowledge,       // auto-retrieves relevant chunks
 });
 ```
 
 ---
 
-## Graph Engine — Durable DAG Execution
-
-Build complex multi-agent workflows as a directed acyclic graph (DAG). Nodes run in topological order, independent nodes run in parallel, and every event is persisted to an event store for deterministic replay and crash recovery.
+## Multi-agent teams
 
 ```ts
-import { createGraph, DurableExecutor, SqliteEventStore, NodeKind } from 'confused-ai/graph';
+import { createTeam, defineRole } from 'confused-ai/orchestration';
 
-const graph = createGraph('research-pipeline')
-  .addNode({ id: 'search',    kind: NodeKind.TASK, execute: async (ctx) => ({ results: await search(ctx.state.query as string) }) })
-  .addNode({ id: 'summarise', kind: NodeKind.TASK, execute: async (ctx) => ({ summary: await summarise((ctx.state['search'] as { results: string[] }).results) }) })
-  .chain('search', 'summarise')
-  .build();
+const researcher = defineRole({ role: 'Researcher', goal: 'Find facts', llm: myProvider });
+const writer     = defineRole({ role: 'Writer',     goal: 'Write clearly', llm: myProvider });
+const reviewer   = defineRole({ role: 'Reviewer',   goal: 'Improve quality', llm: myProvider });
 
-const store    = SqliteEventStore.create('./runs.db');
-const executor = new DurableExecutor(graph, store);
+const team = createTeam({
+  name: 'ContentTeam',
+  mode: 'pipeline',    // sequential: researcher → writer → reviewer
+  agents: [researcher, writer, reviewer],
+});
 
-const result = await executor.run({ variables: { query: 'latest AI research' } });
-
-// If the process crashes and restarts, resume where it left off:
-const resumed = await executor.resume(result.executionId);
+const result = await team.run('Write a post about the future of TypeScript');
 ```
 
-Includes: `computeWaves()` for wave-based scheduling, `BackpressureController` for concurrency limiting, `DistributedEngine` + `GraphWorker` for multi-process execution, and a full OTEL telemetry plugin.
+Other modes: `coordinate` (parallel), `route` (smart routing), `collaborate` (sequential).
 
 ---
 
-## Production Hardening
-
-### Circuit Breakers & Rate Limits
+## Production resilience
 
 ```ts
-import { withResilience } from 'confused-ai/production';
-import { RedisRateLimiter } from '@confused-ai/adapter-redis';
+import { withResilience } from 'confused-ai/guard';
 
-const resilient = withResilience(agent, {
-  circuitBreaker: { threshold: 5, timeout: 30_000 },
-  rateLimit:      { maxRequests: 100, windowMs: 60_000 },
-  retry:          { maxAttempts: 3, backoff: 'exponential' },
+const ai = withResilience(baseAgent, {
+  circuitBreaker: { failureThreshold: 5, resetTimeoutMs: 30_000 },
+  rateLimit:      { maxRpm: 60 },
+  retry:          { maxRetries: 3, backoffMs: 1_000, exponential: true },
 });
-
-// Multi-instance deployments: use RedisRateLimiter to enforce limits across all replicas
-// const redisLimiter = new RedisRateLimiter({ client: redisClient, maxRequests: 100, windowMs: 60_000 });
-// ⚠️  Default RateLimiter is in-process only — two replicas means double the effective limit.
 ```
 
-### Budget Enforcement
+---
+
+## Guardrails & safety
 
 ```ts
-const agent = createAgent({
-  instructions: 'You are a helpful assistant.',
+import { GuardrailValidator, createPiiDetectionRule, createPromptInjectionRule } from 'confused-ai/guardrails';
+
+const guardrails = new GuardrailValidator({
+  rules: [
+    createPromptInjectionRule({ threshold: 0.7 }),
+    createPiiDetectionRule({ redact: true }),          // replaces PII with [REDACTED]
+  ],
+});
+
+const ai = agent({ model: 'gpt-4o', guardrails });
+```
+
+---
+
+## Budget enforcement
+
+```ts
+const ai = agent({
+  model: 'gpt-4o',
   budget: {
-    maxUsdPerRun:  0.10,   // $0.10 per run hard cap
-    maxUsdPerUser: 5.00,   // $5.00 per user per month
+    maxCostUsd: 0.10,    // hard stop at $0.10 per run
+    maxTokens: 50_000,   // or 50k tokens — whichever comes first
   },
 });
-// Throws BudgetExceededError before limit is crossed
 ```
 
-### Human-in-the-Loop (HITL)
+---
+
+## Observability
 
 ```ts
-import { requireApprovalTool, SqliteApprovalStore } from 'confused-ai/production';
-import { createHttpService } from 'confused-ai/runtime';
+import { OtelTracer, PrometheusMetrics } from 'confused-ai/observe';
+import { serve } from 'confused-ai';
 
-// SqliteApprovalStore — durable, survives process restarts
-// ⚠️  InMemoryApprovalStore is available for tests only — approvals are lost on restart.
-const service = createHttpService({
-  agents:        { admin: adminAgent },
-  approvalStore: new SqliteApprovalStore('./approvals.db'),
-  // GET  /v1/approvals        — list pending
-  // POST /v1/approvals/:id    — { approved: true, decidedBy: 'admin' }
+await serve(ai, {
+  port: 3000,
+  tracer: new OtelTracer({ endpoint: 'http://tempo:4318/v1/traces' }),
+  metrics: new PrometheusMetrics(),   // GET /metrics → Prometheus text
+});
+// Every run, tool call, and LLM request is traced automatically
+```
+
+---
+
+## Streaming
+
+```ts
+for await (const chunk of ai.stream({ prompt: 'Write a blog post' })) {
+  process.stdout.write(chunk);
+}
+```
+
+---
+
+## Serve as HTTP API
+
+```ts
+import { serve } from 'confused-ai';
+
+await serve(ai, { port: 3000 });
+// POST /v1/run          { prompt, sessionId?, userId? }
+// POST /v1/stream       SSE
+// GET  /v1/health
+// GET  /v1/openapi.json
+// GET  /v1/approvals    HITL pending list
+// POST /v1/approvals/:id submit decision
+```
+
+---
+
+## Graph / DAG engine
+
+```ts
+import { createGraph, DAGEngine, DurableExecutor, NodeKind } from 'confused-ai/graph';
+
+const graph = createGraph({
+  nodes: [
+    { id: 'fetch',   kind: NodeKind.Agent, config: { agent: fetchAgent } },
+    { id: 'analyse', kind: NodeKind.Agent, config: { agent: analyseAgent } },
+    { id: 'report',  kind: NodeKind.Agent, config: { agent: reportAgent } },
+  ],
+  edges: [
+    { from: 'fetch', to: 'analyse' },
+    { from: 'analyse', to: 'report' },
+  ],
+});
+
+// Durable — survives process crashes
+const executor = new DurableExecutor(graph, eventStore);
+const id = await executor.run({ input: 'Q3 analysis' });
+// If crash: await executor.resume(id);
+```
+
+---
+
+## LLM Router (cost-optimised)
+
+```ts
+import { createCostRouter } from 'confused-ai/router';
+
+const router = createCostRouter({
+  providers: new Map([
+    ['gpt-4o',      openaiGPT4o],
+    ['gpt-4o-mini', openaiMini],
+    ['gemini-2.0-flash', gemini],
+  ]),
+  minCapability: 7,
+  maxInputCostPerMillion: 1.00,
 });
 ```
 
-### Multi-Tenancy
-
-```ts
-import { createTenantContext } from 'confused-ai';
-
-const ctx = createTenantContext({ tenantId: 'acme-corp', ... });
-await agent.run(prompt, { context: ctx });
-```
-
-### Audit Log & Idempotency
-
-```ts
-import { createHttpService } from 'confused-ai/runtime';
-import { SqliteAuditStore } from 'confused-ai/observability';
-
-const service = createHttpService({
-  agents:     { support: supportAgent },
-  auditStore: new SqliteAuditStore('./audit.db'),
-  // X-Idempotency-Key header → deduplicates retries automatically
-});
-```
-
 ---
 
-## HTTP Runtime
+## Cron scheduler
 
 ```ts
-import { createAgent } from 'confused-ai';
-import { createAgentRouter, createHttpService, listenService } from 'confused-ai/serve';
+import { ScheduleManager } from 'confused-ai/scheduler';
 
-const service = createHttpService({
-  agents:   { support: supportAgent },
-  cors:     '*',
-  openApi:  { title: 'My Agent API', version: '1.0.0' },
-  adminApi: true,
-  websocket: true,
+const scheduler = new ScheduleManager();
+
+await scheduler.add({
+  id: 'daily-report',
+  cron: '0 9 * * 1-5',    // weekdays at 9am
+  handler: async () => {
+    const r = await reportAgent.run({ prompt: 'Generate daily report' });
+    await emailTool.execute({ to: 'team@company.com', body: r.output });
+  },
 });
 
-listenService(service, { port: 3000 });
-```
-
-Routes: `GET /v1/health` · `GET /v1/agents` · `POST /v1/sessions` · `POST /v1/chat` (JSON + SSE stream) · `GET /v1/openapi.json` · `GET /v1/approvals` · `POST /v1/approvals/:id` · `/admin/*`
-
----
-
-## Observability & Tracing
-
-```ts
-import { OTLPTraceExporter, OTLPMetricsExporter } from 'confused-ai/observe';
-import { createHttpService } from 'confused-ai/serve';
-
-const service = createHttpService({
-  agents:  { support: supportAgent },
-  tracer:  new OTLPTraceExporter({ endpoint: 'http://jaeger:4318/v1/traces' }),
-  metrics: new OTLPMetricsExporter({ endpoint: 'http://prometheus:4318/v1/metrics' }),
-});
-// W3C traceparent propagated across all agent-to-agent HTTP calls automatically
-// Grafana dashboard: /templates/grafana-dashboard.json
+await scheduler.start();
 ```
 
 ---
 
-## MCP Client & Server
+## All supported LLM providers (40+)
 
-```ts
-import { loadMcpToolsFromUrl } from 'confused-ai/tool';
-import { createAgent } from 'confused-ai';
-
-const mcpTools = await loadMcpToolsFromUrl('http://mcp-server:3001');
-const agent = createAgent({ tools: mcpTools, instructions: 'Use MCP filesystem tools.' });
-```
+OpenAI · Anthropic · Google Gemini · AWS Bedrock · Azure OpenAI · Groq · Mistral · DeepSeek · Cohere · Fireworks · Together AI · OpenRouter · Ollama · vLLM · LM Studio · Cerebras · SambaNova · Hyperbolic · AI21 Labs · Perplexity · Alibaba DashScope (Qwen) · Zhipu AI (GLM) · Moonshot (Kimi) · 01.AI (Yi) · Baichuan · MiniMax · Volcengine · HunYuan · StepFun · InternLM · Upstage (Solar) · Replicate · Lambda Labs · Novita AI · Cloudflare Workers AI · Writer (Palmyra) · Snowflake Cortex · Lepton AI · Featherless AI · LocalAI · KoboldCpp · Text-Generation-WebUI · Jan
 
 ---
 
-## Voice (TTS & STT)
+## All 40 packages
 
-```ts
-import { createVoiceProvider, OpenAIVoiceAdapter } from 'confused-ai/voice';
-
-const voice = createVoiceProvider(new OpenAIVoiceAdapter({ apiKey: process.env.OPENAI_API_KEY! }));
-const audio = await voice.textToSpeech('Hello, how can I help you?');
-const text  = await voice.speechToText(audio);
-```
-
----
-
-## Deployment
-
-Production-ready templates in [`/templates`](./templates/):
-
-```bash
-# Docker
-docker build -t my-agent . && docker run -e OPENAI_API_KEY=$KEY -p 3000:3000 my-agent
-
-# Fly.io
-fly launch && fly secrets set OPENAI_API_KEY=sk-... && fly deploy
-
-# Kubernetes
-kubectl apply -f templates/k8s.yaml
-```
-
-Includes: `Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`, `k8s.yaml` with health probes, resource limits, and rolling updates.
-
----
-
-## Subpath Packages
-
-`confused-ai` is published as a **monorepo of 39 individually-installable packages** — all automatically included when you `npm install confused-ai`, or installable à la carte for leaner bundles.
-
-### Root subpath imports
-
-| Import | Contents |
-|--------|---------|
-| `confused-ai` | Main barrel (`agent`, `createAgent`) |
-| `confused-ai/model` | Provider classes + factory shorthands (`openai()`, `anthropic()`, `ollama()`) |
-| `confused-ai/tool` | `tool()`, `defineTool()`, MCP client/server |
-| `confused-ai/workflow` | Pipelines, graph engine, multi-agent orchestrator |
-| `confused-ai/guard` | Circuit breakers, rate limits, budgets, HITL |
-| `confused-ai/serve` | HTTP runtime, OpenAPI, WebSocket |
-| `confused-ai/observe` | OTLP tracing, metrics, structured logger |
-| `confused-ai/test` | Mocking utilities (`mockAgent()`, `scenario()`) |
-| `confused-ai/graph` | Advanced graph builder, durable execution, event stores |
-| `confused-ai/adapters` | 20-category adapter registry |
-| `confused-ai/contracts` | Dependency-free shared interfaces |
-| `confused-ai/tools/shell` | `ShellTool` — ⚠️ requires security review |
-| `confused-ai/tools/search` | `TavilySearchTool`, `DuckDuckGoTool`, `ExaToolkit` |
-| `confused-ai/tools/communication` | `SlackToolkit`, `GmailToolkit`, `DiscordTool` |
-| `confused-ai/tools/devtools` | `GitHubToolkit`, `DockerToolkit` |
-| `confused-ai/tools/productivity` | `ClickUpToolkit`, `NotionToolkit` |
-| `confused-ai/tools/data` | `DatabaseToolkit`, `Neo4jToolkit` |
-| `confused-ai/tools/finance` | `StripeToolkit`, `YahooFinanceTool` |
-
-### Individual `@confused-ai/*` packages
-
-Each sub-package is **published separately on npm** and can be installed on its own:
-
-```bash
-npm install @confused-ai/core       # agent engine only (~50 kB)
-npm install @confused-ai/tools      # all tools
-npm install @confused-ai/memory     # session + vector memory
-npm install @confused-ai/knowledge  # RAG + document loaders
-npm install @confused-ai/observe    # OTLP tracing + metrics
-npm install @confused-ai/serve      # HTTP runtime
-npm install @confused-ai/workflow   # pipelines + graph engine
-```
-
-<details>
-<summary>All 39 <code>@confused-ai/*</code> packages</summary>
-
-| Package | Description |
+| Package | What it does |
 |---------|-------------|
-| `@confused-ai/adapter-redis` | Redis adapter for rate limiting and caching |
-| `@confused-ai/agentic` | Agentic loop primitives |
-| `@confused-ai/artifacts` | Markdown / file artifact generation |
-| `@confused-ai/background` | BullMQ, Kafka, RabbitMQ, SQS background queues |
-| `@confused-ai/cli` | `confused-ai` CLI |
-| `@confused-ai/compression` | Context-window compression |
-| `@confused-ai/config` | Configuration helpers |
-| `@confused-ai/context` | Multi-tenancy context provider |
-| `@confused-ai/contracts` | Shared dependency-free interfaces |
-| `@confused-ai/core` | Agent engine, session, model interface |
-| `@confused-ai/db` | Database adapters |
-| `@confused-ai/eval` | Evaluation harness |
-| `@confused-ai/execution` | Step executor |
-| `@confused-ai/graph` | Durable DAG graph engine |
-| `@confused-ai/guard` | Circuit breakers, rate limiter, budgets |
-| `@confused-ai/guardrails` | Content safety validators |
-| `@confused-ai/knowledge` | RAG engine + document loaders |
-| `@confused-ai/learning` | Reinforcement / feedback learning |
-| `@confused-ai/memory` | In-memory + vector memory stores |
-| `@confused-ai/models` | LLM provider adapters (OpenAI, Anthropic, Gemini…) |
-| `@confused-ai/observe` | OTLP tracing, metrics, structured logger |
-| `@confused-ai/orchestration` | Multi-agent orchestration primitives |
-| `@confused-ai/planner` | LLM planning module |
-| `@confused-ai/playground` | Local chat UI server |
-| `@confused-ai/plugins` | Plugin middleware system |
-| `@confused-ai/production` | Production hardening (audit log, HITL, idempotency) |
-| `@confused-ai/reasoning` | Chain-of-thought reasoning |
-| `@confused-ai/router` | Intelligent LLM router |
-| `@confused-ai/scheduler` | Cron / scheduled agent tasks |
-| `@confused-ai/sdk` | SDK builder for external consumers |
-| `@confused-ai/serve` | HTTP runtime, OpenAPI, WebSocket |
-| `@confused-ai/session` | Session store (in-memory + SQLite) |
-| `@confused-ai/shared` | Internal shared utilities |
-| `@confused-ai/storage` | File + blob storage adapters |
-| `@confused-ai/test-utils` | Testing mocks and helpers |
+| `@confused-ai/core` | Agent runner base, types |
+| `@confused-ai/agentic` | ReAct loop, HITL, guardrails, budget |
+| `@confused-ai/models` | 40+ LLM adapters |
+| `@confused-ai/router` | Cost-optimised LLM routing |
 | `@confused-ai/tools` | 100+ built-in tools |
-| `@confused-ai/video` | Video processing tools |
-| `@confused-ai/voice` | TTS + STT (OpenAI / ElevenLabs) |
-| `@confused-ai/workflow` | Workflow pipelines + graph runner |
-
-</details>
-
----
-
-## LLM Providers
-
-| Provider | Environment variable |
-|----------|---------------------|
-| OpenAI (GPT-4o, o1, …) | `OPENAI_API_KEY` |
-| Anthropic Claude | `ANTHROPIC_API_KEY` |
-| Google Gemini | `GOOGLE_API_KEY` or `GEMINI_API_KEY` |
-| OpenRouter (100+ models) | `OPENROUTER_API_KEY` |
-| Azure OpenAI | `OPENAI_API_KEY` + `OPENAI_BASE_URL` |
-| AWS Bedrock | `@aws-sdk/client-bedrock-runtime` peer dep |
-| Any OpenAI-compatible | Pass `apiKey` + `baseURL` to `createAgent` |
-
----
-
-## Testing
-
-```ts
-import { mockAgent, scenario } from 'confused-ai/test';
-
-const agent = mockAgent({ responses: ['The answer is 42'] });
-
-await scenario(agent)
-  .send('What is the answer?')
-  .expectText('42')
-  .run();
-```
-
-### Graph testing utilities
-
-```ts
-import { createTestRunner, createMockLLMProvider, expectEventSequence } from 'confused-ai/testing';
-import { GraphEventType } from 'confused-ai/graph';
-
-const runner = createTestRunner();
-const result = await runner.run(myGraph);
-
-// assert event sequence (allows gaps)
-expectEventSequence(result.eventTypes, [
-  GraphEventType.EXECUTION_STARTED,
-  GraphEventType.EXECUTION_COMPLETED,
-]);
-```
-
-515 passing tests covering circuit breakers, rate limiters, JWT RBAC, LLM caching, guardrails, graph execution, and more. See [`/packages`](./packages/).
-
-> Test count is verified on every CI run across Node 18, 20, and 22.
+| `@confused-ai/plugins` | Plugin registry |
+| `@confused-ai/memory` | Short/long-term memory, vector stores |
+| `@confused-ai/knowledge` | RAG engine, loaders, vector adapters |
+| `@confused-ai/session` | Session persistence |
+| `@confused-ai/storage` | KV + file storage |
+| `@confused-ai/artifacts` | Typed output artifacts |
+| `@confused-ai/learning` | Learning from past interactions |
+| `@confused-ai/db` | Internal SQLite/Postgres store |
+| `@confused-ai/adapter-redis` | Redis adapter |
+| `@confused-ai/guardrails` | PII, injection, moderation |
+| `@confused-ai/production` | Circuit breaker, rate limit, health |
+| `@confused-ai/guard` | `withResilience()` wrapper |
+| `@confused-ai/observe` | OTLP tracing, Prometheus, logger |
+| `@confused-ai/eval` | Evaluation, benchmarking, regression |
+| `@confused-ai/compression` | Token budget, Huffman codec |
+| `@confused-ai/config` | Env vars, secret managers |
+| `@confused-ai/context` | Context provider/backend |
+| `@confused-ai/serve` | HTTP server, SSE, OpenAPI |
+| `@confused-ai/graph` | DAG engine, durable execution |
+| `@confused-ai/orchestration` | Teams, pipelines, swarms, A2A |
+| `@confused-ai/workflow` | Branching helpers |
+| `@confused-ai/planner` | Classical AI planner |
+| `@confused-ai/reasoning` | CoT, Tree-of-Thought |
+| `@confused-ai/scheduler` | Cron scheduler |
+| `@confused-ai/background` | Background queues (BullMQ, Kafka…) |
+| `@confused-ai/execution` | Concurrency, backpressure |
+| `@confused-ai/sdk` | High-level SDK, `defineAgent`, workflows |
+| `@confused-ai/skills` | Built-in skill packs |
+| `@confused-ai/cli` | CLI: replay, inspect, export |
+| `@confused-ai/playground` | Browser chat UI |
+| `@confused-ai/test-utils` | MockLLMProvider, test runners |
+| `@confused-ai/voice` | TTS/STT voice agents |
+| `@confused-ai/video` | Video generation |
+| `@confused-ai/contracts` | Shared interfaces |
+| `@confused-ai/shared` | Internal utilities |
 
 ---
 
-## CLI
+## Documentation
 
-```bash
-npx confused-ai --help   # after npm install or npm run build
-```
+**[confused-ai.github.io/confused-ai](https://confused-ai.github.io/confused-ai)**
 
-### Graph run debugging
-
-After executing a graph with `DurableExecutor` (backed by `SqliteEventStore`), use the built-in CLI to inspect, replay, export, and diff past runs:
-
-```bash
-# Replay event timeline for a run
-confused-ai replay --run-id <executionId> --db ./graph-events.db
-
-# Per-node summary (status, retries, duration, errors)
-confused-ai inspect --run-id <executionId>
-
-# Export all events to JSON
-confused-ai export --run-id <executionId> --out events.json --pretty
-
-# Compare two runs — exits 1 if any nodes diverged (CI-friendly)
-confused-ai diff --run-id-a <baseline> --run-id-b <new>
-
-# Validate env vars, API keys, and config before deploy
-confused-ai doctor
-```
-
-> `confused-ai doctor` checks Node.js version, all LLM provider API keys, optional packages, and network connectivity. Use it in CI pre-deploy checks.
-
----
-
-## Enterprise Checklist
-
-- [x] **Security** — Guardrails, JWT RBAC, secret-manager adapters (AWS, Azure Key Vault, HashiCorp Vault, GCP), Zod-validated tool inputs
-- [x] **Reliability** — Circuit breakers, retry with backoff, Redis distributed rate limiting, graceful shutdown, checkpoint/resume
-- [x] **Compliance** — Persistent audit log, idempotency keys, per-user USD budget caps, W3C trace-context
-- [x] **Observability** — OTLP tracing, structured logging, eval store, health endpoints, Grafana dashboard template
-- [x] **Deployment** — Docker, Compose, Kubernetes, Fly.io, Render templates with health probes
-- [x] **Testing** — MockLLMProvider, MockToolRegistry, Vitest-compatible fixtures, 515 passing tests
-
----
-
-## Contributing
-
-```bash
-git clone https://github.com/confused-ai/confused-ai.git
-cd confused-ai && bun install
-bun test          # 515 tests — run with Node 18, 20, and 22 in CI
-bun run build     # tsup
-bun run docs:dev  # VitePress docs site
-```
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
-
----
-
-## Telemetry
-
-**Off by default.** Set `CONFUSED_AI_TELEMETRY=1` to send a minimal framework startup event. No prompts, no PII ever.
+- [Getting Started](https://confused-ai.github.io/confused-ai/guide/getting-started)
+- [Core Concepts](https://confused-ai.github.io/confused-ai/guide/concepts)
+- [All Modules](https://confused-ai.github.io/confused-ai/guide/all-modules)
+- [Providers (40+)](https://confused-ai.github.io/confused-ai/guide/providers)
+- [Tools (100+)](https://confused-ai.github.io/confused-ai/guide/tools)
+- [Multi-Agent](https://confused-ai.github.io/confused-ai/guide/orchestration)
+- [RAG / Knowledge](https://confused-ai.github.io/confused-ai/guide/rag)
+- [Production](https://confused-ai.github.io/confused-ai/guide/production)
+- [Guardrails](https://confused-ai.github.io/confused-ai/guide/guardrails)
+- [Observability](https://confused-ai.github.io/confused-ai/guide/observability)
+- [Evaluation](https://confused-ai.github.io/confused-ai/guide/eval)
+- [Examples](https://confused-ai.github.io/confused-ai/examples/)
 
 ---
 
 ## License
 
-[MIT](./LICENSE) — Copyright © 2024-present Raja Shekar Reddy Vuyyuru
+MIT © Raja Shekar Reddy Vuyyuru

@@ -119,12 +119,12 @@ describe('ContextProvider', () => {
 
     it('setup() resolves without error', async () => {
         const p = new StaticContextProvider();
-        await expect(p.setup()).resolves.not.toThrow();
+        await expect(p.setup()).resolves.toBeUndefined();
     });
 
     it('close() resolves without error', async () => {
         const p = new StaticContextProvider();
-        await expect(p.close()).resolves.not.toThrow();
+        await expect(p.close()).resolves.toBeUndefined();
     });
 
     it('update() throws by default (not supported)', async () => {

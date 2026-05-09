@@ -1,744 +1,233 @@
 ---
 title: LLM Providers
-description: Complete reference for all 40+ LLM providers supported by confused-ai — setup, configuration, and model IDs.
+description: 40+ supported LLM providers — OpenAI, Anthropic, Google, Groq, Ollama, AWS Bedrock and more.
 outline: [2, 3]
 ---
 
 # LLM Providers
 
-confused-ai ships with built-in support for **40+ LLM providers**. Every provider is auto-detected from environment variables — no manual wiring required.
+confused-ai ships adapters for 40+ LLM providers. All are lazy dynamic imports — zero bundle cost unless used.
 
-## Quick selection
+## Model string shorthand
 
-| Provider | Import shorthand | Env var |
-|----------|-----------------|---------|
-| OpenAI | `openai:gpt-4o` | `OPENAI_API_KEY` |
-| Anthropic | `anthropic:claude-3-5-sonnet-20241022` | `ANTHROPIC_API_KEY` |
-| Google Gemini | `google:gemini-2.0-flash` | `GOOGLE_API_KEY` |
-| Azure OpenAI | `azure:gpt-4o` | `AZURE_OPENAI_API_KEY` |
-| AWS Bedrock | `bedrock:anthropic.claude-3-5-sonnet` | `AWS_ACCESS_KEY_ID` |
-| Groq | `groq:llama-3.3-70b-versatile` | `GROQ_API_KEY` |
-| OpenRouter | `openrouter:anthropic/claude-3.5-sonnet` | `OPENROUTER_API_KEY` |
-| Together AI | `together:meta-llama/Meta-Llama-3.1-70B` | `TOGETHER_API_KEY` |
-| Cohere | `cohere:command-r-plus` | `COHERE_API_KEY` |
-| Mistral | `mistral:mistral-large-latest` | `MISTRAL_API_KEY` |
-
-Pass any shorthand directly to `model`:
+The easiest way to pick a provider is by model name. Set the matching env var and pass the model string:
 
 ```ts
 import { agent } from 'confused-ai';
 
-const ai = agent({ model: 'anthropic:claude-3-5-sonnet-20241022', instructions: '...' });
+// Auto-detects provider from model name + env vars
+const ai = agent({ model: 'gpt-4o-mini' });
 ```
 
-The model resolver splits on `:`, looks up the provider, reads the env var, and constructs the provider automatically.
+| Model string | Provider | Env var |
+|---|---|---|
+| `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `o1`, `o3` | OpenAI | `OPENAI_API_KEY` |
+| `claude-3-5-sonnet-*`, `claude-3-haiku-*`, `claude-opus-*` | Anthropic | `ANTHROPIC_API_KEY` |
+| `gemini-2.0-flash`, `gemini-1.5-pro`, `gemini-*` | Google | `GOOGLE_API_KEY` |
+| `llama-3.3-70b-versatile`, `mixtral-*` | Groq | `GROQ_API_KEY` |
+| `mistral-large`, `mistral-small`, `codestral` | Mistral | `MISTRAL_API_KEY` |
+| `deepseek-chat`, `deepseek-reasoner` | DeepSeek | `DEEPSEEK_API_KEY` |
+| `command-r-plus`, `command-r` | Cohere | `COHERE_API_KEY` |
+| `amazon.nova-*`, `amazon.titan-*` | AWS Bedrock | `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` |
+| `accounts/fireworks/*` | Fireworks | `FIREWORKS_API_KEY` |
+| `together-*` | Together AI | `TOGETHER_API_KEY` |
+| `qwen-*` | Alibaba DashScope | `DASHSCOPE_API_KEY` |
+| `glm-*` | Zhipu AI | `ZHIPU_API_KEY` |
+| `solar-*` | Upstage | `UPSTAGE_API_KEY` |
+| `nova-micro`, `nova-lite`, `nova-pro` | Nova (AWS) | `AWS_ACCESS_KEY_ID` |
 
----
+## Provider instances
 
-## Using the `ModelResolver`
-
-```ts
-import { ModelResolver } from '@confused-ai/models';
-
-// Resolve a provider from a shorthand string
-const provider = ModelResolver.resolve('openai:gpt-4o');
-
-// Or construct explicitly
-const provider = ModelResolver.resolve('openai:gpt-4o', {
-  apiKey:  process.env.OPENAI_API_KEY!,
-  baseURL: 'https://api.openai.com/v1',
-});
-```
-
----
-
-## Providers — Cloud
-
-### OpenAI
+For full control, create a provider instance directly:
 
 ```ts
-import { OpenAIProvider } from '@confused-ai/models';
+import {
+  OpenAIProvider,
+  AnthropicProvider,
+  GoogleProvider,
+} from 'confused-ai';
 
-const llm = new OpenAIProvider({
-  apiKey:      process.env.OPENAI_API_KEY!,
-  model:       'gpt-4o',           // or: gpt-4o-mini, gpt-4-turbo, o1-mini, o3-mini
+// OpenAI
+const openai = new OpenAIProvider({
+  apiKey: process.env.OPENAI_API_KEY!,
+  model: 'gpt-4o',
   temperature: 0.7,
-  maxTokens:   4096,
-  baseURL:     'https://api.openai.com/v1', // override for proxies
+  maxTokens: 4096,
 });
-```
 
-| Model ID | Context | Best for |
-|----------|---------|---------|
-| `gpt-4o` | 128k | Reasoning, tool use, multimodal |
-| `gpt-4o-mini` | 128k | Fast, cost-efficient |
-| `gpt-4-turbo` | 128k | Long-context tasks |
-| `o1` | 200k | Complex multi-step reasoning |
-| `o1-mini` | 128k | Fast reasoning |
-| `o3-mini` | 200k | Advanced reasoning, low cost |
-
----
-
-### Anthropic
-
-```ts
-import { AnthropicProvider } from '@confused-ai/models';
-
-const llm = new AnthropicProvider({
+// Anthropic
+const claude = new AnthropicProvider({
   apiKey: process.env.ANTHROPIC_API_KEY!,
-  model:  'claude-3-5-sonnet-20241022',
+  model: 'claude-3-5-sonnet-20241022',
 });
-```
 
-| Model ID | Context | Best for |
-|----------|---------|---------|
-| `claude-3-5-sonnet-20241022` | 200k | Coding, analysis, instruction-following |
-| `claude-3-5-haiku-20241022` | 200k | Fast, cost-efficient |
-| `claude-3-opus-20240229` | 200k | Complex reasoning |
-
----
-
-### Google Gemini
-
-```ts
-import { GoogleProvider } from '@confused-ai/models';
-
-const llm = new GoogleProvider({
+// Google Gemini
+const gemini = new GoogleProvider({
   apiKey: process.env.GOOGLE_API_KEY!,
-  model:  'gemini-2.0-flash',
+  model: 'gemini-2.0-flash',
 });
+
+const ai = agent({ llmProvider: openai, systemPrompt: '...' });
 ```
 
-| Model ID | Context | Best for |
-|----------|---------|---------|
-| `gemini-2.0-flash` | 1M | Fast, long-context |
-| `gemini-1.5-pro` | 2M | Very long documents |
-| `gemini-1.5-flash` | 1M | Cost-efficient |
-
----
-
-### Azure OpenAI
+## OpenRouter (100+ models via one API)
 
 ```ts
-import { createAzureOpenAI } from '@confused-ai/models';
+import { createOpenRouterProvider } from 'confused-ai';
 
-const llm = createAzureOpenAI({
-  apiKey:     process.env.AZURE_OPENAI_API_KEY!,
-  endpoint:   process.env.AZURE_OPENAI_ENDPOINT!,    // e.g. https://my-resource.openai.azure.com
-  deployment: 'gpt-4o',                              // your deployment name
-  apiVersion: '2024-10-21',
-});
-```
-
-Or via shorthand: `azure:gpt-4o` (reads `AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_ENDPOINT`).
-
----
-
-### AWS Bedrock
-
-```ts
-import { createBedrockProvider } from '@confused-ai/models';
-
-const llm = createBedrockProvider({
-  region:          process.env.AWS_REGION ?? 'us-east-1',
-  accessKeyId:     process.env.AWS_ACCESS_KEY_ID!,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  model:           'anthropic.claude-3-5-sonnet-20241022-v2:0',
-});
-```
-
-Popular Bedrock model IDs:
-- `anthropic.claude-3-5-sonnet-20241022-v2:0`
-- `amazon.titan-text-express-v1`
-- `meta.llama3-70b-instruct-v1:0`
-- `mistral.mistral-large-2402-v1:0`
-- `cohere.command-r-plus-v1:0`
-
----
-
-### Groq
-
-```ts
-import { createGroq } from '@confused-ai/models';
-
-const llm = createGroq({
-  apiKey: process.env.GROQ_API_KEY!,
-  model:  'llama-3.3-70b-versatile',
-});
-```
-
-Groq delivers **very low latency** via custom LPU hardware.
-
-| Model ID | Context | Speed |
-|----------|---------|-------|
-| `llama-3.3-70b-versatile` | 128k | Very fast |
-| `llama-3.1-8b-instant` | 128k | Extremely fast |
-| `mixtral-8x7b-32768` | 32k | Fast |
-| `gemma2-9b-it` | 8k | Fast |
-
----
-
-### OpenRouter
-
-```ts
-import { createOpenRouter } from '@confused-ai/models';
-
-const llm = createOpenRouter({
+const provider = createOpenRouterProvider({
   apiKey: process.env.OPENROUTER_API_KEY!,
-  model:  'anthropic/claude-3.5-sonnet',
+  model: 'anthropic/claude-3.5-sonnet',
 });
 ```
 
-OpenRouter proxies 100+ models from a single endpoint. Use any model ID from [openrouter.ai/models](https://openrouter.ai/models).
-
----
-
-### Together AI
+## Groq (ultra-fast inference)
 
 ```ts
-import { createTogetherAI } from '@confused-ai/models';
+import { createGroqProvider } from 'confused-ai';
 
-const llm = createTogetherAI({
-  apiKey: process.env.TOGETHER_API_KEY!,
-  model:  'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
+const groq = createGroqProvider({
+  apiKey: process.env.GROQ_API_KEY!,
+  model: 'llama-3.3-70b-versatile',
 });
 ```
 
----
-
-### Cohere
+## Ollama (local models)
 
 ```ts
-import { createCohere } from '@confused-ai/models';
+import { ollama } from 'confused-ai';
 
-const llm = createCohere({
-  apiKey: process.env.COHERE_API_KEY!,
-  model:  'command-r-plus',
+const local = ollama({ model: 'llama3.2', baseUrl: 'http://localhost:11434' });
+```
+
+No API key required. Runs fully locally.
+
+## AWS Bedrock
+
+```ts
+import { bedrock } from 'confused-ai';
+
+const aws = bedrock({
+  model: 'amazon.nova-pro-v1:0',
+  region: 'us-east-1',
+  // uses AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY from env
 });
 ```
 
-| Model ID | Context | Best for |
-|----------|---------|---------|
-| `command-r-plus` | 128k | RAG, complex reasoning |
-| `command-r` | 128k | Balanced |
-| `command-light` | 4k | Fast, low cost |
+## Self-hosted / OpenAI-compatible
 
----
-
-### Mistral AI
+Any endpoint that follows the OpenAI API shape works:
 
 ```ts
-import { createMistral } from '@confused-ai/models';
+import { createOpenAICompatibleProvider } from 'confused-ai';
 
-const llm = createMistral({
-  apiKey: process.env.MISTRAL_API_KEY!,
-  model:  'mistral-large-latest',
-});
-```
-
-| Model ID | Context | Best for |
-|----------|---------|---------|
-| `mistral-large-latest` | 128k | Complex tasks |
-| `mistral-small-latest` | 32k | Fast, low cost |
-| `codestral-latest` | 256k | Code generation |
-| `open-mistral-7b` | 32k | Self-host, free |
-
----
-
-### Perplexity
-
-```ts
-import { createPerplexity } from '@confused-ai/models';
-
-const llm = createPerplexity({
-  apiKey: process.env.PERPLEXITY_API_KEY!,
-  model:  'sonar-pro',
-});
-```
-
-Perplexity models have **real-time web access** built in.
-
----
-
-### Fireworks AI
-
-```ts
-import { createFireworks } from '@confused-ai/models';
-
-const llm = createFireworks({
-  apiKey: process.env.FIREWORKS_API_KEY!,
-  model:  'accounts/fireworks/models/llama-v3p1-70b-instruct',
-});
-```
-
----
-
-### Deepseek
-
-```ts
-import { createDeepseek } from '@confused-ai/models';
-
-const llm = createDeepseek({
-  apiKey: process.env.DEEPSEEK_API_KEY!,
-  model:  'deepseek-chat',  // or: deepseek-reasoner
-});
-```
-
----
-
-### xAI Grok
-
-```ts
-import { createXAI } from '@confused-ai/models';
-
-const llm = createXAI({
-  apiKey: process.env.XAI_API_KEY!,
-  model:  'grok-2',
-});
-```
-
----
-
-### Replicate
-
-```ts
-import { createReplicate } from '@confused-ai/models';
-
-const llm = createReplicate({
-  apiKey: process.env.REPLICATE_API_KEY!,
-  model:  'meta/llama-3.1-405b-instruct',
-});
-```
-
----
-
-### RunPod (Serverless Endpoints)
-
-```ts
-import { createRunPod } from '@confused-ai/models';
-
-const llm = createRunPod({
-  apiKey:      process.env.RUNPOD_API_KEY!,
-  endpointId:  'abc123xyz',    // your RunPod serverless endpoint ID
-  model:       'llama-3.1-70b',
-});
-```
-
----
-
-### IBM watsonx
-
-```ts
-import { createWatsonx } from '@confused-ai/models';
-
-const llm = createWatsonx({
-  apiKey:    process.env.WATSONX_API_KEY!,
-  projectId: process.env.WATSONX_PROJECT_ID!,
-  model:     'ibm/granite-34b-code-instruct',
-  region:    'us-south',
-});
-```
-
----
-
-## Providers — Chinese
-
-### Alibaba Qwen
-
-```ts
-import { createQwen } from '@confused-ai/models';
-
-const llm = createQwen({
-  apiKey: process.env.DASHSCOPE_API_KEY!,
-  model:  'qwen-max',   // or: qwen-turbo, qwen-plus, qwen2.5-72b-instruct
-});
-```
-
----
-
-### Baidu ERNIE
-
-```ts
-import { createERNIE } from '@confused-ai/models';
-
-const llm = createERNIE({
-  apiKey:    process.env.BAIDU_API_KEY!,
-  secretKey: process.env.BAIDU_SECRET_KEY!,
-  model:     'ernie-4.0',
-});
-```
-
----
-
-### Tencent Hunyuan
-
-```ts
-import { createHunyuan } from '@confused-ai/models';
-
-const llm = createHunyuan({
-  secretId:  process.env.HUNYUAN_SECRET_ID!,
-  secretKey: process.env.HUNYUAN_SECRET_KEY!,
-  model:     'hunyuan-pro',
-});
-```
-
----
-
-### Volcengine ARK (ByteDance DouBao)
-
-```ts
-import { createVolcengineARK } from '@confused-ai/models';
-
-const llm = createVolcengineARK({
-  apiKey:     process.env.ARK_API_KEY!,
-  endpointId: process.env.ARK_ENDPOINT_ID!,
-  model:      'doubao-pro-32k',
-});
-```
-
----
-
-### Minimax
-
-```ts
-import { createMinimax } from '@confused-ai/models';
-
-const llm = createMinimax({
-  apiKey:  process.env.MINIMAX_API_KEY!,
-  groupId: process.env.MINIMAX_GROUP_ID!,
-  model:   'abab6.5s-chat',
-});
-```
-
----
-
-### Baichuan
-
-```ts
-import { createBaichuan } from '@confused-ai/models';
-
-const llm = createBaichuan({
-  apiKey:    process.env.BAICHUAN_API_KEY!,
-  secretKey: process.env.BAICHUAN_SECRET_KEY!,
-  model:     'Baichuan4',
-});
-```
-
----
-
-### Stepfun
-
-```ts
-import { createStepfun } from '@confused-ai/models';
-
-const llm = createStepfun({
-  apiKey: process.env.STEPFUN_API_KEY!,
-  model:  'step-2-16k',
-});
-```
-
----
-
-### InternLM (Shanghai AI Lab)
-
-```ts
-import { createInternLM } from '@confused-ai/models';
-
-const llm = createInternLM({
-  apiKey: process.env.INTERNLM_API_KEY!,
-  model:  'internlm2_5-20b-chat',
-});
-```
-
----
-
-## Providers — Self-Hosted / Local
-
-All self-hosted providers implement the same `LLMProvider` interface so they're interchangeable with cloud providers.
-
-### Ollama
-
-```ts
-import { createOllama } from '@confused-ai/models';
-
-const llm = createOllama({
-  baseURL: 'http://localhost:11434',  // default
-  model:   'llama3.2',               // any model you've pulled
-});
-```
-
-Start Ollama: `ollama serve` → pull a model: `ollama pull llama3.2`.
-
----
-
-### vLLM
-
-```ts
-import { createVLLM } from '@confused-ai/models';
-
-const llm = createVLLM({
+// vLLM
+const vllm = createOpenAICompatibleProvider({
   baseURL: 'http://localhost:8000/v1',
-  model:   'meta-llama/Llama-3.1-70B-Instruct',
-  apiKey:  'dummy',                  // vLLM requires a non-empty key
+  apiKey: 'local',
+  model: 'meta-llama/Llama-3.1-8B-Instruct',
 });
-```
 
----
-
-### LM Studio
-
-```ts
-import { createLMStudio } from '@confused-ai/models';
-
-const llm = createLMStudio({
+// LM Studio
+const lmStudio = createOpenAICompatibleProvider({
   baseURL: 'http://localhost:1234/v1',
-  model:   'lmstudio-community/Meta-Llama-3.1-8B-Instruct-GGUF',
+  apiKey: 'lm-studio',
+  model: 'llama-3.2-1b-instruct',
 });
+
+// LocalAI, KoboldCpp, Text-Generation-WebUI, Jan — same pattern
 ```
 
----
+## LLM Router (cost-optimised)
 
-### LocalAI
+Route requests to the cheapest model that meets your quality requirements:
 
 ```ts
-import { createLocalAI } from '@confused-ai/models';
+import { createCostRouter } from 'confused-ai';
 
-const llm = createLocalAI({
-  baseURL: 'http://localhost:8080/v1',
-  model:   'ggml-gpt4all-j',
+const router = createCostRouter({
+  providers: new Map([
+    ['gpt-4o',      openaiGPT4o],
+    ['gpt-4o-mini', openaiMini],
+    ['gemini-2.0-flash', gemini],
+  ]),
+  minCapability: 7,       // require at least a 7/10 capability score
+  maxInputCostPerMillion: 1.00,  // cap at $1/M tokens
 });
+
+const ai = agent({ llmProvider: router });
 ```
 
----
+See [LLM Router](/guide/llm-router) for full documentation.
 
-### KoboldCpp
+## Multimodal (vision)
 
-```ts
-import { createKoboldCpp } from '@confused-ai/models';
-
-const llm = createKoboldCpp({
-  baseURL: 'http://localhost:5001',
-  model:   'koboldcpp',
-});
-```
-
----
-
-### Text Generation WebUI (Oobabooga)
+Send images alongside text:
 
 ```ts
-import { createTextGenWebUI } from '@confused-ai/models';
+import { image, text } from 'confused-ai';
 
-const llm = createTextGenWebUI({
-  baseURL: 'http://localhost:5000/v1',
-  model:   'model-name',
-});
-```
-
----
-
-### Jan
-
-```ts
-import { createJan } from '@confused-ai/models';
-
-const llm = createJan({
-  baseURL: 'http://localhost:1337/v1',
-  model:   'tinyllama-1.1b',
-});
-```
-
----
-
-## Providers — Specialized Cloud
-
-### HuggingFace Inference
-
-```ts
-import { createHuggingFace } from '@confused-ai/models';
-
-const llm = createHuggingFace({
-  apiKey: process.env.HUGGINGFACE_API_KEY!,
-  model:  'meta-llama/Meta-Llama-3.1-70B-Instruct',
-});
-```
-
----
-
-### DeepInfra
-
-```ts
-import { createDeepInfra } from '@confused-ai/models';
-
-const llm = createDeepInfra({
-  apiKey: process.env.DEEPINFRA_API_KEY!,
-  model:  'meta-llama/Meta-Llama-3.1-70B-Instruct',
-});
-```
-
----
-
-### Lepton AI
-
-```ts
-import { createLepton } from '@confused-ai/models';
-
-const llm = createLepton({
-  apiKey: process.env.LEPTON_API_KEY!,
-  model:  'llama3-1-70b',
-});
-```
-
----
-
-### Featherless AI
-
-```ts
-import { createFeatherless } from '@confused-ai/models';
-
-const llm = createFeatherless({
-  apiKey: process.env.FEATHERLESS_API_KEY!,
-  model:  'Qwen/Qwen2.5-72B-Instruct',
-});
-```
-
----
-
-### Snowflake Cortex
-
-```ts
-import { createSnowflake } from '@confused-ai/models';
-
-const llm = createSnowflake({
-  account:  process.env.SNOWFLAKE_ACCOUNT!,
-  username: process.env.SNOWFLAKE_USERNAME!,
-  password: process.env.SNOWFLAKE_PASSWORD!,
-  model:    'mistral-large2',
-});
-```
-
----
-
-### Cloudflare Workers AI
-
-```ts
-import { createCloudflare } from '@confused-ai/models';
-
-const llm = createCloudflare({
-  accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
-  apiToken:  process.env.CLOUDFLARE_API_TOKEN!,
-  model:     '@cf/meta/llama-3.1-8b-instruct',
-});
-```
-
----
-
-## ISP Interfaces
-
-All providers implement the following TypeScript interfaces from `@confused-ai/core`:
-
-```ts
-interface ITextGenerator {
-  generate(messages: Message[], opts?: GenerateOptions): Promise<GenerateResult>;
-}
-
-interface IStreamingProvider {
-  stream(messages: Message[], opts?: GenerateOptions): AsyncIterable<StreamChunk>;
-}
-
-interface IToolCallProvider {
-  generateWithTools(
-    messages: Message[],
-    tools: ToolDefinition[],
-    opts?: GenerateOptions,
-  ): Promise<GenerateWithToolsResult>;
-}
-
-interface IEmbeddingProvider {
-  embed(input: string | string[]): Promise<number[][]>;
-}
-```
-
-A provider may implement one or all four. Use these interfaces to write provider-agnostic code:
-
-```ts
-import type { ITextGenerator } from '@confused-ai/core';
-
-function summarise(llm: ITextGenerator, text: string) {
-  return llm.generate([{ role: 'user', content: `Summarise: ${text}` }]);
-}
-```
-
----
-
-## Model fallback chains
-
-Pass an array to `model` to set up automatic fallbacks:
-
-```ts
-const ai = agent({
-  model: [
-    'anthropic:claude-3-5-sonnet-20241022',   // primary
-    'openai:gpt-4o',                           // fallback 1
-    'groq:llama-3.3-70b-versatile',            // fallback 2
+const result = await ai.run({
+  prompt: [
+    image('https://example.com/chart.png'),
+    text('What trend does this chart show?'),
   ],
-  instructions: '...',
 });
 ```
 
-When the primary model fails (network error, rate limit, or context overflow), the next model in the chain is tried automatically.
+## All supported providers
 
----
+::: details Full provider list (40+)
+**Major cloud**
+- OpenAI (GPT-4o, o1, o3, DALL-E)
+- Anthropic (Claude 3.5, Claude Opus)
+- Google (Gemini 2.0, Gemini 1.5)
+- AWS Bedrock (Nova, Titan, Llama via Bedrock)
+- Azure OpenAI
 
-## LLM Router
+**Fast inference**
+- Groq (Llama, Mixtral — ultra-fast)
+- Cerebras (Llama 3.3 — fastest)
+- SambaNova (Llama)
+- Hyperbolic
 
-For **intelligent routing** based on task type, cost, and speed, see the [LLM Router guide](/guide/llm-router).
+**OpenRouter / aggregators**
+- OpenRouter (100+ models)
+- Together AI
+- Fireworks AI
+- DeepInfra
+- Novita AI
 
-```ts
-import { createBalancedRouter } from 'confused-ai/llm';
+**Specialist**
+- Mistral AI (Mistral, Codestral)
+- DeepSeek (Chat, Reasoner)
+- Cohere (Command R+)
+- AI21 Labs (Jamba)
+- Perplexity
 
-const router = createBalancedRouter({
-  models: ['gpt-4o', 'claude-3-5-sonnet-20241022', 'groq:llama-3.3-70b-versatile'],
-});
-```
+**Chinese providers**
+- Alibaba DashScope (Qwen)
+- Zhipu AI (GLM)
+- Moonshot (Kimi)
+- 01.AI (Yi)
+- Baichuan, MiniMax, Volcengine, HunYuan, StepFun, InternLM
 
----
+**Self-hosted**
+- Ollama
+- vLLM
+- LM Studio
+- LocalAI
+- KoboldCpp
+- Text-Generation-WebUI
+- Jan
 
-## Bring your own provider
-
-Implement `IFullLLMProvider` to integrate any API:
-
-```ts
-import type { IFullLLMProvider, Message, GenerateResult } from '@confused-ai/core';
-
-class MyCustomProvider implements IFullLLMProvider {
-  async generate(messages: Message[]): Promise<GenerateResult> {
-    const response = await fetch('https://my-api.example.com/v1/chat', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${this.apiKey}` },
-      body: JSON.stringify({ messages }),
-    });
-    const data = await response.json() as { content: string; usage: { total_tokens: number } };
-    return {
-      text:       data.content,
-      totalTokens: data.usage.total_tokens,
-      finishReason: 'stop',
-    };
-  }
-
-  async *stream(messages: Message[]) {
-    // implement streaming...
-  }
-
-  async generateWithTools(messages, tools) {
-    // implement tool use...
-  }
-
-  async embed(input) {
-    // implement embeddings...
-  }
-}
-
-// Use it like any built-in provider
-const ai = agent({ model: new MyCustomProvider({ apiKey: '...' }), instructions: '...' });
-```
+**Platforms**
+- Cloudflare Workers AI
+- Replicate
+- Lambda Labs
+- Lepton AI
+- Featherless AI
+- Snowflake Cortex
+- Writer (Palmyra)
+- Upstage (Solar)
+:::
