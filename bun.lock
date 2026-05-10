@@ -38,6 +38,7 @@
         "@confused-ai/serve": "0.1.0",
         "@confused-ai/session": "0.1.0",
         "@confused-ai/shared": "0.1.0",
+        "@confused-ai/skills": "0.1.0",
         "@confused-ai/storage": "0.1.0",
         "@confused-ai/test-utils": "0.1.0",
         "@confused-ai/tools": "0.1.0",
@@ -134,12 +135,14 @@
       "name": "@confused-ai/sdk",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/execution": "*",
-        "@confused-ai/memory": "*",
-        "@confused-ai/planner": "*",
-        "@confused-ai/tools": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/execution": "0.1.0",
+        "@confused-ai/memory": "0.1.0",
+        "@confused-ai/orchestration": "0.1.0",
+        "@confused-ai/planner": "0.1.0",
+        "@confused-ai/session": "0.1.0",
+        "@confused-ai/tools": "0.1.0",
       },
       "devDependencies": {
         "tsup": "^8.0.0",
@@ -150,7 +153,7 @@
       "name": "@confused-ai/skills",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
+        "@confused-ai/contracts": "0.1.0",
       },
       "devDependencies": {
         "tsup": "^8.0.2",
@@ -158,7 +161,7 @@
         "vitest": "^1.6.0",
       },
       "peerDependencies": {
-        "@confused-ai/tools": "*",
+        "@confused-ai/tools": "0.1.0",
       },
       "optionalPeers": [
         "@confused-ai/tools",
@@ -218,7 +221,7 @@
       "name": "@confused-ai/shared",
       "version": "0.1.0",
       "peerDependencies": {
-        "@confused-ai/core": "*",
+        "@confused-ai/core": "0.1.0",
       },
     },
     "packages/platform/compression": {
@@ -266,7 +269,7 @@
       "name": "@confused-ai/guard",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
+        "@confused-ai/contracts": "0.1.0",
       },
       "devDependencies": {
         "tsup": "^8.4.0",
@@ -278,7 +281,7 @@
       "name": "@confused-ai/guardrails",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/core": "*",
+        "@confused-ai/core": "0.1.0",
         "zod": "^3.0.0",
       },
       "devDependencies": {
@@ -290,7 +293,7 @@
       "name": "@confused-ai/observe",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
+        "@confused-ai/contracts": "0.1.0",
         "@opentelemetry/api": "^1.9.0",
       },
       "devDependencies": {
@@ -303,10 +306,11 @@
       "name": "@confused-ai/production",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/session": "*",
-        "@confused-ai/shared": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/memory": "0.1.0",
+        "@confused-ai/session": "0.1.0",
+        "@confused-ai/shared": "0.1.0",
       },
       "devDependencies": {
         "tsup": "^8.0.0",
@@ -341,9 +345,9 @@
       "name": "@confused-ai/models",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/shared": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/shared": "0.1.0",
       },
       "devDependencies": {
         "@anthropic-ai/sdk": ">=0.30.0",
@@ -387,12 +391,12 @@
       "name": "@confused-ai/agentic",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/guard": "*",
-        "@confused-ai/guardrails": "*",
-        "@confused-ai/observe": "*",
-        "@confused-ai/shared": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/guard": "0.1.0",
+        "@confused-ai/guardrails": "0.1.0",
+        "@confused-ai/observe": "0.1.0",
+        "@confused-ai/shared": "0.1.0",
         "zod": "^3.0.0",
       },
       "devDependencies": {
@@ -400,10 +404,10 @@
         "typescript": "*",
       },
       "peerDependencies": {
-        "@confused-ai/compression": "*",
-        "@confused-ai/knowledge": "*",
-        "@confused-ai/production": "*",
-        "@confused-ai/reasoning": "*",
+        "@confused-ai/compression": "0.1.0",
+        "@confused-ai/knowledge": "0.1.0",
+        "@confused-ai/production": "0.1.0",
+        "@confused-ai/reasoning": "0.1.0",
         "@opentelemetry/api": "^1.0.0",
       },
       "optionalPeers": [
@@ -443,7 +447,7 @@
       "name": "@confused-ai/core",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
+        "@confused-ai/contracts": "0.1.0",
         "zod": ">=3.22.0",
       },
       "devDependencies": {
@@ -452,9 +456,9 @@
         "vitest": "^4.0.18",
       },
       "peerDependencies": {
-        "@confused-ai/db": "*",
-        "@confused-ai/guard": "*",
-        "@confused-ai/observe": "*",
+        "@confused-ai/db": "0.1.0",
+        "@confused-ai/guard": "0.1.0",
+        "@confused-ai/observe": "0.1.0",
       },
       "optionalPeers": [
         "@confused-ai/db",
@@ -466,9 +470,9 @@
       "name": "@confused-ai/execution",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/planner": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/planner": "0.1.0",
       },
       "devDependencies": {
         "tsup": "*",
@@ -504,15 +508,15 @@
       "name": "@confused-ai/orchestration",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/agentic": "*",
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/memory": "*",
-        "@confused-ai/models": "*",
-        "@confused-ai/observe": "*",
-        "@confused-ai/planner": "*",
-        "@confused-ai/shared": "*",
-        "@confused-ai/tools": "*",
+        "@confused-ai/agentic": "0.1.0",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/memory": "0.1.0",
+        "@confused-ai/models": "0.1.0",
+        "@confused-ai/observe": "0.1.0",
+        "@confused-ai/planner": "0.1.0",
+        "@confused-ai/shared": "0.1.0",
+        "@confused-ai/tools": "0.1.0",
         "zod": "^3.0.0",
       },
       "devDependencies": {
@@ -524,8 +528,8 @@
       "name": "@confused-ai/planner",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
       },
       "devDependencies": {
         "tsup": "^8.0.0",
@@ -666,9 +670,9 @@
       "name": "@confused-ai/memory",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/shared": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/shared": "0.1.0",
       },
       "devDependencies": {
         "tsup": "^8.0.0",
@@ -676,7 +680,7 @@
         "vitest": "^3.2.0",
       },
       "peerDependencies": {
-        "@confused-ai/db": "*",
+        "@confused-ai/db": "0.1.0",
         "@pinecone-database/pinecone": ">=3.0.0",
         "pg": ">=8.0.0",
       },
@@ -690,9 +694,9 @@
       "name": "@confused-ai/session",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/shared": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/shared": "0.1.0",
       },
       "devDependencies": {
         "tsup": "^8.4.0",
@@ -700,7 +704,7 @@
         "vitest": "^4.0.18",
       },
       "peerDependencies": {
-        "@confused-ai/db": "*",
+        "@confused-ai/db": "0.1.0",
         "better-sqlite3": ">=11.0.0",
         "ioredis": ">=5.0.0",
       },
@@ -735,9 +739,9 @@
       "name": "@confused-ai/tools",
       "version": "0.1.0",
       "dependencies": {
-        "@confused-ai/contracts": "*",
-        "@confused-ai/core": "*",
-        "@confused-ai/shared": "*",
+        "@confused-ai/contracts": "0.1.0",
+        "@confused-ai/core": "0.1.0",
+        "@confused-ai/shared": "0.1.0",
         "zod": "^3.0.0",
       },
       "devDependencies": {
