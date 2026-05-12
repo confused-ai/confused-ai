@@ -45,7 +45,7 @@ function scanPackageDirs(baseDir, depth, maxDepth, dirs) {
 
 export function discoverPackageDirs({ includePrivate = true } = {}) {
   const dirs = [];
-  scanPackageDirs(packagesDir, 0, 2, dirs);
+  if (existsSync(packagesDir)) scanPackageDirs(packagesDir, 0, 2, dirs);
 
   return dirs
     .filter((dir) => includePrivate || readPackageJson(dir).private !== true)

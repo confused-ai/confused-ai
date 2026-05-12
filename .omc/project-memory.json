@@ -366,6 +366,12 @@
       "type": "file"
     },
     {
+      "path": "vitest.config.ts",
+      "accessCount": 3,
+      "lastAccessed": 1778582805629,
+      "type": "file"
+    },
+    {
       "path": "src/llm/types.ts",
       "accessCount": 2,
       "lastAccessed": 1776855758620,
@@ -489,12 +495,6 @@
       "path": "tests/artifact.test.ts",
       "accessCount": 1,
       "lastAccessed": 1776855672740,
-      "type": "file"
-    },
-    {
-      "path": "vitest.config.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776855675943,
       "type": "file"
     },
     {

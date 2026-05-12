@@ -85,6 +85,19 @@ const entries = [
   ['src/tools/data/index.ts',             'dist/tools/data.d.ts'],
   ['src/tools/finance/index.ts',          'dist/tools/finance.d.ts'],
   ['src/tools/social/index.ts',           'dist/tools/social.d.ts'],
+  // missing entries
+  ['src/adapter-redis/index.ts',          'dist/adapter-redis.d.ts'],
+  ['src/compression/index.ts',            'dist/compression.d.ts'],
+  ['src/context/index.ts',               'dist/context.d.ts'],
+  ['src/db/index.ts',                    'dist/db.d.ts'],
+  ['src/eval/index.ts',                  'dist/eval.d.ts'],
+  ['src/models/index.ts',               'dist/models.d.ts'],
+  ['src/reasoning/index.ts',            'dist/reasoning.d.ts'],
+  ['src/router/index.ts',               'dist/router.d.ts'],
+  ['src/scheduler/index.ts',            'dist/scheduler.d.ts'],
+  ['src/skills/index.ts',               'dist/skills.d.ts'],
+  ['src/test-utils/index.ts',           'dist/test-utils.d.ts'],
+  ['src/test-utils/conformance.ts',     'dist/test-utils/conformance.d.ts'],
 ];
 
 // ── Worker body (runs in each thread) ────────────────────────────────────────
