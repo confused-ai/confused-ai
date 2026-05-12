@@ -15,7 +15,7 @@
  * @example
  * ```ts
  * import { createClient } from 'redis';
- * import { RedisSessionStore } from './/index.js';
+ * import { RedisSessionStore } from './index.js';
  *
  * const redis = createClient({ url: process.env.REDIS_URL });
  * await redis.connect();
@@ -25,7 +25,7 @@
  * ```
  */
 
-import type { SessionStore, SessionData, Message, SessionMessage } from '../contracts/index.js';
+import type { SessionStore, SessionData, SessionMessage } from '../contracts/index.js';
 import { newId } from '../contracts/index.js';
 
 // ── Minimal Redis client interface (avoids importing redis types at compile time) ──
@@ -75,22 +75,41 @@ export class RedisSessionStore implements SessionStore {
     private sessKey(id: string): string { return `${this.prefix}${id}`; }
     private msgsKey(id: string): string { return `${this.prefix}msgs:${id}`; }
 
-    async create(userId: string, metadata?: Record<string, unknown>): Promise<string> {
+    async create(data: { agentId: string; userId?: string; messages?: SessionMessage[] } | string): Promise<SessionData | string> {
+        // Support both object pattern and legacy string (userId) pattern
+        const userId = typeof data === 'string' ? data : (data.userId ?? '');
+        const agentId = typeof data === 'string' ? undefined : data.agentId;
+        const initialMessages: SessionMessage[] = typeof data === 'string' ? [] : (data.messages ?? []);
         const id = newId('sess');
         const now = Date.now();
-        // Single hSet call with field-value map (node-redis v4 supports object overload via unknown cast)
         await (this.client.hSet as unknown as (key: string, fields: Record<string, string>) => Promise<number>)(
             this.sessKey(id),
             {
                 id,
-                userId,
-                metadata: JSON.stringify(metadata ?? {}),
+                ...(userId && { userId }),
+                ...(agentId && { agentId }),
+                metadata: JSON.stringify({}),
                 createdAt: String(now),
                 updatedAt: String(now),
             },
         );
         await this.client.expire(this.sessKey(id), this.ttl);
-        return id;
+        if (initialMessages.length > 0) {
+            await this.append(id, initialMessages);
+        }
+        // Legacy string callers get back a string ID; object callers get SessionData
+        if (typeof data === 'string') {
+            return id;
+        }
+        return {
+            id,
+            agentId,
+            userId: userId || undefined,
+            messages: initialMessages,
+            metadata: {},
+            createdAt: now,
+            updatedAt: now,
+        };
     }
 
     async get(sessionId: string): Promise<SessionData | null> {
@@ -115,7 +134,7 @@ export class RedisSessionStore implements SessionStore {
         };
     }
 
-    async append(sessionId: string, messages: readonly Message[]): Promise<void> {
+    async append(sessionId: string, messages: readonly SessionMessage[]): Promise<void> {
         if (messages.length === 0) return;
 
         const serialised = messages.map((m) => JSON.stringify(m));

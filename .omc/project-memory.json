@@ -289,8 +289,14 @@
   "hotPaths": [
     {
       "path": "src/index.ts",
-      "accessCount": 12,
-      "lastAccessed": 1778580969136,
+      "accessCount": 13,
+      "lastAccessed": 1778584985803,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 9,
+      "lastAccessed": 1778585077518,
       "type": "file"
     },
     {
@@ -303,12 +309,6 @@
       "path": "src/llm/anthropic-provider.ts",
       "accessCount": 6,
       "lastAccessed": 1776856650024,
-      "type": "file"
-    },
-    {
-      "path": "package.json",
-      "accessCount": 6,
-      "lastAccessed": 1778507605744,
       "type": "file"
     },
     {

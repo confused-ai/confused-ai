@@ -12,7 +12,7 @@ import { randomUUID } from 'node:crypto';
  * @example
  * ```ts
  * import { createClient } from 'redis';
- * import { RedisRateLimiter } from './/index.js';
+ * import { RedisRateLimiter } from './index.js';
  *
  * const redis = createClient({ url: process.env.REDIS_URL });
  * await redis.connect();
