@@ -145,6 +145,28 @@ export interface CreateHttpServiceOptions {
      * ```
      */
     db?: import('@confused-ai/db').AgentDb;
+    /**
+     * Per-request timeout in milliseconds. Applies to agent execution (both streaming
+     * and non-streaming). When exceeded the request is aborted and a 504 is returned.
+     * Default: no timeout.
+     *
+     * @example
+     * ```ts
+     * createHttpService({ agents: { assistant }, requestTimeoutMs: 60_000 });
+     * ```
+     */
+    requestTimeoutMs?: number;
+    /**
+     * Bind host for `listenService`. Default: `'0.0.0.0'` (all interfaces).
+     * Set to `'127.0.0.1'` to restrict to loopback only.
+     */
+    host?: string;
+    /**
+     * Whether to expose raw error messages in 500 responses.
+     * Default: `false` — returns `'Internal server error'` to avoid leaking internals.
+     * Set to `true` in development for easier debugging.
+     */
+    exposeErrors?: boolean;
 }
 
 export interface RequestAuditEntry {
@@ -161,7 +183,12 @@ export interface HttpService {
     port: number;
     /** Node HTTP server instance */
     server: import('node:http').Server;
-    close(): Promise<void>;
+    /**
+     * Stop the server. Stops accepting new connections, then waits up to
+     * `drainTimeoutMs` (default: 30 s) for in-flight requests to complete
+     * before resolving. Useful for zero-downtime graceful shutdown on SIGTERM.
+     */
+    close(drainTimeoutMs?: number): Promise<void>;
     /** When tracing is on, last N audit entries (default cap 500). */
     getAuditLog(): ReadonlyArray<RequestAuditEntry>;
 }

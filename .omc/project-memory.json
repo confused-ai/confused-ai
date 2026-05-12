@@ -288,9 +288,21 @@
   },
   "hotPaths": [
     {
+      "path": "src/runtime/server.ts",
+      "accessCount": 7,
+      "lastAccessed": 1778565195206,
+      "type": "file"
+    },
+    {
       "path": "src/llm/anthropic-provider.ts",
       "accessCount": 6,
       "lastAccessed": 1776856650024,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 6,
+      "lastAccessed": 1778507605744,
       "type": "file"
     },
     {
@@ -330,6 +342,18 @@
       "type": "file"
     },
     {
+      "path": "tsup.config.ts",
+      "accessCount": 3,
+      "lastAccessed": 1778507666479,
+      "type": "file"
+    },
+    {
+      "path": "src/create-agent/factory.ts",
+      "accessCount": 3,
+      "lastAccessed": 1778572332784,
+      "type": "file"
+    },
+    {
       "path": "src/index.ts",
       "accessCount": 2,
       "lastAccessed": 1776855753303,
@@ -363,18 +387,6 @@
       "path": "src/create-agent/index.ts",
       "accessCount": 2,
       "lastAccessed": 1776855780090,
-      "type": "file"
-    },
-    {
-      "path": "src/create-agent/factory.ts",
-      "accessCount": 2,
-      "lastAccessed": 1776855793269,
-      "type": "file"
-    },
-    {
-      "path": "package.json",
-      "accessCount": 2,
-      "lastAccessed": 1776855793321,
       "type": "file"
     },
     {
@@ -480,12 +492,6 @@
       "type": "file"
     },
     {
-      "path": "tsup.config.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776855675910,
-      "type": "file"
-    },
-    {
       "path": "vitest.config.ts",
       "accessCount": 1,
       "lastAccessed": 1776855675943,
@@ -501,12 +507,6 @@
       "path": "src/agentic/types.ts",
       "accessCount": 1,
       "lastAccessed": 1776855683284,
-      "type": "file"
-    },
-    {
-      "path": "src/runtime/server.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776855683465,
       "type": "file"
     },
     {

@@ -383,6 +383,8 @@
     "example:scheduled": "bun examples/scheduled-agent.ts",
     "example:code-review": "bun examples/code-review-pipeline.ts",
     "example:eval": "bun examples/eval-regression.ts",
+    "example:agno-vs": "bun examples/agno-vs-confused-ai.ts",
+    "example:agno-server": "python3 examples/run_agno_server.py",
     "build": "bun run build:root",
     "build:root": "tsup && node scripts/gen-root-dts.mjs",
     "build:packages": "turbo run build --filter='@confused-ai/*' --output-logs=errors-only",

@@ -78,7 +78,7 @@ export default defineConfig({
     format: ['cjs', 'esm'],
     dts: false,
     splitting: false,
-    sourcemap: true,
+    sourcemap: false,
     clean: true,
     treeshake: true,
     /** Lazy `require()` — install only what you use; must not be resolved at bundle time */

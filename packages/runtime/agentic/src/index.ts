@@ -37,6 +37,8 @@ export function createAgenticAgent(config: {
     budgetEnforcer?: import('@confused-ai/production').BudgetEnforcer;
     budgetModelId?: string;
     knowledgebase?: import('@confused-ai/knowledge').RAGEngine;
+    temperature?: number;
+    maxTokens?: number;
 }): {
     name: string;
     instructions: string;
@@ -73,6 +75,8 @@ export function createAgenticAgent(config: {
         budgetEnforcer: config.budgetEnforcer,
         budgetModelId: config.budgetModelId,
         knowledgebase: config.knowledgebase,
+        temperature: config.temperature,
+        maxTokens: config.maxTokens,
     });
 
     if (config.humanInTheLoop) runner.setHumanInTheLoop(config.humanInTheLoop);

@@ -128,6 +128,12 @@ export function createHttpService(
     const maxBodyBytes = options.maxBodyBytes ?? 1_048_576; // 1 MB default
     const authMiddleware = options.auth ? createAuthMiddleware(options.auth) : null;
     const agentDb = options.db ?? null;
+    const requestTimeoutMs = options.requestTimeoutMs ?? 0; // 0 = disabled
+    const exposeErrors = options.exposeErrors ?? false;
+
+    // Track in-flight requests for graceful shutdown
+    let inFlight = 0;
+    let drainResolve: (() => void) | null = null;
 
     // Idempotency store — defaults to in-memory if not provided
     const idempotencyOpts = options.idempotency;
@@ -163,6 +169,20 @@ export function createHttpService(
         : null;
 
     const server = http.createServer(async (req, res) => {
+        inFlight++;
+        res.on('finish', () => {
+            inFlight--;
+            if (inFlight === 0) drainResolve?.();
+        });
+
+        // Per-request abort controller for timeout enforcement
+        const ac = requestTimeoutMs > 0 ? new AbortController() : null;
+        let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+        if (ac && requestTimeoutMs > 0) {
+            timeoutHandle = setTimeout(() => ac.abort(), requestTimeoutMs);
+            req.on('close', () => clearTimeout(timeoutHandle));
+        }
+
         const path = (req.url ?? '/').split('?')[0] ?? '/';
         const method = req.method ?? 'GET';
         // Assign a correlation ID for every request — echo client-supplied or generate one
@@ -457,6 +477,7 @@ export function createHttpService(
                             sessionId,
                             userId: body.userId,
                             onChunk: (text) => writeEvent({ type: 'chunk', text }),
+                            ...(ac && { signal: ac.signal }),
                         });
                         writeEvent({
                             type: 'done',
@@ -470,9 +491,14 @@ export function createHttpService(
                         });
                         pushAudit(200, { id: rid, agent: agentName, sessionId });
                     } catch (e) {
-                        const msg = e instanceof Error ? e.message : String(e);
+                        const isTimeout = ac?.signal.aborted;
+                        const msg = isTimeout
+                            ? 'Request timeout'
+                            : exposeErrors
+                                ? (e instanceof Error ? e.message : String(e))
+                                : 'Agent error';
                         writeEvent({ type: 'error', message: msg });
-                        pushAudit(500, { id: rid, agent: agentName, sessionId });
+                        pushAudit(isTimeout ? 504 : 500, { id: rid, agent: agentName, sessionId });
                     }
                     res.end();
                     return;
@@ -481,6 +507,7 @@ export function createHttpService(
                 const result = await agent.run(body.message, {
                     sessionId,
                     userId: body.userId,
+                    ...(ac && { signal: ac.signal }),
                 });
 
                 const responseBody = JSON.stringify({
@@ -586,10 +613,18 @@ export function createHttpService(
             sendJson(res, 404, { error: 'Not found' }, cors);
             pushAudit(404);
         } catch (e) {
-            const msg = e instanceof Error ? e.message : String(e);
-            sendJson(res, 500, { error: msg }, cors);
+            if (ac?.signal.aborted) {
+                sendJson(res, 504, { error: 'Request timeout' }, cors);
+            } else {
+                const msg = exposeErrors
+                    ? (e instanceof Error ? e.message : String(e))
+                    : 'Internal server error';
+                sendJson(res, 500, { error: msg }, cors);
+            }
             pushAudit(500);
             adminStats.totalErrors++;
+        } finally {
+            clearTimeout(timeoutHandle);
         }
     });
 
@@ -598,15 +633,39 @@ export function createHttpService(
         attachWebSocketTransport(server, map);
     }
 
+    const host = options.host ?? '0.0.0.0';
+
     return {
         port,
         server,
-        close: () =>
+        close: (drainTimeoutMs = 30_000) =>
             new Promise((resolve, reject) => {
-                server.close((err) => (err ? reject(err) : resolve()));
+                // Stop accepting new connections
+                server.close((err) => {
+                    if (err) reject(err);
+                });
+
+                if (inFlight === 0) {
+                    resolve();
+                    return;
+                }
+
+                // Wait for in-flight requests to finish
+                const drainTimeout = setTimeout(() => {
+                    drainResolve = null;
+                    resolve(); // give up waiting, proceed with shutdown
+                }, drainTimeoutMs);
+
+                drainResolve = () => {
+                    clearTimeout(drainTimeout);
+                    drainResolve = null;
+                    resolve();
+                };
             }),
         getAuditLog: () => audit.slice(),
-    };
+        /** Expose host for listenService */
+        _host: host,
+    } as HttpService & { _host: string };
 }
 
 /**
@@ -617,7 +676,8 @@ export function listenService(svc: HttpService, port?: number): Promise<HttpServ
     return new Promise((resolve, reject) => {
         svc.server.once('error', reject);
         const p = port ?? svc.port;
-        svc.server.listen(p, '0.0.0.0', () => {
+        const host = (svc as HttpService & { _host?: string })._host ?? '0.0.0.0';
+        svc.server.listen(p, host, () => {
             const address = svc.server.address();
             if (address && typeof address === 'object') {
                 (svc as { port: number }).port = address.port;

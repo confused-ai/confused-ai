@@ -24,9 +24,7 @@
  * ```
  */
 
-import type { SessionStore } from '@confused-ai/session';
-import type { SessionQuery, Session, SessionId, SessionRun } from '@confused-ai/session';
-import type { Message } from '../providers/types.js';
+import type { SessionStore, SessionData, SessionMessage } from '@confused-ai/session';
 import { RateLimiter } from './rate-limiter.js';
 import type { RateLimiterConfig } from './rate-limiter.js';
 
@@ -55,9 +53,9 @@ export interface TenantContext {
  * Wraps a `SessionStore` and prefixes all session IDs with `tenantId:`,
  * ensuring complete data isolation between tenants without separate databases.
  */
-export class TenantScopedSessionStore {
+export class TenantScopedSessionStore implements SessionStore {
     constructor(
-        private readonly base: any,
+        private readonly base: SessionStore,
         private readonly tenantId: string
     ) {}
 
@@ -70,69 +68,39 @@ export class TenantScopedSessionStore {
         return id.startsWith(p) ? id.slice(p.length) : id;
     }
 
-    private prefixSession(session: any): any {
-        return { ...session, id: this.unprefix(session.id) as SessionId };
+    private prefixData(data: SessionData): SessionData {
+        return { ...data, id: this.unprefix(data.id) };
     }
 
-    async create(session: Omit<Session, 'id' | 'createdAt' | 'updatedAt'>): Promise<Session> {
+    async create(session: { agentId: string; userId?: string; messages?: SessionMessage[] } | string): Promise<SessionData> {
+        if (typeof session === 'string') {
+            // Caller supplied an explicit ID — prefix it
+            const s = await this.base.create(this.prefix(session));
+            return this.prefixData(s);
+        }
         const s = await this.base.create(session);
-        return this.prefixSession(s);
+        return this.prefixData(s);
     }
 
-    async get(sessionId: SessionId): Promise<Session | null> {
+    async get(sessionId: string): Promise<SessionData | undefined> {
         const s = await this.base.get(this.prefix(sessionId));
-        return s ? this.prefixSession(s) : null;
+        return s ? this.prefixData(s) : undefined;
     }
 
-    async update(sessionId: SessionId, updates: Partial<Omit<Session, 'id' | 'createdAt'>>): Promise<Session> {
-        const s = await this.base.update(this.prefix(sessionId), updates);
-        return this.prefixSession(s);
+    async update(sessionId: string, data: { messages: SessionMessage[] }): Promise<void> {
+        return this.base.update(this.prefix(sessionId), data);
     }
 
-    async delete(sessionId: SessionId): Promise<boolean> {
-        return this.base.delete(this.prefix(sessionId));
-    }
-
-    async list(query?: SessionQuery): Promise<Session[]> {
-        const sessions = await this.base.list(query);
-        return sessions
-            .filter((s: any) => s.id.startsWith(`${this.tenantId}:`))
-            .map((s: any) => this.prefixSession(s));
-    }
-
-    async addMessage(sessionId: SessionId, message: Message): Promise<Session> {
-        const s = await this.base.addMessage(this.prefix(sessionId), message);
-        return this.prefixSession(s);
-    }
-
-    async getMessages(sessionId: SessionId): Promise<Message[]> {
+    async getMessages(sessionId: string): Promise<SessionMessage[]> {
         return this.base.getMessages(this.prefix(sessionId));
     }
 
-    async clearMessages(sessionId: SessionId): Promise<Session> {
-        const s = await this.base.clearMessages(this.prefix(sessionId));
-        return this.prefixSession(s);
+    async appendMessage(sessionId: string, message: SessionMessage): Promise<void> {
+        return this.base.appendMessage(this.prefix(sessionId), message);
     }
 
-    async setContext(sessionId: SessionId, key: string, value: unknown): Promise<Session> {
-        const s = await this.base.setContext(this.prefix(sessionId), key, value);
-        return this.prefixSession(s);
-    }
-
-    async getContext(sessionId: SessionId, key: string): Promise<unknown> {
-        return this.base.getContext(this.prefix(sessionId), key);
-    }
-
-    async recordRun(run: Omit<SessionRun, 'id'>): Promise<SessionRun> {
-        return this.base.recordRun({ ...run, sessionId: this.prefix(run.sessionId) });
-    }
-
-    async getRuns(sessionId: SessionId): Promise<SessionRun[]> {
-        return this.base.getRuns(this.prefix(sessionId));
-    }
-
-    async cleanup(): Promise<number> {
-        return this.base.cleanup();
+    async delete(sessionId: string): Promise<void> {
+        return this.base.delete(this.prefix(sessionId));
     }
 }
 
@@ -178,13 +146,12 @@ export class TenantRegistry {
  * @param tenantId - Unique identifier for the tenant.
  * @param options - Base stores and config to scope.
  */
-export function createTenantContext(
+export async function createTenantContext(
     tenantId: string,
     options: TenantContextOptions = {}
-): TenantContext {
-    const sessionStore = (options.sessionStore
-        ? new TenantScopedSessionStore(options.sessionStore, tenantId)
-        : new TenantScopedSessionStore(createFallbackSessionStore(), tenantId)) as unknown as SessionStore;
+): Promise<TenantContext> {
+    const baseStore = options.sessionStore ?? await createFallbackSessionStore();
+    const sessionStore = new TenantScopedSessionStore(baseStore, tenantId);
 
     const rateLimiter = new RateLimiter({
         name: `tenant:${tenantId}`,
@@ -204,8 +171,7 @@ export function createTenantContext(
 
 // ── Fallback session store (in-memory) ────────────────────────────────────
 
-function createFallbackSessionStore(): SessionStore {
-    // Lazy import to avoid circular deps
-    const { InMemorySessionStore } = require('@confused-ai/session') as { InMemorySessionStore: new () => SessionStore };
+async function createFallbackSessionStore(): Promise<SessionStore> {
+    const { InMemorySessionStore } = await import('@confused-ai/session');
     return new InMemorySessionStore();
 }

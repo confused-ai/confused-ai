@@ -97,6 +97,18 @@ interface AdminApiOptions {
 
 ---
 
+## `createHttpService` server options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `requestTimeoutMs` | `number` | none | Abort agent execution and return HTTP 504 after this many milliseconds |
+| `host` | `string` | `'0.0.0.0'` | Bind host. Set to `'127.0.0.1'` to restrict to loopback |
+| `exposeErrors` | `boolean` | `false` | Include raw error messages in 500 responses. Enable only in development |
+
+`close(drainTimeoutMs?)` — stops accepting new connections and waits up to `drainTimeoutMs` (default: 30 000 ms) for in-flight requests to finish before resolving.
+
+---
+
 ## Full `createHttpService` example
 
 ```ts
@@ -131,6 +143,15 @@ const svc = createHttpService({
   // WebSocket streaming
   websocket: true,
 
+  // Per-request timeout — abort + 504 after 60 s
+  requestTimeoutMs: 60_000,
+
+  // Bind to loopback only (omit for 0.0.0.0)
+  host: '127.0.0.1',
+
+  // Expose raw error messages in responses (dev only — never set true in production)
+  exposeErrors: false,
+
   // Admin API
   adminApi: {
     enabled: true,
@@ -140,6 +161,9 @@ const svc = createHttpService({
 });
 
 await listenService(svc, 8787);
+
+// Graceful shutdown — drain in-flight requests for up to 30 s
+await svc.close(30_000);
 ```
 
 ---

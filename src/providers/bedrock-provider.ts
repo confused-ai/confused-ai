@@ -13,13 +13,33 @@ import type {
     StreamOptions,
 } from './types.js';
 
+// Minimal Bedrock response shapes — avoids importing the heavy AWS SDK at compile time
+interface BedrockConverseResponse {
+    output?: { message?: { content?: Array<{ text?: string }> } };
+    usage?: { inputTokens?: number; outputTokens?: number };
+    stopReason?: string;
+}
+
+interface BedrockStreamEvent {
+    contentBlockDelta?: { delta?: { text?: string } };
+}
+
+interface BedrockConverseStreamResponse {
+    stream?: AsyncIterable<BedrockStreamEvent>;
+}
+
+// Minimal Bedrock client interface — avoids importing the heavy AWS SDK at compile time
+interface BedrockRuntimeClient {
+    send(command: unknown): Promise<BedrockConverseResponse | BedrockConverseStreamResponse>;
+}
+
 export interface BedrockConverseProviderConfig {
     /** AWS region (e.g. us-east-1). */
     readonly region: string;
     /** Bedrock model or inference profile id (e.g. anthropic.claude-3-5-sonnet-20240620-v1:0). */
     readonly modelId: string;
-    /** Optional client instance; if omitted, one is created with default credential chain. */
-    readonly client?: any;
+    /** Optional pre-constructed client; if omitted, one is created with the default credential chain. */
+    readonly client?: BedrockRuntimeClient;
 }
 
 function flattenText(m: Message): string {
@@ -38,7 +58,7 @@ function flattenText(m: Message): string {
 export class BedrockConverseProvider implements LLMProvider {
     private readonly region: string;
     private readonly modelId: string;
-    private client: any;
+    private client: BedrockRuntimeClient | null;
 
     constructor(config: BedrockConverseProviderConfig) {
         this.region = config.region;
@@ -46,7 +66,7 @@ export class BedrockConverseProvider implements LLMProvider {
         this.client = config.client ?? null;
     }
 
-    private async ensureClient(): Promise<any> {
+    private async ensureClient(): Promise<BedrockRuntimeClient> {
         if (this.client) {
             return this.client;
         }
@@ -54,7 +74,7 @@ export class BedrockConverseProvider implements LLMProvider {
             const { BedrockRuntimeClient } = await import('@aws-sdk/client-bedrock-runtime');
             this.client = new BedrockRuntimeClient({ region: this.region });
             return this.client;
-        } catch (e) {
+        } catch {
             throw new Error(
                 'BedrockConverseProvider requires @aws-sdk/client-bedrock-runtime. Install: npm install @aws-sdk/client-bedrock-runtime'
             );
@@ -102,7 +122,7 @@ export class BedrockConverseProvider implements LLMProvider {
             },
         });
 
-        const out = await client.send(cmd);
+        const out = await client.send(cmd) as BedrockConverseResponse;
         const contentBlocks = out.output?.message?.content ?? [];
         let text = '';
         for (const block of contentBlocks) {
@@ -121,7 +141,7 @@ export class BedrockConverseProvider implements LLMProvider {
 
         return {
             text,
-            finishReason: out.stopReason,
+            finishReason: out.stopReason ?? undefined,
             usage,
         };
     }
@@ -166,7 +186,7 @@ export class BedrockConverseProvider implements LLMProvider {
             },
         });
 
-        const response = await client.send(cmd);
+        const response = await client.send(cmd) as BedrockConverseStreamResponse;
         let text = '';
         const stream = response.stream;
         if (stream) {

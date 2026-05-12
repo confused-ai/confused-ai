@@ -405,6 +405,8 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
         checkpointStore: options.checkpointStore,
         budgetEnforcer: budgetEnforcer as any,
         budgetModelId: model,
+        temperature: options.temperature,
+        maxTokens: options.maxTokens,
     });
 
     return {

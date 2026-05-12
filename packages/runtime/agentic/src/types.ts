@@ -167,6 +167,10 @@ export interface AgenticRunnerConfig {
     readonly budgetEnforcer?: import('@confused-ai/production').BudgetEnforcer;
     /** Model ID passed to the budget enforcer for cost estimation. Default: 'gpt-4o'. */
     readonly budgetModelId?: string;
+    /** Default temperature for LLM calls. Defaults to 0.7. */
+    readonly temperature?: number;
+    /** Default max tokens for LLM calls. Defaults to 4096. */
+    readonly maxTokens?: number;
     /**
      * Optional guardrail engine — checks the input prompt before the run starts
      * and tool calls / outputs during execution.

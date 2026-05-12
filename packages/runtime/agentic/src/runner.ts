@@ -557,8 +557,8 @@ export class AgenticRunner {
                         // streamText is confirmed defined when useStreaming is true (checked by callers)
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         return this.config.llm.streamText!(messages, {
-                            temperature: 0.7,
-                            maxTokens: 4096,
+                            temperature: this.config.temperature ?? 0.7,
+                            maxTokens: this.config.maxTokens ?? 4096,
                             tools: llmTools.length ? llmTools : undefined,
                             toolChoice: llmTools.length ? 'auto' : 'none',
                             onChunk: (chunk: string | { type: string; text: string }) => {
@@ -570,8 +570,8 @@ export class AgenticRunner {
                         });
                     }
                     return this.config.llm.generateText(messages, {
-                        temperature: 0.7,
-                        maxTokens: 4096,
+                        temperature: this.config.temperature ?? 0.7,
+                        maxTokens: this.config.maxTokens ?? 4096,
                         tools: llmTools.length ? llmTools : undefined,
                         toolChoice: llmTools.length ? 'auto' : 'none',
                     });

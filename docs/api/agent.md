@@ -102,6 +102,8 @@ console.log(result.text);
 |---|---|---|
 | `llm` | `LLMProvider \| LLMRouter` | Custom provider or router — overrides `model` and `apiKey` |
 | `contextProviders` | `ContextProvider[]` | Additional context injected into the system prompt |
+| `temperature` | `number` | Sampling temperature for LLM calls (0–2). Default: `0.7` |
+| `maxTokens` | `number` | Maximum output tokens per LLM call. Default: `4096` |
 
 ---
 

@@ -3,20 +3,28 @@
  *
  * Uses dts-bundle-generator to inline all transitive types so that
  * @confused-ai/* workspace packages are NOT needed by consumers.
+ *
+ * Speed strategy:
+ *   1. Worker threads  — generateDtsBundle is synchronous/CPU-bound; Promise.all
+ *      on the main thread gives no parallelism. Each entry runs in its own thread.
+ *   2. Mtime cache     — skip entries whose source file is older than the existing
+ *      dist output (set FORCE_DTS=1 to bypass).
  */
 
-import { generateDtsBundle } from 'dts-bundle-generator';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
+import { writeFileSync, mkdirSync, existsSync, statSync, readdirSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { cpus } from 'os';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const root = resolve(__dirname, '..');
 const tsconfig = resolve(root, 'tsconfig.build.json');
 
-// Map: [source entry, output flat .d.ts path]
+// ── Entry list ────────────────────────────────────────────────────────────────
+// [source entry, output flat .d.ts path]
 const entries = [
-  // ── Root flat files ───────────────────────────────────────────────────────
+  // Root flat files
   ['src/index.ts',          'dist/index.d.ts'],
   ['src/lite.ts',           'dist/lite.d.ts'],
   ['src/model.ts',          'dist/model.d.ts'],
@@ -28,7 +36,7 @@ const entries = [
   ['src/test.ts',           'dist/test.d.ts'],
   ['src/create-agent.ts',   'dist/create-agent.d.ts'],
   ['src/playground.ts',     'dist/playground.d.ts'],
-  // ── Directory index files ─────────────────────────────────────────────────
+  // Directory index files
   ['src/core/index.ts',           'dist/core.d.ts'],
   ['src/memory/index.ts',         'dist/memory.d.ts'],
   ['src/providers/index.ts',      'dist/providers.d.ts'],
@@ -60,7 +68,7 @@ const entries = [
   ['src/graph/index.ts',          'dist/graph.d.ts'],
   ['src/cli/index.ts',            'dist/cli.d.ts'],
   ['src/create-agent/index.ts',   'dist/create-agent/index.d.ts'],
-  // ── tools/* sub-entries ───────────────────────────────────────────────────
+  // tools/* sub-entries
   ['src/tools/utils/shell-entry.ts',      'dist/tools/shell.d.ts'],
   ['src/tools/core/index.ts',             'dist/tools/core.d.ts'],
   ['src/tools/mcp/index.ts',              'dist/tools/mcp.d.ts'],
@@ -68,7 +76,7 @@ const entries = [
   ['src/tools/communication/index.ts',    'dist/tools/communication.d.ts'],
   ['src/tools/productivity/index.ts',     'dist/tools/productivity.d.ts'],
   ['src/tools/devtools/index.ts',         'dist/tools/devtools.d.ts'],
-  ['src/tools/crm/index.ts',              'dist/tools/crm.d.ts'],
+  ['src/tools/crm/index.ts',             'dist/tools/crm.d.ts'],
   ['src/tools/search/index.ts',           'dist/tools/search.d.ts'],
   ['src/tools/scraping/index.ts',         'dist/tools/scraping.d.ts'],
   ['src/tools/media/index.ts',            'dist/tools/media.d.ts'],
@@ -79,49 +87,130 @@ const entries = [
   ['src/tools/social/index.ts',           'dist/tools/social.d.ts'],
 ];
 
-// Cache: avoid re-running dts-bundle-generator for identical source entries
-const cache = new Map();
-
-let passed = 0;
-let failed = 0;
-const total = entries.length;
-
-for (const [relEntry, relOut] of entries) {
-  const entry = resolve(root, relEntry);
-  const out = resolve(root, relOut);
-
-  if (!existsSync(entry)) {
-    console.warn(`[SKIP] ${relEntry} — file not found`);
-    continue;
-  }
-
-  process.stdout.write(`[${passed + failed + 1}/${total}] ${relOut} ... `);
+// ── Worker body (runs in each thread) ────────────────────────────────────────
+if (!isMainThread) {
+  const { entry, outputs, tsconfig: tsc } = workerData;
   const startMs = Date.now();
-
   try {
-    let content;
-    if (cache.has(relEntry)) {
-      content = cache.get(relEntry);
-    } else {
-      const [result] = generateDtsBundle(
-        [{ filePath: entry, output: { noBanner: true } }],
-        { preferredConfigPath: tsconfig },
-      );
-      content = result;
-      cache.set(relEntry, content);
+    const { generateDtsBundle } = await import('dts-bundle-generator');
+    const [content] = generateDtsBundle(
+      [{ filePath: entry, output: { noBanner: true } }],
+      { preferredConfigPath: tsc },
+    );
+    for (const out of outputs) {
+      mkdirSync(dirname(out), { recursive: true });
+      writeFileSync(out, content, 'utf8');
     }
-
-    mkdirSync(dirname(out), { recursive: true });
-    writeFileSync(out, content, 'utf8');
     const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
-    console.log(`done (${elapsed}s, ${(content.length / 1024).toFixed(0)}KB)`);
-    passed++;
+    const label = outputs.map(o => o.replace(root + '/', '')).join(', ');
+    parentPort.postMessage({ status: 'pass', label, elapsed, kb: (content.length / 1024).toFixed(0) });
   } catch (err) {
-    console.error(`FAILED`);
-    console.error(`  ${err.message}`);
-    failed++;
+    parentPort.postMessage({ status: 'fail', label: entry.replace(root + '/', ''), error: err.message });
+  }
+  process.exit(0);
+}
+
+// ── Main thread ───────────────────────────────────────────────────────────────
+
+const CONCURRENCY = cpus().length; // use ALL cores — no artificial cap
+const FORCE = process.env.FORCE_DTS === '1';
+
+/**
+ * Returns true if all dist outputs exist and are newer than the source entry
+ * file and its immediate siblings in the same directory.
+ */
+function isCacheHit(srcRel, outputs) {
+  if (FORCE) return false;
+  const srcAbs = resolve(root, srcRel);
+  if (!existsSync(srcAbs)) return false;
+  if (!outputs.every(o => existsSync(o))) return false;
+  try {
+    const oldestDist = Math.min(...outputs.map(o => statSync(o).mtimeMs));
+    // Check mtime of the entry file itself
+    let newestSrc = statSync(srcAbs).mtimeMs;
+    // Also check siblings in the same directory
+    const srcDir = dirname(srcAbs);
+    for (const f of readdirSync(srcDir)) {
+      try { const t = statSync(`${srcDir}/${f}`).mtimeMs; if (t > newestSrc) newestSrc = t; } catch { /* ignore */ }
+    }
+    return oldestDist > newestSrc;
+  } catch {
+    return false;
   }
 }
 
-console.log(`\nDTS generation: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+function spawnWorker(srcRel, outputs) {
+  return new Promise((res) => {
+    const w = new Worker(new URL(import.meta.url), {
+      workerData: { entry: resolve(root, srcRel), outputs, tsconfig },
+    });
+    w.once('message', res);
+    w.once('error', (err) => res({ status: 'fail', label: srcRel, error: err.message }));
+  });
+}
+
+async function run() {
+  // Deduplicate: multiple output paths for same source → generate once, write to all
+  const sourceToOutputs = new Map();
+  for (const [src, out] of entries) {
+    if (!sourceToOutputs.has(src)) sourceToOutputs.set(src, []);
+    sourceToOutputs.get(src).push(resolve(root, out));
+  }
+
+  const toProcess = [];
+  const skipped = [];
+
+  for (const [src, outputs] of sourceToOutputs) {
+    if (!existsSync(resolve(root, src))) continue; // skip missing entries silently
+    if (isCacheHit(src, outputs)) {
+      skipped.push(src);
+    } else {
+      toProcess.push([src, outputs]);
+    }
+  }
+
+  if (skipped.length) {
+    console.log(`⚡ Skipped ${skipped.length} unchanged entries (use FORCE_DTS=1 to rebuild all)\n`);
+  }
+
+  if (toProcess.length === 0) {
+    console.log('✓ All .d.ts files are up to date.');
+    return;
+  }
+
+  console.log(`Generating ${toProcess.length} .d.ts files (${CONCURRENCY} workers)...\n`);
+  const overallStart = Date.now();
+  let passed = 0;
+  let failed = 0;
+
+  // Work-stealing pool: always keep CONCURRENCY workers busy
+  const queue = [...toProcess];
+  const inFlight = new Map(); // promise → true
+
+  function fill() {
+    while (inFlight.size < CONCURRENCY && queue.length > 0) {
+      const [src, outputs] = queue.shift();
+      const p = spawnWorker(src, outputs).then((msg) => {
+        inFlight.delete(p);
+        if (msg.status === 'pass') {
+          console.log(`✓ ${msg.label} (${msg.elapsed}s, ${msg.kb}KB)`);
+          passed++;
+        } else {
+          console.error(`✗ ${msg.label} — ${msg.error}`);
+          failed++;
+        }
+        fill();
+      });
+      inFlight.set(p, true);
+    }
+  }
+
+  fill();
+  while (inFlight.size > 0) await Promise.race([...inFlight.keys()]);
+
+  const total = ((Date.now() - overallStart) / 1000).toFixed(1);
+  console.log(`\n${passed} passed, ${failed} failed, ${skipped.length} skipped — ${total}s total`);
+  if (failed > 0) process.exit(1);
+}
+
+run().catch((err) => { console.error(err); process.exit(1); });

@@ -108,6 +108,10 @@ export interface CreateAgentOptions extends AgentContextOptions {
     guardrails?: GuardrailEngine | false;
     maxSteps?: number;
     timeoutMs?: number;
+    /** Default temperature for LLM calls (0–2). Defaults to 0.7. */
+    temperature?: number;
+    /** Default max output tokens for LLM calls. Defaults to 4096. */
+    maxTokens?: number;
     retry?: { maxRetries?: number; backoffMs?: number; maxBackoffMs?: number };
     logger?: Logger;
     learningMode?: LearningMode;

@@ -227,7 +227,7 @@ const shutdown = createGracefulShutdown({
 // Register cleanup handlers
 shutdown.register('session-store', () => sessionStore.flush());
 shutdown.register('queue', () => queue.drain());
-shutdown.register('http-server', () => server.close());
+shutdown.register('http-server', () => server.close(30_000)); // drain up to 30 s
 
 // Guard long-running operations against premature termination
 const safeRun = withShutdownGuard(shutdown, async () => {
