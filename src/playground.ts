@@ -12,5 +12,5 @@
  * ```
  */
 
-export { createPlayground } from '@confused-ai/playground';
-export type { PlaygroundAgent, PlaygroundOptions, PlaygroundServer } from '@confused-ai/playground';
+export { createPlayground } from './playground/index.js';
+export type { PlaygroundAgent, PlaygroundOptions, PlaygroundServer } from './playground/index.js';

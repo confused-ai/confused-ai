@@ -21,8 +21,7 @@
  * ```
  */
 
-import type { AgenticRunResult } from '@confused-ai/agentic';
-import type { AgentRunOptions } from '../create-agent.js';
+import type { AgentRunOptions } from '../core/index.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -67,10 +66,10 @@ export interface HealthReport {
 }
 
 /** Interface for any agent that can be wrapped with resilience. */
-interface WrappableAgent {
+export interface WrappableAgent<TResult = unknown> {
     readonly name: string;
     readonly instructions: string;
-    run(prompt: string, options?: AgentRunOptions): Promise<AgenticRunResult>;
+    run(prompt: string, options?: AgentRunOptions): Promise<TResult>;
     createSession?(userId?: string): Promise<string>;
     getSessionMessages?(sessionId: string): Promise<unknown>;
 }
@@ -161,11 +160,11 @@ class InlineRateLimiter {
 
 // ── Resilient Agent ────────────────────────────────────────────────────────
 
-export class ResilientAgent {
+export class ResilientAgent<TResult = unknown> {
     readonly name: string;
     readonly instructions: string;
 
-    private readonly agent: WrappableAgent;
+    private readonly agent: WrappableAgent<TResult>;
     private readonly circuitBreaker: InlineCircuitBreaker | null;
     private readonly rateLimiter: InlineRateLimiter | null;
     private readonly retryConfig: { maxRetries: number; backoffMs: number; maxBackoffMs: number };
@@ -178,7 +177,7 @@ export class ResilientAgent {
     private lastError?: string;
     private lastRunAt?: Date;
 
-    constructor(agent: WrappableAgent, config: ResilienceConfig = {}) {
+    constructor(agent: WrappableAgent<TResult>, config: ResilienceConfig = {}) {
         this.agent = agent;
         this.name = agent.name;
         this.instructions = agent.instructions;
@@ -211,7 +210,7 @@ export class ResilientAgent {
     }
 
     /** Run with resilience: rate limit → circuit breaker → retry → execute. */
-    async run(prompt: string, options?: AgentRunOptions): Promise<AgenticRunResult> {
+    async run(prompt: string, options?: AgentRunOptions): Promise<TResult> {
         // Rate limit check
         this.rateLimiter?.check();
 
@@ -222,7 +221,7 @@ export class ResilientAgent {
         const execute = () => this.agent.run(prompt, options);
 
         try {
-            let result: AgenticRunResult;
+            let result: TResult;
             if (this.circuitBreaker) {
                 result = await this.circuitBreaker.execute(() => this.executeWithRetry(execute));
             } else {
@@ -272,7 +271,7 @@ export class ResilientAgent {
         return 'healthy';
     }
 
-    private async executeWithRetry(fn: () => Promise<AgenticRunResult>): Promise<AgenticRunResult> {
+    private async executeWithRetry(fn: () => Promise<TResult>): Promise<TResult> {
         let lastError: Error | undefined;
         for (let attempt = 0; attempt <= this.retryConfig.maxRetries; attempt++) {
             try {
@@ -300,6 +299,6 @@ export class ResilientAgent {
  * const resilient = withResilience(agent, { circuitBreaker: { failureThreshold: 3 } });
  * ```
  */
-export function withResilience(agent: WrappableAgent, config?: ResilienceConfig): ResilientAgent {
+export function withResilience<TResult = unknown>(agent: WrappableAgent<TResult>, config?: ResilienceConfig): ResilientAgent<TResult> {
     return new ResilientAgent(agent, config);
 }

@@ -8,8 +8,8 @@
  */
 
 import type { Command } from 'commander';
-import { SqliteEventStore, GraphEventType } from '@confused-ai/graph';
-import type { GraphEvent } from '@confused-ai/graph';
+import { SqliteEventStore, GraphEventType } from '../../graph/index.js';
+import type { ExecutionId, GraphEvent } from '../../graph/index.js';
 
 interface NodeSummary {
   nodeId: string;
@@ -29,22 +29,23 @@ function buildNodeSummaries(events: GraphEvent[]): Map<string, NodeSummary> {
     if (!nodes.has(e.nodeId)) {
       nodes.set(e.nodeId, { nodeId: e.nodeId, status: 'pending', attempts: 0 });
     }
-    const n = nodes.get(e.nodeId)!;
+    const n = nodes.get(e.nodeId);
+    if (!n) continue;
 
     switch (e.type) {
       case GraphEventType.NODE_STARTED:
         n.status = 'running';
-        n.attempts = (e.data?.attempt as number) ?? n.attempts + 1;
+        n.attempts = typeof e.data?.['attempt'] === 'number' ? e.data['attempt'] : n.attempts + 1;
         n.startedAt = e.timestamp;
         break;
       case GraphEventType.NODE_COMPLETED:
         n.status = 'completed';
         n.completedAt = e.timestamp;
-        n.durationMs = e.data?.durationMs as number | undefined;
+        if (typeof e.data?.['durationMs'] === 'number') n.durationMs = e.data['durationMs'];
         break;
       case GraphEventType.NODE_FAILED:
         n.status = 'failed';
-        n.error = e.data?.error as string | undefined;
+        if (typeof e.data?.['error'] === 'string') n.error = e.data['error'];
         n.completedAt = e.timestamp;
         break;
       case GraphEventType.NODE_SKIPPED:
@@ -75,14 +76,16 @@ export function registerInspectCommand(program: Command): void {
     .description('Show per-node execution summary for a run')
     .requiredOption('--run-id <id>', 'Execution ID to inspect')
     .option('--db <path>', 'Path to the SQLite event store', './agent.db')
-    .action(async (opts) => {
+    .action(async (opts: { runId: string; db: string }) => {
       const store = new SqliteEventStore(opts.db);
       await store.init();
 
-      const events = await store.load(opts.runId);
+      const runId = opts.runId as ExecutionId;
+      const events = await store.load(runId);
       if (events.length === 0) {
         console.error(`No events found for run-id "${opts.runId}" in ${opts.db}`);
         process.exit(1);
+        return;
       }
 
       const execStatus = events.find(e => e.type === GraphEventType.EXECUTION_COMPLETED)
@@ -98,7 +101,7 @@ export function registerInspectCommand(program: Command): void {
 
       console.log(`\nRun:    ${opts.runId}`);
       console.log(`Status: ${execStatus}`);
-      console.log(`Events: ${events.length}  (${first ? new Date(first.timestamp).toISOString() : 'n/a'} → ${last ? new Date(last.timestamp).toISOString() : 'n/a'})`);
+      console.log(`Events: ${String(events.length)}  (${first ? new Date(first.timestamp).toISOString() : 'n/a'} → ${last ? new Date(last.timestamp).toISOString() : 'n/a'})`);
       console.log();
 
       // Table header
@@ -114,9 +117,9 @@ export function registerInspectCommand(program: Command): void {
 
       for (const n of nodes.values()) {
         const dur = n.durationMs != null
-          ? `${n.durationMs}ms`
+          ? `${String(n.durationMs)}ms`
           : n.startedAt && n.completedAt
-          ? `${n.completedAt - n.startedAt}ms`
+          ? `${String(n.completedAt - n.startedAt)}ms`
           : '-';
         const row =
           `${statusIcon(n.status)} ${n.nodeId.slice(0, COL.id - 2).padEnd(COL.id - 2)}` +

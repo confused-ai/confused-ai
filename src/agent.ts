@@ -4,14 +4,14 @@
  * Composes the default model (from environment), a session store, optional long-lived memory, and default tools.
  */
 
-import type { SessionStore } from '@confused-ai/session';
-import type { Tool, ToolRegistry } from '@confused-ai/tools';
+import type { SessionStore } from './session/index.js';
+import type { Tool, ToolRegistry } from './tools/index.js';
 import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions } from './create-agent.js';
 import { createAgent } from './create-agent.js';
-import { InMemorySessionStore } from '@confused-ai/session';
-import { HttpClientTool } from '@confused-ai/tools';
-import { BrowserTool } from '@confused-ai/tools';
-import type { AgenticRunResult } from '@confused-ai/agentic';
+import { InMemorySessionStore } from './session/index.js';
+import { HttpClientTool } from './tools/index.js';
+import { BrowserTool } from './tools/index.js';
+import type { AgenticRunResult } from './agentic/index.js';
 
 /**
  * Options for the {@link Agent} class.

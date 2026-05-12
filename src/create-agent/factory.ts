@@ -1,22 +1,22 @@
 import type { Message } from '../providers/types.js';
-import type { AgenticStreamHooks } from '@confused-ai/agentic';
-import { withSpan } from '@confused-ai/observe';
-import type { Tool, ToolProvider, ToolResult } from '@confused-ai/tools';
-import { createAgenticAgent } from '@confused-ai/agentic';
-import { HttpClientTool } from '@confused-ai/tools';
-import { BrowserTool } from '@confused-ai/tools';
-import { ToolCategory } from '@confused-ai/tools';
-import { InMemorySessionStore } from '@confused-ai/session';
-import { ConfigError } from '@confused-ai/shared';
-import { toToolRegistry } from '@confused-ai/tools';
-import { isLightweightTool } from '@confused-ai/tools';
-import { createAgentMemoryTools, InMemoryStore } from '@confused-ai/memory';
-import type { MemorySearchResult, MemoryStore } from '@confused-ai/memory';
+import type { AgenticStreamHooks } from '../agentic/index.js';
+import { withSpan } from '../observe/index.js';
+import type { Tool, ToolProvider, ToolResult } from '../tools/index.js';
+import { createAgenticAgent } from '../agentic/index.js';
+import { HttpClientTool } from '../tools/index.js';
+import { BrowserTool } from '../tools/index.js';
+import { ToolCategory } from '../tools/index.js';
+import { InMemorySessionStore } from '../session/index.js';
+import { ConfigError } from '../shared/index.js';
+import { toToolRegistry } from '../tools/index.js';
+import { isLightweightTool } from '../tools/index.js';
+import { createAgentMemoryTools, InMemoryStore } from '../memory/index.js';
+import type { MemorySearchResult, MemoryStore } from '../memory/index.js';
 import { createDevLogger, createDevToolMiddleware } from '../dx/dev-logger.js';
 import { BudgetEnforcer } from '../production/budget.js';
 import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions, AgentRunResult, StreamChunk } from './types.js';
 import type { AdapterRegistry, AdapterBindings } from '../adapters/index.js';
-import type { AppConfig } from '@confused-ai/config';
+import type { AppConfig } from '../config/index.js';
 import {
     resolveLlmForCreateAgent,
     ENV_API_KEY,
@@ -276,7 +276,7 @@ function getFrameworkConfig(): AppConfig | null {
     if (_cachedConfig === undefined) {
         try {
             // Dynamic import to avoid circular dependency at module load time
-            const { loadConfig } = require('@confused-ai/config') as typeof import('@confused-ai/config');
+            const { loadConfig } = require('../config/index.js') as typeof import('../config/index.js');
             _cachedConfig = loadConfig();
         } catch {
             _cachedConfig = null;
@@ -361,11 +361,11 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
             ? null
             : options.sessionStore
               ? options.sessionStore
-              : (adapterBindings?.session as unknown as import('@confused-ai/session').SessionStore | undefined)
+              : (adapterBindings?.session as unknown as import('../session/index.js').SessionStore | undefined)
                 ?? (agentDbPath
                     ? (() => {
                           try {
-                              const { createSqliteStore } = require('@confused-ai/session') as typeof import('@confused-ai/session');
+                              const { createSqliteStore } = require('../session/index.js') as typeof import('../session/index.js');
                               return createSqliteStore({ path: agentDbPath });
                           } catch {
                               return new InMemorySessionStore();
@@ -378,7 +378,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
     const guardrails =
         !guardrailsOption
             ? undefined
-            : (guardrailsOption as import('@confused-ai/guardrails').GuardrailEngine);
+            : (guardrailsOption as import('../guardrails/index.js').GuardrailEngine);
 
     // Budget enforcer — instantiated once per agent, reset on each run
     const budgetEnforcer = options.budget ? new BudgetEnforcer(options.budget) : undefined;

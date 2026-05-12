@@ -28,7 +28,7 @@
  */
 
 import type { CreateAgentOptions } from '../create-agent/types.js';
-import type { Tool } from '@confused-ai/tools';
+import type { Tool } from '../tools/index.js';
 import { MockLLMProvider, type MockLLMOptions } from './mock-llm.js';
 import { MockSessionStore } from './mock-session-store.js';
 

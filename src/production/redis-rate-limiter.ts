@@ -5,7 +5,7 @@
  * Requires `ioredis` (or any {@link RedisClient} with `incr` / `expire`).
  */
 
-import type { RedisClient } from '@confused-ai/session';
+import type { RedisRateLimitClient as RedisClient } from './_types.js';
 import { RateLimitError } from './rate-limiter.js';
 
 export interface RedisRateLimiterConfig {

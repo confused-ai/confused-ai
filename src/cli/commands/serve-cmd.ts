@@ -34,6 +34,7 @@ export function registerServeCommand(program: Command): void {
             } catch (err) {
                 console.error(`Failed to import ${resolved}:`, err);
                 process.exit(1);
+                return;
             }
 
             // Resolve agents from module exports
@@ -57,22 +58,21 @@ export function registerServeCommand(program: Command): void {
                     `  export const agents = { name: createAgent(...) }`
                 );
                 process.exit(1);
+                return;
             }
 
-            const { createHttpService, listenService } = await import('../../runtime/server.js').catch(
-                () => import('../../runtime/server.js' as string)
-            ) as typeof import('../../runtime/server.js');
+            const { createHttpService, listenService } = await import('../../runtime/index.js') as typeof import('../../runtime/index.js');
+
+            const serviceOptions = {
+                agents: agentMap as Parameters<typeof createHttpService>[0]['agents'],
+                ...(typeof options.cors === 'string' && { cors: options.cors }),
+                websocket: Boolean(options.websocket),
+                tracing: options.tracing !== false,
+                ...(options.admin ? { adminApi: { enabled: true, bearerToken: process.env['ADMIN_TOKEN'] ?? '' } } : {}),
+            };
 
             const svc = createHttpService(
-                {
-                    agents: agentMap as Parameters<typeof createHttpService>[0]['agents'],
-                    cors: options.cors as string | undefined,
-                    websocket: Boolean(options.websocket),
-                    tracing: options.tracing !== false,
-                    adminApi: options.admin
-                        ? { enabled: true, bearerToken: process.env.ADMIN_TOKEN ?? '' }
-                        : undefined,
-                },
+                serviceOptions,
                 parseInt(options.port as string, 10)
             );
 

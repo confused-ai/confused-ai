@@ -4,8 +4,8 @@
  * In-memory session store that tracks interactions
  */
 
-import type { SessionQuery, SessionRun } from '@confused-ai/session';
-import type { Session } from '@confused-ai/session';
+import type { SessionQuery, SessionRun } from '../session/index.js';
+import type { Session } from '../session/index.js';
 import type { Message } from '../providers/types.js';
 
 /**

@@ -90,7 +90,7 @@ confused-ai serve agent.ts --port 3000
         description: 'Agent exposed as an HTTP API (JSON + SSE)',
         files: {
             'agent.ts': (name: string) => `import { createAgent } from 'confused-ai';
-import { createHttpService, listenService } from 'confused-ai/runtime';
+import { createHttpService, listenService } from '../../runtime/index.js';
 
 export const agent = createAgent({
   name: '${name}',

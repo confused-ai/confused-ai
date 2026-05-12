@@ -17,8 +17,8 @@ import {
   type LLMProvider,
   type LLMMessage,
   type LLMResponse,
-} from '@confused-ai/graph';
-import type { GraphEvent } from '@confused-ai/graph';
+} from '../graph/index.js';
+import type { GraphEvent } from '../graph/index.js';
 
 // ── Mock LLM ────────────────────────────────────────────────────────────────
 

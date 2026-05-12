@@ -23,7 +23,7 @@
  * ```
  */
 
-import type { AgenticRunResult } from '@confused-ai/agentic';
+import type { AgenticRunResult } from '../agentic/index.js';
 import type { CreateAgentResult } from '../create-agent/types.js';
 
 /** Options for creating a mock agent. */

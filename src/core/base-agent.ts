@@ -6,30 +6,63 @@ import {
     Agent,
     AgentConfig,
     AgentContext,
+    AgentHooks,
     AgentInput,
+    AgentLifecycleHooks,
     AgentOutput,
+    AgentRunOptions,
+    AgentRunResult,
     AgentState,
+    EntityId,
     ExecutionMetadata,
+    Message,
+    MultiModalInput,
+    StreamChunk,
 } from './types.js';
-import { DebugLogger, createDebugLogger } from '@confused-ai/shared';
+import { generateEntityId } from './types.js';
+import { DebugLogger, createDebugLogger } from '../shared/index.js';
 
 /**
  * Abstract base class providing common agent functionality
  */
-export abstract class BaseAgent extends Agent {
+export abstract class BaseAgent implements Agent {
+    readonly id: EntityId;
+    name: string;
+    instructions: string = '';
+    state: AgentState = AgentState.IDLE;
+    readonly config: AgentConfig;
+    readonly hooks: AgentHooks;
     protected startTime?: Date;
     protected iterationCount = 0;
     protected logger: DebugLogger;
 
     constructor(config: AgentConfig) {
-        super(config);
+        this.config = config;
+        this.id = config.id ?? generateEntityId();
+        this.name = config.name;
+        this.hooks = {};
         this.logger = createDebugLogger(`Agent:${this.name}`, config.debug ?? false);
     }
 
+    async setState(newState: AgentState, _ctx: AgentContext): Promise<void> {
+        const old = this.state;
+        this.state = newState;
+        if (this.hooks.onStateChange) await this.hooks.onStateChange(old, newState, _ctx);
+    }
+
+    // These must be implemented by concrete subclasses (Agent interface)
+    abstract run(prompt: string | MultiModalInput, options?: AgentRunOptions): Promise<AgentRunResult>;
+    abstract stream(prompt: string | MultiModalInput, options?: Omit<AgentRunOptions, 'onChunk'>): AsyncIterable<string>;
+    abstract streamEvents(prompt: string | MultiModalInput, options?: Omit<AgentRunOptions, 'onChunk'>): AsyncIterable<StreamChunk>;
+    abstract createSession(userId?: string): Promise<string>;
+    abstract getSessionMessages(sessionId: string): Promise<Message[]>;
+    abstract withSession(sessionId: string): { run: BaseAgent['run']; stream: BaseAgent['stream']; streamEvents: BaseAgent['streamEvents'] };
+
     /**
-     * Main execution method with lifecycle hooks
+     * Internal execution method with lifecycle hooks (contracts-level AgentInput/AgentOutput).
+     * Subclasses that use the older AgentInput/AgentOutput contract should call this.
      */
-    async run(input: AgentInput, ctx: AgentContext): Promise<AgentOutput> {
+    async runWithContext(input: AgentInput, ctx: AgentContext): Promise<AgentOutput> {
         this.startTime = new Date();
         this.iterationCount = 0;
 

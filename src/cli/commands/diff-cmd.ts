@@ -9,8 +9,8 @@
  */
 
 import type { Command } from 'commander';
-import { SqliteEventStore, GraphEventType } from '@confused-ai/graph';
-import type { GraphEvent } from '@confused-ai/graph';
+import { SqliteEventStore, GraphEventType } from '../../graph/index.js';
+import type { GraphEvent } from '../../graph/index.js';
 
 interface NodeOutcome {
   status: string;
@@ -26,16 +26,17 @@ function extractOutcomes(events: GraphEvent[]): Map<string, NodeOutcome> {
     if (!outcomes.has(e.nodeId)) {
       outcomes.set(e.nodeId, { status: 'pending', attempts: 0, sequence: e.sequence });
     }
-    const o = outcomes.get(e.nodeId)!;
+    const o = outcomes.get(e.nodeId);
+    if (!o) continue;
     switch (e.type) {
       case GraphEventType.NODE_STARTED:
         o.status = 'running';
-        o.attempts = (e.data?.attempt as number) ?? o.attempts + 1;
+        o.attempts = typeof e.data?.['attempt'] === 'number' ? e.data['attempt'] : o.attempts + 1;
         o.sequence = e.sequence;
         break;
       case GraphEventType.NODE_COMPLETED:
         o.status = 'completed';
-        o.durationMs = e.data?.durationMs as number | undefined;
+        if (typeof e.data?.['durationMs'] === 'number') o.durationMs = e.data['durationMs'];
         break;
       case GraphEventType.NODE_FAILED:
         o.status = 'failed';
@@ -78,10 +79,12 @@ export function registerDiffCommand(program: Command): void {
       if (eventsA.length === 0) {
         console.error(`No events found for run A: "${opts.runIdA}"`);
         process.exit(1);
+        return;
       }
       if (eventsB.length === 0) {
         console.error(`No events found for run B: "${opts.runIdB}"`);
         process.exit(1);
+        return;
       }
 
       const outcomesA = extractOutcomes(eventsA);
@@ -93,8 +96,13 @@ export function registerDiffCommand(program: Command): void {
       // Summary line
       const totalA = eventsA.length;
       const totalB = eventsB.length;
-      const durA = eventsA[eventsA.length - 1].timestamp - eventsA[0].timestamp;
-      const durB = eventsB[eventsB.length - 1].timestamp - eventsB[0].timestamp;
+      const firstA = eventsA[0];
+      const lastA = eventsA[eventsA.length - 1];
+      const firstB = eventsB[0];
+      const lastB = eventsB[eventsB.length - 1];
+      if (!firstA || !lastA || !firstB || !lastB) return;
+      const durA = lastA.timestamp - firstA.timestamp;
+      const durB = lastB.timestamp - firstB.timestamp;
 
       console.log(`\nRun A: ${opts.runIdA}  (${totalA} events, ${durA}ms)`);
       console.log(`Run B: ${opts.runIdB}  (${totalB} events, ${durB}ms)`);

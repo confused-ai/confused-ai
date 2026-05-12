@@ -137,14 +137,14 @@ export interface CreateHttpServiceOptions {
      *
      * @example
      * ```ts
-     * import { SqliteAgentDb } from '@confused-ai/db';
+     * import { SqliteAgentDb } from '../db/index.js';
      * createHttpService({
      *   agents: { assistant },
      *   db: new SqliteAgentDb({ path: './agent.db' }),
      * });
      * ```
      */
-    db?: import('@confused-ai/db').AgentDb;
+    db?: import('../db/index.js').AgentDb;
     /**
      * Per-request timeout in milliseconds. Applies to agent execution (both streaming
      * and non-streaming). When exceeded the request is aborted and a 504 is returned.

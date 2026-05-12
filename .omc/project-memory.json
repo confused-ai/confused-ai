@@ -288,6 +288,12 @@
   },
   "hotPaths": [
     {
+      "path": "src/index.ts",
+      "accessCount": 12,
+      "lastAccessed": 1778580969136,
+      "type": "file"
+    },
+    {
       "path": "src/runtime/server.ts",
       "accessCount": 7,
       "lastAccessed": 1778565195206,
@@ -354,9 +360,9 @@
       "type": "file"
     },
     {
-      "path": "src/index.ts",
-      "accessCount": 2,
-      "lastAccessed": 1776855753303,
+      "path": "src/core/types.ts",
+      "accessCount": 3,
+      "lastAccessed": 1778580690561,
       "type": "file"
     },
     {
@@ -453,12 +459,6 @@
       "path": "README.md",
       "accessCount": 1,
       "lastAccessed": 1776855661978,
-      "type": "file"
-    },
-    {
-      "path": "src/core/types.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776855664554,
       "type": "file"
     },
     {

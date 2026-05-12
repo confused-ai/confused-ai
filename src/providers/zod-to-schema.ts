@@ -7,7 +7,7 @@
 
 import type { ZodType } from 'zod';
 import type { LLMToolDefinition } from '../providers/types.js';
-import type { Tool, ToolParameters } from '@confused-ai/tools';
+import type { Tool, ToolParameters } from '../tools/index.js';
 
 type ZodWithJsonSchema = ZodType & {
     toJSONSchema?: () => Record<string, unknown>;

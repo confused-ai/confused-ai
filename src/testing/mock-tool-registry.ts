@@ -21,8 +21,8 @@
  * ```
  */
 
-import type { Tool, ToolResult, ToolContext } from '@confused-ai/tools';
-import { ToolCategory } from '@confused-ai/tools';
+import type { Tool, ToolResult, ToolContext } from '../tools/index.js';
+import { ToolCategory } from '../tools/index.js';
 import { z } from 'zod';
 
 export interface ToolCallRecord {

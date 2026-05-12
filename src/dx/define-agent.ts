@@ -14,13 +14,13 @@
  */
 
 import type { CreateAgentOptions, CreateAgentResult } from '../create-agent.js';
-import type { SessionStore } from '@confused-ai/session';
-import type { GuardrailEngine } from '@confused-ai/guardrails';
-import type { ToolMiddleware } from '@confused-ai/tools';
-import type { AgenticLifecycleHooks } from '@confused-ai/agentic';
+import type { SessionStore } from '../session/index.js';
+import type { GuardrailEngine } from '../guardrails/index.js';
+import type { ToolMiddleware } from '../tools/index.js';
+import type { AgenticLifecycleHooks } from '../agentic/index.js';
 import type { z } from 'zod';
 import { createAgent } from '../create-agent.js';
-import { InMemorySessionStore } from '@confused-ai/session';
+import { InMemorySessionStore } from '../session/index.js';
 
 export interface DefineAgentOptions
     extends Pick<

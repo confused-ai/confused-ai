@@ -24,7 +24,7 @@
  * ```
  */
 
-import type { SessionStore, SessionData, SessionMessage } from '@confused-ai/session';
+import { InMemorySessionStore, type SessionStore, type SessionData, type SessionMessage } from '../session/index.js';
 import { RateLimiter } from './rate-limiter.js';
 import type { RateLimiterConfig } from './rate-limiter.js';
 
@@ -63,44 +63,36 @@ export class TenantScopedSessionStore implements SessionStore {
         return `${this.tenantId}:${id}`;
     }
 
-    private unprefix(id: string): string {
+    private unprefixData(data: SessionData): SessionData {
         const p = `${this.tenantId}:`;
-        return id.startsWith(p) ? id.slice(p.length) : id;
+        const id = data.id.startsWith(p) ? data.id.slice(p.length) : data.id;
+        return { ...data, id };
     }
 
-    private prefixData(data: SessionData): SessionData {
-        return { ...data, id: this.unprefix(data.id) };
+    async get(id: string): Promise<SessionData | undefined> {
+        const data = await this.base.get(this.prefix(id));
+        return data ? this.unprefixData(data) : undefined;
     }
 
-    async create(session: { agentId: string; userId?: string; messages?: SessionMessage[] } | string): Promise<SessionData> {
-        if (typeof session === 'string') {
-            // Caller supplied an explicit ID — prefix it
-            const s = await this.base.create(this.prefix(session));
-            return this.prefixData(s);
-        }
-        const s = await this.base.create(session);
-        return this.prefixData(s);
+    async create(data: { agentId: string; userId?: string; messages?: SessionMessage[] } | string): Promise<SessionData> {
+        const result = await this.base.create(data);
+        return this.unprefixData(result);
     }
 
-    async get(sessionId: string): Promise<SessionData | undefined> {
-        const s = await this.base.get(this.prefix(sessionId));
-        return s ? this.prefixData(s) : undefined;
+    async update(id: string, data: { messages: SessionMessage[] }): Promise<void> {
+        return this.base.update(this.prefix(id), data);
     }
 
-    async update(sessionId: string, data: { messages: SessionMessage[] }): Promise<void> {
-        return this.base.update(this.prefix(sessionId), data);
+    async getMessages(id: string): Promise<SessionMessage[]> {
+        return this.base.getMessages(this.prefix(id));
     }
 
-    async getMessages(sessionId: string): Promise<SessionMessage[]> {
-        return this.base.getMessages(this.prefix(sessionId));
+    async appendMessage(id: string, message: SessionMessage): Promise<void> {
+        return this.base.appendMessage(this.prefix(id), message);
     }
 
-    async appendMessage(sessionId: string, message: SessionMessage): Promise<void> {
-        return this.base.appendMessage(this.prefix(sessionId), message);
-    }
-
-    async delete(sessionId: string): Promise<void> {
-        return this.base.delete(this.prefix(sessionId));
+    async delete(id: string): Promise<void> {
+        return this.base.delete(this.prefix(id));
     }
 }
 
@@ -146,12 +138,13 @@ export class TenantRegistry {
  * @param tenantId - Unique identifier for the tenant.
  * @param options - Base stores and config to scope.
  */
-export async function createTenantContext(
+export function createTenantContext(
     tenantId: string,
     options: TenantContextOptions = {}
-): Promise<TenantContext> {
-    const baseStore = options.sessionStore ?? await createFallbackSessionStore();
-    const sessionStore = new TenantScopedSessionStore(baseStore, tenantId);
+): TenantContext {
+    const sessionStore = options.sessionStore
+        ? new TenantScopedSessionStore(options.sessionStore, tenantId)
+        : new TenantScopedSessionStore(createFallbackSessionStore(), tenantId);
 
     const rateLimiter = new RateLimiter({
         name: `tenant:${tenantId}`,
@@ -171,7 +164,6 @@ export async function createTenantContext(
 
 // ── Fallback session store (in-memory) ────────────────────────────────────
 
-async function createFallbackSessionStore(): Promise<SessionStore> {
-    const { InMemorySessionStore } = await import('@confused-ai/session');
+function createFallbackSessionStore(): SessionStore {
     return new InMemorySessionStore();
 }

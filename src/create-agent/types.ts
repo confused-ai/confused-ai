@@ -1,9 +1,9 @@
 import type { LLMProvider } from '../providers/types.js';
 import type { Message } from '../providers/types.js';
 import type { MultiModalInput } from '../providers/vision.js';
-import type { Tool, ToolRegistry, ToolMiddleware } from '@confused-ai/tools';
-import type { LightweightTool } from '@confused-ai/tools';
-import type { SessionStore } from '@confused-ai/session';
+import type { Tool, ToolRegistry, ToolMiddleware } from '../tools/index.js';
+import type { LightweightTool } from '../tools/index.js';
+import type { SessionStore } from '../session/index.js';
 import type {
     AdapterBindings,
     AdapterRegistry,
@@ -16,14 +16,14 @@ import type {
     RateLimitAdapter,
     AuditLogAdapter,
 } from '../adapters/index.js';
-import type { GuardrailEngine } from '@confused-ai/guardrails';
-import type { UserProfileStore } from '@confused-ai/learning';
-import type { LearningMode } from '@confused-ai/learning';
-import type { MemoryStore } from '@confused-ai/memory';
-import type { RAGEngine } from '@confused-ai/knowledge';
-import type { Storage } from '@confused-ai/storage';
+import type { GuardrailEngine } from '../guardrails/index.js';
+import type { UserProfileStore } from '../learning/index.js';
+import type { LearningMode } from '../learning/index.js';
+import type { MemoryStore } from '../memory/index.js';
+import type { RAGEngine } from '../knowledge/index.js';
+import type { Storage } from '../storage/index.js';
 import type { z } from 'zod';
-import type { AgenticRunResult, AgenticLifecycleHooks } from '@confused-ai/agentic';
+import type { AgenticRunResult, AgenticLifecycleHooks } from '../agentic/index.js';
 import type { Logger } from '../observability/types.js';
 
 type AnyLightweightTool = LightweightTool<any, any>;
@@ -244,7 +244,7 @@ export interface AgentRunOptions extends AgentContextOptions {
     /** Restrict which tools may execute for this run. */
     allowedTools?: string[];
     /** Abort/cancel the run. */
-    signal?: import('@confused-ai/agentic').AgenticRunConfig['signal'];
+    signal?: import('../agentic/index.js').AgenticRunConfig['signal'];
 }
 
 /**

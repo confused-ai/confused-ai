@@ -80,12 +80,17 @@ export function registerEvalCommand(program: Command): void {
                     const passed = sample.expected
                         ? actual.toLowerCase().includes(sample.expected.toLowerCase())
                         : true; // no expected = always pass (latency-only mode)
-                    results.push({ input: sample.input, expected: sample.expected, actual, passed });
+                    results.push({
+                        input: sample.input,
+                        ...(sample.expected !== undefined && { expected: sample.expected }),
+                        actual,
+                        passed,
+                    });
                     process.stdout.write(passed ? '✓\n' : '✗\n');
                 } catch (err) {
                     results.push({
                         input: sample.input,
-                        expected: sample.expected,
+                        ...(sample.expected !== undefined && { expected: sample.expected }),
                         actual: '',
                         passed: false,
                         error: err instanceof Error ? err.message : String(err),

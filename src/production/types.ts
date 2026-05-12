@@ -2,7 +2,7 @@
  * Production: runtime, control plane, evals for accuracy, performance, latency.
  */
 
-import type { EntityId } from '../core/types.js';
+import type { EntityId } from '../core/index.js';
 
 /** HTTP runtime: serve agents over HTTP (FastAPI-style; use Express/Hono/Fastify impl) */
 export interface AgentRuntime {

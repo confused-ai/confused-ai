@@ -159,6 +159,7 @@ export class SqliteAuditStore implements AuditStore {
     }
 
     static create(filePath: string): SqliteAuditStore {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         let Database: (p: string) => SqliteAuditStore['db'];
         try {
             Database = require('better-sqlite3') as typeof Database;

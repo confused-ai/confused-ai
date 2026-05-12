@@ -6,11 +6,18 @@ import {
     AgentContext,
     EntityId,
 } from './types.js';
-import type { MemoryStore } from '@confused-ai/memory';
-import type { ToolRegistry } from '@confused-ai/tools';
-import type { Planner } from '@confused-ai/planner';
-import { InMemoryStore } from '@confused-ai/memory';
-import { ToolRegistryImpl } from '@confused-ai/tools';
+import type { MemoryStore } from '../memory/index.js';
+import type { ToolRegistry } from '../tools/index.js';
+import type { Planner } from '../planner/index.js';
+import { InMemoryStore } from '../memory/index.js';
+import { ToolRegistryImpl } from '../tools/index.js';
+
+// Cast helpers — AgentContext uses `unknown` to stay dep-free, but callers use typed stores
+type TypedAgentContext = Omit<AgentContext, 'memory' | 'tools' | 'planner'> & {
+    memory?: MemoryStore;
+    tools?: ToolRegistry;
+    planner?: Planner;
+};
 
 /**
  * Builder for creating AgentContext instances
@@ -78,7 +85,7 @@ export class AgentContextBuilder {
      * - tools  → empty ToolRegistryImpl (auto-created if not set)
      * - planner → undefined (optional; omit for reactive/agentic agents)
      */
-    build(): AgentContext {
+    build(): TypedAgentContext {
         return {
             agentId: this.agentId,
             memory: this.memory ?? new InMemoryStore(),
@@ -92,12 +99,13 @@ export class AgentContextBuilder {
      * Create a builder from an existing context
      */
     static fromContext(context: AgentContext): AgentContextBuilder {
+        const typed = context as TypedAgentContext;
         const builder = new AgentContextBuilder();
-        builder.agentId = context.agentId;
-        builder.memory = context.memory;
-        builder.tools = context.tools;
-        builder.planner = context.planner;
-        builder.metadata = { ...context.metadata };
+        builder.agentId = typed.agentId;
+        builder.memory = typed.memory;
+        builder.tools = typed.tools;
+        builder.planner = typed.planner;
+        builder.metadata = { ...typed.metadata };
         return builder;
     }
 }

@@ -9,8 +9,8 @@
  */
 
 import type { Command } from 'commander';
-import { SqliteEventStore } from '@confused-ai/graph';
-import type { GraphEvent } from '@confused-ai/graph';
+import { SqliteEventStore } from '../../graph/index.js';
+import type { GraphEvent } from '../../graph/index.js';
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
@@ -58,6 +58,7 @@ export function registerReplayCommand(program: Command): void {
 
       const first = events[0];
       const last = events[events.length - 1];
+      if (!first || !last) return;
       const totalMs = last.timestamp - first.timestamp;
 
       console.log(`\nRun:      ${opts.runId}`);

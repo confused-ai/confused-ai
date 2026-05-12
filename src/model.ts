@@ -15,7 +15,7 @@ export {
     BedrockConverseProvider,
     createOpenRouterProvider,
 } from './providers/index.js';
-export { OpenAIEmbeddingProvider } from '@confused-ai/memory';
+export { OpenAIEmbeddingProvider } from './memory/index.js';
 
 // ── Provider Types ──────────────────────────────────────────────────────────
 export type {

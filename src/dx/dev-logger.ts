@@ -41,7 +41,7 @@ export function createDevLogger(): Logger {
 /**
  * Create tool middleware that logs every tool call/result in dev (best DX).
  */
-export function createDevToolMiddleware(): import('@confused-ai/tools').ToolMiddleware {
+export function createDevToolMiddleware(): import('../tools/index.js').ToolMiddleware {
     return {
         beforeExecute(tool, params) {
             console.debug(`${P} 🔧 tool.call ${tool.name}`, params);

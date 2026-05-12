@@ -19,8 +19,8 @@
  * ```
  */
 
-import { MODEL_PRICING } from '../providers/cost-tracker.js';
-import { AgentError, ErrorCode, type ErrorCodeType } from '@confused-ai/shared';
+import { MODEL_PRICING } from './_pricing.js';
+import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/index.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

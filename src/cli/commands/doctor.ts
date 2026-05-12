@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import { createRequire } from 'node:module';
 
-const require = createRequire(import.meta.url);
+const require = createRequire(`${process.cwd()}/package.json`);
 
 function checkEnv(key: string): { set: boolean; value: string } {
     const val = process.env[key];

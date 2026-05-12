@@ -13,7 +13,8 @@ import { registerReplayCommand } from './commands/replay-cmd.js';
 import { registerInspectCommand } from './commands/inspect-cmd.js';
 import { registerExportCommand } from './commands/export-cmd.js';
 import { registerDiffCommand } from './commands/diff-cmd.js';
-import { VERSION } from '@confused-ai/shared';
+import { registerChatCommand } from './commands/chat.js';
+import { VERSION } from '../shared/index.js';
 
 /**
  * Composes the CLI: one `Command` root, subcommands in `commands/`.
@@ -39,6 +40,7 @@ export function buildProgram(): Command {
     registerInspectCommand(program);
     registerExportCommand(program);
     registerDiffCommand(program);
+    registerChatCommand(program);
 
     return program;
 }

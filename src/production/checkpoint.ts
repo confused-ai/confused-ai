@@ -21,7 +21,7 @@
  * ```
  */
 
-import type { Message } from '../providers/types.js';
+import type { Message } from '../core/index.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -105,6 +105,7 @@ export class SqliteCheckpointStore implements AgentCheckpointStore {
     }
 
     static create(filePath: string): SqliteCheckpointStore {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         let Database: (p: string) => SqliteCheckpointStore['db'];
         try {
             Database = require('better-sqlite3') as typeof Database;

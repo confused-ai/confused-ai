@@ -2,7 +2,7 @@
  * LLM provider type definitions — canonical source moved to @confused-ai/core.
  *
  * This file is now a compatibility re-export barrel.
- * Import from '@confused-ai/core' directly in new code.
+ * Import from '../core/index.js' directly in new code.
  *
  * NOTE: LLMProvider and StreamOptions are kept local for backward compatibility —
  * the src/ legacy providers use StreamDelta-based onChunk. Once Wave 2 (provider
@@ -30,14 +30,14 @@ export type {
     IToolCallProvider,
     IEmbeddingProvider,
     IFullLLMProvider,
-} from '@confused-ai/core';
+} from '../core/index.js';
 
 // Backward compat alias: StreamChunk was the text-delta type (now TextStreamChunk)
-export type { TextStreamChunk as StreamChunk } from '@confused-ai/core';
+export type { TextStreamChunk as StreamChunk } from '../core/index.js';
 
 // ── Legacy-compatible types kept local until Wave 2 completes ─────────────────
 
-import type { GenerateOptions, Message, LLMToolDefinition, StreamDelta, ToolCall } from '@confused-ai/core';
+import type { GenerateOptions, Message, LLMToolDefinition, StreamDelta, ToolCall } from '../core/index.js';
 
 /** Streaming options — legacy variant where onChunk receives typed StreamDelta objects. */
 export interface StreamOptions {

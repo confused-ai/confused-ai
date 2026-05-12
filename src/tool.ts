@@ -22,12 +22,12 @@ export {
     type SimpleToolContext,
     type ToolWrapMiddleware,
     type ExtendToolOptions,
-} from '@confused-ai/tools';
+} from './tools/index.js';
 
 // ── Tool types ──────────────────────────────────────────────────────────────
 export {
     ToolCategory,
-} from '@confused-ai/tools';
+} from './tools/index.js';
 
 export type {
     Tool,
@@ -38,9 +38,9 @@ export type {
     ToolRegistry,
     ToolMiddleware,
     ToolParameters,
-} from '@confused-ai/tools';
+} from './tools/index.js';
 
 // ── Built-in tools ──────────────────────────────────────────────────────────
-export * from '@confused-ai/tools';
+export * from './tools/index.js';
 
 // ── MCP (Model Context Protocol) ────────────────────────────────────────────

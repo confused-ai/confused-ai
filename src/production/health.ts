@@ -8,8 +8,8 @@
  * - Aggregated health status
  */
 
-import type { LLMProvider } from '../providers/types.js';
-import type { SessionStore } from '@confused-ai/session';
+import type { LLMProvider } from '../core/index.js';
+import type { SessionStore } from '../session/index.js';
 
 /** Health check status */
 export enum HealthStatus {

@@ -9,8 +9,8 @@
  * - Metrics integration
  */
 
-import type { MetricsCollector } from '../observability/types.js';
-import { AgentError, ErrorCode, type ErrorCodeType } from '@confused-ai/shared';
+import type { MetricsCollector } from './_types.js';
+import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/index.js';
 
 /** Rate limiter configuration */
 export interface RateLimiterConfig {

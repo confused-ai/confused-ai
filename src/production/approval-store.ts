@@ -33,7 +33,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { AgentError, ErrorCode, type ErrorCodeType } from '@confused-ai/shared';
+import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/index.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -215,6 +215,7 @@ export class SqliteApprovalStore implements ApprovalStore {
     }
 
     static create(filePath: string): SqliteApprovalStore {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         let Database: (p: string) => SqliteApprovalStore['db'];
         try {
             Database = require('better-sqlite3') as typeof Database;
