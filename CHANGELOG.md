@@ -7,6 +7,61 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 1.0.0 (2026-05-15)
+
+
+### Features
+
+* add additional tools and configurations ([5b21948](https://github.com/confused-ai/confused-ai/commit/5b2194863bff2a9e3961108f2146fd91f02621dc))
+* add CI, CodeQL, and stale workflows; implement Dependabot configuration ([0667e59](https://github.com/confused-ai/confused-ai/commit/0667e59efb5f6c9d03ac42da0a34dab887419218))
+* add comprehensive documentation for custom adapters, including session, memory, vector store, and LLM provider examples ([4f5df3a](https://github.com/confused-ai/confused-ai/commit/4f5df3a797f48c948d6a185a2487c3561f71140d))
+* add Delightful DX and Enterprise sections with interactive components ([29d9d43](https://github.com/confused-ai/confused-ai/commit/29d9d4373456870bd8f6b3533a6719dbf52cb262))
+* add examples for code review pipeline, eval regression guard, reasoning agent, and scheduled agent ([583821a](https://github.com/confused-ai/confused-ai/commit/583821a5c09c3c650319e3374a04bb71a9a7f7e7))
+* add feedback handling and session fallback store ([66721de](https://github.com/confused-ai/confused-ai/commit/66721de18e70302c18d9ebd1ad0cee2994dfba79))
+* add file system utility tools for reading, writing, and managing files ([a796e34](https://github.com/confused-ai/confused-ai/commit/a796e34782087049e0cad6dbc73e047a3698924f))
+* add HTTP client tool for making web requests ([a796e34](https://github.com/confused-ai/confused-ai/commit/a796e34782087049e0cad6dbc73e047a3698924f))
+* add knowledgebase support and optional buildContext method to agent factory and RAGEngine interface ([318409a](https://github.com/confused-ai/confused-ai/commit/318409aa2ddf81a880c26166918dbaabde7d6c5c))
+* add new packages for adapter-redis, compression, context, db, eval, models, reasoning, router, scheduler, skills, and test-utils ([b4a3076](https://github.com/confused-ai/confused-ai/commit/b4a3076e86ab6a429ad2b94ee6cb2097bd4e2d1f))
+* add scheduler types and interfaces for schedule management ([b48b041](https://github.com/confused-ai/confused-ai/commit/b48b0412f2541ad149867749761d7b648a32eb16))
+* add SQLite-backed learning stores for user memories, session contexts, learned knowledge, entity memories, and decision logs ([7a9db29](https://github.com/confused-ai/confused-ai/commit/7a9db29c225639fdd1af6a316ae787ea9178fa75))
+* add turbo.json for task management and update.md for architecture guidelines ([481d1ac](https://github.com/confused-ai/confused-ai/commit/481d1ac1e0398b880642644a19e31f9a60942167))
+* bump version to 0.8.1 ([dd5e7f2](https://github.com/confused-ai/confused-ai/commit/dd5e7f2cda51670edbb3e9e318e12e45283d1d5c))
+* create DbScheduleStore for managing schedules in AgentDb ([7a9db29](https://github.com/confused-ai/confused-ai/commit/7a9db29c225639fdd1af6a316ae787ea9178fa75))
+* create utility index for easy access to tools ([a796e34](https://github.com/confused-ai/confused-ai/commit/a796e34782087049e0cad6dbc73e047a3698924f))
+* enhance CtaBanner with copy functionality and improved styling ([f7763b5](https://github.com/confused-ai/confused-ai/commit/f7763b5b3651feddee054ace9c5a16e1c310cb56))
+* enhance Graph Engine with durable execution, wave scheduling, and testing utilities ([9e6640b](https://github.com/confused-ai/confused-ai/commit/9e6640b9d229013c9a0d0487e9be9ba28ae5b72c))
+* enhance README and documentation links, update package metadata ([9725a47](https://github.com/confused-ai/confused-ai/commit/9725a4793ffb04b267ea0ec0db88a7c521440876))
+* enhance tsup configuration to include additional entry points for session and plugins packages ([b4a3076](https://github.com/confused-ai/confused-ai/commit/b4a3076e86ab6a429ad2b94ee6cb2097bd4e2d1f))
+* enhance voice module with OpenAI and ElevenLabs support for TTS and STT ([bb1bb6b](https://github.com/confused-ai/confused-ai/commit/bb1bb6b3bf6666d8e37cacc42b7231d3c6ba4104))
+* expand entry points in tsup configuration to include additional source files ([c9866d2](https://github.com/confused-ai/confused-ai/commit/c9866d2401920b96fe2ddb77f566e5ea6896930c))
+* expand workflows documentation with advanced features ([bb1bb6b](https://github.com/confused-ai/confused-ai/commit/bb1bb6b3bf6666d8e37cacc42b7231d3c6ba4104))
+* implement caching and compression for tool execution results ([bdc6c1e](https://github.com/confused-ai/confused-ai/commit/bdc6c1e9df4ab5b0b395f1a54003702a73e2513b))
+* implement DbSessionStore for session management ([7a9db29](https://github.com/confused-ai/confused-ai/commit/7a9db29c225639fdd1af6a316ae787ea9178fa75))
+* implement graph test runner with mock LLM provider and event assertions ([b48b041](https://github.com/confused-ai/confused-ai/commit/b48b0412f2541ad149867749761d7b648a32eb16))
+* implement shell tool for executing shell commands with security measures ([a796e34](https://github.com/confused-ai/confused-ai/commit/a796e34782087049e0cad6dbc73e047a3698924f))
+* introduce DbMemoryStore for persistent memory management ([7a9db29](https://github.com/confused-ai/confused-ai/commit/7a9db29c225639fdd1af6a316ae787ea9178fa75))
+* Introduce Durable Execution Engine and Lightweight Agent State Machine ([01ccd7b](https://github.com/confused-ai/confused-ai/commit/01ccd7bca2036ed76b98f00c9cf9abaec57d8466))
+* **playground:** add interactive agent playground with HTTP server and UI ([4632935](https://github.com/confused-ai/confused-ai/commit/463293521cb6c95a3f63c10afb776deadeec15d0))
+* release version 2.0.0 with new features, improvements, and fixes ([126f6b5](https://github.com/confused-ai/confused-ai/commit/126f6b50e8682ec3473caf6dba29e7bc09775e06))
+* update documentation and improve site configuration ([48888e6](https://github.com/confused-ai/confused-ai/commit/48888e643220c8858e468357e734c75759f8f291))
+* update import paths and enhance session management documentation ([b833736](https://github.com/confused-ai/confused-ai/commit/b833736013e1abb700f7300670fb3a20231075ad))
+* update import paths to 'confused-ai/production' for various modules and enhance observability examples ([72e4ed7](https://github.com/confused-ai/confused-ai/commit/72e4ed7586513d36d5c437802bc5b7a90fc83004))
+* update package versions and descriptions; enhance observability with Prometheus metrics ([e9db968](https://github.com/confused-ai/confused-ai/commit/e9db96849e8b11aceac0e953b9018259edba78e4))
+* update roadmap with cumulative budget, risk register, and governance details; refactor session store and type definitions ([4bb9292](https://github.com/confused-ai/confused-ai/commit/4bb9292b9fa51e377c2eb464747ab77932333ca1))
+* update version to 0.8.0 and refactor import paths for consistency ([f5d7fd6](https://github.com/confused-ai/confused-ai/commit/f5d7fd68c5483fc516e441a47323f62501ccc930))
+* update version to 1.0.0 in package.json and version.ts ([716e8f0](https://github.com/confused-ai/confused-ai/commit/716e8f0fa64fabbc647747d82e3b3b5b8851f95f))
+
+
+### Bug Fixes
+
+* add missing Tool fields in MockToolRegistry ([63a35ab](https://github.com/confused-ai/confused-ai/commit/63a35abb7c5faa6967a3478085745aa70e4f18d0))
+* modify build scripts to clean dist directory before building for all packages ([b4a3076](https://github.com/confused-ai/confused-ai/commit/b4a3076e86ab6a429ad2b94ee6cb2097bd4e2d1f))
+* remove static.yml, fix deploy-docs to build VitePress on all pushes ([93b0978](https://github.com/confused-ai/confused-ai/commit/93b09782370742f05b8e6407179e057c89ec1668))
+* update built-in adapter versions to 1.2.0 ([bb1bb6b](https://github.com/confused-ai/confused-ai/commit/bb1bb6b3bf6666d8e37cacc42b7231d3c6ba4104))
+* update hero text to improve clarity and impact ([1f6d444](https://github.com/confused-ai/confused-ai/commit/1f6d4442dafb98132f91172aad7ab0eae87bce6c))
+* update llmProvider to llm in eval-regression examples and rename manager methods in scheduled-agent ([28409ca](https://github.com/confused-ai/confused-ai/commit/28409ca1a7c7f4b7ac520994d5c6319aed94740d))
+* update version to 1.0.1 in package.json ([be55c8a](https://github.com/confused-ai/confused-ai/commit/be55c8a57a343ffa7e2051af331b1d7983b3a51a))
+
 ## [2.0.0] — 2026-05-09
 
 ### Added
