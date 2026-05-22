@@ -75,7 +75,7 @@ export type StreamDelta = TextStreamChunk | StreamToolCallChunk;
 
 // ── Stream options ────────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated
+
 export type { GenerateOptions, GenerateResult, LLMProvider, ToolCallResult } from './runner/types.js';
 
 export interface StreamOptions {

@@ -110,7 +110,7 @@ export async function streamToSSE(
         for await (const delta of stream) {
             if (delta.type === 'text') {
                 res.write(`event: ${textEvent}\ndata: ${JSON.stringify({ text: delta.text })}\n\n`);
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
             } else if (delta.type === 'tool_call') {
                 res.write(`event: ${toolEvent}\ndata: ${JSON.stringify({ id: delta.id, name: delta.name, argsDelta: delta.argsDelta })}\n\n`);
             }
@@ -195,9 +195,9 @@ export function streamTee(
 
     async function* makeConsumer(buf: StreamDelta[], side: 'drainA' | 'drainB'): AsyncIterable<StreamDelta> {
         while (true) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
             if (buf.length > 0) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
                 yield buf.shift()!;
             } else if (state.done) {
                 return;
@@ -270,7 +270,7 @@ export async function* streamMerge(
 
     while (active > 0 || queue.length > 0) {
         if (queue.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             yield queue.shift()!;
         } else {
             await new Promise<void>((r) => { state.notify = r; });

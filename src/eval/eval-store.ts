@@ -274,7 +274,7 @@ export class SqliteEvalStore implements EvalStore {
     }
 
     static create(filePath: string): SqliteEvalStore {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+
         let Database: (p: string) => BetterSqlite3DB;
         try {
             Database = require('better-sqlite3') as typeof Database;

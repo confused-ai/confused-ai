@@ -48,9 +48,9 @@ export class RabbitMQBackgroundQueue implements BackgroundQueue {
     readonly name = 'rabbitmq';
 
     private readonly opts: RabbitMQBackgroundQueueOptions;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private connection?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private channels: any[] = [];
 
     constructor(options: RabbitMQBackgroundQueueOptions) {
@@ -58,7 +58,7 @@ export class RabbitMQBackgroundQueue implements BackgroundQueue {
     }
 
     private async getChannel(): Promise<unknown> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         // @ts-ignore -- amqplib is an optional peer dep
         const amqplib = (await import('amqplib')) as any;
         if (!this.connection) {

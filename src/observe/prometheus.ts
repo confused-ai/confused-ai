@@ -55,7 +55,7 @@ async function trySdkScrape(): Promise<string | null> {
   try {
     // @opentelemetry/exporter-prometheus is an optional peer dep.
     // Dynamic import keeps this file tree-shakeable for users who don't install it.
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
     // @ts-ignore -- optional peer dependency may not be installed
     const mod = await import('@opentelemetry/exporter-prometheus') as unknown;
     // If the PrometheusExporter has a static `getMetrics()` or `collect()` method

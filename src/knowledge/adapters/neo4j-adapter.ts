@@ -84,9 +84,9 @@ export class Neo4jKnowledgeAdapter implements VectorStore {
         try {
             const embeddings = await Promise.all(documents.map((d) => this._config.embed(d.content)));
             for (let i = 0; i < documents.length; i++) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
                 const doc       = documents[i]!;
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
                 const embedding = embeddings[i]!;
                 await session.run(
                     `MERGE (d:${this._config.nodeLabel} { id: $id })
@@ -151,14 +151,14 @@ export class Neo4jKnowledgeAdapter implements VectorStore {
         if (this._driver) return this._driver;
         // Dynamic import so neo4j-driver is truly optional at bundle time
         // @ts-expect-error — optional peer dependency, may not be installed
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         const neo4j = await import('neo4j-driver').catch(() => {
             throw new Error(
                 '@confused-ai/knowledge Neo4jKnowledgeAdapter requires "neo4j-driver". ' +
                 'Install it with: pnpm add neo4j-driver',
             );
         });
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
         this._driver = ((neo4j as { default?: { driver: (...args: unknown[]) => Neo4jDriver }; driver?: (...args: unknown[]) => Neo4jDriver })
             .default?.driver(this._config.uri, (neo4j as { default?: { auth?: { basic: (u: string, p: string) => unknown } } }).default?.auth?.basic(this._config.username, this._config.password))
             ?? (neo4j as { driver: (uri: string, auth: unknown) => Neo4jDriver }).driver(

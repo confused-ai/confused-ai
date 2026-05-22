@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * @confused-ai/db/dynamodb — DynamoDbAgentDb.
  *
@@ -25,9 +24,9 @@ const MISSING =
   '  Install: npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb';
 
 // Minimal surface types (avoid hard dep on AWS SDK)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type DDBDocClient = { send(cmd: any): Promise<any> };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type DDBClient = any;
 
 
@@ -65,7 +64,7 @@ export class DynamoDbAgentDb extends AgentDb {
 
   private doc(): DDBDocClient {
     if (this._doc) return this._doc;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     let ddbLib: any, docLib: any;
     try {
       ddbLib = require('@aws-sdk/client-dynamodb');
@@ -87,7 +86,7 @@ export class DynamoDbAgentDb extends AgentDb {
   }
 
   private async _doInit(): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     let ddbLib: any;
     try { ddbLib = require('@aws-sdk/client-dynamodb'); } catch { throw new Error(MISSING); }
     // Try to create the table; ignore ResourceInUseException (already exists)
@@ -142,9 +141,9 @@ export class DynamoDbAgentDb extends AgentDb {
     return `${entity}#${filterKey}#${filterValue}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   private async _put(entity: string, id: string, data: Record<string, unknown>, gsi?: { key: string; value: string }): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     let docLib: any;
     try { docLib = require('@aws-sdk/lib-dynamodb'); } catch { throw new Error(MISSING); }
     const item: Record<string, unknown> = {
@@ -164,7 +163,7 @@ export class DynamoDbAgentDb extends AgentDb {
   }
 
   private async _get(entity: string, id: string): Promise<Record<string, unknown> | null> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     let docLib: any;
     try { docLib = require('@aws-sdk/lib-dynamodb'); } catch { throw new Error(MISSING); }
     const result = await this.doc().send(new docLib.GetCommand({
@@ -175,7 +174,7 @@ export class DynamoDbAgentDb extends AgentDb {
   }
 
   private async _del(entity: string, id: string): Promise<boolean> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     let docLib: any;
     try { docLib = require('@aws-sdk/lib-dynamodb'); } catch { throw new Error(MISSING); }
     const existing = await this._get(entity, id);
@@ -188,7 +187,7 @@ export class DynamoDbAgentDb extends AgentDb {
   }
 
   private async _scan(entity: string, limit?: number): Promise<Record<string, unknown>[]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     let docLib: any;
     try { docLib = require('@aws-sdk/lib-dynamodb'); } catch { throw new Error(MISSING); }
     const result = await this.doc().send(new docLib.ScanCommand({

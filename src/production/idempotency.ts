@@ -115,7 +115,7 @@ export class SqliteIdempotencyStore implements IdempotencyStore {
     }
 
     static create(filePath: string): SqliteIdempotencyStore {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+
         let Database: (p: string) => SqliteIdempotencyStore['db'];
         try {
             Database = require('better-sqlite3') as typeof Database;

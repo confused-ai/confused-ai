@@ -215,7 +215,7 @@ export class SqliteApprovalStore implements ApprovalStore {
     }
 
     static create(filePath: string): SqliteApprovalStore {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+
         let Database: (p: string) => SqliteApprovalStore['db'];
         try {
             Database = require('better-sqlite3') as typeof Database;

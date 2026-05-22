@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * @confused-ai/db/turso — TursoAgentDb.
  *

@@ -134,7 +134,7 @@ export function defineRole(def: RoleDefinition): RoleAgent {
           `Supply an llm to defineRole, or pass this role to createTeam which provides one.`,
         );
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
       _agent = createAgenticAgent({
         name: def.role,
         instructions: systemPrompt,

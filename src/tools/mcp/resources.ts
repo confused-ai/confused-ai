@@ -195,7 +195,7 @@ function matchUriTemplate(template: string, uri: string): Record<string, string>
     });
     const match = new RegExp(`^${regexStr}$`).exec(uri);
     if (!match) return null;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     return Object.fromEntries(varNames.map((name, i) => [name, decodeURIComponent(match[i + 1]!)]));
 }
 
@@ -306,7 +306,7 @@ export class McpSamplingClient {
         if (!res.ok) throw new Error(`MCP sampling HTTP ${res.status}: ${await res.text()}`);
         const body = await res.json() as { result?: McpSamplingResult; error?: { code: number; message: string } };
         if (body.error) throw new Error(`MCP sampling ${body.error.code}: ${body.error.message}`);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         return body.result!;
     }
 }

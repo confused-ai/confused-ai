@@ -15,7 +15,7 @@ type ZodWithJsonSchema = ZodType & {
 
 interface ZodCheck {
     // Zod 3 internal check structure (Zod 4 uses toJSONSchema() instead)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     kind: string;
     value?: number;
     regex?: { source: string };

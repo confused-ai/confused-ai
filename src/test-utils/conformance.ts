@@ -174,7 +174,7 @@ export function runMemoryStoreConformance(
       const stored = await mem.store(baseEntry());
       const fetched = await mem.get(stored.id);
       t.expect(fetched).toBeDefined();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       t.expect(fetched!.id).toBe(stored.id);
     });
 
@@ -190,7 +190,7 @@ export function runMemoryStoreConformance(
       const updated = await mem.update(stored.id, { content: 'updated content' });
       t.expect(updated.content).toBe('updated content');
       const fetched = await mem.get(stored.id);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       t.expect(fetched!.content).toBe('updated content');
     });
 
@@ -324,7 +324,7 @@ export function runVectorStoreConformance(
       t.expect(ids.includes('v1') || ids.includes('v3')).toBe(true);
       // Scores should be descending
       for (let i = 1; i < results.length; i++) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         t.expect(results[i - 1]!.score).toBeGreaterThanOrEqual(results[i]!.score);
       }
     });
@@ -359,7 +359,7 @@ export function runVectorStoreConformance(
       await store.upsert([{ id: 'gv1', vector: mkVec(1), metadata: { note: 'test' } }]);
       const entry = await store.get('gv1');
       t.expect(entry).not.toBeNull();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       t.expect(entry!.id).toBe('gv1');
     });
 

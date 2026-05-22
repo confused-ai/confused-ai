@@ -79,7 +79,7 @@ function toOpenAIMessages(messages: Message[]): OpenAIMessageParam[] {
     return messages.map((m) => {
         if (m.role === 'assistant' && 'toolCalls' in m && (m as { toolCalls?: ToolCall[] }).toolCalls?.length) {
             const content = m.content;
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
             const normalized = Array.isArray(content) ? content : (content ?? null);
             return {
                 role: 'assistant',
@@ -101,7 +101,7 @@ function toOpenAIMessages(messages: Message[]): OpenAIMessageParam[] {
             };
         }
         const content = m.content;
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
         const normalized = Array.isArray(content) ? content : (content ?? null);
         return { role: m.role, content: normalized as OpenAIContent };
     });
@@ -182,7 +182,7 @@ export class OpenAIProvider implements LLMProvider {
         if (!choice?.message) {
             this.logger.warn('Empty response from LLM');
             const fr = (choice?.finish_reason ?? 'stop') as GenerateResult['finishReason'];
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             return { text: '', finishReason: fr! };
         }
 

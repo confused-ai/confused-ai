@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await, @typescript-eslint/no-require-imports */
 /**
  * @confused-ai/session — SQLite session store (durable, zero external server).
  *
@@ -35,7 +34,7 @@ export interface SqliteSessionStoreOptions {
 
 export function createSqliteStore(opts: SqliteSessionStoreOptions = {}): SessionStore {
   // Lazy SDK load — throws with helpful message if not installed
-   
+
   let Database: SqliteConstructor;
   try {
     Database = require('better-sqlite3') as SqliteConstructor;

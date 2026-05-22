@@ -201,7 +201,7 @@ export class AgenticRunner {
             const inputResults = await this.guardrails.checkAll(inputCtx);
             const inputViolations = this.guardrails.getViolations(inputResults);
             if (inputViolations.length > 0) {
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
                 if (span.setStatus !== undefined) span.setStatus({ code: 2 /* ERROR */ });
                 return this._blockedResult(prompt, agentId, sessionId, runConfig);
             }
@@ -282,7 +282,7 @@ export class AgenticRunner {
             }
 
             // ── Process LLM output ────────────────────────────────────────
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
             lastText = result.text ?? '';
             if (result.usage) {
                 usage = { ...result.usage };
@@ -395,7 +395,7 @@ export class AgenticRunner {
     private async _applyReasoning(prompt: string, systemPrompt: string): Promise<string | undefined> {
         // reasoning is guaranteed non-null here: _applyReasoning is only called
         // when this.config.reasoning is set (checked by callers).
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const cfg = this.config.reasoning!;
         const strategy = cfg.strategy ?? 'cot';
         const maxSteps  = cfg.maxSteps ?? 6;
@@ -403,7 +403,7 @@ export class AgenticRunner {
         // Build a lightweight generate fn that delegates to the runner's LLM
         const generate = async (msgs: Array<{ role: string; content: string }>): Promise<string> => {
             const result = await this.config.llm.generateText(msgs as Message[]);
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
             return result.text ?? '';
         };
 
@@ -447,12 +447,12 @@ export class AgenticRunner {
         if (!this._compressionManager) {
             const generate = async (msgs: Array<{ role: string; content: string }>): Promise<string> => {
                 const result = await this.config.llm.generateText(msgs as Message[]);
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
                 return result.text ?? '';
             };
             // compression is guaranteed non-null: _maybeCompress is only called when
             // this.config.compression is set.
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             const cfg = this.config.compression!;
             const tokenLimit = cfg.messageSizeThreshold ?? 2000;
             this._compressionManager = new CompressionManager({
@@ -555,7 +555,7 @@ export class AgenticRunner {
                 () => {
                     if (useStreaming) {
                         // streamText is confirmed defined when useStreaming is true (checked by callers)
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
                         return this.config.llm.streamText!(messages, {
                             temperature: this.config.temperature ?? 0.7,
                             maxTokens: this.config.maxTokens ?? 4096,
@@ -564,7 +564,7 @@ export class AgenticRunner {
                             onChunk: (chunk: string | { type: string; text: string }) => {
                                 const text = typeof chunk === 'string' ? chunk : chunk.text;
                                 // streamHooks and onChunk are set when useStreaming is true
-                                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
                                 ctx.streamHooks!.onChunk!(text);
                             },
                         });
@@ -586,10 +586,10 @@ export class AgenticRunner {
     private async _executeAllTools(toolCalls: LLMToolCall[], ctx: RunContext): Promise<Message[]> {
         const concurrency = Math.min(this.config.toolConcurrency ?? 8, 32); // Cap at 32 to prevent abuse
         if (toolCalls.length === 0) return [];
-        
+
         const results = new Array<Message>(toolCalls.length);
         const queue = toolCalls.map((tc, i) => ({ tc, i }));
-        
+
         // Semaphore pattern: spawn N workers that consume tasks from the queue
         const workers = Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
             while (queue.length > 0) {
@@ -603,7 +603,7 @@ export class AgenticRunner {
                 }
             }
         });
-        
+
         await Promise.all(workers);
         return results;
     }
@@ -643,7 +643,7 @@ export class AgenticRunner {
 
         const toolContext = this._buildToolContext(tool, agentId, sessionId);
         // toolMiddleware is initialised to [] in the constructor; the ! is safe.
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const middleware = this.config.toolMiddleware!;
 
         for (const m of middleware) {
@@ -680,7 +680,7 @@ export class AgenticRunner {
             return this._toolErrorMessage(tc.id, error.message);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
         if (toolResultObj !== undefined) {
             for (const m of middleware) {
                 if (m.afterExecute !== undefined) await m.afterExecute(tool, toolResultObj, toolContext);
@@ -708,9 +708,9 @@ export class AgenticRunner {
         ctx: GuardrailContext,
     ): Promise<(Message & { toolCallId: string }) | null> {
         // guardrails is checked by all callers of this method before calling it
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const results = await this.guardrails!.checkToolCall(tc.name, tc.arguments, ctx);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const violations = this.guardrails!.getViolations(results);
         if (!violations.length) return null;
 
@@ -723,9 +723,9 @@ export class AgenticRunner {
 
     private async _checkOutputGuardrails(result: unknown, ctx: GuardrailContext): Promise<unknown> {
         const outputCtx: GuardrailContext = { ...ctx, output: result };
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const results = await this.guardrails!.validateOutput(result, outputCtx);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const violations = this.guardrails!.getViolations(results);
         if (!violations.length) return result;
 

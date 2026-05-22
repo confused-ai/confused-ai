@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 /**
  * @confused-ai/models — Ollama adapter (local models). Lazy SDK import.
  */

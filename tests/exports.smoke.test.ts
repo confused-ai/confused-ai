@@ -26,6 +26,14 @@ describe('confused-ai root (src/index.ts)', () => {
         const m = await import('../src/index.js');
         expect(m.createAgent).toBeDefined();
     });
+
+    it('keeps optional integration tools behind category subpaths', async () => {
+        const m = await import('../src/index.js');
+        expect((m as Record<string, unknown>).CalculatorAddTool).toBeDefined();
+        expect((m as Record<string, unknown>).PlaywrightPageTitleTool).toBeUndefined();
+        expect((m as Record<string, unknown>).StripeCreateCustomerTool).toBeUndefined();
+        expect((m as Record<string, unknown>).PostgreSQLQueryTool).toBeUndefined();
+    });
 });
 
 // ── Subpath: ./model ─────────────────────────────────────────────────────────
@@ -142,6 +150,11 @@ describe('confused-ai/tools/* category subpaths', () => {
         expect(m.tool).toBeDefined();
         expect((m as Record<string, unknown>).TavilySearchTool).toBeUndefined();
     });
+
+    it('scraping exposes Playwright explicitly', async () => {
+        const m = await import('../src/tools/scraping/index.js');
+        expect(m.PlaywrightPageTitleTool).toBeDefined();
+    });
 });
 
 // ── Subpath: ./playground ────────────────────────────────────────────────────
@@ -223,6 +236,14 @@ describe('@confused-ai/tools', () => {
         expect(m.createShellTool).toBeDefined();
         // The unrestricted singleton must NOT be exported from the barrel
         expect((m as Record<string, unknown>)['shell']).toBeUndefined();
+    });
+
+    it('does not export optional provider-backed tools from the safe barrel', async () => {
+        const m = await import('@confused-ai/tools');
+        expect((m as Record<string, unknown>).CalculatorAddTool).toBeDefined();
+        expect((m as Record<string, unknown>).PlaywrightPageTitleTool).toBeUndefined();
+        expect((m as Record<string, unknown>).StripeCreateCustomerTool).toBeUndefined();
+        expect((m as Record<string, unknown>).PostgreSQLQueryTool).toBeUndefined();
     });
 });
 

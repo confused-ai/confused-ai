@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /**
  * @confused-ai/core — ReAct-style agentic runner.
  *

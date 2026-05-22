@@ -102,7 +102,7 @@ export class ToolCompressor {
         }
 
         // summarize
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const summary = await this._summarizeFn!(serialised);
         this._compressions++;
         this._bytesSaved += original - summary.length;

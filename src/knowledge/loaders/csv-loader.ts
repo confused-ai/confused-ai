@@ -49,7 +49,7 @@ export async function loadCsv(
     if (lines.length < 2) return [];
 
     // Parse header
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     const headers = parseCsvRow(lines[0]!, delimiter);
 
     const contentCol = options.contentColumn;
@@ -57,11 +57,11 @@ export async function loadCsv(
 
     const docs: Document[] = [];
     for (let i = 1; i < lines.length; i++) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const values = parseCsvRow(lines[i]!, delimiter);
         const row: Record<string, string> = {};
         for (let j = 0; j < headers.length; j++) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             row[headers[j]!] = values[j] ?? '';
         }
 
@@ -94,7 +94,7 @@ function parseCsvRow(line: string, delimiter: string): string[] {
     let inQuotes = false;
 
     for (let i = 0; i < line.length; i++) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const char = line[i]!;
         const next = line[i + 1];
 

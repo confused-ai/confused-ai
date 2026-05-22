@@ -52,7 +52,7 @@ export class SqliteUserProfileStore implements UserProfileStore {
     }
 
     static create(filePath: string): SqliteUserProfileStore {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+
         let Database: (p: string) => SqliteUserProfileStore['db'];
         try {
             Database = require('better-sqlite3') as typeof Database;

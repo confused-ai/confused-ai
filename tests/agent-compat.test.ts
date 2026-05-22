@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Agent, SimpleAgent } from '../src/agent.js';
+import { Agent } from '../src/agent.js';
 import { InMemoryCheckpointStore } from '../src/execution/state-graph.js';
 import { InMemorySessionStore } from '../src/session/index.js';
 
@@ -43,9 +43,9 @@ describe('Agent compatibility surface', () => {
     });
 });
 
-describe('SimpleAgent modern surface', () => {
-    it('stays zero-config and tool-free by default', () => {
-        const agent = new SimpleAgent();
+describe('Agent unified class surface', () => {
+    it('keeps the single class-based API as the modern surface', () => {
+        const agent = new Agent({ instructions: 'You are a helpful AI assistant.', tools: [] });
         const opts = (agent as any)._opts;
 
         expect(opts.name).toBe('Agent');

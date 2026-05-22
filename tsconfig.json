@@ -19,8 +19,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "types": ["bun-types"],
     "paths": {
       "@confused-ai/adapter-redis": ["./packages/state/adapter-redis/src/index.ts"],

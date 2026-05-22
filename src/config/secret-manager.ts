@@ -226,14 +226,14 @@ export class EnvSecretManagerAdapter implements SecretManagerAdapter {
 
 export class AwsSecretsManagerAdapter implements SecretManagerAdapter {
     private options: AwsSecretManagerOptions;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private client: any = null;
 
     constructor(options: AwsSecretManagerOptions) {
         this.options = options;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private async getClient(): Promise<any> {
         if (this.client) return this.client;
         let SM: new (opts: object) => unknown;
@@ -266,7 +266,7 @@ export class AwsSecretsManagerAdapter implements SecretManagerAdapter {
             ...(version ? { VersionStage: version } : {}),
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const response = await (client as any).send(cmd) as { SecretString?: string; SecretBinary?: Uint8Array };
         if (response.SecretString) return response.SecretString;
         if (response.SecretBinary) return Buffer.from(response.SecretBinary).toString('utf8');
@@ -282,14 +282,14 @@ export class AwsSecretsManagerAdapter implements SecretManagerAdapter {
 
 export class AzureKeyVaultAdapter implements SecretManagerAdapter {
     private options: AzureSecretManagerOptions;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private client: any = null;
 
     constructor(options: AzureSecretManagerOptions) {
         this.options = options;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private async getClient(): Promise<any> {
         if (this.client) return this.client;
         let SecretClient: new (url: string, cred: unknown) => unknown;
@@ -334,7 +334,7 @@ export class AzureKeyVaultAdapter implements SecretManagerAdapter {
 
     async getSecret(name: string, version?: string): Promise<string> {
         const client = await this.getClient();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const secret = await (client as any).getSecret(name, version ? { version } : {}) as {
             value?: string;
         };
@@ -422,7 +422,7 @@ export class VaultAdapter implements SecretManagerAdapter {
 
 export class GcpSecretManagerAdapter implements SecretManagerAdapter {
     private projectId: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private client: any = null;
 
     constructor(options: GcpSecretManagerOptions) {
@@ -433,7 +433,7 @@ export class GcpSecretManagerAdapter implements SecretManagerAdapter {
             '';
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private async getClient(): Promise<any> {
         if (this.client) return this.client;
         let SecretManagerServiceClient: new () => unknown;
@@ -461,7 +461,7 @@ export class GcpSecretManagerAdapter implements SecretManagerAdapter {
             ? `${name}/versions/${version}`
             : `projects/${this.projectId}/secrets/${name}/versions/${version}`;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const [response] = await (client as any).accessSecretVersion({ name: secretName }) as [
             { payload?: { data?: Buffer | Uint8Array } }
         ];

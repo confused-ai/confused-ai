@@ -1,17 +1,48 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import ffmpeg from 'fluent-ffmpeg';
-import '@ffmpeg-installer/ffmpeg'; // ensures ffmpeg binaries are available
-import OpenAI from 'openai';
-import { createClient } from 'pexels';
 
-type PexelsHandle = ReturnType<typeof createClient>;
+type OpenAiClient = {
+  chat: {
+    completions: {
+      create(input: unknown): Promise<{ choices: Array<{ message: { content: string | null } }> }>;
+    };
+  };
+  audio: {
+    speech: {
+      create(input: unknown): Promise<{ arrayBuffer(): Promise<ArrayBuffer> }>;
+    };
+  };
+};
 
-let openaiClient: OpenAI | null = null;
+type PexelsVideo = {
+  video_files: Array<{ quality?: string; link: string }>;
+};
+
+type PexelsHandle = {
+  videos: {
+    search(options: { query: string; per_page: number; orientation: 'portrait' }): Promise<{ videos?: PexelsVideo[] }>;
+  };
+};
+
+type FfmpegCommand = {
+  input(inputPath: string): FfmpegCommand;
+  inputOptions(options: string[]): FfmpegCommand;
+  outputOptions(options: string[]): FfmpegCommand;
+  save(outputPath: string): FfmpegCommand;
+  on(event: 'end', callback: () => void): FfmpegCommand;
+  on(event: 'error', callback: (err: Error) => void): FfmpegCommand;
+};
+
+type FfmpegFactory = (() => FfmpegCommand) & {
+  setFfmpegPath?: (ffmpegPath: string) => void;
+};
+
+let openaiClient: OpenAiClient | null = null;
 let pexelsClient: PexelsHandle | null = null;
+let ffmpegFactory: FfmpegFactory | null = null;
 
-function getOpenai(): OpenAI {
+async function getOpenai(): Promise<OpenAiClient> {
     if (!openaiClient) {
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
@@ -19,13 +50,16 @@ function getOpenai(): OpenAI {
                 'Video features need OPENAI_API_KEY. Set it in the environment before using VideoOrchestrator.',
             );
         }
-        openaiClient = new OpenAI({ apiKey });
+        const mod = await import('openai').catch(() => {
+          throw new Error('Video features need optional peer dependency "openai". Install it before using VideoOrchestrator.');
+        });
+        openaiClient = new mod.default({ apiKey }) as OpenAiClient;
     }
     return openaiClient;
 }
 
 /** Get your Pexels API Key at https://www.pexels.com/api/ */
-function getPexels(): PexelsHandle {
+async function getPexels(): Promise<PexelsHandle> {
     if (!pexelsClient) {
         const key = process.env.PEXELS_API_KEY;
         if (!key) {
@@ -33,9 +67,27 @@ function getPexels(): PexelsHandle {
                 'Video features need PEXELS_API_KEY. Set it in the environment before fetching background footage.',
             );
         }
-        pexelsClient = createClient(key);
+        const mod = await import('pexels').catch(() => {
+          throw new Error('Video features need optional peer dependency "pexels". Install it before fetching background footage.');
+        });
+        pexelsClient = mod.createClient(key) as PexelsHandle;
     }
     return pexelsClient;
+}
+
+async function getFfmpeg(): Promise<FfmpegFactory> {
+  if (ffmpegFactory) return ffmpegFactory;
+
+  const mod = await import('fluent-ffmpeg').catch(() => {
+    throw new Error('Video features need optional peer dependency "fluent-ffmpeg". Install it before rendering video.');
+  });
+  ffmpegFactory = mod.default as unknown as FfmpegFactory;
+
+  const installer = await import('@ffmpeg-installer/ffmpeg').catch(() => null);
+  const installerPath = installer?.default?.path ?? installer?.path;
+  if (installerPath) ffmpegFactory.setFfmpegPath?.(installerPath);
+
+  return ffmpegFactory;
 }
 
 interface VideoGenerationResult {
@@ -99,17 +151,19 @@ export class VideoOrchestrator {
         success: true,
         videoPath: finalOutputPath,
       };
-    } catch (error: any) {
-      console.error(`[Job ${jobId}] Failed to generate video:`, error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[Job ${jobId}] Failed to generate video:`, message);
       return {
         success: false,
-        error: error.message,
+        error: message,
       };
     }
   }
 
   private async generateScript(topic: string): Promise<string> {
-    const response = await getOpenai().chat.completions.create({
+    const openai = await getOpenai();
+    const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
@@ -126,7 +180,8 @@ export class VideoOrchestrator {
   }
 
   private async generateVoiceover(text: string, outputPath: string): Promise<void> {
-    const mp3 = await getOpenai().audio.speech.create({
+    const openai = await getOpenai();
+    const mp3 = await openai.audio.speech.create({
       model: 'tts-1',
       voice: 'alloy',
       input: text,
@@ -137,9 +192,10 @@ export class VideoOrchestrator {
 
   private async fetchBackgroundVideos(query: string, count: number): Promise<string[]> {
     // We search for orientation=portrait to match youtube shorts standard
-    const response = await getPexels().videos.search({ query, per_page: count, orientation: 'portrait' });
+    const pexels = await getPexels();
+    const response = await pexels.videos.search({ query, per_page: count, orientation: 'portrait' });
     
-    if ('videos' in response) {
+    if (response.videos) {
       return response.videos.map(v => {
         // Find the best SD/HD vertical quality
         const videoFile = v.video_files.find(vf => vf.quality === 'hd') || v.video_files[0];
@@ -158,7 +214,8 @@ export class VideoOrchestrator {
     await fs.promises.writeFile(outputPath, buffer);
   }
 
-  private stitchVideo(videoPath: string, audioPath: string, outputPath: string): Promise<void> {
+  private async stitchVideo(videoPath: string, audioPath: string, outputPath: string): Promise<void> {
+    const ffmpeg = await getFfmpeg();
     return new Promise((resolve, reject) => {
       // Basic FFmpeg command to loop the background video to the length of the audio track
       ffmpeg()

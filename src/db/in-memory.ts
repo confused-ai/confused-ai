@@ -20,7 +20,7 @@ import type {
 export class InMemoryAgentDb extends AgentDb {
   readonly type = 'in-memory';
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   constructor(_opts?: { tables?: AgentDbTableNames }) {
     super();
   }

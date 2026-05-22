@@ -61,9 +61,9 @@ export class ToolNameTrie {
 
         // Prune empty leaf nodes back toward root
         for (let i = trail.length - 1; i >= 0; i--) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             const { node: parent, ch } = trail[i]!;
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             const child = parent.children.get(ch)!;
             if (child.terminals.size === 0 && child.children.size === 0) {
                 parent.children.delete(ch);

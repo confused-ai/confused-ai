@@ -15,7 +15,7 @@ export interface Migration {
   sql: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type Db = { query(sql: string, params?: unknown[]): Promise<{ rows: any[] }> };
 
 /**

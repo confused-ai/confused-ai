@@ -48,11 +48,11 @@ export class KafkaBackgroundQueue implements BackgroundQueue {
     readonly name = 'kafka';
 
     private readonly opts: KafkaBackgroundQueueOptions;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private kafka?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private producer?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     private readonly consumers: any[] = [];
     private producerConnected = false;
 
@@ -62,7 +62,7 @@ export class KafkaBackgroundQueue implements BackgroundQueue {
 
     private async getProducer(): Promise<unknown> {
         if (this.producerConnected) return this.producer;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         // @ts-ignore -- kafkajs is an optional peer dep
         const { Kafka } = (await import('kafkajs')) as any;
         this.kafka = new Kafka({
@@ -110,7 +110,7 @@ export class KafkaBackgroundQueue implements BackgroundQueue {
         handler: BackgroundTaskHandler<TPayload>,
         options: WorkerOptions = {},
     ): Promise<() => Promise<void>> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         // @ts-ignore -- kafkajs is an optional peer dep
         const { Kafka } = (await import('kafkajs')) as any;
         if (!this.kafka) {

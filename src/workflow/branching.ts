@@ -195,7 +195,7 @@ export function forEach(
                     }),
                 );
                 for (let j = 0; j < batchResults.length; j++) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
                     results[i + j] = batchResults[j]!;
                 }
             }
@@ -237,7 +237,7 @@ export function race(agents: WorkflowAgent[], options: RaceOptions = {}): Workfl
     if (agents.length === 0) throw new Error('race: at least one agent required');
     return {
         name:         options.name         ?? `race(${agents.map((a) => a.name).join('|')})`,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         instructions: options.instructions ?? agents[0]!.instructions,
 
         async run(prompt: string): Promise<AgentRunResult> {
@@ -248,7 +248,7 @@ export function race(agents: WorkflowAgent[], options: RaceOptions = {}): Workfl
                     const losers = settled
                         .filter((s): s is PromiseFulfilledResult<AgentRunResult> => s.status === 'fulfilled' && s.value !== winner)
                         .map((s) => s.value);
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
                     options.onLosers!(losers);
                 });
             }

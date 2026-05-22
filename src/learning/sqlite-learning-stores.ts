@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * SQLite-backed learning stores for all extended learning store types.
  *

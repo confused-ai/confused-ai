@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * @confused-ai/db/postgres — PostgresAgentDb.
  *
@@ -22,7 +21,7 @@ const MISSING =
   '  Install: npm install pg\n' +
   '           npm install -D @types/pg';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type PgPool = { query(sql: string, params?: unknown[]): Promise<{ rows: any[] }>; end(): Promise<void> };
 type PgPoolCtor = new (config: Record<string, unknown>) => PgPool;
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * @confused-ai/db/mysql — MysqlAgentDb.
  *
@@ -20,7 +19,7 @@ const MISSING =
   '[confused-ai/db] MysqlAgentDb requires mysql2.\n' +
   '  Install: npm install mysql2';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type MysqlPool = { execute(sql: string, params?: unknown[]): Promise<[any[], any]>; end(): Promise<void> };
 type MysqlPoolCreator = { createPool(config: Record<string, unknown>): MysqlPool };
 

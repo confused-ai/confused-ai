@@ -12,7 +12,7 @@ import { ToolCategory, type ToolContext } from '../core/types.js';
 function parseCsv(raw: string, delimiter = ','): Array<Record<string, string>> {
     const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
     if (lines.length === 0) return [];
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     const headers = splitLine(lines[0]!, delimiter);
     return lines.slice(1).filter((l) => l.trim()).map((line) => {
         const vals = splitLine(line, delimiter);
@@ -25,7 +25,7 @@ function splitLine(line: string, delim: string): string[] {
     let cur = '';
     let inQ = false;
     for (let i = 0; i < line.length; i++) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const ch = line[i]!;
         if (ch === '"') {
             if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
@@ -42,10 +42,10 @@ function splitLine(line: string, delim: string): string[] {
 
 function toCsv(rows: Array<Record<string, unknown>>, delim = ','): string {
     if (rows.length === 0) return '';
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     const headers = Object.keys(rows[0]!);
     const esc = (v: unknown) => {
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+
         const s = v === null || v === undefined ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
         return s.includes(delim) || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
     };
@@ -101,7 +101,7 @@ export class CsvParseTool extends BaseTool<typeof ParseSchema, { rows: Array<Rec
     protected async performExecute(input: z.infer<typeof ParseSchema>, _ctx: ToolContext) {
         const rows = parseCsv(input.csv, input.delimiter ?? ',');
         return { rows, rowCount: rows.length, columns: rows.length > 0 ? Object.keys(
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             rows[0]!) : [] };
     }
 }

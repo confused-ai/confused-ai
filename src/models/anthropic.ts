@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 /**
  * @confused-ai/models — Anthropic adapter.
  * Lazy SDK import. Returns LLMProvider (DIP).

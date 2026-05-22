@@ -200,7 +200,7 @@ export function resolveModelString(
     modelStr: string,
     getEnv?: EnvFn,
 ): ResolvedModelConfig | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
     const ge = getEnv ?? (typeof process !== 'undefined' ? (k: string) => process.env?.[k] : undefined);
     const colon = modelStr.indexOf(':');
     if (colon <= 0) return undefined;

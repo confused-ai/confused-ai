@@ -82,7 +82,7 @@ export const SENSITIVE_DATA_PATTERNS: RegExp[] = [
     // Social Security Numbers (SSN)
     /\b\d{3}[ -]?\d{2}[ -]?\d{4}\b/,
     // API keys (common patterns)
-    // eslint-disable-next-line no-useless-escape
+
     /['"\s](?:api[_-]?key|apikey|token|secret)[\s]*[:=][\s]*['"][a-zA-Z0-9_\-]{16,}['"\s]/i,
     // Private keys
     /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/,

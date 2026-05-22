@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * @confused-ai/db/mongo — MongoAgentDb.
  *
@@ -20,7 +19,7 @@ const MISSING =
   '[confused-ai/db] MongoAgentDb requires mongodb.\n' +
   '  Install: npm install mongodb';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type MongoCollection = { findOne(f: object, o?: object): Promise<any>; find(f: object, o?: object): { sort(s: object): { limit(n: number): { skip(n: number): { toArray(): Promise<any[]> }; toArray(): Promise<any[]> }; toArray(): Promise<any[]> } }; updateOne(f: object, u: object, o: object): Promise<any>; deleteOne(f: object): Promise<{ deletedCount: number }>; deleteMany(f: object): Promise<any>; insertOne(d: object): Promise<any>; countDocuments(f: object): Promise<number>; createIndex(spec: object, opts?: object): Promise<string> };
 type MongoDb = { collection(name: string): MongoCollection };
 type MongoClient = { db(name?: string): MongoDb; connect(): Promise<void>; close(): Promise<void> };

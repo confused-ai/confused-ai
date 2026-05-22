@@ -59,7 +59,7 @@ const readPdfTool: Tool = {
     // Dynamic import — pdf-parse is an optional peer dependency.
     let pdfParse: ((buffer: Buffer) => Promise<{ text: string }>) | null = null;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const mod = await import('pdf-parse' as string) as any;
       pdfParse = mod.default ?? mod;
     } catch {
@@ -70,7 +70,7 @@ const readPdfTool: Tool = {
 
     const buffer = await readFile(filePath);
     // pdfParse is always set at this point — the catch above re-throws if import fails.
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     const { text } = await pdfParse!(buffer);
     return text.slice(0, maxChars);
   },

@@ -150,13 +150,13 @@ export function parallelTools<
         id:          options.id,
         name:        options.name,
         description: options.description,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         parameters:  tools[0]!.parameters,
         permissions: mergedPerms,
         category:    options.category ?? ToolCategory.CUSTOM,
         version:     '1.0.0',
 
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         validate: (p): p is z.infer<P> => tools[0]!.validate(p),
 
         async execute(params, ctx): Promise<ToolResult<T[]>> {
@@ -266,7 +266,7 @@ export function retryTool<
                     await new Promise((r) => setTimeout(r, backoffMs * Math.pow(2, attempt - 1)));
                 }
             }
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             return result!;
         },
     };

@@ -64,9 +64,9 @@ export class PgvectorKnowledgeAdapter implements VectorStore {
         const pool = await this._getPool();
         const embeddings = await Promise.all(documents.map((d) => this._embed(d.content)));
         for (let i = 0; i < documents.length; i++) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             const doc  = documents[i]!;
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
             const emb  = embeddings[i]!;
             // Use pgvector array syntax: '[0.1, 0.2, ...]'
             const embStr = `[${emb.join(',')}]`;
