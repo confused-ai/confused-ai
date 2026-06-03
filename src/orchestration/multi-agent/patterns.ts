@@ -13,7 +13,7 @@
  * 9. Self-Correction / Self-Debugging
  */
 
-import type { Agent, AgentOutput, AgentInput, EntityId } from '../../core/index.js';
+import type { Agent, AgentOutput, AgentInput } from '../../core/index.js';
 import { AgentState } from '../../core/index.js';
 import { createRunnableAgent } from '../core/agent-adapter.js';
 import type { OrchestrableAgent, AgentContext } from '../core/types.js';
