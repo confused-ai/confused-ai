@@ -56,6 +56,7 @@ const entries = [
   ['src/runtime/index.ts',        'dist/runtime.d.ts'],
   ['src/shared/index.ts',         'dist/shared.d.ts'],
   ['src/contracts/index.ts',      'dist/contracts.d.ts'],
+  ['src/interfaces.ts',           'dist/interfaces.d.ts'],
   ['src/plugins/index.ts',        'dist/plugins.d.ts'],
   ['src/adapters/index.ts',       'dist/adapters.d.ts'],
   ['src/background/index.ts',     'dist/background.d.ts'],

@@ -61,6 +61,7 @@ export default defineConfig({
         'tools/finance': 'src/tools/finance/index.ts',
         'tools/social': 'src/tools/social/index.ts',
         contracts: 'src/contracts/index.ts',
+        interfaces: 'src/interfaces.ts',
         plugins: 'src/plugins/index.ts',
         adapters: 'src/adapters/index.ts',
         background: 'src/background/index.ts',

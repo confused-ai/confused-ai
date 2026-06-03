@@ -391,7 +391,6 @@
     "build:root": "tsup && bun run build:dts",
     "build:packages": "turbo run build --filter='@confused-ai/*' --output-logs=errors-only",
     "build:all": "bun run build:packages && bun run build:root",
-
     "package:sync": "node scripts/sync-package-manifests.mjs",
     "package:check": "node scripts/sync-package-manifests.mjs --check && node scripts/validate-package-access.mjs",
     "package:prepare": "npm run package:sync && npm run build:all && npm run package:check",
