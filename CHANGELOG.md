@@ -7,7 +7,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.3.0] — 2026-06-03
+
+### Added
+
+- **9 Extended Multi-Agent Orchestration Patterns** (`@confused-ai/orchestration`) — Mixture-of-Agents (MoA), Actor-Critic loops, Socratic tutor guiding, Prompt Chaining pipelines, Program-of-Thought code sandbox runtimes, Skeleton-of-Thought parallel generation, Step-Back conceptual abstraction solvers, Rejection Sampling (Best-of-N) evaluations, and validation-driven Self-Correction.
+- **`createGSDCoordinator()` (Get Shit Done)** — spec-driven workflow coordinator that executes project goals inPlan-Execute-Verify phases, using a workspace `.planning` folder to isolate contexts.
+- **`createRalphLoop()` (RALF)** — autonomous cycle executor that leverages fresh session isolation to prevent context bloat while propagating iteration summaries.
+- **`Mastermind` Context Compression** (`@confused-ai/compression`) — a multi-stage intelligent context compression suite featuring:
+  - `CacheAligner` (KV-cache prefix alignment).
+  - Specialized crushers (`smart-crusher` for JSON, minifiers for Code, log timestamp/duplicate aggregators, XML, CSV).
+  - Sliding-window group budget enforcers to prevent orphaned tool call/result pairs.
+  - Code & Context Reduction (CCR) annotations with `retrieveTool` for on-demand details recall.
+
+---
+
 ## [2.0.0] — 2026-05-09
+
 
 ### Added
 

@@ -136,8 +136,80 @@ Override it with the `prompt` option if your domain has specific compression req
 
 ---
 
+---
+
+## Mastermind Context Compression Suite
+
+While `CompressionManager` handles general summarization, the **Mastermind** compression pipeline is a production-grade, multi-stage compression engine. It optimizes KV-cache reuse, compresses message formats using specialized parsers, enforces strict token budgets, and stashes original data in an on-demand retrieval store (CCR).
+
+The pipeline executes four stages on every run:
+1. **CacheAligner**: Stabilizes the prefix of the message history to maximize KV-cache hits.
+2. **Content Routing & Crusher Dispatch**: Routes message content based on type (JSON, Code, Logs, CSV, XML) to specialized, deterministic parsing algorithms that compress the text without LLM latency.
+3. **Group-based Budget Enforcement**: Drops conversation groups oldest-first to fit within a strict token budget, while ensuring tool calls and tool results are never orphaned.
+4. **Code & Context Reduction (CCR)**: Replaces original content with compressed annotations, stashing the originals. Re-injects a retrieval tool so the agent can fetch the raw details if needed.
+
+```ts
+import { Mastermind, OpenAIProvider } from 'confused-ai';
+
+const provider = new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY! });
+
+const mastermind = new Mastermind({
+  contextTokenBudget: 16_000,        // Fit history within 16k tokens
+  messageTokenThreshold: 1_500,       // Only compress messages larger than 1.5k tokens
+  enableCCR: true,                    // Allow agents to retrieve uncompressed content
+  recentMessagesWindow: 4,            // Keep the last 4 messages completely uncompressed
+  generate: async (msgs) => {         // Fallback LLM summarizer for prose
+    const res = await provider.generateText({
+      messages: msgs,
+      model: 'gpt-4o-mini',
+    });
+    return res.text;
+  },
+});
+
+const agent = createAgent({
+  name: 'mastermind-agent',
+  instructions: 'Use your tools to solve tasks.',
+  model: 'gpt-4o',
+  apiKey: process.env.OPENAI_API_KEY!,
+  // Expose the retrieve tool so the agent can recall compressed details
+  tools: [mastermind.retrieveTool],
+  hooks: {
+    beforeRun: async (input) => {
+      const { messages } = await mastermind.compress(input.messages);
+      // Materialize replaces message contents with their compressed versions
+      input.messages = Mastermind.materialize(messages);
+      return input;
+    },
+  },
+});
+```
+
+### Stage 1: Cache Aligner
+LLM providers charge less and respond faster when prompts hit their KV-cache. The `CacheAligner` normalizes whitespaces, matches repetitive formatting, and structures history headers so prefix matches are maximized.
+
+### Stage 2: Specialized Crushers
+Instead of relying purely on expensive LLMs to summarize structural data, Mastermind inspects the text and routes it to optimized local parsers:
+* **JSON Crusher (`smart-crusher`)**: Strips empty properties, normalizes indentation, and collapses deeply nested schemas.
+* **Code Compressor**: Minifies JS/TS, python, and other codeblocks by removing comments, redundant blank lines, and compressing indentation.
+* **Log Crusher**: Aggregates duplicate trace lines, strips timestamps, and retains only unique stack traces or warning/error contexts.
+* **CSV / XML Crushers**: Retains headers while truncating or downsampling datasets.
+* **Prose Summarizer (`summary-llm`)**: Falls back to an LLM summary ONLY when unstructured markdown/prose is detected.
+
+### Stage 3: Sliding-Window Group Budget Enforcement
+When history exceeds the budget, Mastermind drops the oldest messages. However, standard truncation often separates a tool call from its tool result, breaking the ReAct loop. Mastermind groups assistant tool calls and their subsequent tool results into **atomic blocks** that are dropped together, ensuring the conversation tree remains valid.
+
+### Stage 4: Code & Context Reduction (CCR)
+For highly detailed inputs, compression can lose crucial bits. Under CCR:
+1. Mastermind compresses the message and stashes the raw string in an in-memory `CCRStore`.
+2. The message is annotated with a handle: e.g., `[CCR_REF: ccr-89f41] (Compressed JSON)`.
+3. If the agent notices this reference and needs the exact values, it invokes the built-in `retrieveTool` (e.g. `retrieve_uncompressed_context({ handle: "ccr-89f41" })`) to fetch the uncompressed original.
+
+---
+
 ## Where to go next
 
 - [Session](./session) — conversation persistence; use compression to keep sessions lean.
 - [Memory](./memory) — retain selected facts rather than summarising everything.
 - [Context providers](./context-provider) — inject context deliberately instead of accumulating it.
+

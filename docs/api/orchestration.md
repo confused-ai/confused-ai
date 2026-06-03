@@ -263,9 +263,234 @@ When a linear `compose()` or `pipe()` pipeline is sufficient, prefer that — it
 
 ---
 
+## `createGSDCoordinator()` — spec-driven workflow
+
+Initializes a GSD Coordinator instance.
+
+```ts
+import { createGSDCoordinator } from 'confused-ai/orchestration';
+
+const gsd = createGSDCoordinator({
+  projectDir: './my-project',
+  plannerAgent,
+  executorAgent,
+  verifierAgent,
+  storage: new FilesystemGSDStorage('./my-project/.planning'),
+});
+```
+
+**`createGSDCoordinator()` options (`GSDConfig`):**
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `projectDir` | `string` | ✓ | Path to project workspace |
+| `plannerAgent` | `Agent` | ✓ | Agent used for the Plan phase |
+| `executorAgent` | `Agent` | ✓ | Agent used for the Execute phase |
+| `verifierAgent` | `Agent` | ✓ | Agent used for the Verify phase |
+| `storage` | `GSDStorage` | `InMemoryGSDStorage` | Storage backend for requirements, roadmap, and state |
+
+### `GSDCoordinator` Methods
+
+* **`plan(goal: string): Promise<void>`**
+  Analyzes the goal, initializes the requirements log, and builds the roadmap task list.
+* **`executeStep(): Promise<{ taskName: string, output: string, completed: boolean }>`**
+  Identifies the next incomplete task in the roadmap and runs it inside an isolated session. Returns the output and whether the roadmap is completed.
+* **`verify(): Promise<{ success: boolean, report: string }>`**
+  Evaluates the generated project outputs against the requirements. Marks the state as `COMPLETED` or `FAILED`.
+
+---
+
+## `createRalphLoop()` — iterative cycle loop
+
+Initializes a Ralph / RALF loop runner.
+
+```ts
+import { createRalphLoop } from 'confused-ai/orchestration';
+
+const loop = createRalphLoop({
+  agent,
+  maxCycles: 5,
+  checkComplete: async (ctx) => ctx.lastResult.includes('Verified'),
+});
+```
+
+**`createRalphLoop()` options (`RalphLoopConfig`):**
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `agent` | `Agent` | ✓ | Core agent to run in the loop |
+| `maxCycles` | `number` | `5` | Maximum loop iterations |
+| `checkComplete` | `(context: RalphLoopContext) => Promise<boolean> \| boolean` | ✓ | Function verifying if the task has been solved |
+| `initialState` | `Record<string, any>` | `{}` | Initial state variable map |
+| `promptFormatter` | `(prompt: string, context: RalphLoopContext) => string \| Promise<string>` | *built-in* | Formatter for successive iteration prompts |
+
+### `RalphLoop` Methods
+
+* **`run(prompt: string): Promise<RalphLoopResult>`**
+  Runs the loop. Returns `{ success: boolean, finalOutput: string, cyclesRun: number, logs: RalphLoopLog[], state: Record<string, any> }`.
+
+---
+
+## Multi-Agent Pattern Constructors
+
+Each pattern helper returns a standard `OrchestrableAgent` object that can be run or embedded inside other orchestration constructs.
+
+### `createMixtureOfAgents()`
+
+```ts
+import { createMixtureOfAgents } from 'confused-ai/orchestration';
+
+const agent = createMixtureOfAgents({
+  name: 'MoA',
+  proposers: [agentA, agentB],
+  aggregator: agentC,
+  rounds: 2,
+});
+```
+
+* **`proposers: AnyAgent[]`**: Parallel candidate generators.
+* **`aggregator: AnyAgent`**: Synthesizes proposer answers.
+* **`rounds?: number`** (default `1`): Number of proposer refinement rounds.
+
+### `createActorCritic()`
+
+```ts
+import { createActorCritic } from 'confused-ai/orchestration';
+
+const agent = createActorCritic({
+  name: 'CriticLoop',
+  actor,
+  critic,
+  maxRefinements: 3,
+  isSatisfactory: (feedback) => feedback.includes('pass'),
+});
+```
+
+* **`actor: AnyAgent`**: Generates responses.
+* **`critic: AnyAgent`**: Critiques actor responses.
+* **`maxRefinements?: number`** (default `3`): Max feedback loop cycles.
+* **`isSatisfactory?: (critique: string) => boolean`**: Validation check.
+
+### `createSocraticAgent()`
+
+```ts
+import { createSocraticAgent } from 'confused-ai/orchestration';
+
+const agent = createSocraticAgent({
+  name: 'Tutor',
+  agent,
+  topic: 'Math',
+  instructions: 'Guide step-by-step',
+});
+```
+
+* **`agent: AnyAgent`**: Backing agent.
+* **`topic?: string`**: Subject domain.
+* **`instructions?: string`**: Extra tutor prompts.
+
+### `createPromptChain()`
+
+```ts
+import { createPromptChain } from 'confused-ai/orchestration';
+
+const agent = createPromptChain({
+  name: 'Chain',
+  steps: [
+    { name: 'step1', agent: agentA },
+    { name: 'step2', agent: agentB, template: (input, prev) => `Input: ${input}, prev: ${prev.step1}` }
+  ],
+});
+```
+
+* **`steps: ChainStep[]`**: Ordered list of chain components `{ name, agent, template? }`.
+
+### `createProgramOfThought()`
+
+```ts
+import { createProgramOfThought } from 'confused-ai/orchestration';
+
+const agent = createProgramOfThought({
+  name: 'PoT',
+  agent,
+  executor: async (code) => ({ stdout: 'Result', stderr: '' }),
+});
+```
+
+* **`agent: AnyAgent`**: The coding agent.
+* **`executor?: (code: string) => Promise<{ stdout: string, stderr: string }>`**: Sandboxed runtime.
+
+### `createSkeletonOfThought()`
+
+```ts
+import { createSkeletonOfThought } from 'confused-ai/orchestration';
+
+const agent = createSkeletonOfThought({
+  name: 'SoT',
+  planner,
+  worker,
+  parallel: true,
+});
+```
+
+* **`planner: AnyAgent`**: Outline planner.
+* **`worker: AnyAgent`**: Section writer.
+* **`parallel?: boolean`** (default `true`): Parallel section writing.
+
+### `createStepBackAgent()`
+
+```ts
+import { createStepBackAgent } from 'confused-ai/orchestration';
+
+const agent = createStepBackAgent({
+  name: 'StepBack',
+  stepBackAgent,
+  solverAgent,
+});
+```
+
+* **`stepBackAgent: AnyAgent`**: Conceptual agent.
+* **`solverAgent: AnyAgent`**: Specific problem solving agent.
+
+### `createRejectionSampling()`
+
+```ts
+import { createRejectionSampling } from 'confused-ai/orchestration';
+
+const agent = createRejectionSampling({
+  name: 'BestOfN',
+  agent,
+  judge,
+  n: 3,
+});
+```
+
+* **`agent: AnyAgent`**: Candidate generator.
+* **`judge: AnyAgent | ((candidate: string) => Promise<number> \| number)`**: Scorer/Evaluation agent.
+* **`n?: number`** (default `3`): Number of candidates to sample.
+
+### `createSelfCorrection()`
+
+```ts
+import { createSelfCorrection } from 'confused-ai/orchestration';
+
+const agent = createSelfCorrection({
+  name: 'SelfCorrect',
+  agent,
+  validator: (out) => ({ valid: out.length > 10 }),
+  maxRetries: 3,
+});
+```
+
+* **`agent: AnyAgent`**: Core agent.
+* **`validator: (output: string) => Promise<{ valid: boolean, errors?: string[] }>`**: Target schema/correctness check.
+* **`maxRetries?: number`** (default `3`): Number of attempts.
+
+---
+
 ## Where to go next
 
 - [Orchestration guide](../guide/orchestration) — rollout advice and patterns
 - [08 · Multi-Agent Team](../examples/08-team) — runnable team example
 - [09 · Supervisor Workflow](../examples/09-supervisor) — runnable supervisor example
 - [Compose guide](../guide/compose) — simpler sequential pipelines without orchestration
+
