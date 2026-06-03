@@ -64,6 +64,10 @@ export type {
     MCPToolDescriptor, MCPAgentMessage, MCPAgentClient,
     A2ATask, A2ATaskState, A2AAgentCard, A2AMessage, IA2AClient, A2AStreamEvent,
     TraceContext, LoadBalancer,
+    MoAConfig, ActorCriticConfig, SocraticConfig,
+    ChainStep, PromptChainConfig, ProgramOfThoughtConfig,
+    SkeletonOfThoughtConfig, StepBackConfig, RejectionSamplingConfig,
+    SelfCorrectionConfig, AnyAgent,
 } from './orchestration/index.js';
 export {
     CoordinationType,
@@ -72,6 +76,9 @@ export {
     createSupervisor, createConsensus, createPipeline,
     createHandoff, createAgentRouter,
     createRunnableAgent,
+    createMixtureOfAgents, createActorCritic, createSocraticAgent,
+    createPromptChain, createProgramOfThought, createSkeletonOfThought,
+    createStepBackAgent, createRejectionSampling, createSelfCorrection,
     RoundRobinLoadBalancer, LeastConnectionsLoadBalancer, WeightedResponseTimeLoadBalancer,
     createHttpA2AClient, A2AServer,
     createToolkit, toolkitsToRegistry,

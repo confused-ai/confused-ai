@@ -39,4 +39,31 @@ export type { RalphLoopConfig, RalphLoopContext, RalphLoopLog, RalphLoopResult }
 export { GSDCoordinator, createGSDCoordinator, InMemoryGSDStorage, FilesystemGSDStorage } from './gsd.js';
 export type { GSDConfig, GSDState, GSDStorage } from './gsd.js';
 
+export {
+    createMixtureOfAgents,
+    createActorCritic,
+    createSocraticAgent,
+    createPromptChain,
+    createProgramOfThought,
+    createSkeletonOfThought,
+    createStepBackAgent,
+    createRejectionSampling,
+    createSelfCorrection,
+} from './patterns.js';
+
+export type {
+    MoAConfig,
+    ActorCriticConfig,
+    SocraticConfig,
+    ChainStep,
+    PromptChainConfig,
+    ProgramOfThoughtConfig,
+    SkeletonOfThoughtConfig,
+    StepBackConfig,
+    RejectionSamplingConfig,
+    SelfCorrectionConfig,
+    AnyAgent,
+} from './patterns.js';
+
+
 

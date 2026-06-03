@@ -63,6 +63,7 @@ export * from './multi-agent/handoff.js';
 export * from './multi-agent/router.js';
 export * from './multi-agent/ralph.js';
 export * from './multi-agent/gsd.js';
+export * from './multi-agent/patterns.js';
 
 
 

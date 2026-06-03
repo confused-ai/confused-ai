@@ -27,6 +27,9 @@ export {
     createRunnableAgent,
     RalphLoop, createRalphLoop,
     GSDCoordinator, createGSDCoordinator, InMemoryGSDStorage, FilesystemGSDStorage,
+    createMixtureOfAgents, createActorCritic, createSocraticAgent,
+    createPromptChain, createProgramOfThought, createSkeletonOfThought,
+    createStepBackAgent, createRejectionSampling, createSelfCorrection,
     RoundRobinLoadBalancer, LeastConnectionsLoadBalancer, WeightedResponseTimeLoadBalancer,
     createHttpA2AClient, A2AServer,
     createToolkit, toolkitsToRegistry,
@@ -39,6 +42,10 @@ export type {
     TraceContext, LoadBalancer,
     RalphLoopConfig, RalphLoopContext, RalphLoopLog, RalphLoopResult,
     GSDConfig, GSDState, GSDStorage,
+    MoAConfig, ActorCriticConfig, SocraticConfig,
+    ChainStep, PromptChainConfig, ProgramOfThoughtConfig,
+    SkeletonOfThoughtConfig, StepBackConfig, RejectionSamplingConfig,
+    SelfCorrectionConfig, AnyAgent,
 } from './orchestration/index.js';
 
 
