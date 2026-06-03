@@ -164,3 +164,20 @@ export { VERSION, isTelemetryEnabled, recordFrameworkStartup } from './shared/in
 // ── Redis Adapter ──────────────────────────────────────────────────────────────
 export { RedisEventStore } from './adapter-redis/event-store.js';
 export type { RedisEventStoreConfig } from './adapter-redis/event-store.js';
+
+// ── Mastermind — context compression ─────────────────────────────────────────
+export { Mastermind, CCRStore, CacheAligner, createRetrieveTool,
+    detectContentType, routeContent,
+    smartCrush, crushJsonText,
+    compressCode, compressCodeBlocks,
+    crushLog, crushXml, crushCsv,
+} from './compression/mastermind/index.js';
+export type {
+    MastermindConfig,
+    MastermindStats,
+    MastermindMessage,
+    MastermindRetrieveTool,
+    ContentType,
+    CompressionAlgorithm,
+    CCREntry,
+} from './compression/mastermind/index.js';

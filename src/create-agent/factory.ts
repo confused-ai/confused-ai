@@ -10,10 +10,14 @@ import { InMemorySessionStore } from '../session/index.js';
 import { ConfigError } from '../shared/index.js';
 import { toToolRegistry } from '../tools/index.js';
 import { isLightweightTool } from '../tools/index.js';
+import { zodToJsonSchema } from '../tools/index.js';
 import { createAgentMemoryTools, InMemoryStore } from '../memory/index.js';
 import type { MemorySearchResult, MemoryStore } from '../memory/index.js';
 import { createDevLogger, createDevToolMiddleware } from '../dx/dev-logger.js';
 import { BudgetEnforcer } from '../production/budget.js';
+import { Mastermind } from '../compression/mastermind/index.js';
+import type { MastermindConfig } from '../compression/mastermind/index.js';
+import { z } from 'zod';
 import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions, AgentRunResult, StreamChunk } from './types.js';
 import type { AdapterRegistry, AdapterBindings } from '../adapters/index.js';
 import type { AppConfig } from '../config/index.js';
@@ -231,6 +235,63 @@ function createFrameworkMemoryTools(memoryStore: MemoryStore): AgentTool[] {
 }
 
 /**
+ * Wraps the Mastermind CCR retrieve tool as a framework `Tool` so the agent
+ * loop can invoke it. Lets the LLM fetch the original (uncompressed) content
+ * for any compressed block via its `ccr_xxxx` handle.
+ *
+ * Uses `zodToJsonSchema` so the `parameters` field is a proper JSON Schema
+ * object — not a raw Zod schema cast, which would cause shape mismatches
+ * when the runner serialises tool definitions for the LLM.
+ */
+function createCCRRetrieveTool(mastermind: Mastermind): AgentTool {
+    const retrieve = mastermind.retrieveTool;
+    const schema = z.object({
+        handle: z.string().describe('The CCR handle printed next to a compressed block, e.g. "ccr_0001".'),
+    });
+    const jsonSchema = zodToJsonSchema(schema as any);
+    return {
+        id: retrieve.name,
+        name: retrieve.name,
+        description: retrieve.description,
+        parameters: jsonSchema as unknown as Tool['parameters'],
+        permissions: {
+            allowNetwork: false,
+            allowFileSystem: false,
+            maxExecutionTimeMs: 5_000,
+        },
+        category: ToolCategory.UTILITY,
+        version: '1.0.0',
+        validate(params: unknown): params is Record<string, unknown> {
+            return schema.safeParse(params).success;
+        },
+        async execute(params: Record<string, unknown>): Promise<ToolResult> {
+            const startedAt = new Date();
+            const startMs = Date.now();
+            try {
+                const parsed = schema.parse(params);
+                const data = await retrieve.execute(parsed);
+                return {
+                    success: true,
+                    data,
+                    executionTimeMs: Date.now() - startMs,
+                    metadata: { startTime: startedAt, endTime: new Date(), retries: 0 },
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: {
+                        code: 'CCR_RETRIEVE_ERROR',
+                        message: error instanceof Error ? error.message : String(error),
+                    },
+                    executionTimeMs: Date.now() - startMs,
+                    metadata: { startTime: startedAt, endTime: new Date(), retries: 0 },
+                };
+            }
+        },
+    };
+}
+
+/**
  * Determines if `adapters` is an `AdapterRegistry` (has typed resolver methods)
  * or plain `AdapterBindings`.
  */
@@ -345,8 +406,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
         ? createFrameworkMemoryTools(effectiveMemoryStore)
         : [];
 
-    const tools = resolveTools(options.tools, memoryTools);
-
+    // tools resolved after mastermind is instantiated (CCR retrieve tool added below)
     // Resolve adapter bindings — merges registry / explicit bindings + convenience fields
     const adapterBindings = resolveAdapterBindings(options);
 
@@ -383,6 +443,28 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
     // Budget enforcer — instantiated once per agent, reset on each run
     const budgetEnforcer = options.budget ? new BudgetEnforcer(options.budget) : undefined;
 
+    // Mastermind compression pipeline — on by default, disable with mastermind: false
+    const mastermindEnabled = options.mastermind !== false;
+    const mastermindCfg: MastermindConfig = mastermindEnabled
+        ? {
+              ...(options.mastermind && typeof options.mastermind === 'object' ? options.mastermind : {}),
+              debug: agentDebugMode,
+              // Wire the agent LLM as the prose summarisation backend
+              generate: async (msgs: Array<{ role: string; content: string }>) => {
+                  const r = await llm.generateText(msgs as any, { temperature: 0.1, maxTokens: 1024, toolChoice: 'none' });
+                  return r.text ?? '';
+              },
+          }
+        : {};
+    const mastermind: Mastermind | undefined = mastermindEnabled ? new Mastermind(mastermindCfg) : undefined;
+
+    // Build CCR retrieve tool if CCR is enabled
+    const ccrTools: AgentTool[] = (mastermind && mastermindCfg.enableCCR !== false)
+        ? [createCCRRetrieveTool(mastermind)]
+        : [];
+
+    const tools = resolveTools(options.tools, [...memoryTools, ...ccrTools]);
+
     const storage = options.storage;
     const effectiveLogger = logger ?? (agentDebugMode ? createDevLogger() : undefined);
     const effectiveToolMiddleware = [...(toolMiddleware ?? []), ...(agentDebugMode ? [createDevToolMiddleware()] : [])];
@@ -407,6 +489,14 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
         budgetModelId: model,
         temperature: options.temperature,
         maxTokens: options.maxTokens,
+        // Per-step compression in the ReAct loop — on by default when mastermind is enabled
+        compression: mastermindEnabled
+            ? {
+                  enabled: true,
+                  toolResultsLimit: 2,
+                  messageSizeThreshold: 1500,
+              }
+            : undefined,
     });
 
     return {
@@ -531,6 +621,29 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
                 knowledgeContext: !!knowledgeContext,
             });
 
+            // ── Mastermind: always compress messages before sending to LLM ──
+            // Previously gated on isOverBudget(); now runs every time so tool
+            // outputs, logs, code, and RAG chunks are compressed regardless of
+            // total budget — individual large messages still benefit from 60-95%
+            // token reduction even when the conversation fits within the window.
+            let mastermindStats: import('../compression/mastermind/index.js').MastermindStats | undefined;
+            if (mastermind && messages) {
+                // Deep-clone messages to avoid mutating shared session history refs.
+                // Mastermind.compress() writes compressedContent / _ccrHandle in-place.
+                const cloned = messages.map(m => ({ ...m }));
+                const { messages: compressed, stats } = await mastermind.compress(cloned as any);
+                messages = Mastermind.materialize(compressed) as typeof messages;
+                mastermindStats = stats;
+                if (agentDebugMode) {
+                    runLogger?.debug('agent.run: mastermind compression', { agentId: name }, {
+                        tokensBefore: stats.totalTokensBefore,
+                        tokensAfter:  stats.totalTokensAfter,
+                        compressed:   stats.messagesCompressed,
+                        ccrEntries:   stats.ccrEntries,
+                    });
+                }
+            }
+
             // Per-run hooks are passed via runConfig.hooks — the runner merges them with
             // agent-level hooks locally. No shared config mutation; concurrent runs are isolated.
             const inputMessageCount = messages?.length ?? 0;
@@ -603,6 +716,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
                         followupsGenerated: followups.length,
                         ...(result.usage && { usage: result.usage }),
                         ...(persistedStorageKey && { storageKey: persistedStorageKey }),
+                        ...(mastermindStats && { compression: mastermindStats }),
                     },
                 };
             }

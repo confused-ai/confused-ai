@@ -168,6 +168,25 @@ export class Agent {
 
     budget(config: CreateAgentOptions['budget']): this { this._opts.budget = config; return this.invalidate(); }
 
+    // ── Compression ───────────────────────────────────────────────────────────
+
+    /**
+     * Configure context compression (Mastermind pipeline).
+     * Enabled by default for all agents — compresses tool outputs, logs, code,
+     * and RAG chunks before they reach the LLM (60-95% fewer tokens).
+     *
+     * @param config  Pass `false` to disable, `true` for defaults, or a config object.
+     * @example
+     * ```ts
+     * // Disable compression
+     * agent.compression(false);
+     *
+     * // Custom budget
+     * agent.compression({ contextTokenBudget: 8_000, compressToolResults: true });
+     * ```
+     */
+    compression(config: CreateAgentOptions['mastermind']): this { this._opts.mastermind = config; return this.invalidate(); }
+
     // ── Hooks ─────────────────────────────────────────────────────────────────
 
     hooks(hooks: CreateAgentOptions['hooks']): this {

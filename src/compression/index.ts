@@ -59,6 +59,26 @@ export type {
     EntityType,
 } from './entity-memory.js';
 
+// ── Mastermind — full-pipeline context compression ────────────────────────────
+export { Mastermind, CCRStore, createRetrieveTool, CacheAligner } from './mastermind/index.js';
+export {
+    detectContentType,
+    routeContent,
+    estimateTokens as mastermindEstimateTokens,
+} from './mastermind/index.js';
+export { smartCrush, crushJsonText } from './mastermind/index.js';
+export { compressCode, compressCodeBlocks } from './mastermind/index.js';
+export { crushLog, crushXml, crushCsv } from './mastermind/index.js';
+export type {
+    MastermindMessage,
+    MastermindConfig,
+    MastermindStats,
+    MastermindRetrieveTool,
+    ContentType,
+    CompressionAlgorithm,
+    CCREntry,
+} from './mastermind/index.js';
+
 // ── Token counting ────────────────────────────────────────────────────────────
 export {
     createTokenCounter,

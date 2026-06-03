@@ -135,3 +135,10 @@ export {
     createTenantContext,
 } from './tenant.js';
 export type { TenantConfig, TenantContext, TenantContextOptions } from './tenant.js';
+
+// ── Component versioning ─────────────────────────────────────────────────────
+export {
+    ComponentRegistry,
+    defaultComponentRegistry,
+} from './component-registry.js';
+export type { Component, ComponentVersion, ComponentType, ComponentStatus, RegisterComponentInput } from './component-registry.js';

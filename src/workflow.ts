@@ -25,6 +25,8 @@ export {
     createSupervisor, createConsensus, createPipeline,
     createHandoff, createAgentRouter,
     createRunnableAgent,
+    RalphLoop, createRalphLoop,
+    GSDCoordinator, createGSDCoordinator, InMemoryGSDStorage, FilesystemGSDStorage,
     RoundRobinLoadBalancer, LeastConnectionsLoadBalancer, WeightedResponseTimeLoadBalancer,
     createHttpA2AClient, A2AServer,
     createToolkit, toolkitsToRegistry,
@@ -35,4 +37,8 @@ export type {
     MCPToolDescriptor, MCPAgentMessage, MCPAgentClient,
     A2ATask, A2ATaskState, A2AAgentCard, A2AMessage, IA2AClient, A2AStreamEvent,
     TraceContext, LoadBalancer,
+    RalphLoopConfig, RalphLoopContext, RalphLoopLog, RalphLoopResult,
+    GSDConfig, GSDState, GSDStorage,
 } from './orchestration/index.js';
+
+

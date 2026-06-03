@@ -39,6 +39,12 @@ export function createAgenticAgent(config: {
     knowledgebase?: import('../knowledge/index.js').RAGEngine;
     temperature?: number;
     maxTokens?: number;
+    /** Per-step auto context-compression config — wired from Mastermind defaults */
+    compression?: {
+        enabled: boolean;
+        toolResultsLimit?: number;
+        messageSizeThreshold?: number;
+    };
 }): {
     name: string;
     instructions: string;
@@ -77,6 +83,7 @@ export function createAgenticAgent(config: {
         knowledgebase: config.knowledgebase,
         temperature: config.temperature,
         maxTokens: config.maxTokens,
+        compression: config.compression,
     });
 
     if (config.humanInTheLoop) runner.setHumanInTheLoop(config.humanInTheLoop);

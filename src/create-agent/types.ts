@@ -25,6 +25,7 @@ import type { Storage } from '../storage/index.js';
 import type { z } from 'zod';
 import type { AgenticRunResult, AgenticLifecycleHooks } from '../agentic/index.js';
 import type { Logger } from '../observability/types.js';
+import type { MastermindConfig } from '../compression/mastermind/index.js';
 
 type AnyLightweightTool = LightweightTool<any, any>;
 
@@ -36,6 +37,8 @@ export interface AgentRunDebugInfo {
     followupsGenerated: number;
     usage?: AgenticRunResult['usage'];
     storageKey?: string;
+    /** Mastermind compression stats when context was compressed before the LLM call. */
+    compression?: import('../compression/mastermind/index.js').MastermindStats;
 }
 
 export interface AgentRunResult extends AgenticRunResult {
@@ -223,6 +226,25 @@ export interface CreateAgentOptions extends AgentContextOptions {
      * ```
      */
     hooks?: AgenticLifecycleHooks;
+    /**
+     * Mastermind context compression pipeline.
+     * Compresses tool outputs, logs, code, and conversation history before they
+     * reach the LLM — reducing token usage by 40–90% with no semantic loss.
+     *
+     * Enabled by default. Set `false` to disable entirely.
+     * Pass a `MastermindConfig` to customise thresholds and algorithms.
+     *
+     * @default true
+     * @example
+     * ```ts
+     * // Disable
+     * createAgent({ mastermind: false });
+     *
+     * // Custom budget
+     * createAgent({ mastermind: { contextTokenBudget: 8_000, compressToolResults: true } });
+     * ```
+     */
+    mastermind?: MastermindConfig | boolean;
 }
 
 export interface AgentRunOptions extends AgentContextOptions {

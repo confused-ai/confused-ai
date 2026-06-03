@@ -15,3 +15,5 @@ export type {
     ScheduleRunStore,
 } from './manager.js';
 export { DbScheduleStore } from './db-schedule-store.js';
+export { SchedulerTools } from './scheduler-tools.js';
+export type { SchedulerToolsOptions, SimpleTool } from './scheduler-tools.js';

@@ -146,6 +146,60 @@ export interface CreateHttpServiceOptions {
      */
     db?: import('../db/index.js').AgentDb;
     /**
+     * Session store — when provided, exposes session CRUD endpoints:
+     *   GET    /v1/sessions              → list sessions (by userId)
+     *   GET    /v1/sessions/:id          → get session + messages
+     *   DELETE /v1/sessions/:id          → delete session
+     */
+    sessionStore?: import('../session/types.js').SessionStore;
+    /**
+     * Memory store — when provided, exposes memory CRUD endpoints:
+     *   GET    /v1/memory                → list memories (by userId)
+     *   POST   /v1/memory                → create a memory entry
+     *   DELETE /v1/memory/:id            → delete a memory entry
+     */
+    memoryStore?: import('../memory/types.js').MemoryStore;
+    /**
+     * Knowledge engine — when provided, exposes knowledge endpoints:
+     *   POST   /v1/knowledge/text        → ingest text
+     *   POST   /v1/knowledge/url         → ingest URL
+     *   GET    /v1/knowledge/search      → search (query param: q)
+     */
+    knowledgeEngine?: import('../knowledge/knowledge-engine.js').KnowledgeEngine;
+    /**
+     * Background job store — tracks async (background=true) run jobs.
+     * Exposed via GET /v1/runs/:runId and DELETE /v1/runs/:runId (cancel).
+     * Defaults to an in-memory store if background jobs are used.
+     */
+    backgroundJobStore?: import('./background-jobs.js').InMemoryBackgroundJobStore;
+    /**
+     * Component registry — exposes agent versioning endpoints:
+     *   GET    /v1/components            → list components
+     *   POST   /v1/components            → register component
+     *   GET    /v1/components/:id        → get component
+     *   POST   /v1/components/:id/publish → publish draft
+     *   POST   /v1/components/:id/rollback → rollback to version
+     *   DELETE /v1/components/:id        → delete component
+     */
+    componentRegistry?: import('../production/component-registry.js').ComponentRegistry;
+    /**
+     * Messaging + protocol surface interfaces (Slack, Telegram, A2A, AG-UI).
+     * Each interface registers its own HTTP routes on the server.
+     *
+     * @example
+     * ```ts
+     * import { SlackInterface, TelegramInterface } from 'confused-ai/interfaces';
+     * createHttpService({
+     *   agents: { assistant },
+     *   interfaces: [
+     *     new SlackInterface({ agent: assistant, token: '...', signingSecret: '...' }),
+     *     new TelegramInterface({ agent: assistant, token: '...' }),
+     *   ],
+     * });
+     * ```
+     */
+    interfaces?: import('../interfaces/base.js').BaseInterface[];
+    /**
      * Per-request timeout in milliseconds. Applies to agent execution (both streaming
      * and non-streaming). When exceeded the request is aborted and a 504 is returned.
      * Default: no timeout.

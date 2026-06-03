@@ -11,6 +11,7 @@ import { InMemoryIdempotencyStore } from '../production/idempotency.js';
 import { attachWebSocketTransport } from './ws-transport.js';
 import { createAdminHandler, type AdminStats } from './admin.js';
 import { extractTraceContext } from '../observability/trace-context.js';
+import { InMemoryBackgroundJobStore } from './background-jobs.js';
 const CORS_HEADERS =
     'Content-Type, Accept, X-Session-Id, X-User-Id, X-Request-Id';
 
@@ -130,6 +131,12 @@ export function createHttpService(
     const agentDb = options.db ?? null;
     const requestTimeoutMs = options.requestTimeoutMs ?? 0; // 0 = disabled
     const exposeErrors = options.exposeErrors ?? false;
+    const sessionStore = options.sessionStore ?? null;
+    const memoryStore = options.memoryStore ?? null;
+    const knowledgeEngine = options.knowledgeEngine ?? null;
+    const bgJobStore = options.backgroundJobStore ?? new InMemoryBackgroundJobStore();
+    const componentRegistry = options.componentRegistry ?? null;
+    const ifaces = options.interfaces ?? [];
 
     // Track in-flight requests for graceful shutdown
     let inFlight = 0;
@@ -610,6 +617,293 @@ export function createHttpService(
                 }
             }
 
+            // ── Sessions REST API ─────────────────────────────────────────
+            if (sessionStore) {
+                // GET /v1/sessions?userId=...
+                if (method === 'GET' && (path === '/v1/sessions' || path === '/sessions')) {
+                    const url = new URL(req.url ?? '/', 'http://localhost');
+                    const userId = url.searchParams.get('userId') ?? undefined;
+                    // We can only list if the store supports it; otherwise return empty
+                    const storeWithList = sessionStore as unknown as { listByUser?: (id: string) => Promise<unknown[]> };
+                    const sessions = typeof storeWithList.listByUser === 'function' && userId
+                        ? await storeWithList.listByUser(userId)
+                        : [];
+                    sendJson(res, 200, { sessions }, cors, rid);
+                    pushAudit(200, { id: rid });
+                    return;
+                }
+                // Session by ID
+                const sessionMatch = /^\/v1\/sessions\/([^/]+)$/.exec(path);
+                if (sessionMatch) {
+                    const sessionId = decodeURIComponent(sessionMatch[1] ?? '');
+                    if (method === 'GET') {
+                        const session = await sessionStore.get(sessionId);
+                        if (!session) { sendJson(res, 404, { error: 'Session not found' }, cors, rid); pushAudit(404, { id: rid }); return; }
+                        const messages = await sessionStore.getMessages(sessionId);
+                        sendJson(res, 200, { session, messages }, cors, rid);
+                        pushAudit(200, { id: rid });
+                        return;
+                    }
+                    if (method === 'DELETE') {
+                        const session = await sessionStore.get(sessionId);
+                        if (!session) { sendJson(res, 404, { error: 'Session not found' }, cors, rid); pushAudit(404, { id: rid }); return; }
+                        await sessionStore.delete(sessionId);
+                        sendJson(res, 200, { deleted: true, sessionId }, cors, rid);
+                        pushAudit(200, { id: rid });
+                        return;
+                    }
+                }
+            }
+
+            // ── Memory REST API ───────────────────────────────────────────
+            if (memoryStore) {
+                if (method === 'GET' && (path === '/v1/memory' || path === '/memory')) {
+                    const url = new URL(req.url ?? '/', 'http://localhost');
+                    const limit = Math.min(Number(url.searchParams.get('limit') ?? '20'), 100);
+                    const memories = await memoryStore.getRecent(limit);
+                    sendJson(res, 200, { memories }, cors, rid);
+                    pushAudit(200, { id: rid });
+                    return;
+                }
+                if (method === 'POST' && (path === '/v1/memory' || path === '/memory')) {
+                    let bodyRaw: string;
+                    try { bodyRaw = await readBody(req, maxBodyBytes); }
+                    catch { sendJson(res, 413, { error: 'Request body too large' }, cors); return; }
+                    let body: { content?: string; type?: string; tags?: string[] } = {};
+                    try { body = JSON.parse(bodyRaw) as typeof body; } catch { sendJson(res, 400, { error: 'Invalid JSON' }, cors); return; }
+                    if (!body.content) { sendJson(res, 400, { error: 'Missing "content"' }, cors); return; }
+                    const { MemoryType } = await import('../memory/types.js');
+                    const entry = await memoryStore.store({
+                        type: (body.type as import('../memory/types.js').MemoryType) ?? MemoryType.LONG_TERM,
+                        content: body.content,
+                        metadata: { tags: body.tags ?? [] },
+                    });
+                    sendJson(res, 201, { memory: entry }, cors, rid);
+                    pushAudit(201, { id: rid });
+                    return;
+                }
+                const memoryMatch = /^\/v1\/memory\/([^/]+)$/.exec(path);
+                if (memoryMatch && method === 'DELETE') {
+                    const memId = decodeURIComponent(memoryMatch[1] ?? '');
+                    const deleted = await memoryStore.delete(memId as import('../core/index.js').EntityId);
+                    sendJson(res, 200, { deleted, id: memId }, cors, rid);
+                    pushAudit(200, { id: rid });
+                    return;
+                }
+            }
+
+            // ── Knowledge REST API ────────────────────────────────────────
+            if (knowledgeEngine) {
+                // GET /v1/knowledge/search?q=...&k=5
+                if (method === 'GET' && (path === '/v1/knowledge/search' || path === '/knowledge/search')) {
+                    const url = new URL(req.url ?? '/', 'http://localhost');
+                    const query = url.searchParams.get('q') ?? '';
+                    const topK = Math.min(Number(url.searchParams.get('k') ?? '5'), 20);
+                    if (!query) { sendJson(res, 400, { error: 'Missing "q" query parameter' }, cors); return; }
+                    const results = await knowledgeEngine.buildContext(query, topK);
+                    sendJson(res, 200, { context: results, query }, cors, rid);
+                    pushAudit(200, { id: rid });
+                    return;
+                }
+                // POST /v1/knowledge/text — ingest plain text
+                if (method === 'POST' && (path === '/v1/knowledge/text' || path === '/knowledge/text')) {
+                    let bodyRaw: string;
+                    try { bodyRaw = await readBody(req, 10_485_760 /* 10 MB */); }
+                    catch { sendJson(res, 413, { error: 'Request body too large' }, cors); return; }
+                    let body: { text?: string; source?: string; metadata?: Record<string, unknown> } = {};
+                    try { body = JSON.parse(bodyRaw) as typeof body; } catch { sendJson(res, 400, { error: 'Invalid JSON' }, cors); return; }
+                    if (!body.text) { sendJson(res, 400, { error: 'Missing "text"' }, cors); return; }
+                    const doc: import('../knowledge/types.js').Document = {
+                        id: randomUUID(),
+                        content: body.text,
+                        metadata: { source: body.source ?? 'api', ...body.metadata },
+                    };
+                    await knowledgeEngine.addDocuments([doc]);
+                    sendJson(res, 201, { ingested: true, source: body.source ?? 'api', length: body.text.length }, cors, rid);
+                    pushAudit(201, { id: rid });
+                    return;
+                }
+                // POST /v1/knowledge/url — ingest URL
+                if (method === 'POST' && (path === '/v1/knowledge/url' || path === '/knowledge/url')) {
+                    let bodyRaw: string;
+                    try { bodyRaw = await readBody(req, maxBodyBytes); }
+                    catch { sendJson(res, 413, { error: 'Request body too large' }, cors); return; }
+                    let body: { url?: string } = {};
+                    try { body = JSON.parse(bodyRaw) as typeof body; } catch { sendJson(res, 400, { error: 'Invalid JSON' }, cors); return; }
+                    if (!body.url) { sendJson(res, 400, { error: 'Missing "url"' }, cors); return; }
+                    try {
+                        const { loadUrl } = await import('../knowledge/loaders/url-loader.js');
+                        const docs = await loadUrl(body.url);
+                        await knowledgeEngine.addDocuments(docs);
+                        sendJson(res, 201, { ingested: true, url: body.url, documents: docs.length }, cors, rid);
+                        pushAudit(201, { id: rid });
+                    } catch (e) {
+                        sendJson(res, 422, { error: `Failed to load URL: ${e instanceof Error ? e.message : 'unknown error'}` }, cors);
+                    }
+                    return;
+                }
+            }
+
+            // ── Background run endpoints ──────────────────────────────────
+            // GET /v1/runs/:runId — poll background job
+            const runGetMatch = /^\/v1\/runs\/([^/]+)$/.exec(path);
+            if (runGetMatch) {
+                const runId = decodeURIComponent(runGetMatch[1] ?? '');
+                if (method === 'GET') {
+                    const job = bgJobStore.get(runId);
+                    if (!job) { sendJson(res, 404, { error: 'Run not found' }, cors, rid); pushAudit(404); return; }
+                    sendJson(res, 200, { run: job }, cors, rid);
+                    pushAudit(200, { id: rid });
+                    return;
+                }
+                // DELETE /v1/runs/:runId — cancel
+                if (method === 'DELETE') {
+                    const cancelled = bgJobStore.markCancelled(runId);
+                    if (!cancelled) { sendJson(res, 404, { error: 'Run not found or already terminal' }, cors, rid); pushAudit(404); return; }
+                    sendJson(res, 200, { cancelled: true, runId }, cors, rid);
+                    pushAudit(200, { id: rid });
+                    return;
+                }
+            }
+
+            // POST /v1/agents/:name/runs — async background run
+            const bgRunMatch = /^\/v1\/agents\/([^/]+)\/runs$/.exec(path);
+            if (method === 'POST' && bgRunMatch) {
+                const agentName = decodeURIComponent(bgRunMatch[1] ?? '');
+                const agent = map[agentName];
+                if (!agent) { sendJson(res, 404, { error: `Agent '${agentName}' not found` }, cors, rid); pushAudit(404, { agent: agentName, id: rid }); return; }
+                let bodyRaw: string;
+                try { bodyRaw = await readBody(req, maxBodyBytes); }
+                catch (e) { const code = (e as NodeJS.ErrnoException).code; if (code === 'BODY_TOO_LARGE') { sendJson(res, 413, { error: 'Request body too large' }, cors); return; } throw e; }
+                let body: { message?: string; prompt?: string; sessionId?: string; userId?: string; stream?: boolean; background?: boolean } = {};
+                try { body = bodyRaw ? (JSON.parse(bodyRaw) as typeof body) : {}; } catch { sendJson(res, 400, { error: 'Invalid JSON' }, cors, rid); return; }
+                const message = body.message ?? body.prompt ?? '';
+                if (!message) { sendJson(res, 400, { error: 'Missing "message" or "prompt" string' }, cors, rid); return; }
+
+                const sessionId = body.sessionId ?? await agent.createSession(body.userId);
+                const jobId = randomUUID();
+
+                if (body.background) {
+                    // Fire and forget — return immediately with run ID
+                    bgJobStore.create({ id: jobId, agentName, sessionId, userId: body.userId });
+                    sendJson(res, 202, { run_id: jobId, status: 'pending', session_id: sessionId }, cors, rid);
+                    pushAudit(202, { id: rid, agent: agentName, sessionId });
+                    setImmediate(async () => {
+                        bgJobStore.markRunning(jobId);
+                        try {
+                            const result = await agent.run(message, { sessionId, userId: body.userId });
+                            bgJobStore.markCompleted(jobId, { text: result.text, steps: result.steps, finishReason: result.finishReason });
+                        } catch (e) {
+                            bgJobStore.markFailed(jobId, e instanceof Error ? e.message : 'Unknown error');
+                        }
+                    });
+                    return;
+                }
+
+                // Synchronous foreground run (same as /v1/agents/:name/run)
+                try {
+                    const result = await agent.run(message, { sessionId, userId: body.userId });
+                    sendJson(res, 200, {
+                        run_id: jobId, agent: agentName, session_id: sessionId,
+                        status: 'completed',
+                        content: result.text,
+                        steps: result.steps,
+                        finish_reason: result.finishReason,
+                    }, cors, rid);
+                    pushAudit(200, { id: rid, agent: agentName, sessionId });
+                } catch (e) {
+                    adminStats.totalErrors++;
+                    sendJson(res, 500, { error: exposeErrors ? (e instanceof Error ? e.message : String(e)) : 'Agent run failed' }, cors, rid);
+                    pushAudit(500, { agent: agentName });
+                }
+                return;
+            }
+
+            // ── Component versioning endpoints ────────────────────────────
+            if (componentRegistry) {
+                if (method === 'GET' && (path === '/v1/components' || path === '/components')) {
+                    const url = new URL(req.url ?? '/', 'http://localhost');
+                    const type = url.searchParams.get('type') as import('../production/component-registry.js').ComponentType | null;
+                    const status = url.searchParams.get('status') as import('../production/component-registry.js').ComponentStatus | null;
+                    const components = componentRegistry.list({ type: type ?? undefined, status: status ?? undefined });
+                    sendJson(res, 200, { components }, cors, rid);
+                    pushAudit(200, { id: rid });
+                    return;
+                }
+                if (method === 'POST' && (path === '/v1/components' || path === '/components')) {
+                    let bodyRaw: string;
+                    try { bodyRaw = await readBody(req, maxBodyBytes); }
+                    catch { sendJson(res, 413, { error: 'Request body too large' }, cors); return; }
+                    let body: { name?: string; type?: string; config?: unknown; notes?: string } = {};
+                    try { body = JSON.parse(bodyRaw) as typeof body; } catch { sendJson(res, 400, { error: 'Invalid JSON' }, cors); return; }
+                    if (!body.name || !body.type) { sendJson(res, 400, { error: 'Missing "name" or "type"' }, cors); return; }
+                    const id = componentRegistry.register({
+                        name: body.name,
+                        type: body.type as import('../production/component-registry.js').ComponentType,
+                        config: body.config ?? {},
+                        notes: body.notes,
+                    });
+                    sendJson(res, 201, { id, status: 'draft' }, cors, rid);
+                    pushAudit(201, { id: rid });
+                    return;
+                }
+                const compMatch = /^\/v1\/components\/([^/]+)(?:\/(publish|rollback))?$/.exec(path);
+                if (compMatch) {
+                    const compId = decodeURIComponent(compMatch[1] ?? '');
+                    const action = compMatch[2];
+                    if (method === 'GET' && !action) {
+                        const comp = componentRegistry.get(compId);
+                        if (!comp) { sendJson(res, 404, { error: 'Component not found' }, cors, rid); return; }
+                        sendJson(res, 200, { component: comp }, cors, rid);
+                        pushAudit(200, { id: rid });
+                        return;
+                    }
+                    if (method === 'DELETE' && !action) {
+                        const deleted = componentRegistry.delete(compId);
+                        sendJson(res, 200, { deleted }, cors, rid);
+                        pushAudit(200, { id: rid });
+                        return;
+                    }
+                    if (method === 'POST' && action === 'publish') {
+                        try {
+                            let notes: string | undefined;
+                            const raw = await readBody(req, maxBodyBytes).catch(() => '');
+                            if (raw) { try { notes = (JSON.parse(raw) as { notes?: string }).notes; } catch { /* ignore */ } }
+                            const version = componentRegistry.publish(compId, notes);
+                            sendJson(res, 200, { version, status: 'published' }, cors, rid);
+                            pushAudit(200, { id: rid });
+                        } catch (e) { sendJson(res, 400, { error: e instanceof Error ? e.message : 'Publish failed' }, cors); }
+                        return;
+                    }
+                    if (method === 'POST' && action === 'rollback') {
+                        try {
+                            let toVersion: number | undefined;
+                            const raw = await readBody(req, maxBodyBytes).catch(() => '');
+                            if (raw) { try { toVersion = (JSON.parse(raw) as { version?: number }).version; } catch { /* ignore */ } }
+                            if (!toVersion) { sendJson(res, 400, { error: 'Missing "version" in body' }, cors); return; }
+                            componentRegistry.rollback(compId, toVersion);
+                            sendJson(res, 200, { version: toVersion, status: 'published' }, cors, rid);
+                            pushAudit(200, { id: rid });
+                        } catch (e) { sendJson(res, 400, { error: e instanceof Error ? e.message : 'Rollback failed' }, cors); }
+                        return;
+                    }
+                }
+            }
+
+            // ── Metrics endpoint ──────────────────────────────────────────
+            if (method === 'GET' && (path === '/v1/metrics/summary' || path === '/metrics/summary')) {
+                sendJson(res, 200, {
+                    totalRequests: adminStats.totalRequests,
+                    totalErrors: adminStats.totalErrors,
+                    totalTokens: adminStats.totalTokens,
+                    uptime: Math.floor((Date.now() - serverStartedAt.getTime()) / 1000),
+                    agents: Object.keys(map).length,
+                    timestamp: new Date().toISOString(),
+                }, cors, rid);
+                pushAudit(200, { id: rid });
+                return;
+            }
+
             sendJson(res, 404, { error: 'Not found' }, cors);
             pushAudit(404);
         } catch (e) {
@@ -631,6 +925,11 @@ export function createHttpService(
     // Attach WebSocket transport when enabled
     if (options.websocket) {
         attachWebSocketTransport(server, map);
+    }
+
+    // Attach messaging/protocol interfaces (Slack, Telegram, A2A, AG-UI, etc.)
+    for (const iface of ifaces) {
+        iface.setup(server);
     }
 
     const host = options.host ?? '0.0.0.0';
