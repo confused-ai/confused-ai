@@ -66,7 +66,7 @@ import { definePersona, buildPersonaInstructions } from 'confused-ai';
 
 // ── Session & memory ───────────────────────────────────────────────────────
 import { InMemorySessionStore } from 'confused-ai';
-import { SessionState } from '@confused-ai/session';
+import { SessionState } from 'confused-ai/session';
 import { InMemoryStore, MemoryType } from 'confused-ai';
 import { InMemoryVectorStore } from 'confused-ai';
 
@@ -75,8 +75,8 @@ import { InMemoryUserProfileStore } from 'confused-ai';
 import { LearningMode } from 'confused-ai';
 
 // ── Knowledge / RAG ────────────────────────────────────────────────────────
-import { KnowledgeEngine, splitText } from '@confused-ai/knowledge';
-import type { DocumentInput } from '@confused-ai/knowledge';
+import { KnowledgeEngine, splitText } from 'confused-ai/knowledge';
+import type { DocumentInput } from 'confused-ai/knowledge';
 
 // ── Tools ──────────────────────────────────────────────────────────────────
 import { CalculatorAddTool } from 'confused-ai';
@@ -115,24 +115,24 @@ import { LogLevel } from 'confused-ai';
 import { ExactMatchAccuracy, LevenshteinAccuracy } from 'confused-ai';
 
 // ── Production resilience ──────────────────────────────────────────────────
-import { CircuitBreaker, CircuitState } from '@confused-ai/production';
-import { RateLimiter } from '@confused-ai/production';
+import { CircuitBreaker, CircuitState } from 'confused-ai/production';
+import { RateLimiter } from 'confused-ai/production';
 import {
     HealthCheckManager,
     HealthStatus,
     createSessionStoreHealthCheck,
     createCustomHealthCheck,
-} from '@confused-ai/production';
+} from 'confused-ai/production';
 
 // ── Artifacts ─────────────────────────────────────────────────────────────
-import { InMemoryArtifactStorage, createTextArtifact } from '@confused-ai/artifacts';
+import { InMemoryArtifactStorage, createTextArtifact } from 'confused-ai/artifacts';
 
 // ── HTTP runtime ───────────────────────────────────────────────────────────
-import { createHttpService, listenService } from '@confused-ai/serve';
-import { getRuntimeOpenApiJson } from '@confused-ai/serve';
+import { createHttpService, listenService } from 'confused-ai/serve';
+import { getRuntimeOpenApiJson } from 'confused-ai/serve';
 
 // ── Config & version ───────────────────────────────────────────────────────
-import { loadConfig } from '@confused-ai/config';
+import { loadConfig } from 'confused-ai/config';
 import { VERSION } from 'confused-ai';
 
 // ── Core builder (planner, context) ───────────────────────────────────────

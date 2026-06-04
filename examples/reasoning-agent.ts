@@ -28,13 +28,13 @@ config({
     quiet: true,
 });
 
-import { ReasoningManager } from '@confused-ai/reasoning';
+import { ReasoningManager } from 'confused-ai/reasoning';
 import {
     NextAction,
     ReasoningEventType,
     type ReasoningEvent,
     type ReasoningStep,
-} from '@confused-ai/reasoning';
+} from 'confused-ai/reasoning';
 
 // ── Mock LLM (deterministic — no API key needed) ──────────────────────────
 

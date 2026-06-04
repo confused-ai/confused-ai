@@ -24,8 +24,8 @@ import {
     ScheduleManager,
     InMemoryScheduleStore,
     InMemoryScheduleRunStore,
-} from '@confused-ai/scheduler';
-import type { CreateScheduleInput } from '@confused-ai/scheduler';
+} from 'confused-ai/scheduler';
+import type { CreateScheduleInput } from 'confused-ai/scheduler';
 
 // ── Simulated market data ─────────────────────────────────────────────────
 

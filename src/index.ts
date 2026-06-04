@@ -52,7 +52,7 @@ export * from './tools/utils/calculator.js';
 
 // ── Planner ───────────────────────────────────────────────────────────────────
 // Note: RetryPolicy already exported from ./core/index.js
-export { LLMPlanner, ClassicalPlanner, PlanValidator } from './planner/index.js';
+export { LLMPlanner, ClassicalPlanner, PlanValidator, PlanningAlgorithm } from './planner/index.js';
 export type { Plan, PlannerConfig, Planner } from './planner/index.js';
 
 // ── Execution ─────────────────────────────────────────────────────────────────
@@ -148,7 +148,7 @@ export { AgenticRunner, createAgenticAgent } from './agentic/index.js';
 export type { AgenticRunnerConfig, AgenticLifecycleHooks, AgenticRunResult, AgenticStreamHooks } from './agentic/index.js';
 
 // ── SDK ───────────────────────────────────────────────────────────────────────
-export { defineAgent, DefinedAgent, createWorkflow, WorkflowBuilder, Workflow } from './sdk/index.js';
+export { defineAgent, DefinedAgent, createWorkflow, WorkflowBuilder, Workflow, asOrchestratorAgent } from './sdk/index.js';
 export type { AgentDefinitionConfig, AgentRunConfig, WorkflowResult, WorkflowStep } from './sdk/index.js';
 
 // ── Session ───────────────────────────────────────────────────────────────────

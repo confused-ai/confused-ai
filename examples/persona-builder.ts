@@ -26,8 +26,8 @@ config({
 
 import { Agent } from 'confused-ai';
 import { definePersona } from 'confused-ai';
-import { SessionState } from '@confused-ai/session';
-import type { SessionStore } from '@confused-ai/session';
+import { SessionState } from 'confused-ai/session';
+import type { SessionStore } from 'confused-ai/session';
 import type { AgenticRunResult } from 'confused-ai';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

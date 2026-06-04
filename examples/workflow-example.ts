@@ -17,8 +17,8 @@ import {
     NodeType,
     TransitionType,
     WorkflowStatus,
-} from '@confused-ai/execution';
-import { StepExecutor, PipelineBuilder, EngineEvent } from '@confused-ai/execution';
+} from 'confused-ai/execution';
+import { StepExecutor, PipelineBuilder, EngineEvent } from 'confused-ai/execution';
 
 async function main() {
     console.log('=== Graph-Based Workflow Example ===\n');

@@ -9,13 +9,13 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config as loadEnv } from 'dotenv';
-import { splitText } from '@confused-ai/knowledge';
-import { InMemoryArtifactStorage, createTextArtifact } from '@confused-ai/artifacts';
+import { splitText } from 'confused-ai/knowledge';
+import { InMemoryArtifactStorage, createTextArtifact } from 'confused-ai/artifacts';
 import { InMemoryUserProfileStore } from 'confused-ai';
-import { CircuitBreaker, CircuitState } from '@confused-ai/production';
-import { RateLimiter } from '@confused-ai/production';
+import { CircuitBreaker, CircuitState } from 'confused-ai/production';
+import { RateLimiter } from 'confused-ai/production';
 import { ExactMatchAccuracy, LevenshteinAccuracy } from 'confused-ai';
-import { loadConfig } from '@confused-ai/config';
+import { loadConfig } from 'confused-ai/config';
 
 loadEnv({
     path: path.join(path.dirname(fileURLToPath(import.meta.url)), '.env'),

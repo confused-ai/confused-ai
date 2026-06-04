@@ -34,8 +34,8 @@ import {
     HealthStatus,
     createSessionStoreHealthCheck,
     createCustomHealthCheck,
-} from '@confused-ai/production';
-import { createHttpService, listenService, getRuntimeOpenApiJson } from '@confused-ai/serve';
+} from 'confused-ai/production';
+import { createHttpService, listenService, getRuntimeOpenApiJson } from 'confused-ai/serve';
 import { VERSION } from 'confused-ai';
 
 config({

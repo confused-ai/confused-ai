@@ -42,7 +42,7 @@ import {
     type EvalScorer,
 } from 'confused-ai';
 import { createAgent } from 'confused-ai';
-import { MockLLMProvider } from '@confused-ai/test-utils';
+import { MockLLMProvider } from 'confused-ai/test-utils';
 
 // ── Golden dataset ─────────────────────────────────────────────────────────
 // In production: load from JSON, CSV, or a database

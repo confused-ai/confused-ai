@@ -34,7 +34,7 @@ config({
 });
 
 import { bare, compose, pipe } from 'confused-ai';
-import { MockLLMProvider } from '@confused-ai/test-utils';
+import { MockLLMProvider } from 'confused-ai/test-utils';
 
 // ── Mock LLMs (deterministic canned responses) ────────────────────────────
 
