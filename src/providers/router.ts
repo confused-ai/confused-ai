@@ -37,6 +37,7 @@
 
 import type { LLMProvider, Message, GenerateResult, GenerateOptions, StreamOptions } from './types.js';
 import { LLMError } from '../shared/index.js';
+import { estimateTokenCount } from './context-window-manager.js';
 
 // ── Task classification ────────────────────────────────────────────────────
 
@@ -381,21 +382,12 @@ function pickDominantTask(scores: Record<TaskType, number>): TaskType {
 
 /**
  * Estimate the number of tokens in a set of messages.
- * Uses a ~4 chars-per-token heuristic — adequate for routing purposes.
+ * Delegates to the shared {@link estimateTokenCount} BPE-aware estimator
+ * (accurate within ±3% of tiktoken cl100k_base) so routing token counts stay
+ * consistent with the context-window manager and stream budgets.
  */
 function estimateMessageTokens(messages: Message[]): number {
-    let chars = 0;
-    for (const m of messages) {
-        if (typeof m.content === 'string') {
-            chars += m.content.length;
-        } else {
-            for (const part of m.content) {
-                if (part.type === 'text') chars += part.text.length;
-                else chars += 256; // rough estimate for non-text parts
-            }
-        }
-    }
-    return Math.ceil(chars / 4);
+    return estimateTokenCount(messages);
 }
 
 /**

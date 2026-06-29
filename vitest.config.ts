@@ -28,9 +28,8 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['text', 'lcov', 'json', 'html'],
-            // Only measure coverage on the new packages/* code.
-            // Legacy src/ is excluded: it ships untouched and has its own
-            // integration test coverage via the existing tests/*.test.ts suite.
+            // Measure coverage on the packages/* code (gated at 80) AND the
+            // shipped src/ runtime (reported for visibility, ratcheted over time).
             // adapter-redis is excluded: tests require a live Redis instance
             // (skipped in CI) — coverage is tracked separately with testcontainers.
             include: [
@@ -38,6 +37,7 @@ export default defineConfig({
                 'packages/platform/guard/src/**/*.ts',
                 'packages/platform/observe/src/**/*.ts',
                 'packages/platform/serve/src/**/*.ts',
+                'src/**/*.ts',
             ],
             exclude: [
                 'node_modules/**',
@@ -55,12 +55,22 @@ export default defineConfig({
                 '**/*.test.ts',
                 '**/index.ts',
             ],
-            // Phase 4 target: 80/75 on packages/* (Phase 3 complete; src/ excluded).
+            // Glob-scoped thresholds: packages/* stay gated at 80/75; the shipped
+            // src/ runtime is reported but not yet gated (interim 0). Ratchet the
+            // src/ numbers up as coverage improves — visibility now, gate later.
             thresholds: {
-                lines: 80,
-                functions: 75,
-                branches: 75,
-                statements: 80,
+                'packages/**/src/**/*.ts': {
+                    lines: 80,
+                    functions: 75,
+                    branches: 75,
+                    statements: 80,
+                },
+                'src/**/*.ts': {
+                    lines: 0,
+                    functions: 0,
+                    branches: 0,
+                    statements: 0,
+                },
             },
         },
         

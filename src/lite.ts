@@ -1,10 +1,22 @@
 /**
  * confused-ai/lite — modern minimal entry point.
  *
+ * @packageDocumentation
+ *
  * Use this when you want the cleanest import surface and the smallest
  * runtime bundle. Pull in optional capabilities from focused subpaths such as
  * `confused-ai/tool`, `confused-ai/session`, or `confused-ai/knowledge` only
  * when you need them.
+ *
+ * Quick start:
+ *
+ * ```ts
+ * import { agent } from 'confused-ai/lite';
+ *
+ * const bot = agent('You are a helpful assistant.');
+ * const { text } = await bot.run('Say hello in one short sentence.');
+ * console.log(text);
+ * ```
  */
 
 export { agent } from './dx/agent.js';

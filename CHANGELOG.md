@@ -38,9 +38,21 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - LLM-judge distinguishes JSON parse failures from a genuine score of 0 (`parseError`).
 - Build: `pg`/`fluent-ffmpeg` optional-peer imports no longer break `tsc` (the CI typecheck gate).
 
+### Changed
+
+- **Unified token estimation** on a single shared estimator (`estimateTokenCount`); removed the ad-hoc `chars/4` divergence across the router and stream utils.
+- **Eval regression detection** now accepts an optional baseline + tolerance band (aggregate-drop detection) instead of only a fixed per-run threshold.
+- **Coverage now measures `src/`** (reported for visibility, ratcheted; `packages/*` stay gated at 80) so the shipped runtime is no longer a blind spot.
+
+### Developer experience
+
+- Quick-start `@packageDocumentation` example on the main entry points (`index`, `lite`).
+- `@experimental` JSDoc banners on not-yet-stable subsystems (reasoning, multi-agent swarm/patterns, durable execution, learning, voice, video) so consumers know what is semver-stable.
+- Actionable install/fix hints on peer-dependency and config errors.
+
 ### Deprecated
 
-- The duplicate module stacks (`models/` vs `providers/`, `observability/` vs `observe/`, `eval/` vs `observability/eval`, `execution/` graph engine vs `graph/`) remain but are slated for consolidation in 3.0 — prefer `providers/`, `observe/`, and `graph/`. Each still has live importers, so collapse is staged rather than removed in this release.
+- The duplicate module stacks (`models/` vs `providers/`, `observability/` vs `observe/`, `eval/` vs `observability/eval`, `execution/` graph engine vs `graph/`) are now thin `@deprecated` re-exports of their canonical counterparts — content drift is eliminated and public paths still resolve. Physical removal and the `execution/`→`graph/` engine merge are slated for 3.0 (each still has live importers).
 
 ## [2.3.0] — 2026-06-03
 

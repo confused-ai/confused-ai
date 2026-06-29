@@ -243,17 +243,28 @@ function createFrameworkMemoryTools(memoryStore: MemoryStore): AgentTool[] {
  * object — not a raw Zod schema cast, which would cause shape mismatches
  * when the runner serialises tool definitions for the LLM.
  */
-function createCCRRetrieveTool(mastermind: Mastermind): AgentTool {
-    const retrieve = mastermind.retrieveTool;
-    const schema = z.object({
-        handle: z.string().describe('The CCR handle printed next to a compressed block, e.g. "ccr_0001".'),
-    });
-    const jsonSchema = zodToJsonSchema(schema as any);
+// CCR retrieve tool metadata is static — schema built once at module load,
+// not per-agent (zodToJsonSchema is the second-largest per-call cost after Mastermind).
+const CCR_RETRIEVE_SCHEMA = z.object({
+    handle: z.string().describe('The CCR handle printed next to a compressed block, e.g. "ccr_0001".'),
+});
+const CCR_RETRIEVE_JSON_SCHEMA = zodToJsonSchema(CCR_RETRIEVE_SCHEMA as any);
+const CCR_RETRIEVE_NAME = 'mastermind_retrieve';
+const CCR_RETRIEVE_DESCRIPTION =
+    'Retrieve the original (uncompressed) content for a compressed block. ' +
+    'Pass the `handle` value shown in brackets after a compressed section ' +
+    '(e.g. `[ccr_0001]`). Returns the full original text.';
+
+// Takes a lazy getter so the Mastermind instance is not constructed until the
+// tool is actually invoked by the LLM (which only happens after compression
+// produces a CCR handle — a runtime event, not a per-agent setup cost).
+function createCCRRetrieveTool(getMastermind: () => Mastermind | undefined): AgentTool {
+    const schema = CCR_RETRIEVE_SCHEMA;
     return {
-        id: retrieve.name,
-        name: retrieve.name,
-        description: retrieve.description,
-        parameters: jsonSchema as unknown as Tool['parameters'],
+        id: CCR_RETRIEVE_NAME,
+        name: CCR_RETRIEVE_NAME,
+        description: CCR_RETRIEVE_DESCRIPTION,
+        parameters: CCR_RETRIEVE_JSON_SCHEMA as unknown as Tool['parameters'],
         permissions: {
             allowNetwork: false,
             allowFileSystem: false,
@@ -269,7 +280,16 @@ function createCCRRetrieveTool(mastermind: Mastermind): AgentTool {
             const startMs = Date.now();
             try {
                 const parsed = schema.parse(params);
-                const data = await retrieve.execute(parsed);
+                const mastermind = getMastermind();
+                if (!mastermind) {
+                    return {
+                        success: false,
+                        error: { code: 'CCR_RETRIEVE_ERROR', message: 'Compression pipeline is disabled.' },
+                        executionTimeMs: Date.now() - startMs,
+                        metadata: { startTime: startedAt, endTime: new Date(), retries: 0 },
+                    };
+                }
+                const data = await mastermind.retrieveTool.execute(parsed);
                 return {
                     success: true,
                     data,
@@ -456,11 +476,20 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
               },
           }
         : {};
-    const mastermind: Mastermind | undefined = mastermindEnabled ? new Mastermind(mastermindCfg) : undefined;
+    // Lazy Mastermind — constructing it eagerly cost ~22µs + ~33KB per agent
+    // (98% of createAgent's per-call cost) even when compression never ran.
+    // Built on first use: first run() that compresses, or first CCR tool call.
+    let _mastermind: Mastermind | undefined;
+    const getMastermind = (): Mastermind | undefined => {
+        if (!mastermindEnabled) return undefined;
+        if (!_mastermind) _mastermind = new Mastermind(mastermindCfg);
+        return _mastermind;
+    };
 
-    // Build CCR retrieve tool if CCR is enabled
-    const ccrTools: AgentTool[] = (mastermind && mastermindCfg.enableCCR !== false)
-        ? [createCCRRetrieveTool(mastermind)]
+    // CCR retrieve tool registered up front (LLM needs the tool definition), but
+    // its execute() lazily resolves the Mastermind instance via getMastermind().
+    const ccrTools: AgentTool[] = (mastermindEnabled && mastermindCfg.enableCCR !== false)
+        ? [createCCRRetrieveTool(getMastermind)]
         : [];
 
     const tools = resolveTools(options.tools, [...memoryTools, ...ccrTools]);
@@ -627,6 +656,7 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
             // total budget — individual large messages still benefit from 60-95%
             // token reduction even when the conversation fits within the window.
             let mastermindStats: import('../compression/mastermind/index.js').MastermindStats | undefined;
+            const mastermind = messages ? getMastermind() : undefined;
             if (mastermind && messages) {
                 // Deep-clone messages to avoid mutating shared session history refs.
                 // Mastermind.compress() writes compressedContent / _ccrHandle in-place.

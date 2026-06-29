@@ -31,6 +31,7 @@
 
 import type { StreamDelta } from '../core/index.js';
 import type { ServerResponse } from 'node:http';
+import { estimateTokenCount } from '../providers/context-window-manager.js';
 
 // ── streamToText ──────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ export async function streamToSSE(
 
 export interface StreamBudgetOptions {
     /**
-     * Approximate token budget (using naive word-count / 0.75 heuristic).
+     * Approximate token budget (estimated with the shared BPE-aware estimator).
      * The stream is cut after this many tokens are emitted.
      */
     maxTokens: number;
@@ -139,7 +140,8 @@ export interface StreamBudgetOptions {
 
 /**
  * Wrap a stream; stops yielding deltas after approximately `maxTokens` tokens.
- * Uses a fast heuristic: words / 0.75 ≈ tokens (BPE avg).
+ * Uses the shared {@link estimateTokenCount} BPE-aware estimator so budget
+ * counts stay consistent with the router and context-window manager.
  */
 export async function* streamWithBudget(
     stream: AsyncIterable<StreamDelta>,
@@ -148,8 +150,7 @@ export async function* streamWithBudget(
     let estimatedTokens = 0;
     for await (const delta of stream) {
         if (delta.type === 'text') {
-            // Fast word-count heuristic: chars / 4 ≈ tokens
-            estimatedTokens += Math.ceil(delta.text.length / 4);
+            estimatedTokens += estimateTokenCount(delta.text);
         }
         if (estimatedTokens > options.maxTokens) {
             options.onBudgetExceeded?.(estimatedTokens);

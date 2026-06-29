@@ -237,9 +237,6 @@ export function getContextLimitForModel(model: string, explicitLimit?: number): 
  * Rough estimates based on tokenizer implementations
  */
 export const TOKEN_ESTIMATES = {
-    // English text: ~4 chars per token on average
-    CHARS_PER_TOKEN: 3.5,
-
     // Tool definitions: ~100 tokens per tool on average
     TOKENS_PER_TOOL: 100,
 
