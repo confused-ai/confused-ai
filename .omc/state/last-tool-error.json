@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cat > /tmp/bench-inst.mjs <<'EOF'\\nimport { performance } from 'node:perf_hooks';\\nprocess.env.OPENAI_API_KEY='sk-test-dummy';\\nconst base='/Users/rvuyyuru/Desktop/ag-code/agent-framework/...",
+  "error": "Exit code 1\nfile:///Users/rvuyyuru/Desktop/ag-code/agent-framework/dist/lite.js:13\n  throw Error('Dynamic require of \"' + x + '\" is not supported');\n        ^\n\nError: Dynamic require of \"openai\" is not supported\n    at file:///Users/rvuyyuru/Desktop/ag-code/agent-framework/dist/lite.js:13:9\n    at new OpenAIProvider (file:///Users/rvuyyuru/Desktop/ag-code/agent-framework/dist/lite.js:5613:26)\n    at resolveLlmForCreateAgent (file:///Users/rvuyyuru/Desktop/ag-code/agent-framework/dist/lite.js:653...",
+  "timestamp": "2026-06-29T18:55:50.802Z",
+  "retry_count": 2
+}
