@@ -10,6 +10,12 @@
  *
  * All SDKs are lazy dynamic imports — zero bundle cost unless used.
  * Importing this barrel alone installs nothing.
+ *
+ * @deprecated `@confused-ai/providers` (`src/providers/`) is the canonical provider stack.
+ *   This barrel is retained because its `GenerateResult`/`LLMProvider` shapes are
+ *   `contracts/interfaces`-compatible (consumed by `orchestration/multi-agent/swarm.ts`)
+ *   and it exposes adapter/multimodal/stream surfaces not yet present in `providers/`.
+ *   Prefer importing from `confused-ai/providers` for new code.
  */
 
 export { openai }    from './openai.js';

@@ -2,6 +2,11 @@
  * Metrics Collector Implementation
  *
  * In-memory metrics collection for monitoring and observability
+ *
+ * @deprecated The live metrics stack is `@confused-ai/observe`
+ *   (`src/observe/metrics.ts` + `src/observe/prometheus.ts`). This in-memory collector
+ *   is retained only for the legacy `confused-ai/observability` path and has no active
+ *   importers. Migrate to `confused-ai/observe`.
  */
 
 import { MetricsCollector, MetricValue, MetricType } from './types.js';
