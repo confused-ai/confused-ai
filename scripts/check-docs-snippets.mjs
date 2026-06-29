@@ -14,7 +14,7 @@ const PACKAGE_JSON = path.join(ROOT, 'package.json');
 const ROOT_TSCONFIG = path.join(ROOT, 'tsconfig.json');
 const TSC_BIN = path.join(ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsc.cmd' : 'tsc');
 
-const TS_FENCE_RE = /```(?:ts|tsx|typescript)(?:[^\n]*)\n([\s\S]*?)```/g;
+const TS_FENCE_RE = /```(?:ts|tsx|typescript)([^\n]*)\n([\s\S]*?)```/g;
 const PUBLIC_IMPORT_RE = /from\s+['"]confused-ai(?:\/[^'"]+)?['"]|import\s*\(\s*['"]confused-ai(?:\/[^'"]+)?['"]\s*\)/;
 const PRIVATE_IMPORT_RE = /from\s+['"]@confused-ai(?:\/[^'"]+)?['"]|import\s*\(\s*['"]@confused-ai(?:\/[^'"]+)?['"]\s*\)/g;
 
@@ -64,17 +64,24 @@ async function collectMarkdownFiles(dir) {
 function extractSnippets(markdown, docPath) {
     const snippets = [];
     const privateImportViolations = [];
+    const skippedSnippets = [];
     let match;
     let index = 0;
 
     const re = new RegExp(TS_FENCE_RE.source, TS_FENCE_RE.flags);
     while ((match = re.exec(markdown)) !== null) {
-        const code = match[1].trim();
+        const meta = (match[1] ?? '').trim();
+        const code = (match[2] ?? '').trim();
         if (!code || !PUBLIC_IMPORT_RE.test(code)) {
             continue;
         }
 
         index += 1;
+
+        if (isIllustrativeSnippet(code, meta)) {
+            skippedSnippets.push({ docPath, snippetIndex: index });
+            continue;
+        }
 
         const privateImports = [...code.matchAll(PRIVATE_IMPORT_RE)].map(([fullMatch]) => fullMatch);
         if (privateImports.length > 0) {
@@ -93,7 +100,20 @@ function extractSnippets(markdown, docPath) {
         });
     }
 
-    return { snippets, privateImportViolations };
+    return { snippets, privateImportViolations, skippedSnippets };
+}
+
+function isIllustrativeSnippet(code, meta) {
+    if (/\b(?:no-check|notypecheck|illustrative)\b/i.test(meta)) {
+        return true;
+    }
+
+    return (
+        /(^|[^\w$])\.\.\.([^\w$]|$)/m.test(code) ||
+        /^\s*from\s+\w+\s+import\s+/m.test(code) ||
+        /^\s*def\s+\w+\s*\(/m.test(code) ||
+        /^\s*@\w+\(/m.test(code)
+    );
 }
 
 function sanitizeDocPath(docPath) {
@@ -255,6 +275,7 @@ async function main() {
     const docsFiles = [README_FILE, ...await collectMarkdownFiles(DOCS_DIR)];
     const snippets = [];
     const privateImportViolations = [];
+    const skippedSnippets = [];
 
     for (const filePath of docsFiles) {
         const content = readFileSync(filePath, 'utf8');
@@ -262,6 +283,7 @@ async function main() {
         const extracted = extractSnippets(content, docPath);
         snippets.push(...extracted.snippets);
         privateImportViolations.push(...extracted.privateImportViolations);
+        skippedSnippets.push(...extracted.skippedSnippets);
     }
 
     if (privateImportViolations.length > 0) {
@@ -295,7 +317,10 @@ async function main() {
             return;
         }
 
-        console.log(`✓ docs-snippets: ${snippets.length} public TypeScript snippet(s) typecheck.`);
+        const skipSuffix = skippedSnippets.length > 0
+            ? ` (${skippedSnippets.length} illustrative snippet(s) skipped)`
+            : '';
+        console.log(`✓ docs-snippets: ${snippets.length} public TypeScript snippet(s) typecheck${skipSuffix}.`);
     } finally {
         rmSync(tempRoot, { force: true, recursive: true });
     }

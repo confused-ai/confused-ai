@@ -19,6 +19,10 @@ import type {
     AssistantMessage,
 } from './types.js';
 import { DebugLogger, createDebugLogger } from '../shared/index.js';
+import { createRequire } from 'node:module';
+// ESM-safe require: tsup's ESM bundle turns bare require() into a shim that
+// throws "Dynamic require not supported". createRequire restores sync peer-dep loading.
+const _require = createRequire(import.meta.url);
 
 // Minimal types for compile-time (runtime: peer dependency @anthropic-ai/sdk)
 interface AnthropicClient {
@@ -185,7 +189,7 @@ export class AnthropicProvider implements LLMProvider {
             if (!apiKey) {
                 throw new Error('AnthropicProvider requires apiKey (or ANTHROPIC_API_KEY env var)');
             }
-            const Anthropic = require('@anthropic-ai/sdk').Anthropic;
+            const Anthropic = _require('@anthropic-ai/sdk').Anthropic;
             this.client = new Anthropic({ apiKey });
         }
 

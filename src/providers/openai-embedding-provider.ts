@@ -7,6 +7,10 @@
 
 import type { EmbeddingProvider } from '../memory/index.js';
 import { DebugLogger, createDebugLogger } from '../shared/index.js';
+import { createRequire } from 'node:module';
+// ESM-safe require: tsup's ESM bundle turns bare require() into a shim that
+// throws "Dynamic require not supported". createRequire restores sync peer-dep loading.
+const _require = createRequire(import.meta.url);
 
 interface OpenAIEmbeddingClient {
     embeddings: {
@@ -59,7 +63,7 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
             if (!apiKey) {
                 throw new Error('OpenAIEmbeddingProvider requires apiKey (or OPENAI_API_KEY)');
             }
-            const { OpenAI } = require('openai');
+            const { OpenAI } = _require('openai');
             this.client = new OpenAI({
                 apiKey,
                 ...(config.baseURL && { baseURL: config.baseURL }),

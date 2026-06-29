@@ -13,6 +13,10 @@ import type {
     StreamOptions,
 } from './types.js';
 import { DebugLogger, createDebugLogger } from '../shared/index.js';
+import { createRequire } from 'node:module';
+// ESM-safe require: tsup's ESM bundle turns bare require() into a shim that
+// throws "Dynamic require not supported". createRequire restores sync peer-dep loading.
+const _require = createRequire(import.meta.url);
 
 // Minimal types so we don't require openai at compile time (peer dependency at runtime)
 interface OpenAIClient {
@@ -156,7 +160,7 @@ export class OpenAIProvider implements LLMProvider {
             if (!baseURL && !apiKey) {
                 throw new Error('OpenAIProvider requires apiKey (or OPENAI_API_KEY) or baseURL (or OPENAI_BASE_URL)');
             }
-            const { OpenAI } = require('openai') as {
+            const { OpenAI } = _require('openai') as {
                 OpenAI: new (opts: { apiKey?: string; baseURL?: string }) => OpenAIClient;
             };
             this.client = new OpenAI({

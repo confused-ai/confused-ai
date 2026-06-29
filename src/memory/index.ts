@@ -39,6 +39,10 @@ export type { AgentMemoryTools, AgentMemoryToolsOptions } from './agent-memory-t
 export { TieredMemory, createTieredMemoryTools, DEFAULT_BLOCK_LIMIT } from './tiered-memory.js';
 export type { MemoryBlock, TieredMemoryConfig, TieredMemoryTools } from './tiered-memory.js';
 
+// ── Graph / entity memory (Zep / Mem0-style) ──────────────────────────────────
+export { GraphMemory, createGraphMemoryTools } from './graph-memory.js';
+export type { GraphEntity, GraphRelation, GraphMemoryTools } from './graph-memory.js';
+
 // ── SummaryBufferMemory middleware ────────────────────────────────────────────
 export { createSummaryBufferHook } from './summary-buffer.js';
 export type { SummaryBufferOptions, SummaryBeforeStepHook } from './summary-buffer.js';

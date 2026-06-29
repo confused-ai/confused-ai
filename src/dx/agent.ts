@@ -26,7 +26,8 @@ export type AgentMinimalOptions = Partial<
  *
  * One-argument form (instructions only):
  *   const runnable = agent('You are a helpful assistant.');
- *   // Uses HttpClientTool + BrowserTool by default. Pass tools:[] to disable.
+ *   // No tools by default — pure text reasoning. Pass tools:'web' for
+ *   // [HttpClientTool, BrowserTool], or tools:[...] for your own.
  *
  * Options form (full control):
  *   const runnable = agent({
