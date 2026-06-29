@@ -8,6 +8,10 @@
  *   - StepWorkflow: Fluent step-chaining DSL
  *   - StateGraph + WorkflowExecutor: State-machine graph workflows with checkpointing
  *   - StepExecutor + PipelineBuilder: Event-driven v2 engine with backpressure
+ *
+ * @experimental The durable execution engine and v2 pipeline are newer and not
+ * yet semver-stable — their APIs (event-store contracts, engine config) may
+ * change in a minor release.
  */
 
 export * from './types.js';

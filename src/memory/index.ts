@@ -35,6 +35,10 @@ export type { MemoryDistillerConfig, DistillationResult } from './distiller.js';
 export { createAgentMemoryTools } from './agent-memory-tools.js';
 export type { AgentMemoryTools, AgentMemoryToolsOptions } from './agent-memory-tools.js';
 
+// ── Tiered self-editing memory (Letta / MemGPT-style) ─────────────────────────
+export { TieredMemory, createTieredMemoryTools, DEFAULT_BLOCK_LIMIT } from './tiered-memory.js';
+export type { MemoryBlock, TieredMemoryConfig, TieredMemoryTools } from './tiered-memory.js';
+
 // ── SummaryBufferMemory middleware ────────────────────────────────────────────
 export { createSummaryBufferHook } from './summary-buffer.js';
 export type { SummaryBufferOptions, SummaryBeforeStepHook } from './summary-buffer.js';

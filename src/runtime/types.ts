@@ -23,6 +23,30 @@ export interface CreateHttpServiceOptions {
      */
     auth?: AuthMiddlewareOptions;
     /**
+     * Per-agent RBAC enforced in the request handler **after** the agent is
+     * resolved from the request body. Maps agent name → allowed role strings;
+     * the caller's roles are read from the JWT payload in the auth context
+     * (`claims.jwtPayload.role`). This closes the gap where body-based agent
+     * selection (`POST /v1/chat { "agent": "billing" }`) bypassed URL-regex RBAC.
+     *
+     * @example
+     * ```ts
+     * createHttpService({
+     *   agents: { billing, support },
+     *   auth: jwtAuth({ secret, claimsToContext: ['role'] }),
+     *   rbac: { billing: ['role:admin'], support: ['role:support', 'role:admin'] },
+     * });
+     * ```
+     */
+    rbac?: Record<string, string[]>;
+    /**
+     * Checkpoint/snapshot hook invoked by `close()` after in-flight requests
+     * drain (or the drain timeout elapses). Use it to persist agent/checkpoint
+     * state so a graceful shutdown does not abandon work. Pairs with
+     * `GracefulShutdown.onDrain(svc.close)` from `confused-ai/production`.
+     */
+    onShutdown?: () => Promise<void> | void;
+    /**
      * Trust `X-Forwarded-For` as the client IP.
      * Default: `false`.
      *

@@ -51,7 +51,7 @@ async function getOpenai(): Promise<OpenAiClient> {
             );
         }
         const mod = await import('openai').catch(() => {
-          throw new Error('Video features need optional peer dependency "openai". Install it before using VideoOrchestrator.');
+          throw new Error('Video features require the optional peer dependency "openai" — install it with: npm i openai');
         });
         openaiClient = new mod.default({ apiKey }) as OpenAiClient;
     }
@@ -68,7 +68,7 @@ async function getPexels(): Promise<PexelsHandle> {
             );
         }
         const mod = await import('pexels').catch(() => {
-          throw new Error('Video features need optional peer dependency "pexels". Install it before fetching background footage.');
+          throw new Error('Video features require the optional peer dependency "pexels" — install it with: npm i pexels');
         });
         pexelsClient = mod.createClient(key) as PexelsHandle;
     }
@@ -78,8 +78,9 @@ async function getPexels(): Promise<PexelsHandle> {
 async function getFfmpeg(): Promise<FfmpegFactory> {
   if (ffmpegFactory) return ffmpegFactory;
 
+  // @ts-ignore -- fluent-ffmpeg is an optional peer dependency (no bundled types)
   const mod = await import('fluent-ffmpeg').catch(() => {
-    throw new Error('Video features need optional peer dependency "fluent-ffmpeg". Install it before rendering video.');
+    throw new Error('Video features require the optional peer dependency "fluent-ffmpeg" — install it with: npm i fluent-ffmpeg');
   });
   ffmpegFactory = mod.default as unknown as FfmpegFactory;
 

@@ -41,6 +41,8 @@ export interface ToolContext {
     readonly sessionId: string;
     readonly timeoutMs?: number;
     readonly permissions: ToolPermissions;
+    /** Per-run abort signal — tools may observe it for cooperative cancellation. */
+    readonly signal?: AbortSignal;
 }
 
 export enum ToolCategory {

@@ -2,7 +2,12 @@
  * Minimal Langfuse **public ingestion** client (HTTP, no SDK).
  *
  * Auth: Basic base64(`publicKey:secretKey`). Batch shape follows Langfuse `/api/public/ingestion`.
+ *
+ * SECURITY: prompts/completions/attributes are scrubbed with {@link maskSecrets}
+ * before leaving the process — never export raw secrets/keys to third-party SaaS.
  */
+
+import { maskSecrets } from '../observe/logger.js';
 
 export interface LangfuseIngestClientConfig {
     readonly publicKey: string;
@@ -32,7 +37,7 @@ export async function sendLangfuseBatch(
             'Content-Type': 'application/json',
             Authorization: basicAuth(config.publicKey, config.secretKey),
         },
-        body: JSON.stringify({ batch }),
+        body: maskSecrets(JSON.stringify({ batch })),
     });
     if (!res.ok) {
         const t = await res.text();

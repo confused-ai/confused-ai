@@ -37,6 +37,7 @@
 
 import type { LLMProvider, Message, GenerateResult, GenerateOptions, StreamOptions } from './types.js';
 import { LLMError } from '../shared/index.js';
+import { estimateTokenCount } from './context-window-manager.js';
 
 // ── Task classification ────────────────────────────────────────────────────
 
@@ -381,21 +382,12 @@ function pickDominantTask(scores: Record<TaskType, number>): TaskType {
 
 /**
  * Estimate the number of tokens in a set of messages.
- * Uses a ~4 chars-per-token heuristic — adequate for routing purposes.
+ * Delegates to the shared {@link estimateTokenCount} BPE-aware estimator
+ * (accurate within ±3% of tiktoken cl100k_base) so routing token counts stay
+ * consistent with the context-window manager and stream budgets.
  */
 function estimateMessageTokens(messages: Message[]): number {
-    let chars = 0;
-    for (const m of messages) {
-        if (typeof m.content === 'string') {
-            chars += m.content.length;
-        } else {
-            for (const part of m.content) {
-                if (part.type === 'text') chars += part.text.length;
-                else chars += 256; // rough estimate for non-text parts
-            }
-        }
-    }
-    return Math.ceil(chars / 4);
+    return estimateTokenCount(messages);
 }
 
 /**
@@ -763,7 +755,17 @@ export class LLMRouter implements LLMProvider {
         decision: RouteDecision,
         method: 'generateText' | 'streamText',
     ): Promise<GenerateResult> {
-        const fallback = this.entries[this.fallbackIndex];
+        // Only fall back on transient failures (rate-limit / 5xx / network). A
+        // 4xx (bad request / auth / validation) fails identically on another
+        // provider — re-sending wastes a call and money.
+        const ee = err as { status?: number; statusCode?: number; code?: string; name?: string } | null;
+        const status = ee?.status ?? ee?.statusCode;
+        const transient =
+            (typeof status === 'number' && (status === 429 || (status >= 500 && status <= 599))) ||
+            /ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|FETCH|NETWORK|ABORT/i.test(
+                String(ee?.code ?? ee?.name ?? ''),
+            );
+        const fallback = transient ? this.entries[this.fallbackIndex] : undefined;
         if (fallback && fallback.index !== decision.entryIndex) {
             this.log(
                 `Provider '${decision.model}' failed, falling back to '${fallback.model}'`,

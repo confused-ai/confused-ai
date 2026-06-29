@@ -102,3 +102,33 @@ export const Metrics = {
     unit: '{jobs}',
   }),
 } as const;
+
+/**
+ * Record LLM token usage (and cost, when available) for a single generation.
+ *
+ * Increments `llmTokensTotal` (split by `token_type`) and, when `costUsd` is
+ * provided, `llmCostUsd`. Pass a **bounded** `model` label — never a per-run or
+ * per-user identifier (cardinality explosion). The raw agent instance id must
+ * not be used as a label here; omit `agentName` or pass a configured name.
+ */
+export function recordLlmUsage(usage: {
+  model: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  costUsd?: number;
+  /** Bounded, configured agent name — NOT a per-run/per-user instance id. */
+  agentName?: string;
+}): void {
+  const base: Record<string, string> = { model: usage.model };
+  if (usage.agentName) base['agent_name'] = usage.agentName;
+
+  if (usage.inputTokens && usage.inputTokens > 0) {
+    Metrics.llmTokensTotal.add(usage.inputTokens, { ...base, token_type: 'input' });
+  }
+  if (usage.outputTokens && usage.outputTokens > 0) {
+    Metrics.llmTokensTotal.add(usage.outputTokens, { ...base, token_type: 'output' });
+  }
+  if (typeof usage.costUsd === 'number' && usage.costUsd > 0) {
+    Metrics.llmCostUsd.add(usage.costUsd, base);
+  }
+}

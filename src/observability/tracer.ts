@@ -2,6 +2,11 @@
  * In-Memory Tracer Implementation
  *
  * Simple in-memory tracing for development and debugging
+ *
+ * @deprecated The live OpenTelemetry tracing stack is `@confused-ai/observe`
+ *   (`src/observe/tracing.ts`). This in-memory tracer is retained only for the
+ *   legacy `confused-ai/observability` path and has no active importers. Migrate to
+ *   `confused-ai/observe`.
  */
 
 import { Tracer, TraceSpan, SpanStatus, SpanEvent } from './types.js';

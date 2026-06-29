@@ -1,5 +1,8 @@
 /**
  * Reasoning module: Chain-of-Thought reasoning, Tree-of-Thought, structured steps, event streaming.
+ *
+ * @experimental This subsystem is newer and not yet semver-stable — its API
+ * (CoT/ToT engines, config shapes) may change in a minor release.
  */
 
 export * from './types.js';

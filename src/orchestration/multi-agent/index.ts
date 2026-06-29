@@ -1,3 +1,11 @@
+/**
+ * Multi-agent orchestration: swarm, team, supervisor, pipeline, router, consensus, handoff.
+ *
+ * @experimental The swarm and advanced multi-agent patterns are newer and not
+ * yet semver-stable — their APIs (config shapes, result types) may change in a
+ * minor release.
+ */
+
 // Multi-agent orchestration: swarm, team, supervisor, pipeline, router, consensus, handoff
 export {
     SwarmOrchestrator,

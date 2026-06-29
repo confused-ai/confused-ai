@@ -1,5 +1,8 @@
 /**
  * Learning module: user profiles, memories across sessions, learning modes.
+ *
+ * @experimental This subsystem is newer and not yet semver-stable — its store
+ * interfaces and config shapes may change in a minor release.
  */
 
 export * from './types.js';

@@ -34,7 +34,7 @@
  */
 
 import type { LLMProvider } from '../providers/types.js';
-import type { Tool, ToolRegistry } from '../tools/index.js';
+import type { Tool, ToolRegistry } from '../tools/core/index.js';
 import type { AgenticLifecycleHooks } from '../agentic/index.js';
 import type { CreateAgentResult } from '../create-agent/types.js';
 import { createAgent } from '../create-agent/factory.js';

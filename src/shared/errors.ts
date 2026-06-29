@@ -161,7 +161,14 @@ export class CancellationError extends AgentError {
     }
 }
 
-/** Configuration or setup error */
+/**
+ * Configuration or setup error.
+ *
+ * Use this for invalid options, missing required config, and missing optional
+ * peer dependencies. Always make the `message` actionable: state what is wrong
+ * and the exact copy-pasteable fix, e.g.
+ * `'PgvectorKnowledgeAdapter requires "pg" — install it with: npm i pg'`.
+ */
 export class ConfigError extends AgentError {
     constructor(
         message: string,

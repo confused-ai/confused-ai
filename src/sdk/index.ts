@@ -7,8 +7,8 @@
 export type { AgentDefinitionConfig, AgentRunConfig, WorkflowResult } from './types.js';
 export { defineAgent, defineAgentFromConfig, DefinedAgent, AgentBuilder } from './defined-agent.js';
 export type { TypedAgent, TypedAgentResult, AgentStreamEvent } from './defined-agent.js';
-export { createWorkflow, WorkflowBuilder, Workflow } from './workflow.js';
-export type { WorkflowStep } from './workflow.js';
+export { createWorkflow, WorkflowBuilder, Workflow, isSuspended } from './workflow.js';
+export type { WorkflowStep, WorkflowSuspension, WorkflowCompletion, WorkflowExecuteResult } from './workflow.js';
 export { asOrchestratorAgent } from './orchestrator-adapter.js';
 
 // Re-export core types for convenience (explicit to avoid ambiguity with tools/planner/execution)

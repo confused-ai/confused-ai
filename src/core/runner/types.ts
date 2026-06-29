@@ -35,11 +35,8 @@ export interface RunnerRunConfig {
     readonly runId?: string;
     readonly userId?: string;
     readonly ragContext?: string;
-    readonly signal?: {
-        aborted: boolean;
-        addEventListener?: (type: 'abort', handler: () => void) => void;
-        removeEventListener?: (type: 'abort', handler: () => void) => void;
-    };
+    /** Abort signal; threaded into LLM SDK calls and tool execution for true cancellation. */
+    readonly signal?: AbortSignal;
 }
 
 // ── Retry policy ─────────────────────────────────────────────────────────────

@@ -1,16 +1,40 @@
 /**
  * confused-ai — root entry point.
  *
- * Quick start:
- *   import { agent } from 'confused-ai';
- *   const bot = agent('You are helpful.');
- *   const { text } = await bot.run('Hello!');
+ * @packageDocumentation
  *
- * For fine-grained control, import directly from workspace packages:
- *   import { createAgent }          from './core/index.js';
- *   import { InMemorySessionStore } from './session/index.js';
- *   import { httpClient }           from './tools/index.js';
- *   import { createSwarm }          from './workflow/index.js';
+ * The fastest path to a working agent is the one-call `agent()` factory:
+ *
+ * ```ts
+ * import { agent } from 'confused-ai';
+ *
+ * // 1. Create an agent from a system prompt (model/provider resolved from env).
+ * const bot = agent('You are a helpful assistant.');
+ *
+ * // 2. Run it and read the reply.
+ * const { text } = await bot.run('Say hello in one short sentence.');
+ * console.log(text);
+ * ```
+ *
+ * Stream tokens as they arrive instead of awaiting the full reply:
+ *
+ * ```ts
+ * for await (const chunk of bot.stream('Tell me a short story.')) {
+ *   process.stdout.write(chunk);
+ * }
+ * ```
+ *
+ * For fine-grained control, import directly from focused modules:
+ *
+ * ```ts
+ * import { createAgent }          from './core/index.js';
+ * import { InMemorySessionStore } from './session/index.js';
+ * import { httpClient }           from './tools/index.js';
+ * import { createSwarm }          from './orchestration/multi-agent/index.js';
+ * ```
+ *
+ * Prefer the smallest possible import surface? Use the `confused-ai/lite`
+ * entry point and pull optional capabilities from focused subpaths on demand.
  */
 
 // ── Headline API ───────────────────────────────────────────────────────────────
@@ -31,12 +55,13 @@ export type { CreateAgentOptions, AgentRunOptions, AgentRunResult, CreateAgentRe
 export * from './core/index.js';
 
 // ── Memory ─────────────────────────────────────────────────────────────────────
-export { InMemoryStore, VectorMemoryStore, InMemoryVectorStore, OpenAIEmbeddingProvider, MemoryType } from './memory/index.js';
-export type { VectorMemoryStoreConfig, EmbeddingProvider, MemoryStore, MemoryEntry, MemoryQuery } from './memory/index.js';
+export { InMemoryStore, VectorMemoryStore, InMemoryVectorStore, OpenAIEmbeddingProvider, MemoryType, TieredMemory, createTieredMemoryTools, DEFAULT_BLOCK_LIMIT } from './memory/index.js';
+export type { VectorMemoryStoreConfig, EmbeddingProvider, MemoryStore, MemoryEntry, MemoryQuery, MemoryBlock, TieredMemoryConfig, TieredMemoryTools } from './memory/index.js';
 
 // ── Tools ─────────────────────────────────────────────────────────────────────
 // Note: Tool, ToolRegistry already exported from ./core/index.js
 export { ToolNameTrie, NGramIndex, BaseTool, ToolRegistryImpl, tool, wrapTool,
+    createTools, extendTool, pipeTools, versionTool,
     ToolCache, ToolCompressor, handleToolGatewayRequest,
     zodToJsonSchema,
     defineTool, httpClient, fileSystem, createShellTool, browserTool,
@@ -84,6 +109,9 @@ export {
     createToolkit, toolkitsToRegistry,
     extractTraceContext, generateTraceparent, injectTraceHeaders,
 } from './orchestration/index.js';
+
+// ── Graph workflows ─────────────────────────────────────────────────────────
+export { createGraph, SqliteEventStore } from './graph/index.js';
 
 // ── Observability ─────────────────────────────────────────────────────────────
 export * from './observability/index.js';
@@ -147,9 +175,17 @@ export type {
 export { AgenticRunner, createAgenticAgent } from './agentic/index.js';
 export type { AgenticRunnerConfig, AgenticLifecycleHooks, AgenticRunResult, AgenticStreamHooks } from './agentic/index.js';
 
+// ── Production runtime helpers ──────────────────────────────────────────────
+export { ResumableStreamManager, formatSSE } from './production/resumable-stream.js';
+export type { StreamCheckpoint, ResumableStreamConfig, StreamChunkSSE } from './production/resumable-stream.js';
+
+// ── Agent data-stream protocol (SSE in / out for streamEvents) ──────────────
+export { toDataStream, toSSEResponse, readDataStream, encodeSSE } from './serve/data-stream.js';
+export type { DataStreamEvent } from './serve/data-stream.js';
+
 // ── SDK ───────────────────────────────────────────────────────────────────────
-export { defineAgent, DefinedAgent, createWorkflow, WorkflowBuilder, Workflow, asOrchestratorAgent } from './sdk/index.js';
-export type { AgentDefinitionConfig, AgentRunConfig, WorkflowResult, WorkflowStep } from './sdk/index.js';
+export { defineAgent, DefinedAgent, createWorkflow, WorkflowBuilder, Workflow, asOrchestratorAgent, isSuspended } from './sdk/index.js';
+export type { AgentDefinitionConfig, AgentRunConfig, WorkflowResult, WorkflowStep, WorkflowSuspension, WorkflowCompletion, WorkflowExecuteResult } from './sdk/index.js';
 
 // ── Session ───────────────────────────────────────────────────────────────────
 // Note: SessionStore type already exported from ./core/index.js
@@ -188,3 +224,22 @@ export type {
     CompressionAlgorithm,
     CCREntry,
 } from './compression/mastermind/index.js';
+
+// ── Voice and video ─────────────────────────────────────────────────────────
+export {
+    OpenAIVoiceProvider,
+    ElevenLabsVoiceProvider,
+    createVoiceProvider,
+    VoiceStreamSession,
+} from './voice/index.js';
+export type {
+    VoiceConfig,
+    VoiceProvider,
+    TTSResult,
+    STTResult,
+    OpenAIVoice,
+    VoiceStreamConfig,
+    VoiceStreamEvent,
+    VoiceStreamEventType,
+} from './voice/index.js';
+export { VideoOrchestrator } from './video/index.js';

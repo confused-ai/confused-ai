@@ -1,8 +1,8 @@
 import type { LLMProvider } from '../providers/types.js';
 import type { Message } from '../providers/types.js';
 import type { MultiModalInput } from '../providers/vision.js';
-import type { Tool, ToolRegistry, ToolMiddleware } from '../tools/index.js';
-import type { LightweightTool } from '../tools/index.js';
+import type { Tool, ToolRegistry, ToolMiddleware } from '../tools/core/index.js';
+import type { LightweightTool } from '../tools/core/index.js';
 import type { SessionStore } from '../session/index.js';
 import type {
     AdapterBindings,

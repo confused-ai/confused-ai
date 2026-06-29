@@ -56,9 +56,10 @@ const SECRET_PATTERNS: [RegExp, string][] = [
 
 /**
  * Replace known secret patterns in a string with redaction placeholders.
- * Applied to the final serialized JSON line before writing.
+ * Applied to the final serialized JSON line before writing. Exported so other
+ * egress paths (e.g. Langfuse/LangSmith trace export) can scrub before sending.
  */
-function maskSecrets(line: string): string {
+export function maskSecrets(line: string): string {
   let out = line;
   for (const [pattern, replacement] of SECRET_PATTERNS) {
     out = out.replace(pattern, replacement);

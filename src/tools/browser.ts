@@ -10,15 +10,10 @@
 
 import { z }          from 'zod';
 import { defineTool } from './types.js';
-
-// ── SSRF protection: private network block-list ────────────────────────────────
-// O(1) check per hostname using a pre-compiled regex.
-
-const PRIVATE_HOST_RE = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0|\[::1\]|169\.254\.)/i;
-
-function isPrivateHost(hostname: string): boolean {
-  return PRIVATE_HOST_RE.test(hostname) || hostname.endsWith('.local') || hostname.endsWith('.internal');
-}
+// Reuse the single hardened SSRF guard (DNS resolution + IMDS/RFC-1918/CGNAT/
+// IPv6-mapped blocks). A hostname-string-only regex is insufficient: a public
+// hostname can resolve to 169.254.169.254 / 10.x / 127.x and bypass it.
+import { checkSsrf } from './http-client.js';
 
 // ── HTML extraction helpers ────────────────────────────────────────────────────
 
@@ -75,15 +70,17 @@ export const browserTool = defineTool({
   parameters:  BrowserSchema,
 
   async execute({ url, timeout, includeLinks }) {
-    // SSRF check — O(1)
+    // SSRF check — static patterns + DNS resolution (blocks public hostnames
+    // that resolve to private/link-local/metadata IPs).
     let parsed: URL;
     try {
       parsed = new URL(url);
     } catch {
       throw new Error(`[browser_fetch] Invalid URL: ${url}`);
     }
-    if (isPrivateHost(parsed.hostname)) {
-      throw new Error(`[browser_fetch] Blocked: ${parsed.hostname} is a private network address`);
+    const ssrfErr = await checkSsrf(parsed.hostname);
+    if (ssrfErr) {
+      throw new Error(`[browser_fetch] ${ssrfErr}`);
     }
 
     const controller = new AbortController();

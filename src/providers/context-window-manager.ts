@@ -237,9 +237,6 @@ export function getContextLimitForModel(model: string, explicitLimit?: number): 
  * Rough estimates based on tokenizer implementations
  */
 export const TOKEN_ESTIMATES = {
-    // English text: ~4 chars per token on average
-    CHARS_PER_TOKEN: 3.5,
-
     // Tool definitions: ~100 tokens per tool on average
     TOKENS_PER_TOOL: 100,
 
@@ -396,21 +393,28 @@ export class ContextWindowManager {
 
         let result = [...messages];
 
-        // Strategy 1: Truncate (remove oldest messages until it fits)
+        // Strategy 1: Truncate (drop oldest messages until it fits).
+        //  - Pin a leading system message (instructions) — never drop it.
+        //  - Keep tool_use/tool_result groups atomic: when dropping an assistant
+        //    turn, also drop its following tool-result messages so the provider
+        //    never sees an orphaned tool_result (which it rejects).
         if (this.config.strategy === 'truncate') {
-            while (result.length > 1) {
-                const nextMessages = result.slice(1);
-                currentTokens = estimateTokenCount(nextMessages);
+            const hasSystem = result[0]?.role === 'system';
+            const pinned: Message[] = hasSystem ? [result[0]!] : [];
+            let body = hasSystem ? result.slice(1) : result;
 
-                if (currentTokens <= availableTokens) {
-                    dropped = result.length - nextMessages.length;
-                    return { messages: nextMessages, dropped, summarized: false };
-                }
-
-                result = nextMessages;
+            while (body.length > 0) {
+                if (estimateTokenCount([...pinned, ...body]) <= availableTokens) break;
+                // Drop the oldest message, plus any tool-result messages that
+                // immediately follow it (they belong to the turn being removed).
+                let drop = 1;
+                while (drop < body.length && body[drop]?.role === 'tool') drop++;
+                body = body.slice(drop);
+                dropped += drop;
             }
 
-            return { messages: result, dropped: messages.length - 1, summarized: false };
+            const finalMessages = [...pinned, ...body];
+            return { messages: finalMessages, dropped, summarized: false };
         }
 
         // Strategy 2: Summarize (compress oldest messages into a summary)

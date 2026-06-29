@@ -32,11 +32,12 @@ import type { HumanInTheLoopHooks, GuardrailContext } from './_guardrail-types.j
 import type { GuardrailEngine } from './_guardrail-types.js';
 import type { Span } from '@opentelemetry/api';
 import { LLMError, ToolNotAuthorizedError } from '../shared/index.js';
+import { isTransientLLMError } from '../guard/index.js';
 import { toolToLLMDef } from './_zod-to-schema.js';
 import { validateStructuredOutput, buildStructuredOutputPrompt } from './_structured-output.js';
 import { withRetry as guardWithRetry, runToolWithTimeout, createDeadline } from '../guard/index.js';
 import type { RetryPolicy } from '../guard/index.js';
-import { withSpan, Metrics } from '../observe/index.js';
+import { withSpan, Metrics, genAiAttributes, recordLlmUsage } from '../observe/index.js';
 import { ReasoningManager, TreeOfThoughtEngine } from '../reasoning/index.js';
 import { CompressionManager } from '../compression/index.js';
 
@@ -61,6 +62,8 @@ interface RunContext {
     readonly step: number;
     /** Tool allowlist for this run (undefined = no restriction). */
     readonly allowedTools: string[] | undefined;
+    /** Per-run abort signal (linked to run signal + deadline) forwarded to LLM + tools. */
+    readonly signal: AbortSignal | undefined;
 }
 
 // ── Pure utility functions ────────────────────────────────────────────────────
@@ -73,7 +76,9 @@ function toGuardRetryPolicy(policy: AgenticRetryPolicy): Partial<RetryPolicy> {
         maxDelayMs: policy.maxBackoffMs ?? 30_000,
         multiplier: 2,
         jitter: true,
-        retryOn: () => true,
+        // Retry only transient failures (429/5xx/network). Never retry 4xx
+        // client/validation errors — they will fail identically on replay.
+        retryOn: isTransientLLMError,
     };
 }
 
@@ -245,11 +250,36 @@ export class AgenticRunner {
             }
         }
 
+        // ── Per-run AbortController: aborted on run-signal abort or deadline timeout.
+        //   Forwarded into LLM SDK calls and tool execution so in-flight work cancels.
+        const runAbort = new AbortController();
+        const onExternalAbort = () => runAbort.abort();
+        // Cast to a precise abort-like shape: the EventTarget method overloads on
+        // AbortSignal resolve inconsistently under this lib config when narrowed
+        // from an optional property, so pin the signatures we use.
+        const externalSignal = runConfig.signal as undefined | {
+            readonly aborted: boolean;
+            addEventListener(type: 'abort', cb: () => void, opts?: { once?: boolean }): void;
+            removeEventListener(type: 'abort', cb: () => void): void;
+        };
+        // Only set when we actually attach a listener (i.e. signal not pre-aborted);
+        // guards against removing from a pre-aborted or partially-mocked signal.
+        let detachAbort: (() => void) | undefined;
+        if (externalSignal) {
+            if (externalSignal.aborted) {
+                runAbort.abort();
+            } else {
+                externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+                detachAbort = () => externalSignal.removeEventListener('abort', onExternalAbort);
+            }
+        }
+
         const baseCtx: Omit<RunContext, 'step'> = {
             agentId, sessionId, lifecycle, streamHooks,
             toolTimeoutMs: DEFAULT_TOOL_TIMEOUT_MS,
             retry,
             allowedTools: runConfig.allowedTools,
+            signal: runAbort.signal,
         };
 
         let lastText = '';
@@ -260,8 +290,8 @@ export class AgenticRunner {
 
         // ── ReAct loop ────────────────────────────────────────────────────────
         while (steps < maxSteps) {
-            if (runConfig.signal?.aborted) { finishReason = 'aborted'; break; }
-            if (deadline.expired())         { finishReason = 'timeout'; break; }
+            if (runConfig.signal?.aborted) { runAbort.abort(); finishReason = 'aborted'; break; }
+            if (deadline.expired())         { runAbort.abort(); finishReason = 'timeout'; break; }
 
             steps++;
             streamHooks?.onStep?.(steps);
@@ -291,6 +321,13 @@ export class AgenticRunner {
                     result.usage.promptTokens ?? 0,
                     result.usage.completionTokens ?? 0,
                 );
+                // Record LLM token usage on the bounded `model` label only —
+                // never the per-run agentId (cardinality explosion).
+                recordLlmUsage({
+                    model: this.config.budgetModelId ?? 'unknown',
+                    inputTokens: result.usage.promptTokens,
+                    outputTokens: result.usage.completionTokens,
+                });
                 // Record context window utilization when contextWindowSize is configured.
                 const promptTokens = result.usage.promptTokens;
                 const cwSize = this.config.contextWindowSize;
@@ -302,8 +339,19 @@ export class AgenticRunner {
                 }
             }
 
+            const hasToolCalls = !!result.toolCalls?.length;
+
+            // Append a SINGLE assistant message carrying both text and toolCalls.
+            // (Previously this pushed text here and a second assistant message with
+            //  toolCalls below — duplicating the turn in history.)
+            if (result.text || hasToolCalls) {
+                messages.push({
+                    role: 'assistant',
+                    content: result.text ?? '',
+                    ...(hasToolCalls && { toolCalls: result.toolCalls }),
+                } as Message & { toolCalls?: LLMToolCall[] });
+            }
             if (result.text) {
-                messages.push({ role: 'assistant', content: result.text });
                 const isStreaming = !!streamHooks?.onChunk && !!this.config.llm.streamText;
                 if (!isStreaming) streamHooks?.onChunk?.(result.text);
             }
@@ -313,7 +361,7 @@ export class AgenticRunner {
             }
 
             // ── Terminal state: no tool calls = final answer ───────────────
-            if (!result.toolCalls?.length) {
+            if (!hasToolCalls) {
                 const guardrailCtx: GuardrailContext = { agentId, sessionId, output: lastText };
                 if (this.humanInTheLoop?.beforeFinish) {
                     const approved = await this.humanInTheLoop.beforeFinish(lastText, guardrailCtx);
@@ -324,13 +372,8 @@ export class AgenticRunner {
             }
 
             // ── Tool dispatch (parallel) ───────────────────────────────────
-            messages.push({
-                role: 'assistant',
-                content: result.text || '',
-                toolCalls: result.toolCalls,
-            } as Message & { toolCalls: LLMToolCall[] });
-
-            const toolMessages = await this._executeAllTools(result.toolCalls, { ...baseCtx, step: steps });
+            // (Assistant message with toolCalls was already appended above.)
+            const toolMessages = await this._executeAllTools(result.toolCalls ?? [], { ...baseCtx, step: steps });
             messages.push(...toolMessages);
 
             // ── Auto context compression ───────────────────────────────────
@@ -344,6 +387,9 @@ export class AgenticRunner {
                 await this._saveCheckpoint(checkpointStore, runId, steps, messages, runConfig, startTime);
             }
         }
+
+        // Detach the external-abort listener to avoid leaking it on the caller's signal.
+        detachAbort?.();
 
         // ── Post-loop: structured output, hooks, budget, cleanup ─────────────
         const structuredOutput = await this._validateStructuredOutput(runConfig, lastText);
@@ -550,7 +596,11 @@ export class AgenticRunner {
 
         return withSpan(
             'llm.generate',
-            { 'agent.step': ctx.step, 'llm.stream': useStreaming },
+            {
+                'agent.step': ctx.step,
+                'llm.stream': useStreaming,
+                ...genAiAttributes({ model: this.config.budgetModelId, operation: 'chat' }),
+            },
             () => guardWithRetry(
                 () => {
                     if (useStreaming) {
@@ -561,6 +611,7 @@ export class AgenticRunner {
                             maxTokens: this.config.maxTokens ?? 4096,
                             tools: llmTools.length ? llmTools : undefined,
                             toolChoice: llmTools.length ? 'auto' : 'none',
+                            ...(ctx.signal && { signal: ctx.signal }),
                             onChunk: (chunk: string | { type: string; text: string }) => {
                                 const text = typeof chunk === 'string' ? chunk : chunk.text;
                                 // streamHooks and onChunk are set when useStreaming is true
@@ -574,6 +625,7 @@ export class AgenticRunner {
                         maxTokens: this.config.maxTokens ?? 4096,
                         tools: llmTools.length ? llmTools : undefined,
                         toolChoice: llmTools.length ? 'auto' : 'none',
+                        ...(ctx.signal && { signal: ctx.signal }),
                     });
                 },
                 toGuardRetryPolicy(ctx.retry),
@@ -641,7 +693,7 @@ export class AgenticRunner {
 
         streamHooks?.onToolCall?.(tc.name, effectiveArgs);
 
-        const toolContext = this._buildToolContext(tool, agentId, sessionId);
+        const toolContext = this._buildToolContext(tool, agentId, sessionId, ctx.signal);
         // toolMiddleware is initialised to [] in the constructor; the ! is safe.
 
         const middleware = this.config.toolMiddleware!;
@@ -661,6 +713,7 @@ export class AgenticRunner {
                     () => tool.execute(effectiveArgs, toolContext),
                     toolTimeoutMs,
                     tc.name,
+                    ctx.signal,
                 ),
             );
             Metrics.toolDurationMs.record(Date.now() - _toolStart, {
@@ -762,6 +815,7 @@ export class AgenticRunner {
         tool: Tool,
         agentId: string,
         sessionId: string,
+        signal?: AbortSignal,
     ): ToolContext {
         return {
             toolId: tool.id,
@@ -769,6 +823,7 @@ export class AgenticRunner {
             sessionId,
             timeoutMs: DEFAULT_TOOL_TIMEOUT_MS,
             permissions: tool.permissions,
+            ...(signal && { signal }),
         };
     }
 

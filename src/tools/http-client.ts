@@ -77,8 +77,12 @@ async function checkDns(hostname: string): Promise<string | null> {
 /**
  * Full async SSRF check: static pattern first, then DNS resolution.
  * Returns an error string if blocked, null if permitted.
+ *
+ * Exported so legacy tools (browser, utils/http) reuse this single hardened
+ * guard (DNS resolution + IMDS/RFC-1918/CGNAT/IPv6-mapped blocks) instead of a
+ * weaker hostname-string-only check.
  */
-async function checkSsrf(hostname: string): Promise<string | null> {
+export async function checkSsrf(hostname: string): Promise<string | null> {
   const h = hostname.toLowerCase();
   if (isBlockedByPattern(h)) {
     return (

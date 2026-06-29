@@ -18,7 +18,7 @@ import { DebugLogger, createDebugLogger } from '../shared/index.js';
 interface OpenAIClient {
     chat: {
         completions: {
-            create(params: OpenAICreateParams): Promise<OpenAIResponse | AsyncIterable<OpenAIStreamChunk>>;
+            create(params: OpenAICreateParams, requestOptions?: { signal?: AbortSignal }): Promise<OpenAIResponse | AsyncIterable<OpenAIStreamChunk>>;
         };
     };
 }
@@ -31,6 +31,24 @@ interface OpenAICreateParams {
     tools?: OpenAITool[];
     tool_choice?: 'auto' | 'none';
     stream?: boolean;
+    stream_options?: { include_usage?: boolean };
+}
+
+/**
+ * Re-throw an SDK error with its HTTP `status` and `headers` preserved on the
+ * thrown object, so the retry layer can read `Retry-After` / rate-limit headers.
+ * The OpenAI/Anthropic SDKs already expose `.status` and `.headers`; this is a
+ * defensive normalisation that also surfaces them in `context` for ConfusedAIError.
+ */
+function rethrowWithStatus(err: unknown): never {
+    if (err && typeof err === 'object') {
+        const e = err as Record<string, unknown>;
+        const status = e['status'] ?? (e['response'] as Record<string, unknown> | undefined)?.['status'];
+        const headers = e['headers'] ?? (e['response'] as Record<string, unknown> | undefined)?.['headers'];
+        if (status !== undefined && e['status'] === undefined) e['status'] = status;
+        if (headers !== undefined && e['headers'] === undefined) e['headers'] = headers;
+    }
+    throw err;
 }
 // Content: string or multimodal parts (text, image_url, etc.) per OpenAI API
 type OpenAIContent = string | Array<{ type: string; text?: string; image_url?: { url: string; detail?: string }; file?: { url: string }; audio?: { url: string }; video?: { url: string } }> | null;
@@ -172,7 +190,12 @@ export class OpenAIProvider implements LLMProvider {
             this.logger.debug('Including tools in request', undefined, { toolCount: tools.length });
         }
 
-        const response = await this.client.chat.completions.create(body as unknown as OpenAICreateParams) as OpenAIResponse;
+        // Forward the abort signal as a per-request option (OpenAI SDK 2nd arg).
+        const requestOpts = options?.signal ? { signal: options.signal } : undefined;
+        const response = await (requestOpts
+            ? this.client.chat.completions.create(body as unknown as OpenAICreateParams, requestOpts as never)
+            : this.client.chat.completions.create(body as unknown as OpenAICreateParams)
+        ).catch(rethrowWithStatus) as OpenAIResponse;
 
         const choice = response.choices?.[0];
         if (!choice?.message) {
@@ -224,6 +247,8 @@ export class OpenAIProvider implements LLMProvider {
             max_tokens: options?.maxTokens,
             stop: options?.stop,
             stream: true,
+            // Request the final usage chunk; without this streamed usage is never sent.
+            stream_options: { include_usage: true },
         };
 
         const tools = toOpenAITools(options?.tools);
@@ -232,7 +257,11 @@ export class OpenAIProvider implements LLMProvider {
             body.tool_choice = options?.toolChoice === 'none' ? 'none' : 'auto';
         }
 
-        const stream = await this.client.chat.completions.create(body as unknown as OpenAICreateParams) as AsyncIterable<OpenAIStreamChunk>;
+        const requestOpts = options?.signal ? { signal: options.signal } : undefined;
+        const stream = await (requestOpts
+            ? this.client.chat.completions.create(body as unknown as OpenAICreateParams, requestOpts as never)
+            : this.client.chat.completions.create(body as unknown as OpenAICreateParams)
+        ).catch(rethrowWithStatus) as AsyncIterable<OpenAIStreamChunk>;
 
         let fullText = '';
         const toolCallsMap = new Map<number, { id: string; name: string; args: string }>();

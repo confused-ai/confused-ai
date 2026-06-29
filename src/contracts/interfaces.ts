@@ -51,6 +51,8 @@ export interface GenerateOptions {
   temperature?: number;
   stop?: string[];
   onChunk?: (chunk: string) => void;
+  /** Abort signal forwarded to the provider SDK so in-flight calls cancel on run abort/timeout. */
+  signal?: AbortSignal;
 }
 
 /**

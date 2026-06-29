@@ -9,17 +9,27 @@ export async function runToolWithTimeout<T>(
   fn: () => Promise<T>,
   timeoutMs: number,
   toolName: string,
+  signal?: AbortSignal,
 ): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort: (() => void) | undefined;
   try {
+    if (signal?.aborted) {
+      throw new ToolTimeoutError(toolName, timeoutMs);
+    }
     return await Promise.race([
       fn(),
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => { reject(new ToolTimeoutError(toolName, timeoutMs)); }, timeoutMs);
+        if (signal) {
+          onAbort = () => { reject(new ToolTimeoutError(toolName, timeoutMs)); };
+          signal.addEventListener('abort', onAbort, { once: true });
+        }
       }),
     ]);
   } finally {
     if (timer !== undefined) clearTimeout(timer);
+    if (signal && onAbort) signal.removeEventListener('abort', onAbort);
   }
 }
 

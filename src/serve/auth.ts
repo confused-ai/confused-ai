@@ -7,7 +7,7 @@
  * @module
  */
 
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual, createVerify, createPublicKey, type KeyObject } from 'node:crypto';
 import { ConfusedAIError, ERROR_CODES } from '../contracts/index.js';
 
 // ── JWT types ──────────────────────────────────────────────────────────────
@@ -90,14 +90,41 @@ export class HS256Verifier implements JwtVerifier {
   }
 }
 
+/** A single JSON Web Key (RSA or EC) as returned by a JWKS endpoint. */
+interface Jwk {
+  kty: string;
+  kid?: string;
+  alg?: string;
+  use?: string;
+  n?: string;
+  e?: string;
+  crv?: string;
+  x?: string;
+  y?: string;
+  [key: string]: unknown;
+}
+
+/** Allowlisted asymmetric JWT algorithms → Node `createVerify` digest names. */
+const JWKS_ALG_TO_DIGEST: Record<string, string> = {
+  RS256: 'RSA-SHA256',
+  RS384: 'RSA-SHA384',
+  RS512: 'RSA-SHA512',
+  PS256: 'RSA-SHA256',
+  PS384: 'RSA-SHA384',
+  PS512: 'RSA-SHA512',
+  ES256: 'SHA256',
+  ES384: 'SHA384',
+  ES512: 'SHA512',
+};
+
 /**
  * JwksVerifier — RS256/EC JWT verification with remote JWKS key fetching.
  *
- * Stub implementation for Phase 3. To be completed in Phase 4 with:
- * - HTTP fetch from JWKS URI
- * - Key caching with TTL
- * - Multiple key support (kid matching)
- * - RS256 and EC signature verification
+ * - Fetches the JWKS document from the configured URI.
+ * - Matches the signing key by the token's `kid` header.
+ * - Caches keys for `cacheTtlSeconds` (default 300s) and refetches on a `kid` miss.
+ * - Verifies RS/PS/ES signatures with `node:crypto`. The `none` algorithm and any
+ *   non-allowlisted algorithm are rejected.
  *
  * @example
  * ```ts
@@ -108,23 +135,168 @@ export class HS256Verifier implements JwtVerifier {
 export class JwksVerifier implements JwtVerifier {
   private readonly _jwksUri: string;
   private readonly _cacheTtlSeconds: number;
+  private readonly _clockToleranceSecs: number;
+  private _keyCache = new Map<string, KeyObject>();
+  private _cacheExpiresAt = 0;
+  private _inflight: Promise<void> | null = null;
 
   constructor(
     jwksUri: string,
-    options: { cacheTtlSeconds?: number } = {},
+    options: { cacheTtlSeconds?: number; clockToleranceSecs?: number } = {},
   ) {
     this._jwksUri = jwksUri;
     this._cacheTtlSeconds = options.cacheTtlSeconds ?? 300;
+    this._clockToleranceSecs = options.clockToleranceSecs ?? 60;
   }
 
-  verify(_token: string): Promise<JwtPayload> {
-    // Use stored config for future JWKS implementation
-    void this._jwksUri;
-    void this._cacheTtlSeconds;
-    return Promise.reject(new ConfusedAIError({
-      code: ERROR_CODES.UNAUTHORIZED,
-      message: 'JwksVerifier not yet implemented — use HS256Verifier for production JWT verification',
-    }));
+  async verify(token: string): Promise<JwtPayload> {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new ConfusedAIError({ code: ERROR_CODES.UNAUTHORIZED, message: 'Malformed JWT' });
+    }
+    const [headerB64, payloadB64, sigB64] = parts as [string, string, string];
+
+    // Parse + validate header
+    let header: { alg?: string; kid?: string };
+    try {
+      header = JSON.parse(base64UrlDecode(headerB64).toString('utf8')) as { alg?: string; kid?: string };
+    } catch {
+      throw new ConfusedAIError({ code: ERROR_CODES.UNAUTHORIZED, message: 'Invalid JWT header' });
+    }
+
+    const alg = header.alg;
+    if (!alg || alg === 'none') {
+      throw new ConfusedAIError({ code: ERROR_CODES.UNAUTHORIZED, message: 'JWT algorithm "none" is not allowed' });
+    }
+    const digest = JWKS_ALG_TO_DIGEST[alg];
+    if (!digest) {
+      throw new ConfusedAIError({
+        code: ERROR_CODES.UNAUTHORIZED,
+        message: `Unsupported JWKS algorithm: ${alg}`,
+      });
+    }
+
+    // Resolve the signing key by kid (refetch on miss / expiry).
+    const key = await this.resolveKey(header.kid);
+
+    // Verify signature.
+    const signingInput = `${headerB64}.${payloadB64}`;
+    const signature = base64UrlDecode(sigB64);
+    const verifier = createVerify(digest);
+    verifier.update(signingInput);
+    verifier.end();
+
+    let ok: boolean;
+    try {
+      // ES signatures from JWS are raw r||s; Node accepts that via dsaEncoding 'ieee-p1363'.
+      if (alg.startsWith('ES')) {
+        ok = verifier.verify({ key, dsaEncoding: 'ieee-p1363' }, signature);
+      } else if (alg.startsWith('PS')) {
+        ok = verifier.verify(
+          { key, padding: 6 /* RSA_PKCS1_PSS_PADDING */, saltLength: -1 /* RSA_PSS_SALTLEN_DIGEST */ },
+          signature,
+        );
+      } else {
+        ok = verifier.verify(key, signature);
+      }
+    } catch {
+      ok = false;
+    }
+    if (!ok) {
+      throw new ConfusedAIError({ code: ERROR_CODES.UNAUTHORIZED, message: 'Invalid JWT signature' });
+    }
+
+    // Decode + validate claims.
+    let claims: Record<string, unknown>;
+    try {
+      claims = JSON.parse(base64UrlDecode(payloadB64).toString('utf8')) as Record<string, unknown>;
+    } catch {
+      throw new ConfusedAIError({ code: ERROR_CODES.UNAUTHORIZED, message: 'Invalid JWT payload' });
+    }
+
+    const now = Date.now() / 1000;
+    if (typeof claims['exp'] === 'number' && now > (claims['exp'] as number) + this._clockToleranceSecs) {
+      throw new ConfusedAIError({ code: ERROR_CODES.UNAUTHORIZED, message: 'JWT expired' });
+    }
+    if (typeof claims['nbf'] === 'number' && now < (claims['nbf'] as number) - this._clockToleranceSecs) {
+      throw new ConfusedAIError({ code: ERROR_CODES.UNAUTHORIZED, message: 'JWT not yet valid' });
+    }
+
+    return claims as unknown as JwtPayload;
+  }
+
+  /** Return the cached key for `kid`, refetching the JWKS on a miss or TTL expiry. */
+  private async resolveKey(kid?: string): Promise<KeyObject> {
+    const fresh = Date.now() < this._cacheExpiresAt;
+    if (fresh) {
+      const cached = this.lookupKey(kid);
+      if (cached) return cached;
+    }
+    await this.refreshKeys();
+    const key = this.lookupKey(kid);
+    if (!key) {
+      throw new ConfusedAIError({
+        code: ERROR_CODES.UNAUTHORIZED,
+        message: kid ? `No JWKS key matching kid '${kid}'` : 'No JWKS keys available',
+      });
+    }
+    return key;
+  }
+
+  private lookupKey(kid?: string): KeyObject | undefined {
+    if (kid) return this._keyCache.get(kid);
+    // No kid in token — only safe to use a single-key JWKS.
+    if (this._keyCache.size === 1) return this._keyCache.values().next().value;
+    return undefined;
+  }
+
+  /** Fetch and cache the JWKS. De-dupes concurrent refreshes. */
+  private async refreshKeys(): Promise<void> {
+    if (this._inflight) return this._inflight;
+    this._inflight = (async () => {
+      let res: Response;
+      try {
+        res = await fetch(this._jwksUri);
+      } catch (e) {
+        throw new ConfusedAIError({
+          code: ERROR_CODES.UNAUTHORIZED,
+          message: `Failed to fetch JWKS: ${e instanceof Error ? e.message : String(e)}`,
+        });
+      }
+      if (!res.ok) {
+        throw new ConfusedAIError({
+          code: ERROR_CODES.UNAUTHORIZED,
+          message: `JWKS endpoint returned ${res.status}`,
+        });
+      }
+      const body = (await res.json()) as { keys?: Jwk[] };
+      const keys = Array.isArray(body.keys) ? body.keys : [];
+      const next = new Map<string, KeyObject>();
+      let anonymous = 0;
+      for (const jwk of keys) {
+        if (jwk.use && jwk.use !== 'sig') continue;
+        let keyObject: KeyObject;
+        try {
+          // Node accepts JWK directly via createPublicKey({ key, format: 'jwk' }).
+          keyObject = createPublicKey({ key: jwk as Record<string, unknown>, format: 'jwk' });
+        } catch {
+          continue;
+        }
+        const id = jwk.kid ?? `__anon_${anonymous++}`;
+        next.set(id, keyObject);
+      }
+      if (next.size === 0) {
+        throw new ConfusedAIError({
+          code: ERROR_CODES.UNAUTHORIZED,
+          message: 'JWKS document contained no usable signing keys',
+        });
+      }
+      this._keyCache = next;
+      this._cacheExpiresAt = Date.now() + this._cacheTtlSeconds * 1000;
+    })().finally(() => {
+      this._inflight = null;
+    });
+    return this._inflight;
   }
 }
 
