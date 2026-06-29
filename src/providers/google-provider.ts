@@ -15,6 +15,10 @@ import type {
     StreamOptions,
 } from './types.js';
 import { createDebugLogger, type DebugLogger } from '../shared/index.js';
+import { createRequire } from 'node:module';
+// ESM-safe require: tsup's ESM bundle turns bare require() into a shim that
+// throws "Dynamic require not supported". createRequire restores sync peer-dep loading.
+const _require = createRequire(import.meta.url);
 
 // ── Minimal SDK types (compile-time only; runtime: @google/generative-ai) ──
 
@@ -215,7 +219,7 @@ export class GoogleProvider implements LLMProvider {
             if (!apiKey) {
                 throw new Error('GoogleProvider requires apiKey or GOOGLE_API_KEY / GEMINI_API_KEY env var');
             }
-            const { GoogleGenerativeAI } = require('@google/generative-ai') as {
+            const { GoogleGenerativeAI } = _require('@google/generative-ai') as {
                 GoogleGenerativeAI: new (key: string) => GoogleGenerativeAIClient;
             };
             this.client = new GoogleGenerativeAI(apiKey);
