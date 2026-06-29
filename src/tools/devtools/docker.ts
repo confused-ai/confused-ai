@@ -9,16 +9,58 @@ import { BaseTool } from '../core/base-tool.js';
 import { ToolCategory, type ToolContext } from '../core/types.js';
 
 export interface DockerToolConfig {
-    /** Docker host URL (or DOCKER_HOST env var). Default: http://localhost:2375 */
+    /**
+     * Docker host URL (or DOCKER_HOST env var). REQUIRED — there is no default.
+     * Exposing an unauthenticated Docker socket to an agent is equivalent to host RCE.
+     */
     host?: string;
     /** API version (default: v1.47) */
     apiVersion?: string;
+    /**
+     * Allow volume binds that mount sensitive host paths (`/`, `/etc`,
+     * the Docker socket, `/root`, the home dir). Off by default — opt in only
+     * in fully-trusted, isolated environments.
+     * @default false
+     */
+    allowHostMounts?: boolean;
 }
 
 function getHost(config: DockerToolConfig): string {
-    const host = config.host ?? process.env['DOCKER_HOST'] ?? 'http://localhost:2375';
+    // Do NOT default to a live socket: an unauthenticated Docker daemon is host RCE.
+    const host = config.host ?? process.env['DOCKER_HOST'];
+    if (!host) {
+        throw new Error(
+            'Docker host not configured; set DOCKER_HOST or pass host — ' +
+            'exposing the Docker socket to an agent is dangerous'
+        );
+    }
     const version = config.apiVersion ?? 'v1.47';
     return `${host.replace(/\/$/, '')}/${version}`;
+}
+
+/** Host paths whose mount into a container grants effective host takeover. */
+const SENSITIVE_MOUNT_PREFIXES = ['/', '/etc', '/var/run/docker.sock', '/root'];
+
+/**
+ * Reject volume binds mounting sensitive host paths unless explicitly allowed.
+ * A bind is `host:container[:mode]`; we inspect the host side.
+ */
+function assertSafeBinds(binds: string[] | undefined, allowHostMounts: boolean): void {
+    if (allowHostMounts || !binds) return;
+    const home = process.env['HOME'] ?? '';
+    for (const bind of binds) {
+        const hostPath = (bind.split(':')[0] ?? '').replace(/\/+$/, '') || '/';
+        const blocked =
+            SENSITIVE_MOUNT_PREFIXES.includes(hostPath) ||
+            hostPath === '/var/run/docker.sock' ||
+            (home !== '' && (hostPath === home || hostPath === home.replace(/\/+$/, '')));
+        if (blocked) {
+            throw new Error(
+                `Refusing to mount sensitive host path "${hostPath}" into a container; ` +
+                'set allowHostMounts: true to override (host takeover risk)'
+            );
+        }
+    }
 }
 
 async function dockerRequest(baseUrl: string, method: string, path: string, body?: object): Promise<unknown> {
@@ -165,6 +207,8 @@ export class DockerCreateContainerTool extends BaseTool<typeof CreateContainerSc
 
     protected async performExecute(input: z.infer<typeof CreateContainerSchema>, _ctx: ToolContext) {
         const base = getHost(this.config);
+        // Block mounting sensitive host paths unless explicitly opted in.
+        assertSafeBinds(input.volumes, this.config.allowHostMounts ?? false);
         const params = input.name ? `?name=${encodeURIComponent(input.name)}` : '';
         const portBindings: Record<string, Array<{ HostPort: string; HostIp?: string }>> = {};
         const exposedPorts: Record<string, object> = {};

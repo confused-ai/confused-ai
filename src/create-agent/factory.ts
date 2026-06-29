@@ -1,16 +1,16 @@
 import type { Message } from '../providers/types.js';
 import type { AgenticStreamHooks } from '../agentic/index.js';
-import { withSpan } from '../observe/index.js';
-import type { Tool, ToolProvider, ToolResult } from '../tools/index.js';
+import { withSpan, genAiAttributes } from '../observe/index.js';
+import type { Tool, ToolProvider, ToolResult } from '../tools/core/index.js';
 import { createAgenticAgent } from '../agentic/index.js';
-import { HttpClientTool } from '../tools/index.js';
-import { BrowserTool } from '../tools/index.js';
-import { ToolCategory } from '../tools/index.js';
+import { HttpClientTool } from '../tools/utils/http.js';
+import { BrowserTool } from '../tools/utils/browser.js';
+import { ToolCategory } from '../tools/core/index.js';
 import { InMemorySessionStore } from '../session/index.js';
 import { ConfigError } from '../shared/index.js';
-import { toToolRegistry } from '../tools/index.js';
-import { isLightweightTool } from '../tools/index.js';
-import { zodToJsonSchema } from '../tools/index.js';
+import { toToolRegistry } from '../tools/core/index.js';
+import { isLightweightTool } from '../tools/core/index.js';
+import { zodToJsonSchema } from '../tools/core/zod-to-schema.js';
 import { createAgentMemoryTools, InMemoryStore } from '../memory/index.js';
 import type { MemorySearchResult, MemoryStore } from '../memory/index.js';
 import { createDevLogger, createDevToolMiddleware } from '../dx/dev-logger.js';
@@ -737,6 +737,15 @@ export function createAgent(options: CreateAgentOptions): CreateAgentResult {
 
             if (result.usage?.totalTokens !== undefined) {
                 runSpan.setAttribute('llm.usage.total_tokens', result.usage.totalTokens);
+            }
+            // OTel GenAI semantic-convention attributes (gen_ai.*) + legacy llm.* aliases.
+            for (const [k, v] of Object.entries(genAiAttributes({
+                model,
+                operation: 'chat',
+                inputTokens: result.usage?.promptTokens,
+                outputTokens: result.usage?.completionTokens,
+            }))) {
+                if (v !== undefined) runSpan.setAttribute(k, v);
             }
             runSpan.setAttribute('agent.finish_reason', result.finishReason ?? 'stop');
             runSpan.setAttribute('agent.followups.count', followups.length);

@@ -84,7 +84,13 @@ export {
     SqliteIdempotencyStore,
     createSqliteIdempotencyStore,
 } from './idempotency.js';
-export type { IdempotencyStore, IdempotencyOptions } from './idempotency.js';
+export type {
+    IdempotencyStore,
+    IdempotencyOptions,
+    IdempotencyEntry,
+    IdempotencyState,
+    IdempotencyReservation,
+} from './idempotency.js';
 
 // ── Audit store ──────────────────────────────────────────────────────────────
 export {
@@ -120,9 +126,16 @@ export {
     SqliteApprovalStore,
     createSqliteApprovalStore,
     waitForApproval,
+    requireApprovalTool,
     ApprovalRejectedError,
 } from './approval-store.js';
-export type { ApprovalStore, HitlRequest, ApprovalDecision, ApprovalStatus } from './approval-store.js';
+export type {
+    ApprovalStore,
+    HitlRequest,
+    ApprovalDecision,
+    ApprovalStatus,
+    RequireApprovalToolOptions,
+} from './approval-store.js';
 
 // ── Resilient agent wrapper ──────────────────────────────────────────────────
 export { ResilientAgent, withResilience } from './resilient-agent.js';

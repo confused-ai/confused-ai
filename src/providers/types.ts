@@ -47,6 +47,8 @@ export interface StreamOptions {
     readonly toolChoice?: 'auto' | 'none' | { type: 'tool'; name: string };
     readonly stop?: string[];
     readonly onChunk?: (delta: StreamDelta) => void;
+    /** Abort signal forwarded to the provider SDK so in-flight streams cancel on run abort/timeout. */
+    readonly signal?: AbortSignal;
 }
 
 /**

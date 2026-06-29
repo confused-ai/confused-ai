@@ -33,6 +33,7 @@ interface OpenAICreateParams {
     tools?: OpenAITool[];
     tool_choice?: 'auto' | 'none';
     stream?: boolean;
+    stream_options?: { include_usage?: boolean };
 }
 // Content: string or multimodal parts (text, image_url, etc.) per OpenAI API
 type OpenAIContent = string | Array<{ type: string; text?: string; image_url?: { url: string; detail?: string }; file?: { url: string }; audio?: { url: string }; video?: { url: string } }> | null;
@@ -229,6 +230,8 @@ export class OpenAIProvider implements LLMProvider {
             max_tokens: options?.maxTokens,
             stop: options?.stop,
             stream: true,
+            // Request the final usage chunk; without this streamed usage is zero.
+            stream_options: { include_usage: true },
         };
 
         const tools = toOpenAITools(options?.tools);

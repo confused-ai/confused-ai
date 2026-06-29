@@ -37,6 +37,7 @@ export type { VectorMemoryStoreConfig, EmbeddingProvider, MemoryStore, MemoryEnt
 // ── Tools ─────────────────────────────────────────────────────────────────────
 // Note: Tool, ToolRegistry already exported from ./core/index.js
 export { ToolNameTrie, NGramIndex, BaseTool, ToolRegistryImpl, tool, wrapTool,
+    createTools, extendTool, pipeTools, versionTool,
     ToolCache, ToolCompressor, handleToolGatewayRequest,
     zodToJsonSchema,
     defineTool, httpClient, fileSystem, createShellTool, browserTool,
@@ -84,6 +85,9 @@ export {
     createToolkit, toolkitsToRegistry,
     extractTraceContext, generateTraceparent, injectTraceHeaders,
 } from './orchestration/index.js';
+
+// ── Graph workflows ─────────────────────────────────────────────────────────
+export { createGraph, SqliteEventStore } from './graph/index.js';
 
 // ── Observability ─────────────────────────────────────────────────────────────
 export * from './observability/index.js';
@@ -147,6 +151,10 @@ export type {
 export { AgenticRunner, createAgenticAgent } from './agentic/index.js';
 export type { AgenticRunnerConfig, AgenticLifecycleHooks, AgenticRunResult, AgenticStreamHooks } from './agentic/index.js';
 
+// ── Production runtime helpers ──────────────────────────────────────────────
+export { ResumableStreamManager, formatSSE } from './production/resumable-stream.js';
+export type { StreamCheckpoint, ResumableStreamConfig, StreamChunkSSE } from './production/resumable-stream.js';
+
 // ── SDK ───────────────────────────────────────────────────────────────────────
 export { defineAgent, DefinedAgent, createWorkflow, WorkflowBuilder, Workflow, asOrchestratorAgent } from './sdk/index.js';
 export type { AgentDefinitionConfig, AgentRunConfig, WorkflowResult, WorkflowStep } from './sdk/index.js';
@@ -188,3 +196,22 @@ export type {
     CompressionAlgorithm,
     CCREntry,
 } from './compression/mastermind/index.js';
+
+// ── Voice and video ─────────────────────────────────────────────────────────
+export {
+    OpenAIVoiceProvider,
+    ElevenLabsVoiceProvider,
+    createVoiceProvider,
+    VoiceStreamSession,
+} from './voice/index.js';
+export type {
+    VoiceConfig,
+    VoiceProvider,
+    TTSResult,
+    STTResult,
+    OpenAIVoice,
+    VoiceStreamConfig,
+    VoiceStreamEvent,
+    VoiceStreamEventType,
+} from './voice/index.js';
+export { VideoOrchestrator } from './video/index.js';

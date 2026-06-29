@@ -57,4 +57,10 @@ export interface MetricsCollector {
 export interface RedisRateLimitClient {
     incr(key: string): Promise<number>;
     expire(key: string, seconds: number): Promise<number>;
+    /**
+     * Optional server-side script evaluation (ioredis `eval`). When present, the
+     * limiter uses an atomic INCR+PEXPIRE Lua script; otherwise it falls back to
+     * the (non-atomic) INCR-then-EXPIRE path.
+     */
+    eval?(script: string, numKeys: number, ...args: (string | number)[]): Promise<unknown>;
 }

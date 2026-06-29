@@ -255,33 +255,21 @@ export interface ProgramOfThoughtConfig {
 export function createProgramOfThought(config: ProgramOfThoughtConfig): OrchestrableAgent {
     const run = async (input: AgentInput, _ctx: AgentContext): Promise<AgentOutput> => {
         const start = Date.now();
-        const defaultExecutor = async (code: string) => {
-            try {
-                // A safe evaluation wrapper inside node.js/bun
-                // If it's a basic mathematical or algorithmic code block, execute it
-                // We wrap standard console.log behavior
-                let logOutput = '';
-                const originalLog = console.log;
-                console.log = (...args) => {
-                    logOutput += args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ') + '\n';
-                };
-                const fn = new Function(code);
-                const val = await fn();
-                console.log = originalLog;
-                return {
-                    stdout: logOutput + (val !== undefined ? `Result: ${val}` : ''),
-                    stderr: '',
-                };
-            } catch (err) {
-                return {
-                    stdout: '',
-                    stderr: err instanceof Error ? err.stack || err.message : String(err),
-                    error: err instanceof Error ? err : new Error(String(err)),
-                };
-            }
+        // SECURITY: there is no safe default executor. Running LLM-authored code
+        // with `new Function`/`eval` grants full host (Node) access — an indirect
+        // prompt-injection → RCE vector. Callers MUST opt in to an explicit,
+        // sandboxed executor (e.g. a vm-isolated runner, E2B, or a Docker-backed
+        // tool). With none configured, refuse rather than execute.
+        const refuseExecutor = async (_code: string) => {
+            const error = new Error(
+                'createProgramOfThought requires an explicit `executor`. ' +
+                'Executing LLM-generated code with no sandbox is unsafe (RCE). ' +
+                'Provide a sandboxed executor (vm-isolated, E2B, or Docker-backed).',
+            );
+            return { stdout: '', stderr: error.message, error };
         };
 
-        const executor = config.executor ?? defaultExecutor;
+        const executor = config.executor ?? refuseExecutor;
 
         // Prompt the agent to output a executable block of JS code inside a markdown code fence
         const codingPrompt = `${input.prompt}

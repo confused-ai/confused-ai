@@ -23,6 +23,12 @@ export interface LlmJudgeResult {
     readonly score: number;
     readonly rationale: string;
     readonly rawText: string;
+    /**
+     * True when the judge output could not be parsed as JSON. The `score` is
+     * then a fallback 0 — callers/regression baselines should treat this as an
+     * *invalid sample* (judge failure), NOT a genuine score of 0.
+     */
+    readonly parseError?: boolean;
 }
 
 /**
@@ -59,7 +65,7 @@ export async function runLlmAsJudge(options: LlmJudgeOptions): Promise<LlmJudgeR
     const rationale =
         typeof rationaleRaw === 'string' ? rationaleRaw : parsed ? 'No rationale parsed' : 'No JSON in judge output';
 
-    return { score, rationale, rawText: text };
+    return { score, rationale, rawText: text, parseError: parsed === null };
 }
 
 // ── Multi-criteria judge ───────────────────────────────────────────────────

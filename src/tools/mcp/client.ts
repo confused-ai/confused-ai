@@ -132,9 +132,23 @@ class McpBridgeTool extends BaseTool<ToolParameters, string> {
         this.client = client;
     }
 
+    /**
+     * SECURITY — UNTRUSTED OUTPUT.
+     *
+     * The string returned here is the raw response of a **remote** MCP tool and
+     * is concatenated into the agent's context. It must be treated as untrusted:
+     * a malicious or compromised MCP server can return tool-poisoning / indirect
+     * prompt-injection payloads (OWASP LLM01). Do NOT assume it is safe to act on.
+     *
+     * TODO(security): route this text through an output guardrail before it
+     * reaches the model. Entry point: wrap the `return text` below with the
+     * framework guardrail runner (see `src/guardrails`/`runOptions.guardrails`)
+     * once a server-side output-scanning hook is available here.
+     */
     protected async performExecute(params: McpOpenArgs): Promise<string> {
         const args = params as Record<string, unknown>;
         const out = await this.client.callTool(this.mcpName, args);
+        // UNTRUSTED: remote MCP tool output — see security note above.
         const text = (out.content ?? [])
             .map((c) => (c.type === 'text' && c.text ? c.text : JSON.stringify(c)))
             .join('\n');

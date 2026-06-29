@@ -722,15 +722,13 @@ Provide a detailed, helpful response to the user's request.`;
         input: AgentInput,
         _ctx: AgentContext
     ): Promise<unknown> {
-        // If no LLM provider is configured, use placeholder logic
+        // Fail loud: without an LLM/executor we cannot produce a real result.
+        // Returning a fake placeholder would silently mask a misconfiguration.
         if (!this.llmProvider) {
-            this.logger.debug(`Using placeholder logic for ${template.name} (no LLM configured)`);
-            return {
-                specialization: template.specialization,
-                capabilities: template.capabilities,
-                result: `Executed by ${template.name} (placeholder - no LLM configured)`,
-                input: input.prompt,
-            };
+            throw new Error(
+                `Swarm subagent "${template.name}" has no LLM/executor configured. ` +
+                `Provide an LLM via SwarmConfig.llm (or inject an executor) before running the swarm.`,
+            );
         }
 
         this.logger.debug(`Calling LLM for ${template.name}`, undefined, {

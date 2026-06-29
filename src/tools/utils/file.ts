@@ -7,6 +7,7 @@ import { BaseTool, BaseToolConfig } from '../core/base-tool.js';
 import { ToolContext, ToolCategory, type ToolParameters } from '../core/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { resolveWithin } from './safe-path.js';
 
 /**
  * Base configuration for file tools
@@ -16,17 +17,11 @@ export interface FileToolConfig extends Partial<Omit<BaseToolConfig<ToolParamete
 }
 
 /**
- * Helper to check if path is safe
+ * Resolve `relativePath` strictly inside `baseDir`, rejecting traversal and
+ * symlink escapes. Delegates to the shared {@link resolveWithin} guard.
  */
 async function checkPath(baseDir: string, relativePath: string): Promise<string> {
-    const resolvedBase = path.resolve(baseDir);
-    const resolvedPath = path.resolve(resolvedBase, relativePath);
-
-    if (!resolvedPath.startsWith(resolvedBase)) {
-        throw new Error(`Access denied: Path ${relativePath} is outside base directory ${baseDir}`);
-    }
-
-    return resolvedPath;
+    return resolveWithin(baseDir, relativePath);
 }
 
 // --- Write File Tool ---

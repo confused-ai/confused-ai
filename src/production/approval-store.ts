@@ -33,7 +33,9 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { z } from 'zod';
 import { AgentError, ErrorCode, type ErrorCodeType } from '../shared/index.js';
+import { tool } from '../tools/core/tool-helper.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -360,4 +362,94 @@ export async function waitForApproval(
         await new Promise((resolve) => setTimeout(resolve, pollMs));
     }
     throw new ApprovalRejectedError({ approvalId, toolName: 'unknown', comment: 'Approval wait timeout' });
+}
+
+// ── Human-in-the-loop tool factory ─────────────────────────────────────────
+
+/** Options for {@link requireApprovalTool}. */
+export interface RequireApprovalToolOptions {
+    /** Tool name exposed to the model. Default: `request_human_approval`. */
+    readonly name?: string;
+    /** Tool description shown to the model. */
+    readonly description?: string;
+    /** Agent name recorded on the approval request. Default: `'unknown'`. */
+    readonly agentName?: string;
+    /** Risk level recorded on the approval request. Default: `'high'`. */
+    readonly riskLevel?: HitlRequest['riskLevel'];
+    /** Approval TTL in ms (how long the request stays pending). Default: 30 min. */
+    readonly ttlMs?: number;
+    /** Poll interval while waiting for a decision (ms). Default: 2000. */
+    readonly pollIntervalMs?: number;
+    /** Max time to wait for a decision (ms). Default: matches `ttlMs`. */
+    readonly timeoutMs?: number;
+}
+
+/**
+ * Create a HITL tool that pauses the agent loop until a human approves or rejects.
+ *
+ * The returned tool (a) creates a pending approval in the {@link ApprovalStore},
+ * (b) waits for a decision via {@link waitForApproval}, and (c) returns the outcome
+ * to the agent. A rejection or timeout surfaces as {@link ApprovalRejectedError}
+ * so the agentic loop can halt the gated action.
+ *
+ * @remarks
+ * This implementation performs an **in-process** wait (polling the store). Durable
+ * resume — persisting the agent's pending state across restarts and resuming from the
+ * stored decision — is a follow-up; the approval record itself is already durable when
+ * a SQLite/Postgres store is used.
+ *
+ * @example
+ * ```ts
+ * import { createSqliteApprovalStore, requireApprovalTool } from 'confused-ai/production';
+ * const store = createSqliteApprovalStore('./agent.db');
+ * const agent = createAgent({ name: 'Safe', tools: [requireApprovalTool(store)] });
+ * ```
+ */
+export function requireApprovalTool(
+    store: ApprovalStore,
+    options: RequireApprovalToolOptions = {}
+) {
+    const ttlMs = options.ttlMs ?? 30 * 60 * 1000;
+    return tool({
+        name: options.name ?? 'request_human_approval',
+        description:
+            options.description ??
+            'Pause and request human approval before performing a high-risk action. ' +
+            'Returns once a human approves or rejects the request.',
+        parameters: z.object({
+            action: z.string().describe('Short description of the action requiring approval.'),
+            details: z
+                .record(z.string(), z.unknown())
+                .optional()
+                .describe('Structured arguments shown to the approver.'),
+            runId: z
+                .string()
+                .optional()
+                .describe('Run identifier to correlate the approval with the agent run.'),
+        }),
+        async execute(params, ctx) {
+            const runId = params.runId ?? ctx?.sessionId ?? randomUUID();
+            const request = await store.create({
+                runId,
+                agentName: options.agentName ?? ctx?.agentId ?? 'unknown',
+                toolName: params.action,
+                toolArguments: params.details ?? {},
+                riskLevel: options.riskLevel ?? 'high',
+                ttlMs,
+            });
+
+            const decided = await waitForApproval(store, request.id, {
+                ...(options.pollIntervalMs !== undefined ? { pollIntervalMs: options.pollIntervalMs } : {}),
+                timeoutMs: options.timeoutMs ?? ttlMs,
+            });
+
+            // waitForApproval throws on rejection/timeout; reaching here means approved.
+            return {
+                approved: true as const,
+                approvalId: decided.id,
+                decidedBy: decided.decidedBy,
+                comment: decided.comment,
+            };
+        },
+    });
 }

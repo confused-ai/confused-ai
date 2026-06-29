@@ -155,6 +155,15 @@ describe('Extended Multi-Agent Patterns', () => {
             const pot = createProgramOfThought({
                 name: 'Calculator-Agent',
                 agent,
+                // Explicit sandboxed executor (no unsafe default executor exists).
+                executor: async (code: string) => {
+                    let out = '';
+                    const vm = await import('node:vm');
+                    vm.runInNewContext(code, {
+                        console: { log: (...a: unknown[]) => { out += a.map(String).join(' ') + '\n'; } },
+                    });
+                    return { stdout: out.trim(), stderr: '' };
+                },
             });
 
             const result = await pot.run({ prompt: 'What is 2 + 2?' }, { agentId: 'test', metadata: {} });

@@ -78,6 +78,7 @@ async function getPexels(): Promise<PexelsHandle> {
 async function getFfmpeg(): Promise<FfmpegFactory> {
   if (ffmpegFactory) return ffmpegFactory;
 
+  // @ts-ignore -- fluent-ffmpeg is an optional peer dependency (no bundled types)
   const mod = await import('fluent-ffmpeg').catch(() => {
     throw new Error('Video features need optional peer dependency "fluent-ffmpeg". Install it before rendering video.');
   });

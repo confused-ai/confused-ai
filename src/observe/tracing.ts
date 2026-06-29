@@ -29,6 +29,68 @@ export function getTracer(version?: string): Tracer {
 
 export type SpanAttributes = Record<string, string | number | boolean | undefined>;
 
+/**
+ * Build OpenTelemetry GenAI semantic-convention attributes for an LLM span.
+ *
+ * Emits the standard `gen_ai.*` keys (system, request.model, operation.name,
+ * usage.input_tokens, usage.output_tokens) and keeps the legacy `llm.*` keys
+ * as aliases so existing dashboards keep working.
+ *
+ * @see https://opentelemetry.io/docs/specs/semconv/gen-ai/
+ */
+export function genAiAttributes(input: {
+  /** Provider id, e.g. `'anthropic'` | `'openai'`. Inferred from `model` when omitted. */
+  system?: string;
+  /** Requested model id, e.g. `'gpt-4o'` / `'claude-sonnet-4'`. */
+  model?: string;
+  /** GenAI operation name. Default `'chat'`. */
+  operation?: string;
+  /** Prompt (input) tokens. */
+  inputTokens?: number;
+  /** Completion (output) tokens. */
+  outputTokens?: number;
+}): SpanAttributes {
+  const operation = input.operation ?? 'chat';
+  const system = input.system ?? inferGenAiSystem(input.model);
+  const attrs: SpanAttributes = {
+    'gen_ai.operation.name': operation,
+    ...(system !== undefined && { 'gen_ai.system': system }),
+    ...(input.model !== undefined && {
+      'gen_ai.request.model': input.model,
+      'llm.request.model': input.model, // legacy alias
+    }),
+    ...(input.inputTokens !== undefined && {
+      'gen_ai.usage.input_tokens': input.inputTokens,
+      'llm.usage.prompt_tokens': input.inputTokens, // legacy alias
+    }),
+    ...(input.outputTokens !== undefined && {
+      'gen_ai.usage.output_tokens': input.outputTokens,
+      'llm.usage.completion_tokens': input.outputTokens, // legacy alias
+    }),
+  };
+  return attrs;
+}
+
+/** Best-effort provider id from a model string, for `gen_ai.system`. */
+export function inferGenAiSystem(model?: string): string | undefined {
+  if (!model) return undefined;
+  const m = model.toLowerCase();
+  const provider = m.includes(':') ? (m.split(':')[0] as string) : '';
+  if (provider) {
+    if (/(anthropic|openai|google|gemini|vertex|cohere|mistral|groq|deepseek|xai|grok|azure)/.test(provider)) {
+      return provider === 'grok' ? 'xai' : provider === 'gemini' ? 'google' : provider;
+    }
+  }
+  if (m.includes('claude')) return 'anthropic';
+  if (m.startsWith('gpt') || m.startsWith('o1') || m.startsWith('o3')) return 'openai';
+  if (m.includes('gemini')) return 'google';
+  if (m.includes('mistral') || m.includes('mixtral')) return 'mistral';
+  if (m.includes('deepseek')) return 'deepseek';
+  if (m.includes('grok')) return 'xai';
+  if (m.includes('command-r') || m.includes('cohere')) return 'cohere';
+  return undefined;
+}
+
 function cleanAttributes(attrs: SpanAttributes): Record<string, string | number | boolean> {
   const out: Record<string, string | number | boolean> = {};
   for (const k of Object.keys(attrs)) {

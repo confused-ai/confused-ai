@@ -22,21 +22,46 @@
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+/** Processing state for an idempotency record. */
+export type IdempotencyState = 'pending' | 'completed';
+
 /** Cached response entry. */
 export interface IdempotencyEntry {
     readonly key: string;
+    /** Lifecycle state — `pending` while the request is in-flight, `completed` once cached. */
+    readonly state: IdempotencyState;
     readonly responseStatus: number;
     readonly responseBody: string;
     readonly createdAt: string;
     readonly expiresAt: string;
 }
 
+/** Outcome of an atomic {@link IdempotencyStore.reserve}. */
+export interface IdempotencyReservation {
+    /** True when this caller atomically created the pending record (won the race). */
+    readonly created: boolean;
+    /** The existing entry when `created` is false (may be `pending` or `completed`). */
+    readonly existing: IdempotencyEntry | null;
+}
+
 /** Pluggable idempotency persistence interface. */
 export interface IdempotencyStore {
+    /**
+     * Atomically reserve a key (Stripe-style). Inserts a `pending` record only if
+     * the key does not already exist. Returns `{ created: true }` for the caller that
+     * won the race; otherwise `{ created: false, existing }` so the caller can return
+     * the cached completed response or a 409 "in progress".
+     */
+    reserve(key: string, ttlMs: number): Promise<IdempotencyReservation>;
     /** Fetch an existing entry, or null if not found / expired. */
     get(key: string): Promise<IdempotencyEntry | null>;
-    /** Store a response for a key with a TTL. */
+    /** Store/complete a response for a key with a TTL. */
     set(key: string, status: number, body: string, ttlMs: number): Promise<void>;
+    /**
+     * Release a `pending` reservation that never completed (e.g. the agent threw),
+     * so a subsequent retry can re-reserve. No-op if the key is already completed.
+     */
+    release(key: string): Promise<void>;
     /** Remove expired entries (optional housekeeping). */
     prune?(): Promise<void>;
 }
@@ -60,6 +85,27 @@ export interface IdempotencyOptions {
 export class InMemoryIdempotencyStore implements IdempotencyStore {
     private cache = new Map<string, IdempotencyEntry>();
 
+    /**
+     * Atomic check-and-set: JS is single-threaded, so the synchronous read+write
+     * below cannot be interleaved by a concurrent reserve() on the same key.
+     */
+    async reserve(key: string, ttlMs: number): Promise<IdempotencyReservation> {
+        const existing = this.cache.get(key);
+        if (existing && new Date(existing.expiresAt) >= new Date()) {
+            return { created: false, existing };
+        }
+        const now = new Date();
+        this.cache.set(key, {
+            key,
+            state: 'pending',
+            responseStatus: 0,
+            responseBody: '',
+            createdAt: now.toISOString(),
+            expiresAt: new Date(now.getTime() + ttlMs).toISOString(),
+        });
+        return { created: true, existing: null };
+    }
+
     async get(key: string): Promise<IdempotencyEntry | null> {
         const entry = this.cache.get(key);
         if (!entry) return null;
@@ -74,11 +120,17 @@ export class InMemoryIdempotencyStore implements IdempotencyStore {
         const now = new Date();
         this.cache.set(key, {
             key,
+            state: 'completed',
             responseStatus: status,
             responseBody: body,
             createdAt: now.toISOString(),
             expiresAt: new Date(now.getTime() + ttlMs).toISOString(),
         });
+    }
+
+    async release(key: string): Promise<void> {
+        const entry = this.cache.get(key);
+        if (entry && entry.state === 'pending') this.cache.delete(key);
     }
 
     async prune(): Promise<void> {
@@ -96,7 +148,7 @@ export class SqliteIdempotencyStore implements IdempotencyStore {
     private db: {
         exec: (sql: string) => void;
         prepare: (sql: string) => {
-            run: (...params: unknown[]) => void;
+            run: (...params: unknown[]) => { changes: number };
             get: (...params: unknown[]) => unknown;
         };
     };
@@ -106,12 +158,19 @@ export class SqliteIdempotencyStore implements IdempotencyStore {
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS idempotency_cache (
                 key TEXT PRIMARY KEY,
+                state TEXT NOT NULL DEFAULT 'completed',
                 response_status INTEGER NOT NULL,
                 response_body TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 expires_at TEXT NOT NULL
             );
         `);
+        // Best-effort migration for pre-existing tables lacking the state column.
+        try {
+            this.db.exec(`ALTER TABLE idempotency_cache ADD COLUMN state TEXT NOT NULL DEFAULT 'completed'`);
+        } catch {
+            /* column already exists */
+        }
     }
 
     static create(filePath: string): SqliteIdempotencyStore {
@@ -127,17 +186,35 @@ export class SqliteIdempotencyStore implements IdempotencyStore {
         return new SqliteIdempotencyStore(Database(filePath));
     }
 
+    /**
+     * Atomic reserve via `INSERT ... ON CONFLICT DO NOTHING`. SQLite serializes
+     * writes, so exactly one concurrent caller observes `changes === 1`.
+     */
+    async reserve(key: string, ttlMs: number): Promise<IdempotencyReservation> {
+        const now = new Date();
+        const result = this.db.prepare(
+            `INSERT INTO idempotency_cache (key, state, response_status, response_body, created_at, expires_at)
+             VALUES (?, 'pending', 0, '', ?, ?)
+             ON CONFLICT(key) DO NOTHING`
+        ).run(key, now.toISOString(), new Date(now.getTime() + ttlMs).toISOString());
+        if (result.changes === 1) {
+            return { created: true, existing: null };
+        }
+        return { created: false, existing: await this.get(key) };
+    }
+
     async get(key: string): Promise<IdempotencyEntry | null> {
         const row = this.db.prepare(
-            `SELECT key, response_status, response_body, created_at, expires_at
+            `SELECT key, state, response_status, response_body, created_at, expires_at
              FROM idempotency_cache WHERE key = ? AND expires_at > ?`
         ).get(key, new Date().toISOString()) as {
-            key: string; response_status: number; response_body: string;
+            key: string; state?: string; response_status: number; response_body: string;
             created_at: string; expires_at: string;
         } | undefined;
         if (!row) return null;
         return {
             key: row.key,
+            state: (row.state as IdempotencyState | undefined) ?? 'completed',
             responseStatus: row.response_status,
             responseBody: row.response_body,
             createdAt: row.created_at,
@@ -148,13 +225,18 @@ export class SqliteIdempotencyStore implements IdempotencyStore {
     async set(key: string, status: number, body: string, ttlMs: number): Promise<void> {
         const now = new Date();
         this.db.prepare(
-            `INSERT INTO idempotency_cache (key, response_status, response_body, created_at, expires_at)
-             VALUES (?, ?, ?, ?, ?)
+            `INSERT INTO idempotency_cache (key, state, response_status, response_body, created_at, expires_at)
+             VALUES (?, 'completed', ?, ?, ?, ?)
              ON CONFLICT(key) DO UPDATE SET
+               state='completed',
                response_status=excluded.response_status,
                response_body=excluded.response_body,
                expires_at=excluded.expires_at`
         ).run(key, status, body, now.toISOString(), new Date(now.getTime() + ttlMs).toISOString());
+    }
+
+    async release(key: string): Promise<void> {
+        this.db.prepare(`DELETE FROM idempotency_cache WHERE key = ? AND state = 'pending'`).run(key);
     }
 
     async prune(): Promise<void> {

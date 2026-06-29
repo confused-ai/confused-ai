@@ -7,14 +7,23 @@
  * when you need them.
  */
 
-export { agent, bare, defineAgent, compose, pipe } from './dx/index.js';
+export { agent } from './dx/agent.js';
+export { bare } from './dx/bare.js';
+export { defineAgent } from './dx/define-agent.js';
+export { compose, pipe } from './dx/compose.js';
 export type {
     AgentMinimalOptions,
+} from './dx/agent.js';
+export type {
     BareAgentOptions,
+} from './dx/bare.js';
+export type {
     DefineAgentOptions,
+} from './dx/define-agent.js';
+export type {
     ComposeOptions,
     ComposedAgent,
-} from './dx/index.js';
+} from './dx/compose.js';
 
 export { createAgent } from './create-agent.js';
 export type {

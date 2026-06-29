@@ -297,6 +297,16 @@ export class DAGEngine {
         return;
       }
 
+      // Fail-fast: once a node has failed (which sets state.status = FAILED),
+      // stop scheduling NEW work. Let already in-flight nodes settle, then halt.
+      if (this.state.status === ExecutionStatus.FAILED) {
+        if (this._activeNodeSet.size > 0) {
+          await this._waitForAnyCompletion();
+          continue;
+        }
+        return;
+      }
+
       // Find nodes that are ready to execute
       const readyNodes = this._getReadyNodes();
 
@@ -382,22 +392,27 @@ export class DAGEngine {
 
       if (!anySourceCompleted) continue; // Stay in candidates — predecessor may complete later
 
-      // For JOIN nodes, check join strategy
+      // Determine the join strategy. Default for any node with multiple
+      // incoming edges is 'all' (fan-in waits for ALL predecessors), matching
+      // DefaultScheduler.getReadyNodes' `.every(...)` semantics. A node opts
+      // into race/any behaviour via JOIN kind + joinStrategy or metadata.
       const nodeDef = this.graph.nodes.get(nid)!;
       const joinStrategy = nodeDef.metadata?.joinStrategy as string | undefined;
-      if (nodeDef.kind === NodeKind.JOIN || joinStrategy) {
-        const strategy = joinStrategy ?? 'all';
-        if (strategy === 'all') {
-          // All sources must be completed
-          const allCompleted = incomingEdgeIds.every(eid => {
-            const edge = this.graph.edges.get(eid)!;
-            const sourceState = this.state.nodes[edge.from];
-            return sourceState?.status === NodeStatus.COMPLETED || sourceState?.status === NodeStatus.SKIPPED;
-          });
-          if (!allCompleted) continue; // Stay in candidates
-        }
-        // 'race' and 'settled': at least one completed is enough
+      const strategy = joinStrategy ?? 'all';
+      const isRaceJoin =
+        (nodeDef.kind === NodeKind.JOIN || joinStrategy !== undefined) &&
+        (strategy === 'race' || strategy === 'settled' || strategy === 'any');
+
+      if (!isRaceJoin && incomingEdgeIds.length > 1) {
+        // Fan-in: require ALL predecessors to have completed (or been skipped).
+        const allCompleted = incomingEdgeIds.every(eid => {
+          const edge = this.graph.edges.get(eid)!;
+          const sourceState = this.state.nodes[edge.from];
+          return sourceState?.status === NodeStatus.COMPLETED || sourceState?.status === NodeStatus.SKIPPED;
+        });
+        if (!allCompleted) continue; // Stay in candidates
       }
+      // Race/any join (or single in-edge): at least one completed is enough.
 
       ready.push(nid);
     }
@@ -481,6 +496,10 @@ export class DAGEngine {
       this._emitEvent(GraphEventType.NODE_COMPLETED, nid, {
         durationMs: completedAt - (nodeState?.startedAt ?? completedAt),
         hasOutput: output !== undefined,
+        // Persist the actual output so durable resume can restore state.results
+        // for downstream nodes (correctness over payload size).
+        output,
+        nodeName: nodeDef.name,
       });
 
       // Notify plugins
@@ -1060,13 +1079,24 @@ export function replayState(events: GraphEvent[], graph: GraphDef): GraphState {
         break;
       case GraphEventType.NODE_COMPLETED:
         if (event.nodeId) {
+          const completedOutput = event.data?.output;
           state.nodes[event.nodeId] = {
             ...state.nodes[event.nodeId],
             nodeId: event.nodeId,
             status: NodeStatus.COMPLETED,
+            output: completedOutput,
             completedAt: event.timestamp,
             durationMs: event.data?.durationMs as number,
           };
+          // Restore the node's output into state.results so downstream nodes
+          // resume with the correct inputs. Prefer the persisted node name,
+          // falling back to the graph definition.
+          const resultName =
+            (event.data?.nodeName as string | undefined) ??
+            graph.nodes.get(event.nodeId)?.name;
+          if (resultName) {
+            state.results[resultName] = completedOutput;
+          }
           state.activeNodes = state.activeNodes.filter(id => id !== event.nodeId);
         }
         break;

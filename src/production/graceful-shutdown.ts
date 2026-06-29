@@ -90,6 +90,31 @@ export class GracefulShutdown {
     }
 
     /**
+     * Register a drain/checkpoint handler that runs during shutdown.
+     *
+     * This is the integration point for {@link createHttpService}: pass the
+     * service's `close()` (which drains in-flight HTTP requests) and/or a
+     * checkpoint-store snapshot so in-flight agent state is persisted before exit
+     * instead of being abandoned on timeout.
+     *
+     * @example
+     * ```ts
+     * const svc = createHttpService({ agents });
+     * const shutdown = new GracefulShutdown();
+     * shutdown.addHandler('http-drain', () => svc.close(25_000));
+     * shutdown.addHandler('checkpoint', () => checkpointStore.flush());
+     * shutdown.listen();
+     * ```
+     *
+     * @remarks Handlers registered here run via {@link runHandlers} in parallel,
+     * bounded by `timeoutMs`. Ordering between drain and checkpoint, if required,
+     * should be composed inside a single handler.
+     */
+    onDrain(handler: CleanupHandler): void {
+        this.addHandler('drain', handler);
+    }
+
+    /**
      * Start listening for shutdown signals.
      * Only call this once.
      */

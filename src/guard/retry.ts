@@ -27,6 +27,52 @@ const defaultSleep = (ms: number): Promise<void> =>
 
 const defaultRetryOn = (error: unknown): boolean => isConfusedAIError(error) && error.retryable;
 
+/** HTTP status codes that are safe to retry (rate-limit + transient server/gateway errors). */
+const TRANSIENT_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+/**
+ * Extract an HTTP status code from a provider/SDK error, checking the common
+ * shapes: `error.status`, `error.statusCode`, `error.response.status`, and the
+ * ConfusedAIError `context.status` bag.
+ */
+function extractStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object') return undefined;
+  const e = error as Record<string, unknown>;
+  const direct = e['status'] ?? e['statusCode'];
+  if (typeof direct === 'number') return direct;
+  const resp = e['response'] as Record<string, unknown> | undefined;
+  if (resp && typeof resp['status'] === 'number') return resp['status'] as number;
+  const ctx = e['context'] as Record<string, unknown> | undefined;
+  if (ctx && typeof ctx['status'] === 'number') return ctx['status'] as number;
+  return undefined;
+}
+
+/**
+ * Predicate: is this error a TRANSIENT failure that is safe to retry?
+ *
+ * Retries on:
+ *   - HTTP 408/425/429/500/502/503/504 (rate-limit + transient server errors)
+ *   - Network errors (ECONNRESET / ETIMEDOUT / ECONNREFEUSED / EAI_AGAIN / fetch failed)
+ *   - ConfusedAIError with `retryable: true`
+ *
+ * Never retries 400/401/403/404/422 client/validation errors — they replay identically.
+ */
+export function isTransientLLMError(error: unknown): boolean {
+  if (isConfusedAIError(error) && error.retryable) return true;
+
+  const status = extractStatus(error);
+  if (status !== undefined) return TRANSIENT_STATUS.has(status);
+
+  // Network-level errors carry a `code` or a recognisable message but no HTTP status.
+  const e = error as { code?: unknown; message?: unknown } | null;
+  const code = typeof e?.code === 'string' ? e.code : '';
+  if (['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'EAI_AGAIN', 'EPIPE', 'ENOTFOUND'].includes(code)) {
+    return true;
+  }
+  const msg = (typeof e?.message === 'string' ? e.message : '').toLowerCase();
+  return /network|fetch failed|socket hang up|timed out|timeout|econnreset/.test(msg);
+}
+
 /**
  * Extract a wait duration (in ms) from a `Retry-After` or provider-specific
  * rate-limit reset header attached to the error, if available.

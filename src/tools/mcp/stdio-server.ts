@@ -11,15 +11,23 @@ import type { Tool } from '../core/types.js';
 import type { ToolContext } from '../core/types.js';
 import { zodToJsonSchema } from '../core/zod-to-schema.js';
 
-function gatewayCtx(toolId: string): ToolContext {
+/**
+ * Build the execution context for a tool invoked over stdio.
+ *
+ * SECURITY: do NOT blanket-grant network + filesystem to every tool. Each tool
+ * only receives the capabilities it explicitly declares in its own
+ * `permissions` (per-tool opt-in). A tool that does not request network/FS
+ * access cannot obtain it via the gateway.
+ */
+function gatewayCtx(tool: Tool): ToolContext {
     return {
-        toolId,
+        toolId: tool.id,
         agentId: 'mcp-stdio',
         sessionId: 'mcp-stdio',
         permissions: {
-            allowNetwork: true,
-            allowFileSystem: true,
-            maxExecutionTimeMs: 120_000,
+            allowNetwork: tool.permissions?.allowNetwork ?? false,
+            allowFileSystem: tool.permissions?.allowFileSystem ?? false,
+            maxExecutionTimeMs: tool.permissions?.maxExecutionTimeMs ?? 120_000,
         },
     };
 }
@@ -104,7 +112,7 @@ export async function handleMcpStdioLine(
             });
         }
         const args = p.arguments && typeof p.arguments === 'object' ? p.arguments : {};
-        const res = await tool.execute(args, gatewayCtx(tool.id));
+        const res = await tool.execute(args, gatewayCtx(tool));
         const text = res.success ? JSON.stringify(res.data ?? {}) : (res.error?.message ?? 'Tool failed');
         return JSON.stringify({
             jsonrpc: '2.0',

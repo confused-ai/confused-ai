@@ -23,8 +23,23 @@ import { DebugLogger, createDebugLogger } from '../shared/index.js';
 // Minimal types for compile-time (runtime: peer dependency @anthropic-ai/sdk)
 interface AnthropicClient {
     messages: {
-        create(params: AnthropicCreateParams): Promise<AnthropicResponse | AsyncIterable<AnthropicStreamEvent>>;
+        create(params: AnthropicCreateParams, requestOptions?: { signal?: AbortSignal }): Promise<AnthropicResponse | AsyncIterable<AnthropicStreamEvent>>;
     };
+}
+
+/**
+ * Re-throw an SDK error with its HTTP `status` and `headers` preserved on the
+ * thrown object so the retry layer can read `Retry-After` / rate-limit headers.
+ */
+function rethrowWithStatus(err: unknown): never {
+    if (err && typeof err === 'object') {
+        const e = err as Record<string, unknown>;
+        const status = e['status'] ?? (e['response'] as Record<string, unknown> | undefined)?.['status'];
+        const headers = e['headers'] ?? (e['response'] as Record<string, unknown> | undefined)?.['headers'];
+        if (status !== undefined && e['status'] === undefined) e['status'] = status;
+        if (headers !== undefined && e['headers'] === undefined) e['headers'] = headers;
+    }
+    throw err;
 }
 
 interface AnthropicCreateParams {
@@ -188,14 +203,19 @@ export class AnthropicProvider implements LLMProvider {
         const { system, messages: anthropicMsgs } = toAnthropicMessages(messages);
         const tools = toAnthropicTools(options?.tools);
 
-        const response = await this.client.messages.create({
+        const reqParams = {
             model: this.model,
             max_tokens: options?.maxTokens ?? 4096,
             system,
             messages: anthropicMsgs,
             temperature: options?.temperature ?? 0.7,
             ...(tools && { tools }),
-        } as AnthropicCreateParams) as AnthropicResponse;
+        } as AnthropicCreateParams;
+        const requestOpts = options?.signal ? { signal: options.signal } : undefined;
+        const response = await (requestOpts
+            ? this.client.messages.create(reqParams, requestOpts)
+            : this.client.messages.create(reqParams)
+        ).catch(rethrowWithStatus) as AnthropicResponse;
 
         let text = '';
         const toolCalls: ToolCall[] = [];
@@ -236,7 +256,7 @@ export class AnthropicProvider implements LLMProvider {
         const { system, messages: anthropicMsgs } = toAnthropicMessages(messages);
         const tools = toAnthropicTools(options?.tools);
 
-        const stream = await this.client.messages.create({
+        const streamParams = {
             model: this.model,
             max_tokens: options?.maxTokens ?? 4096,
             system,
@@ -244,7 +264,12 @@ export class AnthropicProvider implements LLMProvider {
             temperature: options?.temperature ?? 0.7,
             stream: true,
             ...(tools && { tools }),
-        } as AnthropicCreateParams) as AsyncIterable<AnthropicStreamEvent>;
+        } as AnthropicCreateParams;
+        const requestOpts = options?.signal ? { signal: options.signal } : undefined;
+        const stream = await (requestOpts
+            ? this.client.messages.create(streamParams, requestOpts)
+            : this.client.messages.create(streamParams)
+        ).catch(rethrowWithStatus) as AsyncIterable<AnthropicStreamEvent>;
 
         let fullText = '';
         // index → {id, name, args} for in-flight tool blocks

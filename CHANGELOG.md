@@ -13,6 +13,35 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `XquikToolkit` for opt-in X post search, user search, and trend lookup through the Xquik REST API.
 
+### Security
+
+- **Removed unsandboxed code execution (RCE).** `createProgramOfThought` no longer ships a `new Function`-based default executor; callers must opt in to an explicit sandboxed executor (vm-isolated, E2B, or Docker-backed).
+- **Filesystem tools are now path-sandboxed.** New shared `resolveWithin` guard rejects `../` traversal, sibling-dir/absolute-path escapes, and symlink escapes; `fileSystem` and the `utils/file` tools are confined to a root (`CONFUSED_AI_FS_ROOT` or cwd). New `createFileSystemTool({ root })`.
+- **JWT algorithm-confusion hardened.** Header `alg` is now required, pinned to the configured family, and `none` is rejected on the asymmetric path. `JwksVerifier` (RS/ES/PS, kid resolution, JWKS caching, exp/nbf) is fully implemented.
+- **Docker tool no longer defaults to an open socket.** A host must be supplied (`DOCKER_HOST` or config); volume binds to sensitive host paths are rejected unless `allowHostMounts: true`.
+- **SSRF closed on legacy HTTP/browser tools** — they now reuse the DNS-resolving guard (`checkSsrf`) that blocks IMDS/RFC-1918/CGNAT/IPv6-mapped/loopback, with per-redirect re-validation.
+- **Secret/PII redaction before external trace export.** Langfuse/LangSmith ingestion now scrubs payloads with `maskSecrets` before sending.
+- MCP remote tool output documented as untrusted (tool-poisoning vector).
+
+### Fixed
+
+- **Cancellation works end-to-end.** `AbortSignal` is threaded into LLM SDK calls and tool execution (provider `signal` option), so in-flight runs cancel instead of running to completion.
+- **Retries are safe.** The agent loop retries only transient errors (429/5xx/network) instead of blanket-retrying 4xx/auth/validation; provider errors now carry `status`/headers so `Retry-After` is honored.
+- **Anthropic tool-calling + streaming.** The live provider emits proper `tool_use`/`tool_result` blocks, passes `tools` in streaming, and reports token usage; OpenAI streaming sets `stream_options.include_usage`. Cost/budget accounting no longer reads zero on streamed traffic.
+- The agent loop appends a single assistant message per turn (was duplicating text + tool calls).
+- **Provider fallback/router classify by typed status, not message substrings**, and only fall back on transient errors.
+- **Context-window truncation** pins a leading system prompt and keeps tool_use/tool_result pairs atomic.
+- **Durable graph resume restores node outputs** (was persisting only a `hasOutput` flag → silent wrong results on resume); graph now fails fast on a failed node.
+- **Multi-agent handoff passes conversation history** to the target and no longer hardcodes `COMPLETED` (multi-hop chains work); swarm subagent execution fails loud instead of returning fake placeholder results.
+- **Idempotency is race-free** (atomic `reserve()` before work, Stripe-style); **Redis rate limiter is atomic** (single Lua `INCR`+`PEXPIRE`); **`BudgetEnforcer` is wired into the loop** (per-step cost + hard stop); **HITL `requireApprovalTool` implemented**; RBAC enforced on the resolved agent name (was bypassed on the main chat path).
+- **Observability: OTel GenAI semantic conventions** (`gen_ai.*`) on LLM spans, LLM token/cost metrics now recorded (bounded labels), and the Prometheus endpoint reports "exporter not wired" instead of fake zeros.
+- LLM-judge distinguishes JSON parse failures from a genuine score of 0 (`parseError`).
+- Build: `pg`/`fluent-ffmpeg` optional-peer imports no longer break `tsc` (the CI typecheck gate).
+
+### Deprecated
+
+- The duplicate module stacks (`models/` vs `providers/`, `observability/` vs `observe/`, `eval/` vs `observability/eval`, `execution/` graph engine vs `graph/`) remain but are slated for consolidation in 3.0 — prefer `providers/`, `observe/`, and `graph/`. Each still has live importers, so collapse is staged rather than removed in this release.
+
 ## [2.3.0] — 2026-06-03
 
 ### Added

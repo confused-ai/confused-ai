@@ -5,27 +5,10 @@
 import { z } from 'zod';
 import { BaseTool, BaseToolConfig } from '../core/base-tool.js';
 import { ToolContext, ToolCategory } from '../core/types.js';
-
-/** Patterns matching private/internal network addresses (SSRF protection) */
-const PRIVATE_HOST_PATTERNS = [
-    /^localhost$/i,
-    /^127\./,
-    /^10\./,
-    /^172\.(1[6-9]|2[0-9]|3[01])\./,
-    /^192\.168\./,
-    /^0\.0\.0\.0$/,
-    /^\[::1\]$/,
-    /^169\.254\./,          // link-local
-    /\.internal$/i,
-    /\.local$/i,
-];
-
-/**
- * Validate a URL is not targeting private/internal networks (SSRF protection)
- */
-function isPrivateHost(hostname: string): boolean {
-    return PRIVATE_HOST_PATTERNS.some(p => p.test(hostname));
-}
+// Reuse the single hardened SSRF guard (DNS resolution + IMDS/RFC-1918/CGNAT/
+// IPv6-mapped blocks). A hostname-string-only check is insufficient: a public
+// hostname can resolve to 169.254.169.254 / 10.x / 127.x and bypass it.
+import { checkSsrf } from '../http-client.js';
 
 /**
  * HTTP methods
@@ -93,7 +76,7 @@ export class HttpClientTool extends BaseTool<typeof HttpToolParameters, HttpResp
     /**
      * Validate URL against host restrictions
      */
-    private validateUrl(urlStr: string): string | null {
+    private async validateUrl(urlStr: string): Promise<string | null> {
         let parsed: URL;
         try {
             parsed = new URL(urlStr);
@@ -101,9 +84,11 @@ export class HttpClientTool extends BaseTool<typeof HttpToolParameters, HttpResp
             return `Invalid URL: ${urlStr}`;
         }
 
-        // Block private networks (SSRF protection)
-        if (this.blockPrivateNetworks && isPrivateHost(parsed.hostname)) {
-            return `Blocked: ${parsed.hostname} is a private/internal network address`;
+        // Block private networks (SSRF protection) — resolves DNS and blocks
+        // private/reserved/link-local IPs, not just hostname strings.
+        if (this.blockPrivateNetworks) {
+            const ssrfErr = await checkSsrf(parsed.hostname);
+            if (ssrfErr) return ssrfErr;
         }
 
         // Check host allowlist
@@ -129,7 +114,7 @@ export class HttpClientTool extends BaseTool<typeof HttpToolParameters, HttpResp
         const { url, method, headers, body, timeout } = params;
 
         // Validate URL against SSRF and host restrictions
-        const urlError = this.validateUrl(url);
+        const urlError = await this.validateUrl(url);
         if (urlError) {
             throw new Error(urlError);
         }

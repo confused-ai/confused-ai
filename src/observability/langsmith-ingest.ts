@@ -2,7 +2,12 @@
  * Minimal LangSmith run ingestion (HTTP). Requires `LANGSMITH_API_KEY` or passed `apiKey`.
  *
  * Endpoint may evolve; verify against https://api.smith.langchain.com docs for your workspace.
+ *
+ * SECURITY: run inputs/outputs/extra are scrubbed with {@link maskSecrets} before
+ * leaving the process — never export raw secrets/keys to third-party SaaS.
  */
+
+import { maskSecrets } from '../observe/logger.js';
 
 export interface LangSmithRunPayload {
     readonly id?: string;
@@ -32,7 +37,7 @@ export async function sendLangSmithRunBatch(
             'Content-Type': 'application/json',
             'x-api-key': apiKey,
         },
-        body: JSON.stringify({ post: runs }),
+        body: maskSecrets(JSON.stringify({ post: runs })),
     });
     if (!res.ok) {
         const t = await res.text();

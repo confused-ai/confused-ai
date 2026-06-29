@@ -59,29 +59,49 @@ export interface FallbackChainConfig {
     debug?: boolean;
 }
 
+/** Extract an HTTP status code from a provider/SDK error (status / statusCode / response.status). */
+function errorStatus(error: unknown): number | undefined {
+    if (!error || typeof error !== 'object') return undefined;
+    const e = error as Record<string, unknown>;
+    const direct = e['status'] ?? e['statusCode'];
+    if (typeof direct === 'number') return direct;
+    const resp = e['response'] as Record<string, unknown> | undefined;
+    if (resp && typeof resp['status'] === 'number') return resp['status'] as number;
+    const ctx = e['context'] as Record<string, unknown> | undefined;
+    if (ctx && typeof ctx['status'] === 'number') return ctx['status'] as number;
+    return undefined;
+}
+
+/** Network-level error (no HTTP status) — connection reset/refused/timeout. */
+function isNetworkError(error: unknown): boolean {
+    const e = error as { code?: unknown; message?: unknown } | null;
+    const code = typeof e?.code === 'string' ? e.code : '';
+    if (['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'EAI_AGAIN', 'EPIPE', 'ENOTFOUND'].includes(code)) return true;
+    const msg = (typeof e?.message === 'string' ? e.message : '').toLowerCase();
+    return /network|fetch failed|socket hang up|timed out|timeout|econnreset/.test(msg);
+}
+
 /**
- * Determine if an error should trigger fallback
+ * Determine if an error should trigger fallback.
+ * Branches on the TYPED HTTP status / error code — never message substrings
+ * (which match false positives like model names "gpt-4500").
  */
 function shouldFallback(error: Error, strategy: FallbackStrategy): boolean {
-    const message = error.message.toLowerCase();
+    const status = errorStatus(error);
 
     switch (strategy) {
         case FallbackStrategy.ANY_ERROR:
             return true;
 
         case FallbackStrategy.RATE_LIMIT:
-            return message.includes('rate limit') || message.includes('429') || message.includes('quota');
+            return status === 429;
 
         case FallbackStrategy.TIMEOUT:
-            return message.includes('timeout') || message.includes('timed out') || message.includes('408');
+            return status === 408 || isNetworkError(error);
 
         case FallbackStrategy.API_ERROR:
-            return (
-                message.includes('api error') ||
-                /[45]\d{2}/.test(message) ||
-                message.includes('server error') ||
-                message.includes('service unavailable')
-            );
+            // 429 + 5xx server/gateway errors, plus network-level failures.
+            return status === 429 || (status !== undefined && status >= 500 && status <= 599) || isNetworkError(error);
 
         default:
             return false;
@@ -98,7 +118,7 @@ export class FallbackChainProvider implements LLMProvider {
     private strategy: FallbackStrategy;
     private maxRetries: number;
     private debug: boolean;
-    private callHistory: Array<{ provider: number; model: string; success: boolean; error?: string }> = [];
+    private callHistory: Array<{ provider: number; maxTokens: number; success: boolean; error?: string }> = [];
 
     constructor(config: FallbackChainConfig) {
         if (config.providers.length === 0) {
@@ -155,10 +175,10 @@ async generateText(messages: Message[], options?: GenerateOptions): Promise<Gene
             if (shouldFallback(lastError, this.strategy)) {
                 providerIndex++;
 
+                // Exhausted the chain — do NOT wrap around to re-hit a provider that
+                // already failed; stop and surface the aggregated error.
                 if (providerIndex >= this.providers.length) {
-                    // Wrap around or fail?
-                    // For now, wrap to first provider and continue retrying
-                    providerIndex = 0;
+                    break;
                 }
             } else {
                 // Don't fallback, but might retry same provider
@@ -218,8 +238,9 @@ async streamText(messages: Message[], options?: StreamOptions): Promise<Generate
             if (shouldFallback(lastError, this.strategy)) {
                 providerIndex++;
 
+                // Exhausted the chain — do NOT wrap around to a failed provider.
                 if (providerIndex >= this.providers.length) {
-                    providerIndex = 0;
+                    break;
                 }
             } else {
                 break;
@@ -285,7 +306,9 @@ getStats(): {
      * Record a call attempt
      */
     private recordCall(providerIndex: number, maxTokens: number, success: boolean, error?: string): void {
-        this.callHistory.push({ provider: providerIndex, model: `Provider${providerIndex + 1}(${maxTokens}tk)`, success, error });
+        // Record the provider index + request maxTokens separately — do NOT synthesise
+        // a fake "model" label from them (it conflated two distinct dimensions).
+        this.callHistory.push({ provider: providerIndex, maxTokens, success, error });
         // Cap to prevent unbounded growth
         if (this.callHistory.length > 1000) {
             this.callHistory = this.callHistory.slice(-1000);

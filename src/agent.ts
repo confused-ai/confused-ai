@@ -6,13 +6,13 @@
  */
 
 import type { SessionStore } from './session/index.js';
-import type { Tool, ToolRegistry } from './tools/index.js';
+import type { Tool, ToolRegistry } from './tools/core/index.js';
 import type { CreateAgentOptions, CreateAgentResult, AgentRunOptions } from './create-agent.js';
 import { createAgent } from './create-agent.js';
 import { InMemoryCheckpointStore } from './execution/state-graph.js';
 import { InMemorySessionStore } from './session/index.js';
-import { HttpClientTool } from './tools/index.js';
-import { BrowserTool } from './tools/index.js';
+import { HttpClientTool } from './tools/utils/http.js';
+import { BrowserTool } from './tools/utils/browser.js';
 import type { AgenticRunResult } from './agentic/index.js';
 
 // ─────────────────────────────────────────────────────────────────────────────

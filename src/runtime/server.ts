@@ -4,7 +4,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { CreateAgentResult } from '../create-agent.js';
 import type { CreateHttpServiceOptions, HttpService, RequestAuditEntry } from './types.js';
 import { getRuntimeOpenApiJson } from './openapi.js';
-import { createAuthMiddleware } from './auth.js';
+import { createAuthMiddleware, sendForbidden } from './auth.js';
+import { hasRole, type JwtPayload } from './jwt-rbac.js';
 import type { AuditEntry } from '../production/audit-store.js';
 import type { IdempotencyStore } from '../production/idempotency.js';
 import { InMemoryIdempotencyStore } from '../production/idempotency.js';
@@ -151,6 +152,9 @@ export function createHttpService(
     const idempotencyHeader = idempotencyOpts?.headerName?.toLowerCase() ?? 'x-idempotency-key';
     const trustProxy = options.trustProxy === true;
 
+    // Per-agent RBAC enforced server-side after body-based agent resolution.
+    const rbacRules = options.rbac ?? null;
+
     // Persistent audit store (optional — falls back to in-memory array)
     const auditStore = options.auditStore ?? null;
 
@@ -207,10 +211,12 @@ export function createHttpService(
 
         // Run auth middleware (skips public paths internally)
         let authIdentity: string | undefined;
+        let authClaims: Record<string, unknown> | undefined;
         if (authMiddleware) {
             const ctx = await authMiddleware(req, res);
             if (!ctx) return; // middleware already wrote 401
             authIdentity = ctx.identity;
+            authClaims = ctx.claims;
             // Attach auth context to request for downstream use
             (req as NodeJS.Dict<unknown> & IncomingMessage)['authContext'] = ctx;
         }
@@ -416,6 +422,23 @@ export function createHttpService(
                     return;
                 }
 
+                // ── RBAC enforcement (body-based agent selection) ─────────────
+                // The URL-regex RBAC in jwtAuth only matches `/agents/:name/`, so a
+                // body-selected agent (`POST /v1/chat { agent }`) would slip past it.
+                // Enforce here, after the agent name is resolved from the body.
+                if (rbacRules && rbacRules[agentName]) {
+                    const requiredRoles = rbacRules[agentName]!;
+                    const jwtPayload = authClaims?.['jwtPayload'] as JwtPayload | undefined;
+                    if (!jwtPayload || !hasRole(jwtPayload, requiredRoles)) {
+                        sendForbidden(
+                            res,
+                            `Insufficient role for agent '${agentName}'. Required: ${requiredRoles.join(' | ')}`
+                        );
+                        pushAudit(403, { agent: agentName });
+                        return;
+                    }
+                }
+
                 // ── Idempotency check ─────────────────────────────────────
                 const sessionHeader = firstHeaderValue(req.headers['x-session-id']);
                 const accept = req.headers.accept;
@@ -438,16 +461,35 @@ export function createHttpService(
                               stream: wantsStream,
                           })
                         : undefined;
+                // Atomic reserve closes the get→run→set TOCTOU race: only the caller
+                // that creates the `pending` record proceeds; concurrent retries either
+                // replay the completed response or get 409 "in progress".
                 if (idempotencyStore && scopedIdempotencyKey) {
-                    const cached = await idempotencyStore.get(scopedIdempotencyKey);
-                    if (cached) {
-                        // Return cached response without re-running the agent
-                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                        res.setHeader('X-Idempotency-Replay', 'true');
-                        if (cors) res.setHeader('Access-Control-Allow-Origin', cors);
-                        res.writeHead(cached.responseStatus);
-                        res.end(cached.responseBody);
-                        pushAudit(cached.responseStatus, { agent: agentName });
+                    const reservation = await idempotencyStore.reserve(
+                        scopedIdempotencyKey,
+                        idempotencyTtlMs
+                    );
+                    if (!reservation.created) {
+                        const existing = reservation.existing;
+                        if (existing && existing.state === 'completed') {
+                            // Return cached response without re-running the agent
+                            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                            res.setHeader('X-Idempotency-Replay', 'true');
+                            if (cors) res.setHeader('Access-Control-Allow-Origin', cors);
+                            res.writeHead(existing.responseStatus);
+                            res.end(existing.responseBody);
+                            pushAudit(existing.responseStatus, { agent: agentName });
+                            return;
+                        }
+                        // A concurrent request holds the pending reservation.
+                        sendJson(
+                            res,
+                            409,
+                            { error: 'Request with this idempotency key is already in progress' },
+                            cors,
+                            rid
+                        );
+                        pushAudit(409, { agent: agentName });
                         return;
                     }
                 }
@@ -505,17 +547,30 @@ export function createHttpService(
                                 ? (e instanceof Error ? e.message : String(e))
                                 : 'Agent error';
                         writeEvent({ type: 'error', message: msg });
+                        // Release the pending idempotency reservation so a retry can re-run.
+                        if (idempotencyStore && scopedIdempotencyKey) {
+                            await idempotencyStore.release(scopedIdempotencyKey).catch(() => { /* best-effort */ });
+                        }
                         pushAudit(isTimeout ? 504 : 500, { id: rid, agent: agentName, sessionId });
                     }
                     res.end();
                     return;
                 }
 
-                const result = await agent.run(body.message, {
-                    sessionId,
-                    userId: body.userId,
-                    ...(ac && { signal: ac.signal }),
-                });
+                let result;
+                try {
+                    result = await agent.run(body.message, {
+                        sessionId,
+                        userId: body.userId,
+                        ...(ac && { signal: ac.signal }),
+                    });
+                } catch (e) {
+                    // Release the pending idempotency reservation so a retry can re-run.
+                    if (idempotencyStore && scopedIdempotencyKey) {
+                        await idempotencyStore.release(scopedIdempotencyKey).catch(() => { /* best-effort */ });
+                    }
+                    throw e;
+                }
 
                 const responseBody = JSON.stringify({
                     id: rid,
@@ -937,30 +992,42 @@ export function createHttpService(
     return {
         port,
         server,
-        close: (drainTimeoutMs = 30_000) =>
-            new Promise((resolve, reject) => {
+        close: (drainTimeoutMs = 30_000) => {
+            // Run a checkpoint/snapshot hook after draining so in-flight agent
+            // state is persisted rather than abandoned. This is the integration
+            // point for `GracefulShutdown.onDrain(svc.close)` +
+            // `checkpointStore.flush()` (see production/graceful-shutdown.ts).
+            const finalize = async (): Promise<void> => {
+                if (options.onShutdown) {
+                    await Promise.resolve(options.onShutdown()).catch(() => { /* best-effort */ });
+                }
+            };
+            return new Promise<void>((resolve, reject) => {
                 // Stop accepting new connections
                 server.close((err) => {
                     if (err) reject(err);
                 });
 
+                const done = () => { finalize().finally(resolve); };
+
                 if (inFlight === 0) {
-                    resolve();
+                    done();
                     return;
                 }
 
                 // Wait for in-flight requests to finish
                 const drainTimeout = setTimeout(() => {
                     drainResolve = null;
-                    resolve(); // give up waiting, proceed with shutdown
+                    done(); // give up waiting, proceed with shutdown
                 }, drainTimeoutMs);
 
                 drainResolve = () => {
                     clearTimeout(drainTimeout);
                     drainResolve = null;
-                    resolve();
+                    done();
                 };
-            }),
+            });
+        },
         getAuditLog: () => audit.slice(),
         /** Expose host for listenService */
         _host: host,

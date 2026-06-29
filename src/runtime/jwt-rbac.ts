@@ -100,6 +100,17 @@ export function verifyJwtHs256(token: string, secret: string): JwtPayload {
     if (parts.length !== 3) throw new Error('Invalid JWT format');
     const [headerB64, payloadB64, signatureB64] = parts as [string, string, string];
 
+    // Algorithm-confusion hardening: require an explicit HS256 alg in the header.
+    // Reject 'none' and any asymmetric alg so an attacker cannot smuggle an
+    // RS256/ES256 token (or unsigned token) into the HMAC verification path.
+    const header = JSON.parse(base64UrlDecode(headerB64)) as { alg?: string };
+    if (!header.alg) {
+        throw new Error('JWT header missing required "alg"');
+    }
+    if (header.alg !== 'HS256') {
+        throw new Error(`JWT algorithm mismatch: expected HS256, got ${header.alg}`);
+    }
+
     // Verify signature
     const expectedBuf = Buffer.from(
         base64UrlEncode(
@@ -140,8 +151,22 @@ export function verifyJwtAsymmetric(
     const [headerB64, payloadB64, signatureB64] = parts as [string, string, string];
 
     const header = JSON.parse(base64UrlDecode(headerB64)) as { alg?: string };
-    if (header.alg && header.alg !== algorithm) {
+    // Algorithm-confusion hardening: require an explicit alg, reject 'none',
+    // and require an exact match with the configured algorithm. An absent or
+    // mismatched alg must never fall through to verification.
+    if (!header.alg) {
+        throw new Error('JWT header missing required "alg"');
+    }
+    if (header.alg.toLowerCase() === 'none') {
+        throw new Error('JWT "alg: none" is not permitted');
+    }
+    if (header.alg !== algorithm) {
         throw new Error(`JWT algorithm mismatch: expected ${algorithm}, got ${header.alg}`);
+    }
+    // Reject tokens whose alg family does not match the key type expected here
+    // (this function only verifies asymmetric RS*/ES* keys).
+    if (!/^(RS|ES)/.test(header.alg)) {
+        throw new Error(`JWT algorithm "${header.alg}" not valid for asymmetric key verification`);
     }
 
     // Map JWT algorithm to Node crypto algorithm name

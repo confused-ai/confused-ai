@@ -54,11 +54,15 @@ async function withRetryFallback<T>(fn: () => Promise<T>, policy: RetryPolicy): 
             return await fn();
         } catch (err) {
             lastError = err instanceof Error ? err : new Error(String(err));
-            if (attempt < maxRetries) {
+            // Only retry transient failures (429/5xx/network); 4xx/validation replay identically.
+            const transient = guard?.isTransientLLMError?.(err) ?? true;
+            if (attempt < maxRetries && transient) {
                 // Full-jitter: random in [0, min(base * 2^attempt, maxMs)]
                 const cap   = Math.min(baseMs * Math.pow(2, attempt), maxMs);
                 const delay = Math.random() * cap;
                 await sleep(delay);
+            } else {
+                break;
             }
         }
     }
@@ -73,8 +77,17 @@ type WithRetryGuardFn = <T>(fn: () => Promise<T>, policy: Record<string, unknown
 type CreateDeadlineFn = (ms: number, label: string) => { expired: () => boolean };
 
 /** Loaded once at module init — not in the hot path. */
-const guard   = tryRequire('../../guard/index.js')   as { withRetry?: WithRetryGuardFn; createDeadline?: CreateDeadlineFn } | undefined;
-const observe = tryRequire('../../observe/index.js') as { withSpan?: WithSpanFn } | undefined;
+const guard   = tryRequire('../../guard/index.js')   as { withRetry?: WithRetryGuardFn; createDeadline?: CreateDeadlineFn; isTransientLLMError?: (e: unknown) => boolean } | undefined;
+const observe = tryRequire('../../observe/index.js') as {
+    withSpan?: WithSpanFn;
+    genAiAttributes?: (input: { system?: string; model?: string; operation?: string; inputTokens?: number; outputTokens?: number }) => Record<string, unknown>;
+} | undefined;
+
+/** GenAI semantic-convention attributes for LLM spans (falls back to a minimal record). */
+function genAiAttrs(input: { model?: string; operation?: string; inputTokens?: number; outputTokens?: number }): Record<string, unknown> {
+    if (observe?.genAiAttributes) return observe.genAiAttributes(input);
+    return { 'gen_ai.operation.name': input.operation ?? 'chat' };
+}
 
 function tryRequire(id: string): Record<string, unknown> | undefined {
     try {
@@ -94,7 +107,8 @@ async function withRetry<T>(fn: () => Promise<T>, policy: RetryPolicy): Promise<
             maxDelayMs:    policy.maxBackoffMs ?? 30_000,
             multiplier:    2,
             jitter:        true,
-            retryOn:       () => true,
+            // Retry only transient failures (429/5xx/network); never 4xx/validation.
+            retryOn:       guard.isTransientLLMError ?? (() => false),
         });
     }
     return withRetryFallback(fn, policy);
@@ -255,7 +269,7 @@ export class AgentRunner {
             let result: GenerateResult;
             const useStreaming = !!streamHooks?.onChunk && !!this.config.llm.streamText;
             try {
-                result = await this._callLLM(messages, llmTools, useStreaming, streamHooks, steps, retry);
+                result = await this._callLLM(messages, llmTools, useStreaming, streamHooks, steps, retry, runConfig.signal);
             } catch (err) {
                 finishReason = 'error';
                 const error  = err instanceof Error ? err : new Error(String(err));
@@ -290,7 +304,7 @@ export class AgentRunner {
             if (!result.toolCalls?.length || result.finishReason === 'stop') break;
 
             // Dispatch tool calls — O(k tool calls per step)
-            await this._dispatchTools(result.toolCalls, messages, lifecycle, streamHooks, steps, toolTimeoutMs);
+            await this._dispatchTools(result.toolCalls, messages, lifecycle, streamHooks, steps, toolTimeoutMs, runConfig.signal);
         }
 
         if (steps >= effectiveMaxSteps && finishReason === 'stop') {
@@ -330,16 +344,18 @@ export class AgentRunner {
         streamHooks: RunnerStreamHooks | undefined,
         step: number,
         retry: RetryPolicy,
+        signal?: AbortSignal,
     ): Promise<GenerateResult> {
         return withSpan(
             'llm.generate',
-            { 'agent.step': step, 'llm.stream': useStreaming },
+            { 'agent.step': step, 'llm.stream': useStreaming, ...genAiAttrs({ operation: 'chat' }) },
             () => withRetry(() => {
                 const toolChoice: GenerateOptions['toolChoice'] = llmTools.length ? 'auto' : 'none';
                 const opts: GenerateOptions = {
                     toolChoice,
                     ...(llmTools.length > 0 && { tools: llmTools }),
                     ...(streamHooks?.onChunk !== undefined && { onChunk: streamHooks.onChunk }),
+                    ...(signal && { signal }),
                 };
                 if (useStreaming && this.config.llm.streamText) {
                     return this.config.llm.streamText(messages, opts);
@@ -358,6 +374,7 @@ export class AgentRunner {
         streamHooks: RunnerStreamHooks | undefined,
         step: number,
         toolTimeoutMs: number,
+        signal?: AbortSignal,
     ): Promise<void> {
         // Process all tool calls — order must be preserved for message history integrity
         for (const tc of toolCalls) {
@@ -381,11 +398,23 @@ export class AgentRunner {
 
             let output: unknown;
             try {
-                // Race against per-tool deadline — O(1) Promise.race overhead
-                const timeout = new Promise<never>((_, rej) =>
-                    setTimeout(() => { rej(new Error(`Tool "${tc.name}" timed out after ${String(toolTimeoutMs)}ms`)); }, toolTimeoutMs),
-                );
-                output = await Promise.race([tool.execute(args), timeout]);
+                if (signal?.aborted) throw new Error(`Tool "${tc.name}" aborted`);
+                // Race against per-tool deadline + abort signal — O(1) Promise.race overhead
+                let timer: ReturnType<typeof setTimeout> | undefined;
+                let onAbort: (() => void) | undefined;
+                const timeout = new Promise<never>((_, rej) => {
+                    timer = setTimeout(() => { rej(new Error(`Tool "${tc.name}" timed out after ${String(toolTimeoutMs)}ms`)); }, toolTimeoutMs);
+                    if (signal) {
+                        onAbort = () => { rej(new Error(`Tool "${tc.name}" aborted`)); };
+                        signal.addEventListener('abort', onAbort, { once: true });
+                    }
+                });
+                try {
+                    output = await Promise.race([tool.execute(args), timeout]);
+                } finally {
+                    if (timer !== undefined) clearTimeout(timer);
+                    if (signal && onAbort) signal.removeEventListener('abort', onAbort);
+                }
             } catch (err) {
                 const error = err instanceof Error ? err : new Error(String(err));
                 if (lifecycle.onError) await lifecycle.onError(error, step);

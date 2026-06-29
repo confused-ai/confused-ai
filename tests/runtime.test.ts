@@ -3,6 +3,9 @@ import { describe, expect, it, afterEach } from 'vitest';
 import type { CreateAgentResult } from '../src/create-agent/types.js';
 import type { Message } from '../src/providers/types.js';
 import { createHttpService, listenService, getRuntimeOpenApiJson } from '../src/runtime/index.js';
+import { canListenOnLoopback } from './support/network.js';
+
+const CAN_LISTEN_ON_LOOPBACK = await canListenOnLoopback();
 
 function request(
     port: number,
@@ -75,7 +78,7 @@ function echoAgent(onRun?: (prompt: string) => void): CreateAgentResult {
     };
 }
 
-describe('createHttpService', () => {
+describe.skipIf(!CAN_LISTEN_ON_LOOPBACK)('createHttpService', () => {
     let svc: Awaited<ReturnType<typeof listenService>> | undefined;
 
     afterEach(async () => {
@@ -92,7 +95,7 @@ describe('createHttpService', () => {
         // Use direct property access to avoid bun's path-separator interpretation
         expect(paths['/v1/openapi.json']).toBeDefined();
 
-        const s = createHttpService({ agents: { a: mockAgent() }, tracing: false });
+        const s = createHttpService({ agents: { a: mockAgent() }, tracing: false, host: '127.0.0.1' });
         svc = await listenService(s, 0);
         const port = svc.port;
         const res = await request(port, { method: 'GET', path: '/v1/openapi.json' });
@@ -102,7 +105,7 @@ describe('createHttpService', () => {
     });
 
     it('streams chat as SSE when stream: true', async () => {
-        const s = createHttpService({ agents: { a: mockAgent() }, tracing: false });
+        const s = createHttpService({ agents: { a: mockAgent() }, tracing: false, host: '127.0.0.1' });
         svc = await listenService(s, 0);
         const port = svc.port;
         const res = await request(port, {
@@ -127,7 +130,12 @@ describe('createHttpService', () => {
 
     it('replays only the same idempotent request scope', async () => {
         const seen: string[] = [];
-        const s = createHttpService({ agents: { a: echoAgent((prompt) => { seen.push(prompt); }) }, tracing: false, idempotency: {} });
+        const s = createHttpService({
+            agents: { a: echoAgent((prompt) => { seen.push(prompt); }) },
+            tracing: false,
+            idempotency: {},
+            host: '127.0.0.1',
+        });
         svc = await listenService(s, 0);
         const port = svc.port;
 
@@ -163,6 +171,7 @@ describe('createHttpService', () => {
         const s = createHttpService({
             agents: { a: echoAgent() },
             tracing: true,
+            host: '127.0.0.1',
             rateLimit: { check(key) { seenKeys.push(key); } },
             auditStore: { async append(entry) { auditEntries.push({ ip: entry.ip }); } },
         });
@@ -189,6 +198,7 @@ describe('createHttpService', () => {
             agents: { a: echoAgent() },
             tracing: true,
             trustProxy: true,
+            host: '127.0.0.1',
             rateLimit: { check(key) { seenKeys.push(key); } },
             auditStore: { async append(entry) { auditEntries.push({ ip: entry.ip }); } },
         });

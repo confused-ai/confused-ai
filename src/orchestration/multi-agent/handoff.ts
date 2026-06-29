@@ -20,7 +20,7 @@
  * ```
  */
 
-import type { AgentInput, AgentOutput, AgentRunResult, Agent as CoreAgent } from '../../core/index.js';
+import type { AgentInput, AgentOutput, AgentRunResult, Message, Agent as CoreAgent } from '../../core/index.js';
 import { AgentState } from '../../core/index.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -110,11 +110,40 @@ export class HandoffProtocol {
                 input = this.config.transformInput(input, targetName);
             }
 
+            // Forward the conversation context to the target agent (unless
+            // explicitly disabled). The prior handoff chain is replayed as
+            // conversation history so the target sees what came before.
+            const forwardContext = this.config.forwardContext ?? true;
+            const historyMessages: Message[] | undefined =
+                forwardContext && chain.length > 0
+                    ? chain.flatMap((h): Message[] => [
+                          { role: 'user', content: h.context.prompt },
+                          {
+                              role: 'assistant',
+                              content:
+                                  typeof h.result?.result === 'string'
+                                      ? h.result.result
+                                      : JSON.stringify(h.result?.result ?? ''),
+                          },
+                      ])
+                    : undefined;
+
             const stepStart = Date.now();
-            const runResult: AgentRunResult = await targetAgent.run(input.prompt, { runId: `handoff-${Date.now()}` });
+            const runResult: AgentRunResult = await targetAgent.run(input.prompt, {
+                runId: `handoff-${Date.now()}`,
+                ...(historyMessages ? { messages: historyMessages } : {}),
+            });
+            // Derive the resulting state from the actual agent output rather than
+            // hardcoding COMPLETED — lets multi-hop chains continue up to maxDepth.
+            const derivedState =
+                runResult.finishReason === 'error' || runResult.finishReason === 'aborted'
+                    ? AgentState.FAILED
+                    : runResult.finishReason === 'stop'
+                      ? AgentState.COMPLETED
+                      : AgentState.EXECUTING;
             const output: AgentOutput = {
                 result: runResult.text,
-                state: AgentState.COMPLETED,
+                state: derivedState,
                 metadata: {
                     startTime: new Date(stepStart),
                     endTime: new Date(),

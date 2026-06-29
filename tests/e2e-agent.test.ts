@@ -43,6 +43,9 @@ import {
     createPromptInjectionRule,
 } from '@confused-ai/guardrails';
 import { InMemoryEvalStore, runEvalSuite } from '@confused-ai/eval';
+import { canListenOnLoopback } from './support/network.js';
+
+const CAN_LISTEN_ON_LOOPBACK = await canListenOnLoopback();
 
 // ── Controlled LLM helpers ────────────────────────────────────────────────────
 
@@ -403,7 +406,7 @@ function httpRequest(port: number, opts: {
     });
 }
 
-describe('E2E: HTTP service integration', () => {
+describe.skipIf(!CAN_LISTEN_ON_LOOPBACK)('E2E: HTTP service integration', () => {
     let svc: import('../src/runtime/types.js').HttpService | undefined;
 
     // Build a minimal HTTP server wrapping a controlled agent
@@ -426,7 +429,10 @@ describe('E2E: HTTP service integration', () => {
             async getSessionMessages() { return []; },
         };
 
-        const service = createHttpService({ agents: [{ name: 'e2e-agent', agent: agentResult }] });
+        const service = createHttpService({
+            agents: [{ name: 'e2e-agent', agent: agentResult }],
+            host: '127.0.0.1',
+        });
         svc = await listenService(service, 0); // port 0 = OS picks free port
     });
 
