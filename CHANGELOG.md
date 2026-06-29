@@ -9,6 +9,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.4.0] — 2026-06-30
+
 ### Added
 
 - `XquikToolkit` for opt-in X post search, user search, and trend lookup through the Xquik REST API.
