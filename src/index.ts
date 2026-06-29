@@ -54,9 +54,17 @@ export type { CreateAgentOptions, AgentRunOptions, AgentRunResult, CreateAgentRe
 // ── Core framework ─────────────────────────────────────────────────────────────
 export * from './core/index.js';
 
+// ── Prompt management & versioning ─────────────────────────────────────────────
+export { PromptRegistry, renderTemplate } from './prompts/index.js';
+export type { PromptVersion, RegisterOptions, VersionSelector } from './prompts/index.js';
+
+// ── Prompt optimization (DSPy-style bootstrap few-shot) ────────────────────────
+export { bootstrapFewShot, renderFewShot } from './optimize/index.js';
+export type { OptimizeExample, Demo, OptimizeScorer, GenerateFn, BootstrapConfig, OptimizedPrompt } from './optimize/index.js';
+
 // ── Memory ─────────────────────────────────────────────────────────────────────
-export { InMemoryStore, VectorMemoryStore, InMemoryVectorStore, OpenAIEmbeddingProvider, MemoryType, TieredMemory, createTieredMemoryTools, DEFAULT_BLOCK_LIMIT } from './memory/index.js';
-export type { VectorMemoryStoreConfig, EmbeddingProvider, MemoryStore, MemoryEntry, MemoryQuery, MemoryBlock, TieredMemoryConfig, TieredMemoryTools } from './memory/index.js';
+export { InMemoryStore, VectorMemoryStore, InMemoryVectorStore, OpenAIEmbeddingProvider, MemoryType, TieredMemory, createTieredMemoryTools, DEFAULT_BLOCK_LIMIT, GraphMemory, createGraphMemoryTools } from './memory/index.js';
+export type { VectorMemoryStoreConfig, EmbeddingProvider, MemoryStore, MemoryEntry, MemoryQuery, MemoryBlock, TieredMemoryConfig, TieredMemoryTools, GraphEntity, GraphRelation, GraphMemoryTools } from './memory/index.js';
 
 // ── Tools ─────────────────────────────────────────────────────────────────────
 // Note: Tool, ToolRegistry already exported from ./core/index.js
