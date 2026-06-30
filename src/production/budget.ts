@@ -168,6 +168,13 @@ export class BudgetEnforcer {
     /**
      * Add step cost and check run-level cap immediately.
      * Call after each LLM step with the token usage from that step.
+     *
+     * Semantics: this is a POST-STEP hard stop, not a pre-flight guard. The
+     * step's cost is recorded first, then the cap is checked — so a single
+     * step whose cost exceeds the remaining budget will push `runSpendUsd`
+     * past `maxUsdPerRun` before this throws. The cap bounds how much a run
+     * continues spending, not the cost of any one step. Callers needing a
+     * hard per-step ceiling must estimate cost before issuing the LLM call.
      */
     addStepCost(model: string, promptTokens: number, completionTokens: number): void {
         const cost = estimateCostUsd(model, promptTokens, completionTokens);
