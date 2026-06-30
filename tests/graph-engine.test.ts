@@ -707,6 +707,54 @@ describe('Multi-Agent Orchestration', () => {
     expect(result.text).toContain('voter-3');
   });
 
+  it("Consensus 'best' without a judge throws instead of guessing", async () => {
+    const orchestrator = new MultiAgentOrchestrator();
+    orchestrator.addAgent(mockAgent('a')).addAgent(mockAgent('b'));
+
+    await expect(
+      orchestrator.runConsensus({ agents: ['a', 'b'], task: 'q', strategy: 'best' }),
+    ).rejects.toThrow(/requires a judge/);
+  });
+
+  it("Consensus 'best' with a judge returns the judge's pick", async () => {
+    const orchestrator = new MultiAgentOrchestrator();
+    orchestrator.addAgent(mockAgent('a')).addAgent(mockAgent('b'));
+
+    const result = await orchestrator.runConsensus({
+      agents: ['a', 'b'],
+      task: 'q',
+      strategy: 'best',
+      judge: { name: 'judge', instructions: 'judge', llm: createMockLLM('judge', 'JUDGE PICK') },
+    });
+
+    expect(result.text).toBe('JUDGE PICK');
+    expect(result.agentResults.judge).toBeDefined();
+  });
+
+  it("Consensus 'majority' throws when every response is distinct", async () => {
+    const orchestrator = new MultiAgentOrchestrator();
+    // mockAgent responses are unique per name → no real majority
+    orchestrator.addAgent(mockAgent('a')).addAgent(mockAgent('b')).addAgent(mockAgent('c'));
+
+    await expect(
+      orchestrator.runConsensus({ agents: ['a', 'b', 'c'], task: 'q', strategy: 'majority' }),
+    ).rejects.toThrow(/no agreement/);
+  });
+
+  it("Consensus 'majority' returns the agreed answer when agents match", async () => {
+    const orchestrator = new MultiAgentOrchestrator();
+    const agree = (name: string): AgentDef => ({ name, instructions: name, llm: createMockLLM(name, 'approved') });
+    orchestrator.addAgent(agree('a')).addAgent(agree('b')).addAgent(mockAgent('c'));
+
+    const result = await orchestrator.runConsensus({
+      agents: ['a', 'b', 'c'],
+      task: 'Approve?',
+      strategy: 'majority',
+    });
+
+    expect(result.text).toBe('approved');
+  });
+
   it('Competitive should return first result', async () => {
     const fastAgent: AgentDef = {
       name: 'fast',
