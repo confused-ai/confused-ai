@@ -477,7 +477,17 @@
     "rate-limiting",
     "agent-framework",
     "open-source-ai",
-    "bun"
+    "bun",
+    "generative-ai",
+    "gen-ai",
+    "ai-agents",
+    "ai-sdk",
+    "agent-sdk",
+    "agent-orchestration",
+    "ai-automation",
+    "build-ai-agents",
+    "vercel-ai-sdk-alternative",
+    "agno-alternative"
   ],
   "author": {
     "name": "rvuyyuru2",
