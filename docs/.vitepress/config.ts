@@ -45,6 +45,7 @@ export default defineConfig({
         ['meta', { property: 'og:description', content: 'Open-source TypeScript framework for production AI agents. 40+ LLM providers, 100+ tools, multi-agent teams, RAG, guardrails, circuit breakers, budget enforcement, OTLP tracing. CrewAI / LangChain alternative.' }],
         ['meta', { property: 'og:locale', content: 'en_US' }],
         ['meta', { property: 'og:image', content: `${SITE_URL}/og-banner.svg` }],
+        ['meta', { property: 'og:image:alt', content: 'Confused-AI — TypeScript AI agent framework for building production LLM agents, teams, and workflows' }],
         ['meta', { property: 'og:url', content: SITE_URL }],
 
         // Twitter / X
@@ -53,6 +54,7 @@ export default defineConfig({
         ['meta', { name: 'twitter:title', content: 'Confused-AI — TypeScript AI Agent Framework' }],
         ['meta', { name: 'twitter:description', content: 'Build production AI agents in TypeScript. 40+ LLMs, 100+ tools, multi-agent teams, RAG, guardrails, budget caps — open source.' }],
         ['meta', { name: 'twitter:image', content: `${SITE_URL}/og-banner.svg` }],
+        ['meta', { name: 'twitter:image:alt', content: 'Confused-AI — TypeScript AI agent framework for production LLM agents' }],
 
         // SEO
         ['meta', { name: 'keywords', content: 'AI agent framework TypeScript, build AI agents TypeScript, LLM orchestration framework, multi-agent system TypeScript, agentic AI framework, ReAct agent loop, autonomous AI agents, AI agent SDK, production AI agents, AI workflow automation, OpenAI agent framework, Anthropic Claude agents, Google Gemini agents, Groq LLM agents, Ollama local LLM agents, LLM router TypeScript, RAG TypeScript, retrieval augmented generation, vector store TypeScript, knowledge base AI, MCP model context protocol, tool use LLM, function calling LLM, HITL human in the loop AI, AI guardrails PII detection, prompt injection defense, circuit breaker LLM, AI rate limiting, budget enforcement LLM, cost control AI API, AI observability OTLP, OpenTelemetry AI agents, Prometheus AI metrics, AI eval framework, LLM judge evaluation, AI regression testing, AI session management, multi-tenant AI, AI scheduler cron, background queue AI, DAG workflow engine, durable execution AI, tree of thought reasoning, chain of thought AI, CrewAI alternative, LangChain alternative, LangGraph alternative, Agno alternative, AutoGen alternative, TypeScript LLM framework, Bun AI framework, AI agent starter kit, open source AI agent framework' }],
@@ -60,6 +62,32 @@ export default defineConfig({
         ['meta', { name: 'robots', content: 'index, follow' }],
         ['meta', { name: 'google-site-verification', content: '' }],
         ['link', { rel: 'canonical', href: SITE_URL }],
+
+        // Structured data (JSON-LD) — Google rich results for software / open-source projects
+        [
+            'script',
+            { type: 'application/ld+json' },
+            JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'SoftwareApplication',
+                name: 'Confused-AI',
+                alternateName: 'confused-ai TypeScript AI agent framework',
+                applicationCategory: 'DeveloperApplication',
+                operatingSystem: 'Cross-platform (Node.js, Bun)',
+                programmingLanguage: 'TypeScript',
+                description:
+                    'Open-source TypeScript framework for building production-grade AI agents, multi-agent teams, and workflows. ' +
+                    '30+ LLM providers, 100+ tools, RAG, guardrails, circuit breakers, rate limiting, budget enforcement, and OTLP tracing. ' +
+                    'A CrewAI, LangChain, LangGraph, and Vercel AI SDK alternative.',
+                url: SITE_URL,
+                downloadUrl: 'https://www.npmjs.com/package/confused-ai',
+                license: 'https://opensource.org/licenses/MIT',
+                keywords:
+                    'TypeScript AI agent framework, LLM agents, multi-agent orchestration, agentic AI, RAG, ' +
+                    'guardrails, circuit breaker, rate limiting, budget enforcement, CrewAI alternative, LangChain alternative',
+                offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            }),
+        ],
 
         // Performance
         ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
