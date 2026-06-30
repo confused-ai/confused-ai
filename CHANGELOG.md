@@ -7,6 +7,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.5.0](https://github.com/confused-ai/confused-ai/compare/v2.4.0...v2.5.0) (2026-06-30)
+
+
+### Features
+
+* **dx:** graph memory, prompt optimization, specialist-gap modules + tests ([98adac3](https://github.com/confused-ai/confused-ai/commit/98adac3cc3cddca0b948089f3967c449c090cd0f))
+
+
+### Bug Fixes
+
+* **providers:** use createRequire shim so ESM bundle doesn't crash on default agent() ([f25425e](https://github.com/confused-ai/confused-ai/commit/f25425e20005ed735bb3590fa917746e7e9e14de))
+* replace fake-data stubs with honest behavior ([54aa7e1](https://github.com/confused-ai/confused-ai/commit/54aa7e1eae684de76825a560fde0f0eda49b13ef))
+
 ## [Unreleased]
 
 ## [2.4.0] — 2026-06-30
