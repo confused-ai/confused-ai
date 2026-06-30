@@ -3,7 +3,9 @@
  * Injects W3C `traceparent` / `tracestate` headers for distributed tracing across
  * multi-agent swarms when a {@link TraceContext} is provided.
  *
- * `subscribe` is a stub (poll or WebSocket must be implemented per deployment).
+ * Outbound only: `subscribe` throws, because inbound delivery requires a broker
+ * push transport (SSE/WebSocket) or polling that this minimal client does not
+ * implement. Use a transport-specific A2A client for inbound messages.
  */
 
 import type { IA2AClient, A2AMessage } from './types.js';
@@ -67,10 +69,13 @@ export class HttpA2AClient implements IA2AClient {
     }
 
     subscribe(_agentId: string, _handler: (msg: A2AMessage) => void | Promise<void>): () => void {
-        // Inbound delivery requires broker push (SSE/WS) or polling — not implemented here.
-        return () => {
-            /* noop */
-        };
+        // Fail loud: a silent no-op would drop every inbound message while looking
+        // like a working subscription. Inbound delivery needs SSE/WebSocket/polling.
+        throw new Error(
+            'HttpA2AClient is outbound-only: subscribe() is not supported. Inbound A2A ' +
+            'message delivery requires a broker push transport (SSE/WebSocket) or polling. ' +
+            'Use a transport-specific A2A client to receive messages.',
+        );
     }
 }
 

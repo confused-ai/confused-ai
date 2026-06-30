@@ -416,9 +416,11 @@ export class SwarmOrchestrator {
         task: AgentInput,
         _parentContext?: AgentContext
     ): Promise<TaskDecomposition> {
-        // For now, use a simple rule-based decomposition
-        // In production, this would use an LLM to intelligently decompose
-        const subtasks = this.ruleBasedDecomposition(task);
+        // Use the configured LLM to decompose intelligently; fall back to the
+        // keyword-based heuristic only when no LLM is available.
+        const subtasks = this.llmProvider
+            ? await this.llmDecomposition(task)
+            : this.ruleBasedDecomposition(task);
 
         // Build execution stages based on dependencies
         const stages = this.buildExecutionStages(subtasks);
@@ -432,8 +434,89 @@ export class SwarmOrchestrator {
     }
 
     /**
-     * Simple rule-based decomposition for demonstration
-     * In production, this would use LLM-based decomposition
+     * LLM-driven decomposition: ask the model to split the task into independent
+     * subtasks, returned as a validated JSON array. Falls back to the rule-based
+     * heuristic if the model returns nothing usable.
+     */
+    private async llmDecomposition(task: AgentInput): Promise<Subtask[]> {
+        const maxSubtasks = Math.max(2, Math.min(6, this.config.maxSubagents));
+        const messages: Message[] = [
+            {
+                role: 'system',
+                content:
+                    'You decompose a complex task into independent, parallelizable subtasks for a swarm of ' +
+                    `specialist agents. Return ONLY a JSON array (no prose, no markdown fences) of at most ${maxSubtasks} ` +
+                    'objects, each: {"description": string, "specialization": ' +
+                    '"researcher"|"developer"|"analyst"|"writer"|"generalist", ' +
+                    '"dependsOn": number[] (indices of earlier subtasks that must finish first; [] if none), ' +
+                    '"complexity": integer 1-10}.',
+            },
+            { role: 'user', content: `Task: ${task.prompt}` },
+        ];
+        const options: GenerateOptions = {
+            temperature: this.config.llm?.temperature ?? 0.2,
+            maxTokens: this.config.llm?.maxTokens,
+        };
+        const result = await this.llmProvider!.generateText(messages, options);
+        const parsed = this.parseDecomposition(result.text, task);
+        if (parsed.length === 0) {
+            this.logger.debug('LLM decomposition returned no usable subtasks; using rule-based fallback');
+            return this.ruleBasedDecomposition(task);
+        }
+        return parsed;
+    }
+
+    /**
+     * Parse + validate an LLM decomposition response into Subtasks. Tolerates
+     * surrounding prose/fences by extracting the first JSON array. Dependencies
+     * may only reference earlier subtasks, which keeps the dependency graph acyclic.
+     */
+    private parseDecomposition(text: string, task: AgentInput): Subtask[] {
+        const match = text.match(/\[[\s\S]*\]/);
+        if (!match) return [];
+        let raw: unknown;
+        try {
+            raw = JSON.parse(match[0]);
+        } catch {
+            return [];
+        }
+        if (!Array.isArray(raw)) return [];
+
+        const subtasks: Subtask[] = [];
+        raw.forEach((item, i) => {
+            if (!item || typeof item !== 'object') return;
+            const o = item as Record<string, unknown>;
+            const description = typeof o.description === 'string' && o.description.trim()
+                ? o.description.trim()
+                : `Subtask ${i + 1}`;
+            const specialization = typeof o.specialization === 'string' && o.specialization.trim()
+                ? o.specialization.trim()
+                : 'generalist';
+            const dependsOn = Array.isArray(o.dependsOn)
+                ? o.dependsOn.filter((d): d is number => Number.isInteger(d) && d >= 0 && d < i)
+                : [];
+            const complexity = Number.isInteger(o.complexity)
+                ? Math.min(10, Math.max(1, o.complexity as number))
+                : 5;
+            subtasks.push({
+                id: `subtask-${i + 1}`,
+                description,
+                specialization,
+                dependencies: dependsOn.map(d => `subtask-${d + 1}`),
+                estimatedComplexity: complexity,
+                input: {
+                    prompt: `${description}\n\nOverall task: ${task.prompt}`,
+                    context: task.context,
+                },
+            });
+        });
+        return subtasks;
+    }
+
+    /**
+     * Rule-based decomposition fallback, used only when no LLM is configured
+     * (see {@link llmDecomposition}). Keyword heuristic — not a replacement for
+     * model-driven decomposition.
      */
     private ruleBasedDecomposition(task: AgentInput): Subtask[] {
         const subtasks: Subtask[] = [];
@@ -892,7 +975,9 @@ Provide a detailed, helpful response to the user's request.`;
         results: Map<EntityId, SubtaskResult>,
         originalTask: AgentInput
     ): Promise<unknown> {
-        // In production, this would use an LLM to synthesize results
+        // Structured aggregation: collate each subtask's real output keyed by id.
+        // (This is a deterministic collation, not an LLM synthesis — callers that
+        // want a narrative summary should run the result through a judge/agent.)
         const outputs: Record<string, unknown> = {};
 
         results.forEach((result, subtaskId) => {

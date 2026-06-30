@@ -89,7 +89,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Custom adapter guide** — `docs/guide/custom-adapter.md` covers `SessionStore`, `MemoryStore`, `VectorStore`, `LLMProvider`, and `QueueAdapter` with real interface signatures and ~30-line implementations.
 - **`scripts/check-docs-claims.mjs`** — CI gate (`bun run check:docs`) that scans `docs/**/*.md` for `packages/…` and `src/…` file references and exits 1 if any referenced path does not exist on disk.
 - **`scripts/check-bundle-size.mjs`** — CI gate (`bun run check:bundle`) that esbuild-bundles + gzip-measures every package and fails if any exceeds its configured budget (default 80 KB).
-- **Complete test coverage** — every workspace package now has a test file. Total: **1 569 tests passing, 12 skipped** across **72 test files**.
+- **Test coverage** — **772 tests passing (2 skipped) across 38 test files** (`vitest run`).
 
 ### Changed
 

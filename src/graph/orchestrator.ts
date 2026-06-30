@@ -383,7 +383,10 @@ export class MultiAgentOrchestrator {
     strategy?: 'majority' | 'best' | 'merge';
     judge?: AgentDef;
   }): Promise<OrchestratorResult> {
-    const strategy = options.strategy ?? 'best';
+    // Default to 'merge': it is the only strategy that always returns a real,
+    // explainable result without a judge. 'best' requires a judge; 'majority'
+    // requires agreeing responses (see each case below).
+    const strategy = options.strategy ?? 'merge';
     const results: Record<string, AgentResult> = {};
 
     // Run all agents in parallel
@@ -412,13 +415,24 @@ export class MultiAgentOrchestrator {
 
     switch (strategy) {
       case 'majority': {
-        // Simple frequency-based voting
+        // Frequency-based voting over normalized response text. Only meaningful
+        // when agents return matching answers (e.g. a label/classification);
+        // free-text responses are almost always distinct, which is not a majority.
         const votes = new Map<string, number>();
         for (const { result } of agentResults) {
           const key = result.text.trim().toLowerCase();
           votes.set(key, (votes.get(key) ?? 0) + 1);
         }
         const sorted = [...votes.entries()].sort((a, b) => b[1] - a[1]);
+        const topCount = sorted[0]?.[1] ?? 0;
+        if (topCount < 2) {
+          throw new Error(
+            `Consensus strategy 'majority' found no agreement: all ${agentResults.length} ` +
+            `responses are distinct. Majority voting requires agents to return matching ` +
+            `answers (e.g. a classification label). For open-ended responses use ` +
+            `strategy 'best' with a judge, or 'merge' to combine them.`,
+          );
+        }
         finalText = agentResults.find(r =>
           r.result.text.trim().toLowerCase() === sorted[0]?.[0]
         )?.result.text ?? '';
@@ -426,21 +440,23 @@ export class MultiAgentOrchestrator {
       }
 
       case 'best': {
-        if (options.judge) {
-          // Use a judge agent to pick the best
-          const judgeRuntime = new AgentRuntime(options.judge);
-          const judgePrompt = `Given these responses to the task "${options.task}":\n\n` +
-            agentResults.map(r => `## ${r.name}\n${r.result.text}`).join('\n\n') +
-            '\n\nChoose the best response and explain why. Return only the best response text.';
-
-          const judgeResult = await judgeRuntime.run(judgePrompt);
-          finalText = judgeResult.text;
-          results['judge'] = judgeResult;
-        } else {
-          // Without a judge, pick the longest (heuristic)
-          const sorted = agentResults.sort((a, b) => b.result.text.length - a.result.text.length);
-          finalText = sorted[0]?.result.text ?? '';
+        // 'best' has no reliable automatic scorer — response length is not quality —
+        // so it requires a judge agent to actually rank the responses.
+        if (!options.judge) {
+          throw new Error(
+            `Consensus strategy 'best' requires a judge agent: there is no reliable ` +
+            `automatic way to rank free-text responses. Pass options.judge, or use ` +
+            `strategy 'merge' to combine all responses.`,
+          );
         }
+        const judgeRuntime = new AgentRuntime(options.judge);
+        const judgePrompt = `Given these responses to the task "${options.task}":\n\n` +
+          agentResults.map(r => `## ${r.name}\n${r.result.text}`).join('\n\n') +
+          '\n\nChoose the best response and explain why. Return only the best response text.';
+
+        const judgeResult = await judgeRuntime.run(judgePrompt);
+        finalText = judgeResult.text;
+        results['judge'] = judgeResult;
         break;
       }
 

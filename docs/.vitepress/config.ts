@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress';
 
 const base = process.env.BASE ?? '/';
-const SITE_URL = process.env.SITE_URL ?? 'https://rvuyyuru2.github.io/agent-framework';
+const SITE_URL = process.env.SITE_URL ?? 'https://confused-ai.github.io/confused-ai';
 
 export default defineConfig({
     base,
