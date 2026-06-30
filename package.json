@@ -41,11 +41,6 @@
       "import": "./dist/providers.js",
       "require": "./dist/providers.cjs"
     },
-    "./llm": {
-      "types": "./dist/providers.d.ts",
-      "import": "./dist/providers.js",
-      "require": "./dist/providers.cjs"
-    },
     "./tools": {
       "types": "./dist/tools.d.ts",
       "import": "./dist/tools.js",
@@ -389,13 +384,6 @@
     "build": "tsup",
     "build:dts": "node scripts/gen-root-dts.mjs",
     "build:root": "tsup && bun run build:dts",
-    "build:packages": "turbo run build --filter='@confused-ai/*' --output-logs=errors-only",
-    "build:all": "bun run build:packages && bun run build:root",
-    "package:sync": "node scripts/sync-package-manifests.mjs",
-    "package:check": "node scripts/sync-package-manifests.mjs --check && node scripts/validate-package-access.mjs",
-    "package:prepare": "npm run package:sync && npm run build:all && npm run package:check",
-    "publish:packages": "node scripts/publish-packages.mjs",
-    "publish:packages:dry-run": "node scripts/publish-packages.mjs --dry-run",
     "dev": "tsup --watch",
     "typecheck": "tsc -p tsconfig.typecheck.json",
     "test": "vitest run",
@@ -406,7 +394,7 @@
     "lint:packages": "bun run lint",
     "lint:fix": "eslint src --fix",
     "check": "bun run typecheck && bun run lint && bun run test",
-    "release:check": "bun run check && bun run build && bun run package:check",
+    "release:check": "bun run check && bun run build",
     "production:check": "bun run release:check && bun run check:bundle && bun run check:docs && bun run pack:inspect",
     "check:bundle": "bun run check:bundle:lite && node scripts/check-bundle-size.mjs --entry src/tools/core/index.ts --max-kb 20 --label confused-ai/tools/core && node scripts/check-bundle-size.mjs --entry src/tools/search/index.ts --max-kb 80 --label confused-ai/tools/search && bun run check:bundle:root",
     "check:bundle:lite": "node scripts/check-bundle-size.mjs --entry src/lite.ts --max-kb 110 --label confused-ai/lite",
@@ -416,7 +404,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "prepack": "npm run typecheck && npm run lint && npm run test && npm run package:prepare",
+    "prepack": "npm run typecheck && npm run lint && npm run test && npm run build:root",
     "pack:inspect": "npm pack --dry-run"
   },
   "keywords": [
@@ -523,7 +511,6 @@
     "eslint-plugin-boundaries": "^6.0.2",
     "playwright": "^1.59.1",
     "tsup": "^8.4.0",
-    "turbo": "^2.9.8",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.1",
     "vitepress": "^1.6.4",
