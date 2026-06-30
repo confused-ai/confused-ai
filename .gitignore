@@ -47,3 +47,12 @@ temp/
 # Bun
 bun.lockb
 package-lock.json
+
+# AI tooling scaffolding (do not commit)
+.codex/
+.omc/
+.serena/
+.tmp-doccheck/
+
+# vitepress build cache (do not commit)
+docs/.vitepress/cache/
