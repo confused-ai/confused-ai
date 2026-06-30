@@ -110,12 +110,12 @@ export class RateLimiter {
     /** Check if a request can be made immediately */
     canProceed(): boolean {
         this.refillTokens();
-        return this.tokens > 0;
+        return this.tokens >= 1;
     }
 
     /** Get time until next token available in ms */
     getTimeUntilAvailable(): number {
-        if (this.tokens > 0) return 0;
+        if (this.tokens >= 1) return 0;
 
         const tokenRefillRate = this.config.intervalMs / this.config.maxRequests;
         const timeSinceLastRefill = Date.now() - this.lastRefill;
@@ -128,7 +128,7 @@ export class RateLimiter {
     async execute<T>(fn: () => Promise<T>): Promise<T> {
         this.refillTokens();
 
-        if (this.tokens > 0) {
+        if (this.tokens >= 1) {
             this.tokens--;
             this.recordMetric('rate_limiter_allowed', 1);
             return fn();
@@ -149,7 +149,7 @@ export class RateLimiter {
      */
     tryAcquire(): boolean {
         this.refillTokens();
-        if (this.tokens > 0) {
+        if (this.tokens >= 1) {
             this.tokens--;
             return true;
         }
@@ -216,7 +216,7 @@ export class RateLimiter {
         while (this.queue.length > 0) {
             this.refillTokens();
 
-            if (this.tokens <= 0) {
+            if (this.tokens < 1) {
                 // Wait for a token
                 await this.waitForToken();
                 continue;

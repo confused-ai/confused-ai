@@ -310,6 +310,12 @@
       "type": "file"
     },
     {
+      "path": "src/production/rate-limiter.ts",
+      "accessCount": 8,
+      "lastAccessed": 1782811813461,
+      "type": "file"
+    },
+    {
       "path": "src/providers/context-window-manager.ts",
       "accessCount": 7,
       "lastAccessed": 1782758445365,
@@ -457,12 +463,6 @@
       "path": "src/graph/scheduler.ts",
       "accessCount": 1,
       "lastAccessed": 1782737500514,
-      "type": "file"
-    },
-    {
-      "path": "src/production/rate-limiter.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782737505608,
       "type": "file"
     },
     {
